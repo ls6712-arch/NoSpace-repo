@@ -12,6 +12,11 @@
 -- else (a profile, a Stub, a feed) reads it. An entry lasts at most 24 hours, so one that crosses
 -- midnight is fine and one that never ends is not.
 --
+-- It also adds pursuits.is_plan: a one-off plan made from the calendar is stored as a small
+-- Pursuit (one session, friends only, not shared), and this flag keeps it out of every list of
+-- a person's own Pursuits (the app never puts it in the local journal, and skips it when it
+-- restores or joins Pursuits). It changes no policy and no existing row (default false).
+--
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Rollback: rollback_20261113000000_calendar_edits.sql.
 
@@ -55,3 +60,6 @@ create policy "you change your own entries"
 create policy "you remove your own entries"
   on public.calendar_entries for delete to authenticated
   using (calendar_entries.user_id = (select auth.uid()));
+
+-- A one-off plan's Pursuit is marked so Your Pursuits can leave it out.
+alter table public.pursuits add column is_plan boolean not null default false;

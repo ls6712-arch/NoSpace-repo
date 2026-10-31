@@ -1,6 +1,6 @@
 import { supabase } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
-import { DEFAULT_CHECK_IN_DAYS, dropProject, startProject, type PursuitMember } from "./journal";
+import { DEFAULT_CHECK_IN_DAYS, dropProject, newProject, type PursuitMember } from "./journal";
 import { mirrorPursuitOpen, setImIn } from "./openPursuits";
 import { endsAtFor } from "./pursuitGoal";
 import { defaultMeasure } from "./pursuitProgress";
@@ -33,7 +33,9 @@ export async function createPlan(plan: NewPlan, owner: Owner, now = Date.now()):
   try {
     const endsAt = endsAtFor(Math.max(1, Math.ceil((plan.startsAt - now) / 86_400_000)), new Date(now));
     const member: PursuitMember = { userId: owner.id, username: owner.username, displayName: owner.displayName, avatarUrl: owner.avatarUrl, status: "joined", role: "owner" };
-    const project = startProject({
+    // Made, but never put in the local journal: a one-off plan is not one of the person's Pursuits.
+    const project = newProject({
+      plan: true,
       title: plan.title.slice(0, 80),
       hobbySlug: spaceSlug,
       subHobby: slug,
@@ -46,6 +48,7 @@ export async function createPlan(plan: NewPlan, owner: Owner, now = Date.now()):
     await mirrorPursuit(owner.id, project);
     await mirrorPursuitMeasure(project.id, "together", project.measure);
     await mirrorPursuitOpen(project.id, { visibility: "friends", endsAt });
+    await markAsPlan(project.id);
     const { data, error } = await supabase
       .from("pursuit_sessions")
       .insert({ pursuit_id: project.id, starts_at: new Date(plan.startsAt).toISOString(), place: null, note: plan.title.slice(0, 140), created_by: owner.id })
@@ -59,6 +62,21 @@ export async function createPlan(plan: NewPlan, owner: Owner, now = Date.now()):
     return { sessionId: (data as { id: number }).id, pursuitId: project.id };
   } catch (e) {
     return { error: friendlyError(e) };
+  }
+}
+
+/**
+ * Marks the Pursuit row as a one-off plan (`pursuits.is_plan`, from the calendar
+ * migration), so the person's other devices and a friend who joins it keep it out
+ * of their Pursuit lists too. Best effort: before that migration is live the
+ * column is not there and the update does nothing.
+ */
+async function markAsPlan(pursuitId: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuits").update({ is_plan: true }).eq("id", pursuitId);
+  } catch {
+    // Without the column the plan is a plain Pursuit on this person's other devices until the migration is applied.
   }
 }
 

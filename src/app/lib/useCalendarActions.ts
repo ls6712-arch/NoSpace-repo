@@ -6,9 +6,10 @@ import { CHANGED } from "./calendarCopy";
 import type { CalendarFreeSlot } from "./calendarView";
 import type { Owner } from "./firstPlanRemote";
 import { savePrivate } from "./onboardingRemote";
-import { cancelOwnPlan, createPlan, deleteSession, leavePlan, moveSession, planNumber, type NewPlan } from "./planEdits";
+import { cancelOwnPlan, createPlan, deleteSession, moveSession, planNumber, type NewPlan } from "./planEdits";
 import { ERROR_LINE } from "./stateCopy";
-import { announceChange, flushPendingChanges } from "./undo";
+import { sendPending } from "./calendarPending";
+import { announceChange, flushPendingChanges, type PersistedChange } from "./undo";
 import type { WeekPlanDetail } from "./weekView";
 
 /**
@@ -77,32 +78,38 @@ export function useCalendarActions({ owner, usualWindows, reloadPlans }: { owner
     [owner, reloadPlans],
   );
 
-  /** Takes a plan off the calendar now and sends the removal after the 6 seconds, unless it is undone. */
-  const removeLater = (plan: WeekPlanDetail, message: string, send: () => Promise<string | null>, after?: () => void) => {
+  /**
+   * Takes a plan off the calendar now and sends the removal after the 6 seconds, unless it is undone.
+   * It is also kept in storage, so closing the tab does not lose it.
+   */
+  const removeLater = (plan: WeekPlanDetail, message: string, change: PersistedChange, after?: () => void) => {
     hide(plan.id, true);
     announceChange(message, {
       undo: () => hide(plan.id, false),
-      commit: () => {
-        void send().then((e) => {
+      persist: change,
+      commit: () =>
+        sendPending(change).then((e) => {
           if (e) {
             hide(plan.id, false);
             notifyError(e);
           } else after?.();
-        });
-      },
+        }),
     });
   };
 
-  const cancelPlan = useCallback((plan: WeekPlanDetail) => {
-    const id = planNumber(plan.id, "session");
-    if (id === null) return;
-    removeLater(plan, CHANGED.planRemoved, () => cancelOwnPlan(id, plan.pursuitId), () => track({ name: "plan_cancelled" }));
-  }, []);
+  const cancelPlan = useCallback(
+    (plan: WeekPlanDetail) => {
+      const id = planNumber(plan.id, "session");
+      if (!userId || id === null) return;
+      removeLater(plan, CHANGED.planRemoved, { type: "cancelPlan", userId, payload: { sessionId: id, pursuitId: plan.pursuitId ?? null } }, () => track({ name: "plan_cancelled" }));
+    },
+    [userId],
+  );
 
   const leave = useCallback(
     (plan: WeekPlanDetail) => {
       if (!userId) return;
-      removeLater(plan, CHANGED.planLeft, () => leavePlan(plan, userId), () => track({ name: "plan_left" }));
+      removeLater(plan, CHANGED.planLeft, { type: "leavePlan", userId, payload: { id: plan.id, kind: plan.kind } }, () => track({ name: "plan_left" }));
     },
     [userId],
   );
@@ -111,7 +118,9 @@ export function useCalendarActions({ owner, usualWindows, reloadPlans }: { owner
     (plan: WeekPlanDetail) => {
       const id = planNumber(plan.id, "session");
       if (!userId || id === null) return;
-      removeLater(plan, CHANGED.sessionSkipped, () => (plan.mine ? deleteSession(id) : leavePlan(plan, userId)));
+      // Your own Pursuit: only that session goes. Someone else's: only you come out of it.
+      const change: PersistedChange = plan.mine ? { type: "deleteSession", userId, payload: { sessionId: id } } : { type: "leavePlan", userId, payload: { id: plan.id, kind: plan.kind } };
+      removeLater(plan, CHANGED.sessionSkipped, change);
     },
     [userId],
   );
@@ -188,20 +197,24 @@ export function useCalendarActions({ owner, usualWindows, reloadPlans }: { owner
   }, []);
 
   /** Removing is sent after the 6 seconds, like cancelling a plan. */
-  const removeOwn = useCallback((entry: CalendarEntry, message: string) => {
-    setEntries((l) => l.filter((x) => x.id !== entry.id));
-    announceChange(message, {
-      undo: () => setEntries((l) => (l.some((x) => x.id === entry.id) ? l : [...l, entry])),
-      commit: () => {
-        void removeEntry(entry.id).then((e) => {
-          if (e) {
-            setEntries((l) => (l.some((x) => x.id === entry.id) ? l : [...l, entry]));
-            notifyError(e);
-          }
-        });
-      },
-    });
-  }, []);
+  const removeOwn = useCallback(
+    (entry: CalendarEntry, message: string) => {
+      setEntries((l) => l.filter((x) => x.id !== entry.id));
+      const change: PersistedChange | undefined = userId ? { type: "removeEntry", userId, payload: { entryId: entry.id } } : undefined;
+      announceChange(message, {
+        undo: () => setEntries((l) => (l.some((x) => x.id === entry.id) ? l : [...l, entry])),
+        persist: change,
+        commit: () =>
+          removeEntry(entry.id).then((e) => {
+            if (e) {
+              setEntries((l) => (l.some((x) => x.id === entry.id) ? l : [...l, entry]));
+              notifyError(e);
+            }
+          }),
+      });
+    },
+    [userId],
+  );
 
   const removeBlock = useCallback((entry: CalendarEntry) => removeOwn(entry, CHANGED.blockRemoved), [removeOwn]);
   const removeFree = useCallback((entry: CalendarEntry) => removeOwn(entry, CHANGED.freeRemoved), [removeOwn]);

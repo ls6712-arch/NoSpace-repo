@@ -14,7 +14,8 @@
 -- scoped to the two fixture users, never to the whole table.
 --   01 to 03 A adds, and reads, its own entries     04 to 07 B cannot see, add, change or move them
 --   08 signed out cannot read                        09 to 17 each constraint (must be refused)
---   18 to 21 the catalog: delete policy, every policy owner only, RLS on, cascade on user delete
+--   18 to 19 pursuits.is_plan exists and defaults to false
+--   20 to 23 the catalog: delete policy, every policy owner only, RLS on, cascade on user delete
 
 begin;
 
@@ -189,6 +190,14 @@ begin
 
   -- The catalog, as the owner role.
   perform set_config('role', v_owner_role, true);
+
+  v_n := (select count(*) from information_schema.columns c where c.table_schema = 'public' and c.table_name = 'pursuits' and c.column_name = 'is_plan' and c.data_type = 'boolean' and c.is_nullable = 'NO' and c.column_default = 'false');
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_n = 1 then ' PASS pursuits.is_plan is a boolean, not null, default false' else ' FAIL pursuits.is_plan is missing or the wrong shape' end);
+
+  v_n := (select count(*) from public.pursuits p where p.is_plan and p.user_id in (v_a, v_b));
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_n = 0 then ' PASS no Pursuit is a plan until the app says so' else ' FAIL ' || v_n || ' fixture Pursuits are plans' end);
 
   v_n := (select count(*) from pg_policies pp where pp.schemaname = 'public' and pp.tablename = 'calendar_entries' and pp.cmd = 'DELETE' and pp.qual like '%user_id%auth.uid%');
   v_i := v_i + 1;
