@@ -215,7 +215,7 @@ export function People() {
     <div className="min-h-viewport">
       <section className="relative overflow-hidden py-12 tab:py-12">
         <div className="absolute inset-0 [background-image:var(--gradient-brand-soft)]" />
-        <div className="container mx-auto max-w-5xl px-4 relative">
+        <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8 relative">
           <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
             People
           </h1>
@@ -226,7 +226,7 @@ export function People() {
       </section>
 
       <div className="bg-surface pb-24 pt-8">
-        <div className="container mx-auto max-w-5xl px-4">
+        <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8">
           <PeopleBrowser />
         </div>
       </div>

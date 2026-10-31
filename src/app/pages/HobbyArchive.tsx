@@ -96,7 +96,7 @@ export function HobbyArchive() {
   if (!target) {
     return (
       <div className="min-h-viewport bg-surface py-16">
-        <div className="container mx-auto max-w-2xl px-4 text-center">
+        <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 text-center">
           <h1 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
             No such hobby
           </h1>
@@ -129,7 +129,7 @@ export function HobbyArchive() {
 
   return (
     <div className="min-h-viewport bg-surface py-8 tab:py-12">
-      <div className="container mx-auto max-w-3xl px-4">
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8">
         <Link
           to="/you"
           className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"

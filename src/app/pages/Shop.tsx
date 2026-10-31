@@ -20,7 +20,7 @@ export function Shop() {
 
   return (
     <div className="min-h-viewport bg-surface py-14">
-      <div className="container mx-auto px-4">
+      <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8">
         <div className="text-center mb-10">
           <h1 className="text-title mb-3">The marketplace</h1>
           <p className="text-muted-foreground text-lead">

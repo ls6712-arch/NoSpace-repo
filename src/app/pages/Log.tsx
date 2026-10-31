@@ -148,7 +148,7 @@ function Shell({ children, bare }: { children: React.ReactNode; bare?: boolean }
   if (bare) return <>{children}</>;
   return (
     <div className="min-h-viewport bg-surface py-10 tab:py-14">
-      <div className="container mx-auto max-w-lg px-4">{children}</div>
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8">{children}</div>
     </div>
   );
 }
@@ -167,7 +167,7 @@ function SheetShell({ children, bare }: { children: React.ReactNode; bare?: bool
       transition={sheetSpring}
       className="fixed inset-0 z-50 overflow-y-auto overscroll-contain bg-background"
     >
-      <div className="mx-auto min-h-full max-w-md px-4 pb-32">{children}</div>
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 min-h-full pb-32">{children}</div>
     </motion.div>
   );
 }
@@ -1621,7 +1621,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         )}
 
         <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background">
-          <div className="mx-auto max-w-md px-4 pt-3 pb-[max(1rem,var(--safe-bottom,0px))]">
+          <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 pt-3 pb-[max(1rem,var(--safe-bottom,0px))]">
             <PillButton className="w-full" disabled={!hasSomething || saving} onClick={() => void publish()}>
               {saving ? "One sec…" : circle === "private" ? "Keep it private" : "Post"}
             </PillButton>

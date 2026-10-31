@@ -590,7 +590,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
 
       {/* The one primary action; the other two are small links under it. Sits above the tab bar on a phone. */}
       <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background desk:bottom-0">
-        <div className="mx-auto flex max-w-md flex-col items-center gap-1 px-4 pt-3 pb-2">
+        <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-col items-center gap-1 pt-3 pb-2">
           <PillButton className="w-full" onClick={doWithPeople}>
             Do this with people
           </PillButton>

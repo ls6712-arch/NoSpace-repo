@@ -85,7 +85,7 @@ export function Billboard({ slides }: { slides: BillboardSlide[] }) {
               />
               <div className="bg-scrim pointer-events-none absolute inset-0" aria-hidden="true" />
               <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
-              <div className="absolute inset-0 mx-auto flex w-full max-w-[1264px] flex-col items-start justify-end gap-3 px-4 pb-28 tab:px-6 desk:px-8 tab:pb-24">
+              <div className="absolute inset-0 mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-col items-start justify-end gap-3 pb-28 tab:pb-24">
                 {i === 0 && <p className="text-small font-semibold text-on-media/90">Corner of the week</p>}
                 <h2 className="max-w-2xl text-display">
                   {corner.name}

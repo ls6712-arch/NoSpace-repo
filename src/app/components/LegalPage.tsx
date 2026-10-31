@@ -18,7 +18,7 @@ export function LegalPage({
   children: ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-[720px] px-5 py-12">
+    <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 py-12">
       <h1 className="mb-2 text-title" style={{ fontFamily: "var(--font-serif)" }}>
         {title}
       </h1>

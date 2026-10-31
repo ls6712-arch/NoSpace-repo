@@ -31,6 +31,20 @@ const WIDTHS = (opt("widths", "390,744,1128,1440")!).split(",").map(Number);
 const THEMES = (opt("themes", "light,dark")!).split(",") as ("light" | "dark")[];
 const HEIGHT: Record<number, number> = { 390: 844, 744: 1024, 1128: 800, 1440: 900 };
 const PAGES: [string, string][] = [["home", "/my-space"], ["discover", "/discover"], ["search", "/search?q=pottery"], ["week", "/week"], ["chats", "/messages"], ["notifications", "/inbox"], ["you", "/you"], ["settings", "/settings"]];
+/** The other pages, and which of the two widths each is: PAGE is 1040px of content, READING 680px (see lib/pageGrid.ts). */
+const OTHERS: [string, string, "PAGE" | "READING", "main" | "viewport"][] = [
+  ["corners", "/corners", "PAGE", "main"],
+  ["corner", "/corners/pasta", "PAGE", "main"],
+  ["category", "/browse/food-drink", "PAGE", "main"],
+  ["people", "/people", "PAGE", "main"],
+  ["pursuit", "/pursuit/aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1", "READING", "main"],
+  ["new-pursuit", "/pursuits/new", "READING", "main"],
+  ["log", "/create", "READING", "viewport"],
+  ["terms", "/terms", "READING", "main"],
+  ["privacy", "/privacy-policy", "READING", "main"],
+  ["settings-account", "/account", "PAGE", "main"],
+];
+const TIER_PX = { PAGE: 1040, READING: 680 };
 const MIME: Record<string, string> = { ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".svg": "image/svg+xml", ".webp": "image/webp", ".woff2": "font/woff2", ".html": "text/html" };
 
 function build(dist: string) {
@@ -160,6 +174,58 @@ const selftest = async () => {
   process.exit(clips > 0 && sizes > 0 && offset ? 0 : 1);
 };
 
+/** Runs in the page: the content box of the page's container (the first element with one of the two width classes). */
+function containerBox() {
+  const el = document.querySelector('main [class*="max-w-[calc("], main [class*="max-w-[1040px]"]') as HTMLElement | null;
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  const cs = getComputedStyle(el);
+  const pad = parseFloat(cs.paddingLeft);
+  // PageShell keeps its gutters on the element around the 1040px box; the other pages keep them on the box itself.
+  const gutter = pad > 0 ? pad : parseFloat(getComputedStyle(el.parentElement!).paddingLeft);
+  const left = r.left + pad;
+  const right = r.right - parseFloat(cs.paddingRight);
+  const m = document.querySelector("main") as HTMLElement;
+  const mr = m.getBoundingClientRect();
+  const ms = getComputedStyle(m);
+  return {
+    left: Math.round(left * 10) / 10,
+    width: Math.round((right - left) * 10) / 10,
+    // The space right of the rail: main's content box.
+    mainLeft: mr.left + parseFloat(ms.paddingLeft),
+    mainWidth: mr.width - parseFloat(ms.paddingLeft) - parseFloat(ms.paddingRight),
+    gutter,
+  };
+}
+
+/** --others: every other page uses one of the two widths, centred, with the gutters, and sets no width of its own. */
+const others = async (browser: import("playwright-core").Browser, port: number, fails: string[], lines: string[]) => {
+  for (const th of THEMES.slice(0, 1)) for (const w of WIDTHS) for (const [page, route, tier, centre] of OTHERS) {
+    const ctx = await browser.newContext({ viewport: { width: w, height: HEIGHT[w] ?? 900 }, hasTouch: w < 744, isMobile: w < 744, colorScheme: th, reducedMotion: "reduce" });
+    await installSupabaseMock(ctx, buildFixtures(), path.join(HERE, "database.types.ts"));
+    await ctx.addInitScript(([t, se]) => { localStorage.setItem("soosh-theme-preference", t as string); localStorage.setItem("sb-fixture-auth-token", JSON.stringify(se)); }, [th, seededSession()] as const);
+    const p = await ctx.newPage();
+    await p.goto(`http://localhost:${port}/#${route}`);
+    await p.waitForTimeout(2000);
+    const b = await p.evaluate(containerBox);
+    await p.screenshot({ path: path.join(OUT, `others-${page}-${w}.png`) });
+    const id = `${page} @${w}`;
+    if (!b) fails.push(`${id}: no page container (the page sets its own width)`);
+    else {
+      const avail = (centre === "main" ? b.mainWidth : w) - 2 * b.gutter;
+      const want = Math.min(TIER_PX[tier], avail);
+      const base = centre === "main" ? b.mainLeft : 0;
+      const wantLeft = base + b.gutter + (avail - want) / 2;
+      const gutterWant = w >= 1128 ? 32 : w >= 744 ? 24 : 16;
+      if (Math.abs(b.width - want) > 1) fails.push(`${id}: content is ${b.width}px wide, want ${want}px (${tier})`);
+      if (Math.abs(b.left - wantLeft) > 1) fails.push(`${id}: content starts at ${b.left}px, want ${wantLeft}px (centred)`);
+      if (b.gutter !== gutterWant) fails.push(`${id}: gutter is ${b.gutter}px, want ${gutterWant}px`);
+      lines.push(`| ${page} | ${w} | ${tier} | ${b.width} | ${b.left} | ${b.gutter} |`);
+    }
+    await ctx.close();
+  }
+};
+
 const main = async () => {
   if (args.includes("--selftest")) return selftest();
   const dist = path.resolve(opt("dist") ?? path.join(OUT, ".dist"));
@@ -183,10 +249,12 @@ const main = async () => {
     await p.screenshot({ path: path.join(OUT, `${page}-${w}-${th}.png`) });
     await ctx.close();
   }
+  const fails: string[] = [];
+  const otherLines: string[] = [];
+  await others(browser, port, fails, otherLines);
   await browser.close();
   server.close();
 
-  const fails: string[] = [];
   for (const r of rows) {
     const id = `${r.page} @${r.w} ${r.th}`;
     if (r.title === "-") fails.push(`${id}: no title`);
@@ -208,7 +276,7 @@ const main = async () => {
   }
 
   const md = ["# One skin, PR 5: measurements", "", "Measured in the browser against the fixture build. `Size / weight` is that of the element holding the title text, not only the h1. `Text height`, `Text left` and `Text top` are the rendered words (a DOM range), and `Row left` / `Row right` the header row; the check fails if any page differs from another by more than 1px. `Coral` counts coral fills inside the page (the rail's Log is outside it). `Clips` counts hard-clipped rows or boxes. The subtitle must be one line.", "", "| Width | Theme | Page | Title | Size / weight | Text height | Text left | Text top | Row left | Row right | Header top | Content | Coral | Sideways | Clips |", "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
-    ...rows.map((r) => `| ${r.w} | ${r.th} | ${r.page} | ${r.title} | ${r.size} / ${r.weight} | ${r.textH} | ${r.textLeft} | ${r.textTop} | ${r.rowLeft} | ${r.rowRight} | ${r.headerTop} | ${r.width} | ${r.coral} | ${r.over} | ${r.clips.length} |`), "", fails.length ? `## Failures (${fails.length})\n\n${fails.map((f) => `- ${f}`).join("\n")}` : "## Result\n\nAll checks pass."];
+    ...rows.map((r) => `| ${r.w} | ${r.th} | ${r.page} | ${r.title} | ${r.size} / ${r.weight} | ${r.textH} | ${r.textLeft} | ${r.textTop} | ${r.rowLeft} | ${r.rowRight} | ${r.headerTop} | ${r.width} | ${r.coral} | ${r.over} | ${r.clips.length} |`), "", "", "## Every other page", "", "Content width and left edge of each page's container, light, at each width.", "", "| Page | Width | Tier | Content | Left | Gutter |", "|---|---|---|---|---|---|", ...otherLines, "", fails.length ? `## Failures (${fails.length})\n\n${fails.map((f) => `- ${f}`).join("\n")}` : "## Result\n\nAll checks pass."];
   fs.writeFileSync(path.join(OUT, "measurements.md"), md.join("\n") + "\n");
 
   const has = spawnSync("which", ["montage"]).status === 0;
@@ -216,7 +284,12 @@ const main = async () => {
     const files = PAGES.map(([n]) => path.join(OUT, `${n}-${w}-${th}.png`));
     spawnSync("montage", ["-label", "%t", "-pointsize", "22", ...files, "-tile", "4x2", "-geometry", "+8+8", "-background", "#888", path.join(OUT, `montage-${w}-${th}.png`)]);
   }
+  if (has) for (const w of WIDTHS) {
+    const files = OTHERS.map(([n]) => path.join(OUT, `others-${n}-${w}.png`));
+    spawnSync("montage", ["-label", "%t", "-pointsize", "22", ...files, "-tile", "5x2", "-geometry", "+8+8", "-background", "#888", path.join(OUT, `montage-others-${w}-light.png`)]);
+  }
   for (const [n] of PAGES) for (const th of THEMES) for (const w of WIDTHS) fs.rmSync(path.join(OUT, `${n}-${w}-${th}.png`), { force: true });
+  for (const [n] of OTHERS) for (const w of WIDTHS) fs.rmSync(path.join(OUT, `others-${n}-${w}.png`), { force: true });
   fs.rmSync(path.join(OUT, ".dist"), { recursive: true, force: true });
 
   console.log(`${rows.length} measurements, ${fails.length} failure(s)`);

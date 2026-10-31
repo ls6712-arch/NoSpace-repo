@@ -169,7 +169,7 @@ export function PursuitRecap() {
   return (
     <div className="min-h-viewport bg-background pb-24">
       <Confetti />
-      <div className="mx-auto flex max-w-md flex-col gap-8 px-4 pt-10">
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-col gap-8 pt-10">
         <header className="text-center">
           <p className="text-small text-muted-foreground">{`Pursuit complete · ${plural(days, "day")}`}</p>
           <motion.h1

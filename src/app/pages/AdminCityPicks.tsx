@@ -123,7 +123,7 @@ export function AdminCityPicks() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pb-10 pt-6">
+    <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-col gap-6 pb-10 pt-6">
       <header className="flex flex-col gap-2">
         <Link to="/you" aria-label="Back" className="-ml-2 inline-flex size-11 items-center justify-center rounded-full">
           <ArrowLeft className="size-6" strokeWidth={1.75} aria-hidden="true" />

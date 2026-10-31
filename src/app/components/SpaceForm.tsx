@@ -236,7 +236,7 @@ export function SpaceForm({
   };
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-xl space-y-6 px-4 pb-24 pt-8">
+    <form onSubmit={submit} className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 space-y-6 pb-24 pt-8">
       <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
         {mode === "create" ? "Create a Space" : "Edit Space"}
       </h1>

@@ -260,7 +260,7 @@ export function Pursuit() {
         loading
         className="min-h-viewport bg-surface pb-24"
         skeleton={
-          <div className="container mx-auto max-w-2xl px-4 pt-8">
+          <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 pt-8">
             <div className="mb-6 h-5" />
             <PursuitHeaderSkeleton />
           </div>
@@ -356,7 +356,7 @@ export function Pursuit() {
 
   return (
     <div className="min-h-viewport bg-surface pb-44 desk:pb-24">
-      <div className="container mx-auto max-w-2xl px-4 pt-8">
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 pt-8">
         <Link
           to={owner ? "/my-space" : "/discover"}
           className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
@@ -669,7 +669,7 @@ export function Pursuit() {
       {/* The one action on a Pursuit you take part in: log the next one. Above the tab bar on a phone. */}
       {ownProject && status === "active" && (
         <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background desk:bottom-0">
-          <div className="mx-auto max-w-md px-4 py-3">
+          <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 py-3">
             <Link to={`/create?pursuit=${ownProject.id}`} className="block">
               <PillButton variant="light" className="w-full">
                 {logLabel(cornerLabel, myDone)}

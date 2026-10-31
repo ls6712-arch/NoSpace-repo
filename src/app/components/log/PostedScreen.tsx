@@ -158,7 +158,7 @@ export function PostedScreen({
 
   return (
     <div className="flex min-h-viewport flex-col bg-background">
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-10 pb-40">
+      <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-1 flex-col gap-6 pt-10 pb-40">
         <motion.p initial={PAGE_FROM} animate={PAGE_TO} transition={page} className="text-center text-body text-muted-foreground">
           {AUDIENCE_LINE[audience]}
         </motion.p>
@@ -273,7 +273,7 @@ export function PostedScreen({
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background">
-        <div className="mx-auto max-w-md px-4 pt-3 pb-[max(1rem,var(--safe-bottom,0px))]">
+        <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 pt-3 pb-[max(1rem,var(--safe-bottom,0px))]">
           <Link to="/my-space" onClick={onDone} className="block">
             <PillButton variant="outline" className="w-full">
               Go to Home

@@ -37,7 +37,7 @@ export function ProductDetail() {
 
   return (
     <div className="min-h-viewport bg-surface py-10">
-      <div className="container mx-auto px-4">
+      <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="size-4" />
           Back

@@ -45,4 +45,24 @@ describe("tab pages", () => {
     expect(read("lib/discoverCorners.ts")).not.toContain("Be the first");
     expect(read("components/discover/CornerTearCard.tsx")).not.toContain("Be the first");
   });
+
+  it("keeps every other page on one of the two widths", () => {
+    // Pages that set no width of their own. The Space pages are being redesigned and keep theirs until that lands;
+    // Welcome, Join and Invite are small centred cards.
+    const SKIP = new Set(["SpacePage.tsx", "SpaceRoute.tsx", "Welcome.tsx", "JoinPursuit.tsx", "InviteArrival.tsx", "DevKit.tsx"]);
+    const dir = path.resolve(__dirname, "../../pages");
+    const bad: string[] = [];
+    const walk = (d: string) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (/\.tsx$/.test(e.name) && !/\.test\.tsx$/.test(e.name) && !SKIP.has(e.name)) {
+          const src = fs.readFileSync(p, "utf8");
+          if (/container mx-auto|mx-auto[^"`]*max-w-(md|lg|xl|2xl|3xl|4xl|5xl|6xl)\b[^"`]*px-\d/.test(src)) bad.push(e.name);
+        }
+      }
+    };
+    walk(dir);
+    expect(bad).toEqual([]);
+  });
 });
