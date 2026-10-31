@@ -96,7 +96,7 @@ export function Week() {
             </Link>
           )}
           {noWindows && !hasPlans ? (
-            <Link to="/discover" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline">
+            <Link to="/discover" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline">
               {WEEK_VIEW.findSomething}
             </Link>
           ) : (
@@ -108,7 +108,7 @@ export function Week() {
             </h2>
             <p className="text-body text-muted-foreground">{WEEK_VIEW.flipBody}</p>
           </section>
-          <Link to="/week/free?from=week" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline">
+          <Link to="/week/free?from=week" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline">
             {WEEK_VIEW.changeFree}
           </Link>
         </>
