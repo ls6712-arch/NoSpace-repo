@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, startProject, type PursuitMember } from "./journal";
+import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, newProject, startProject, type PursuitMember } from "./journal";
 import { fetchCornersLive } from "./cornersLive";
 import { eventPlace } from "./eventTicket";
 import { joinTokenFrom } from "./joinToken";
@@ -12,6 +12,7 @@ import {
   getOrCreateInviteLink,
   inviteUrl,
   joinViaLink,
+  markAsPlan,
   mirrorPursuit,
   mirrorPursuitMeasure,
 } from "./pursuitsRemote";
@@ -136,7 +137,7 @@ export interface Owner {
  * with the plan's day and time as its next session, so a friend who takes the
  * other half has something real to join.
  */
-export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now()): Promise<{ pursuitId?: string; error?: string }> {
+export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now(), opts: { asPlan?: boolean } = {}): Promise<{ pursuitId?: string; error?: string }> {
   try {
     const endsAt = endsAtFor(1, new Date(now));
     const member: PursuitMember = {
@@ -147,7 +148,9 @@ export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now
       status: "joined",
       role: "owner",
     };
-    const project = startProject({
+    // A one-off plan (Bring someone on a listing) is made but never put in the journal, so it is not one of the person's Pursuits.
+    const make = opts.asPlan ? (input: Parameters<typeof startProject>[0]) => newProject({ ...input, plan: true }) : startProject;
+    const project = make({
       title: plan.title,
       hobbySlug: plan.corner.spaceSlug,
       subHobby: plan.corner.slug,
@@ -160,6 +163,7 @@ export async function startSmallPursuit(plan: Plan, owner: Owner, now = Date.now
     await mirrorPursuit(owner.id, project);
     await mirrorPursuitMeasure(project.id, "together", project.measure);
     await mirrorPursuitOpen(project.id, { visibility: "friends", endsAt });
+    if (opts.asPlan) await markAsPlan(project.id);
     if (plan.startsAt) {
       await saveSession(project.id, owner.id, { startsAt: plan.startsAt, place: plan.where, note: plan.kind === "at-home" ? plan.step : plan.title });
     }
@@ -216,10 +220,10 @@ export interface SharedHalf {
  * (links can only be made by an owner): the one just made for an at-home
  * plan, else a small one made now for this plan.
  */
-export async function tearOffHalf(plan: Plan, owner: Owner, ownPursuitId?: string): Promise<{ half?: SharedHalf; ownPursuitId?: string; error?: string }> {
+export async function tearOffHalf(plan: Plan, owner: Owner, ownPursuitId?: string, opts: { asPlan?: boolean } = {}): Promise<{ half?: SharedHalf; ownPursuitId?: string; error?: string }> {
   let pursuitId = ownPursuitId;
   if (!pursuitId) {
-    const r = await startSmallPursuit(plan, owner);
+    const r = await startSmallPursuit(plan, owner, Date.now(), opts);
     if (!r.pursuitId) return { error: r.error ?? ERROR_LINE };
     pursuitId = r.pursuitId;
   }

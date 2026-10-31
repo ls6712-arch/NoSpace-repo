@@ -670,3 +670,18 @@ export function pursuitTogetherHref(post: { id: number | string; userId?: string
   if (title) params.set("title", title);
   return `/pursuits/new?${params.toString()}`;
 }
+
+/**
+ * Marks the Pursuit row as a one-off plan (`pursuits.is_plan`, from the calendar
+ * migration), so the person's other devices and a friend who joins it keep it out
+ * of their Pursuit lists too. Best effort: before that migration is live the
+ * column is not there and the update does nothing.
+ */
+export async function markAsPlan(pursuitId: string): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuits").update({ is_plan: true }).eq("id", pursuitId);
+  } catch {
+    // Without the column the plan is a plain Pursuit on this person's other devices until the migration is applied.
+  }
+}
