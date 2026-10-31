@@ -8,7 +8,7 @@
 // Per width and theme it saves, in order, and FAILS (exit 1) when what the name claims is not on screen:
 //   pick                       the first pick, with its label, time and Keep
 //   not-this-swap              after Not this, the next match is in its place
-//   third-not-this             after the 3rd Not this on the same stretch, Find something and no pick
+//   third-not-this             after the 3rd Not this on the same stretch, plain free time and no pick
 //   ask-to-join                the group that needs approval says Ask to join, not Keep
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -78,15 +78,18 @@ async function main() {
       if ((await pickButton(page, "Kiln open day").count()) > 0) throw new Error("Not this left the same pick on screen");
       await shot("not-this-swap", 2);
 
-      // 3. Two more: the 3rd Not this falls back to Find something. (Glaze swap was never offered: three is the most.)
+      // 3. Two more: the 3rd Not this falls back to plain free time. (Glaze swap was never offered: three is the most.)
       await notThis("Hand-building basics");
       await wait(pickButton(page, "Wheel throwing night"));
       await notThis("Wheel throwing night");
       await page.waitForTimeout(500);
       const left = await page.getByRole("button", { name: /^Stubby’s pick, .*(Kiln open day|Hand-building basics|Wheel throwing night|Glaze swap)/ }).count();
       if (left > 0) throw new Error("a pick was still offered after the 3rd Not this");
-      const find = await (w < 744 ? page.locator("#week-day-2") : page).getByRole("link", { name: "Find something" }).count();
-      if (find === 0) throw new Error("no Find something after the 3rd Not this");
+      // A phone's day tiles keep their Find something link; the wide time grid shows the plain free stretch instead.
+      const find = w < 744
+        ? await page.locator("#week-day-2").getByRole("link", { name: "Find something" }).count()
+        : await page.getByRole("button", { name: /^Free / }).count();
+      if (find === 0) throw new Error("no plain free time after the 3rd Not this");
       await shot("third-not-this", 2);
 
       // 4. A group that needs the host's approval says Ask to join, never Keep.

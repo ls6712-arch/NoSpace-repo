@@ -362,11 +362,12 @@ describe("Calendar, the four views", () => {
       expect(where()).toBe("/calendar?view=day&date=2026-10-31");
     });
 
-    it("draws Week as a time grid with a block for the plan and a Find something in free time", () => {
+    it("draws Week as a time grid with a block for the plan and free time, with no Find something link in the grid", () => {
       hook.value = data({ plans: [plan()] });
       at("/calendar?view=week");
       expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
-      expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
+      expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
+      expect(screen.queryAllByRole("link", { name: "Find something" })).toHaveLength(0);
       expect(screen.getByText("7 PM")).toBeTruthy();
     });
 
@@ -405,7 +406,7 @@ describe("Calendar, the four views", () => {
 
     it("hides free time when it is turned off", () => {
       at("/calendar?view=week");
-      expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
+      expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
       fireEvent.click(screen.getByRole("checkbox", { name: /Free time/ }));
       expect(screen.queryAllByRole("button", { name: /^Free / })).toHaveLength(0);
     });

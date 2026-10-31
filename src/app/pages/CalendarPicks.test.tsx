@@ -116,11 +116,11 @@ describe("Stubby's picks", () => {
     expect(screen.getByRole("button", { name: "Keep" })).toBeTruthy();
   });
 
-  it("says Find something when nothing fits, never filler", () => {
+  it("shows plain free time when nothing fits, never filler", () => {
     withEvents([]);
     show("/calendar?view=week");
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
-    expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
   it("does not pick a thing longer than the free stretch", () => {
@@ -173,7 +173,7 @@ describe("Stubby's picks", () => {
     expect(picks.undoKeep).not.toHaveBeenCalled();
   });
 
-  it("goes back to Find something after three Not this on one stretch", async () => {
+  it("goes back to plain free time after three Not this on one stretch", async () => {
     withEvents([1, 2, 3, 4].map((n) => event(n, { startsAt: ny(10, 31, 18 + n * 0), endsAt: ny(10, 31, 20) })));
     show("/calendar?view=week");
     for (let i = 0; i < 3; i++) {
@@ -182,7 +182,7 @@ describe("Stubby's picks", () => {
       await flush();
     }
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
-    expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
   it("remembers Not this on a reload, in this browser", () => {
@@ -210,12 +210,12 @@ describe("Stubby's picks", () => {
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
   });
 
-  it("hides picks when Stubby's picks is turned off, and shows Find something", () => {
+  it("hides picks when Stubby's picks is turned off, and shows plain free time", () => {
     withEvents([event(1)]);
     show("/calendar?view=week");
     fireEvent.click(screen.getByRole("checkbox", { name: /Stubby’s picks/ }));
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
-    expect(screen.getAllByRole("link", { name: "Find something" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
   it("shows a pick in the month and the list too", () => {
