@@ -795,8 +795,8 @@ A private link that puts your plans and Pursuit sessions in Google, Apple or Out
 | Your calendars | Heading of the section. Google's busy times join it later (calendar PR 5) |
 | Soosh in your calendar | Title of the row. Under it: "Your plans appear in Google, Apple or Outlook." (from the design) |
 | Copy subscribe link | Makes the link the first time, then copies it. Toast: Link copied |
-| Reset link | Makes a new link and stops the old one working. Under it: "Resetting stops the old link working." (to confirm) |
-| This device doesn’t have your link. Reset it to get a new one. | On a device that did not make the link: the link is only kept where it was made, so only Reset link is offered (to confirm) |
+| Reset link | Makes a new link. Under it: "Your old link will stop working, including in any calendar using it." (approved Nov 1, 2026) |
+| This device doesn’t have your link. Reset it to get a new one here. | On a device that did not make the link: the link is only kept where it was made (the database holds only its hash, because the feed shows where someone will be), so only Reset link is offered (approved Nov 1, 2026) |
 
 What the feed holds, and never holds: the next 60 days of your plans and Pursuit sessions, each as its title, place, time and a link to that day on your calendar. Never blocks, free time, budget, notes or other people's names.
 

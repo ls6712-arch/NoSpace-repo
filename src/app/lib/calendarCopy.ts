@@ -78,6 +78,6 @@ export const SUBSCRIBE = {
   hint: "Your plans appear in Google, Apple or Outlook.",
   copy: "Copy subscribe link",
   reset: "Reset link",
-  resetHint: "Resetting stops the old link working.",
-  elsewhere: "This device doesn’t have your link. Reset it to get a new one.",
+  resetHint: "Your old link will stop working, including in any calendar using it.",
+  elsewhere: "This device doesn’t have your link. Reset it to get a new one here.",
 } as const;

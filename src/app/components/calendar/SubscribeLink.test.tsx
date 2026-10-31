@@ -73,7 +73,7 @@ describe("Your calendars", () => {
     expect(write).toHaveBeenCalledWith("https://abc.supabase.co/functions/v1/calendar-feed?token=NEW");
     expect(toasts.ok).toEqual(["Link copied"]);
     expect(screen.getByRole("button", { name: "Reset link" })).toBeTruthy();
-    expect(screen.getByText("Resetting stops the old link working.")).toBeTruthy();
+    expect(screen.getByText("Your old link will stop working, including in any calendar using it.")).toBeTruthy();
   });
 
   it("copies the link this browser already has, without making another", async () => {
@@ -91,7 +91,7 @@ describe("Your calendars", () => {
     feed.local = null;
     await show();
     expect(screen.queryByRole("button", { name: "Copy subscribe link" })).toBeNull();
-    expect(screen.getByText("This device doesn’t have your link. Reset it to get a new one.")).toBeTruthy();
+    expect(screen.getByText("This device doesn’t have your link. Reset it to get a new one here.")).toBeTruthy();
     expect(feed.resetFeedLink).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Reset link" }));
     await flush();
