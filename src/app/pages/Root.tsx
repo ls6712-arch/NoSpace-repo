@@ -13,6 +13,7 @@ import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
 import { AccountStatusBanner } from "../components/AccountStatusBanner";
 import { hasRecoveryKind } from "../lib/recoveryLink";
+import { isTypingTarget, SEARCH_SHORTCUT_EVENT } from "../lib/searchShortcut";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
@@ -81,6 +82,18 @@ export function Root() {
   const location = useLocation();
   useTruncationReveal();
   useScrollMemory();
+
+  // "/" focuses search on desktop, unless someone is typing in a field. Whichever search is on screen answers.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+      if (isTypingTarget(e.target) || !window.matchMedia("(min-width: 744px)").matches) return;
+      e.preventDefault();
+      window.dispatchEvent(new Event(SEARCH_SHORTCUT_EVENT));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // A password reset link just opened in this tab (recoveryLink.ts noted it
   // before the router started): its own screen, whatever page the address said.

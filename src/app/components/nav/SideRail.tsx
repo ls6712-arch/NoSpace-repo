@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { NotificationsMenu } from "../NotificationsMenu";
 import { AccountMenuPanel } from "./AccountMenuPanel";
 import { GlobalSearchBox } from "./GlobalSearchBox";
+import { SEARCH_SHORTCUT_EVENT } from "../../lib/searchShortcut";
 import { RailItem } from "./RailItem";
 import { DISCOVER, HOME, LOG, WEEK, YOU } from "./navItems";
 import { useChatsBadge } from "./useChatsBadge";
@@ -44,6 +45,15 @@ export function SideRail() {
 
   // A new page closes whatever is open.
   useEffect(() => setPanel(null), [pathname]);
+
+  // "/" opens the Search panel (on /search the page's own box answers instead).
+  useEffect(() => {
+    const open = () => {
+      if (pathname !== "/search") setPanel("search");
+    };
+    window.addEventListener(SEARCH_SHORTCUT_EVENT, open);
+    return () => window.removeEventListener(SEARCH_SHORTCUT_EVENT, open);
+  }, [pathname]);
 
   useEffect(() => {
     if (!panel) return;

@@ -10,6 +10,7 @@ import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
 import { ChevronDown } from "lucide-react";
 import { LIST_GRID, PageShell } from "../components/layout/PageShell";
+import { GlobalSearchBox } from "../components/nav/GlobalSearchBox";
 import { JumpChips } from "../components/discover/JumpChips";
 import { IdeaPills } from "../components/discover/IdeaPills";
 import { IdeasRow } from "../components/discover/IdeasRow";
@@ -334,6 +335,8 @@ export function Discover() {
         title="Discover"
       >
         <div className="flex flex-col gap-8">
+        {/* One search: this box only leads to /search, the same one the side menu and the phone magnifier open. */}
+        <GlobalSearchBox launcher />
 
         <JumpChips withMoments={!!user} />
 

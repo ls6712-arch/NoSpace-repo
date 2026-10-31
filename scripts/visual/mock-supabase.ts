@@ -82,6 +82,14 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
           ? { ...base, role: "owner", followState: "none", stubsToNext: 2, planningPaused: false, isPrivate: false }
           : { ...base, role: "public", followState: "none", followsYou: false };
       }
+      // Corners with something on near the person's city (public.corners_with_activity).
+      case "corners_with_activity":
+        return [
+          { corner_key: "food-cooking/pasta", events: 4, pursuits: 1, partners: 0 },
+          { corner_key: "crafts-making/pottery", events: 3, pursuits: 2, partners: 1 },
+          { corner_key: "food-cooking/espresso", events: 1, pursuits: 0, partners: 0 },
+          { corner_key: "crafts-making/embroidery", events: 0, pursuits: 3, partners: 0 },
+        ];
       case "get_profile_moments": return { total: 0, items: [] };
       case "get_profile_stubs": return [];
       case "get_profile_pursuits": return [];

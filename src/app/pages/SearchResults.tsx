@@ -1,5 +1,7 @@
 import { PageShell } from "../components/layout/PageShell";
-import { useEffect, useMemo, useState } from "react";
+import { EmptySearch } from "../components/search/EmptySearch";
+import { SEARCH_SHORTCUT_EVENT } from "../lib/searchShortcut";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { ArrowRight, Search } from "lucide-react";
 import { useUnifiedSearch, type SearchHit } from "../lib/search";
@@ -56,6 +58,16 @@ export function SearchResults() {
   const [filters, setFilters] = useState<Set<FilterId>>(new Set());
   const { groups, loading } = useUnifiedSearch(query);
   const [open, setOpen] = useState<OpenPursuit[]>([]);
+  const [nothingToShow, setNothingToShow] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // The cursor is in the box on arrival (Discover and "/" both end here), and "/" brings it back.
+  useEffect(() => {
+    inputRef.current?.focus();
+    const focus = () => inputRef.current?.focus();
+    window.addEventListener(SEARCH_SHORTCUT_EVENT, focus);
+    return () => window.removeEventListener(SEARCH_SHORTCUT_EVENT, focus);
+  }, []);
 
   useEffect(() => {
     setQuery(searchParams.get("q") ?? "");
@@ -143,6 +155,7 @@ export function SearchResults() {
         <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
           <input
+            ref={inputRef}
             type="search"
             autoFocus
             aria-label="Search Moments, people, Spaces"
@@ -163,7 +176,10 @@ export function SearchResults() {
       </div>
 
       {!q ? (
-        <p className="text-small text-muted-foreground">Type something to search.</p>
+        <>
+          <EmptySearch onEmpty={setNothingToShow} />
+          {nothingToShow && <p className="text-small text-muted-foreground">Type something to search.</p>}
+        </>
       ) : nothing && loading ? (
         <Loadable loading skeleton={<PersonListSkeleton count={4} variant="card" />}>{null}</Loadable>
       ) : (

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { SEARCH_SHORTCUT_EVENT } from "../../lib/searchShortcut";
 import { Compass, MessagesSquare, Package, PenLine, Search, Sparkle, UserRound, type LucideIcon } from "lucide-react";
 import { Input } from "../ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -31,12 +32,38 @@ const RESULT_ICON: Record<SearchGroup, LucideIcon> = {
  * Search panel are this one component. `onDone` runs after a result or the
  * results page is chosen, and when Escape is pressed.
  */
-export function GlobalSearchBox({ onDone, autoFocus = false, inline = false }: { onDone?: () => void; autoFocus?: boolean; inline?: boolean }) {
+export function GlobalSearchBox({
+  onDone,
+  autoFocus = false,
+  inline = false,
+  launcher = false,
+}: {
+  onDone?: () => void;
+  autoFocus?: boolean;
+  inline?: boolean;
+  /**
+   * A page-level box (Discover's) that only leads to the search: focusing or tapping it opens /search, where the
+   * cursor is already in the box. It never shows results of its own.
+   */
+  launcher?: boolean;
+}) {
   const navigate = useNavigate();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { all: results } = useUnifiedSearch(query);
+
+  // "/" on desktop: the box that is on screen takes the focus (the launcher never does, it would just navigate).
+  useEffect(() => {
+    if (launcher || inline) return;
+    const focus = () => {
+      const el = inputRef.current;
+      if (el && el.offsetParent !== null) el.focus();
+    };
+    window.addEventListener(SEARCH_SHORTCUT_EVENT, focus);
+    return () => window.removeEventListener(SEARCH_SHORTCUT_EVENT, focus);
+  }, [launcher, inline]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -71,10 +98,28 @@ export function GlobalSearchBox({ onDone, autoFocus = false, inline = false }: {
     }
   };
 
+  if (launcher) {
+    return (
+      <div className="relative w-full">
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        <Input
+          type="search"
+          readOnly
+          aria-label="Search Moments, people, Spaces"
+          placeholder="Search Moments, people, Spaces"
+          className="min-h-12 w-full rounded-full border-border bg-card pl-11 pr-4 text-body"
+          onFocus={() => navigate("/search")}
+          onClick={() => navigate("/search")}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full" ref={ref}>
       <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
+        ref={inputRef}
         type="search"
         autoFocus={autoFocus}
         aria-label="Search Moments, people, Spaces"
