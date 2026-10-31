@@ -8,6 +8,7 @@ import type { Post } from "../data/posts";
 import { buildFeed } from "../lib/homeFeed";
 import { FeedCard } from "../components/home/FeedCard";
 import { HomeHeader } from "../components/home/HomeHeader";
+import { LIST_GRID, PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell";
 import { YourWeekCard } from "../components/home/YourWeekCard";
 import { BestFitCard, type CardState } from "../components/home/BestFitCard";
 import { MoreWaysList } from "../components/home/MoreWaysList";
@@ -117,8 +118,9 @@ export function HomeFeed() {
 
 
   return (
-    <div
-      className="mx-auto w-full max-w-md px-4 pb-8 pt-4 max-desk:pt-[calc(var(--safe-top)+1rem)]"
+    <PageShell
+      title={greetingName ? `Hi ${greetingName}` : GREETING_NO_NAME}
+      subtitle={subline}
       onTouchStart={(e) => {
         touchStart.current = window.scrollY <= 0 ? e.touches[0].clientY : null;
       }}
@@ -131,36 +133,33 @@ export function HomeFeed() {
         if (pull >= PULL_THRESHOLD) void refresh();
         else setPull(0);
       }}
+      topBar={
+        <>
+          <motion.div
+            aria-live="polite"
+            animate={{ height: refreshing ? 32 : pull > 8 ? Math.min(pull / 2, 32) : 0, opacity: refreshing || pull > 8 ? 1 : 0 }}
+            transition={pop}
+            className="flex items-center justify-center overflow-hidden text-small text-muted-foreground"
+          >
+            {refreshing ? "Refreshing…" : pull >= PULL_THRESHOLD ? "Let go to refresh" : "Pull to refresh"}
+          </motion.div>
+          <HomeHeader />
+        </>
+      }
     >
-      <motion.div
-        aria-live="polite"
-        animate={{ height: refreshing ? 32 : pull > 8 ? Math.min(pull / 2, 32) : 0, opacity: refreshing || pull > 8 ? 1 : 0 }}
-        transition={pop}
-        className="flex items-center justify-center overflow-hidden text-small text-muted-foreground"
-      >
-        {refreshing ? "Refreshing…" : pull >= PULL_THRESHOLD ? "Let go to refresh" : "Pull to refresh"}
-      </motion.div>
-
-      <HomeHeader />
-
-      <div className="flex flex-col gap-1 pb-5 pt-3">
-        <h1 className="text-title" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
-          {greetingName ? `Hi ${greetingName}` : GREETING_NO_NAME}
-        </h1>
-        <p className="text-small text-muted-foreground">{subline}</p>
-      </div>
-
       {home.status === "loading" ? (
-        <div className="flex flex-col gap-6" aria-hidden="true">
-          <Skeleton className="h-[148px] w-full rounded-card" />
+        <div className={PAGE_GRID} aria-hidden="true">
+          <Skeleton className={`h-[148px] w-full rounded-card ${SPAN_GRID}`} />
           <Skeleton className="h-[372px] w-full rounded-card" />
           <Skeleton className="h-[92px] w-full rounded-card" />
         </div>
       ) : (
-        <div className="flex flex-col gap-6">
-          <YourWeekCard windows={home.windows} left={home.left} plans={home.plans} now={now} />
+        <div className={PAGE_GRID}>
+          <div className={SPAN_GRID}>
+            <YourWeekCard windows={home.windows} left={home.left} plans={home.plans} now={now} />
+          </div>
           {best && (
-            <section aria-labelledby="home-best-fit" className="flex flex-col gap-2.5">
+            <section aria-labelledby="home-best-fit" className={`flex flex-col gap-2.5 ${SPAN_GRID}`}>
               <h2 id="home-best-fit" className="text-small font-semibold text-muted-foreground">
                 Best fit for you
               </h2>
@@ -174,19 +173,23 @@ export function HomeFeed() {
               />
             </section>
           )}
-          <MoreWaysList
-            items={home.items.slice(1, 4)}
-            firstPosition={1}
-            states={cardStates}
-            onShown={(item, position) => recordSuggestion("shown", item, position)}
-            onOpen={(item, position) => recordSuggestion("opened", item, position)}
-            onPrimary={(item, position) => void onPrimary(item, position)}
-          />
-          <LogMomentCard />
+          <div className={SPAN_GRID}>
+            <MoreWaysList
+              items={home.items.slice(1, 4)}
+              firstPosition={1}
+              states={cardStates}
+              onShown={(item, position) => recordSuggestion("shown", item, position)}
+              onOpen={(item, position) => recordSuggestion("opened", item, position)}
+              onPrimary={(item, position) => void onPrimary(item, position)}
+            />
+          </div>
+          <div className={SPAN_GRID}>
+            <LogMomentCard />
+          </div>
         </div>
       )}
 
-      <h2 className="mb-3 mt-8 text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
+      <h2 className="mb-3 mt-8 text-lead" style={{ fontFamily: "var(--font-display)" }}>
         From your people
       </h2>
 
@@ -197,7 +200,7 @@ export function HomeFeed() {
           <HomeEmpty />
         ) : (
           <>
-            <div>
+            <div className={`${LIST_GRID} items-start`}>
               {feed.map((item, i) => (
                 <FeedCard key={item.post.id} post={item.post} source={item.source} onOpen={open} priority={i === 0} />
               ))}
@@ -213,6 +216,6 @@ export function HomeFeed() {
       </Loadable>
 
       <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && close()} />
-    </div>
+    </PageShell>
   );
 }

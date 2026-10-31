@@ -1,3 +1,4 @@
+import { PageShell } from "../components/layout/PageShell";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { Handshake, ImageOff, ImagePlus, MessageCircle, MessagesSquare, Send, Trash2 } from "lucide-react";
@@ -34,6 +35,9 @@ import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { formatWhen } from "../lib/dates";
+
+/** The selected segment is the selected-chip style: the text colour as fill, the page colour as text. */
+const SEGMENT = "data-[state=active]:bg-foreground data-[state=active]:text-background";
 
 /**
  * Messages live inside an accepted Make together or Explore together, or a
@@ -374,7 +378,7 @@ function ConversationPanel({
               // :hover doesn't apply) covers both without a gesture library.
               const canUnsend = mine && renderKind !== "deleted" && !m.status && onUnsend && typeof m.id !== "string";
               return (
-                <div key={m.id} className={`group ${mine ? "ml-auto max-w-[80%]" : "max-w-[80%]"}`}>
+                <div key={m.id} className={`group flex w-fit max-w-[75%] flex-col ${mine ? "ml-auto items-end" : "items-start"}`}>
                   {renderKind === "deleted" ? (
                     <p className="rounded-card border border-dashed border-[var(--hairline)] px-3.5 py-2 text-small italic text-muted-foreground">
                       Message deleted
@@ -403,13 +407,13 @@ function ConversationPanel({
                   ) : renderKind === "pursuit" ? (
                     <SharedContentCard kind="pursuit" pursuitId={m.sharedPursuitId} />
                   ) : (
-                    <div className="relative">
+                    <div className="relative w-fit max-w-full">
                       <div
-                        className={`rounded-card px-3.5 py-2 text-small ${
+                        className={`rounded-card px-3.5 py-2 text-small break-words ${
                           m.status === "failed"
                             ? "border border-dashed border-[var(--accent-text)] bg-surface-muted text-foreground"
                             : mine
-                              ? `text-on-brand [background-color:var(--accent-text)] ${m.status === "sending" ? "opacity-60" : ""}`
+                              ? `bg-foreground text-background ${m.status === "sending" ? "opacity-60" : ""}`
                               : "bg-surface-muted"
                         }`}
                       >
@@ -503,9 +507,9 @@ function ConversationPanel({
           }}
           disabled={composerDisabled}
           placeholder={composerPlaceholder}
-          className="flex-1"
+          className="flex-1 border-border"
         />
-        <Button variant="coral" size="icon" onClick={onSend} aria-label="Send" disabled={composerDisabled}>
+        <Button size="icon" className="bg-foreground text-background hover:bg-foreground/85" onClick={onSend} aria-label="Send" disabled={composerDisabled}>
           <Send className="size-4" />
         </Button>
       </div>
@@ -841,26 +845,22 @@ export function Messages() {
   const requestCount = requests.length;
 
   return (
-    <div className="min-h-viewport bg-surface py-10 tab:py-14">
-      <div className="container mx-auto max-w-4xl px-4">
-        <div className="mb-1 flex items-center justify-between gap-3">
-          <h1 className="text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Messages
-          </h1>
-          <Button variant="coral" size="sm" onClick={openPicker}>
-            New message
-          </Button>
-        </div>
-        <p className="mb-6 text-small text-muted-foreground">
-          People who accepted making or exploring something together, and anyone who’s sent or
-          received a direct message.
-        </p>
+    <PageShell
+      title="Chats"
+      subtitle="People who accepted making or exploring something together, and anyone who’s sent or received a direct message."
+      action={
+        <Button variant="outline" onClick={openPicker}>
+          New message
+        </Button>
+      }
+    >
+      <div>
         {newMessageDialog}
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="chats">Chats</TabsTrigger>
-            <TabsTrigger value="requests">
+            <TabsTrigger value="chats" className={SEGMENT}>Chats</TabsTrigger>
+            <TabsTrigger value="requests" className={SEGMENT}>
               Message requests{requestCount > 0 ? ` (${requestCount})` : ""}
             </TabsTrigger>
           </TabsList>
@@ -1037,7 +1037,7 @@ export function Messages() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -1068,8 +1068,8 @@ function RequestCard({ request }: { request: Participation }) {
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
-          variant="coral"
           size="sm"
+          className="bg-foreground text-background hover:bg-foreground/85"
           disabled={!!busy}
           onClick={async () => {
             setBusy("accept");

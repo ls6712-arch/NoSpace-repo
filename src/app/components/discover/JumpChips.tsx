@@ -12,7 +12,7 @@ export const JUMP_SECTIONS = [
 export function JumpChips({ withMoments = true }: { withMoments?: boolean }) {
   const reduced = usePrefersReducedMotion();
   return (
-    <nav aria-label="Sections" className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 tab:-mx-8 tab:px-8 [scrollbar-width:none]">
+    <nav aria-label="Sections" className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 tab:-mx-6 tab:px-6 desk:-mx-8 desk:px-8 [scrollbar-width:none]">
       {JUMP_SECTIONS.filter((s) => withMoments || s.id !== "discover-moments").map((s) => (
         <Chip
           key={s.id}

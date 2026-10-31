@@ -682,7 +682,7 @@ Words around the page, approved Oct 31, 2026:
 | Corner card, At home tab | The idea's title, a short thing to do (for example Start a sourdough starter) |
 | Corner card, With people tab | The title of the soonest open Pursuit for that Corner; with no name, Find people to go with |
 | Corner card, At a place tab | The name of the nearest Space for that Corner (same neighborhood, then same city); with no name, Find a place near you |
-| A tab with nothing behind it | Be the first (opens Create a Pursuit from With people, Create a Space from At a place) |
+| A tab with nothing behind it | Left out. The card shows only the tabs that have something (Oct 31, 2026, replaces "Be the first") |
 | Ideas, nothing fits | Nothing fits that mix yet, with the link Show more ideas (it loosens Spend to Treat me) |
 | Feed, nothing new | Nothing new nearby yet, with the link Log a Moment |
 | Feed heading with no city saved | What people are making |

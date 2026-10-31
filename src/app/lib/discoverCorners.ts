@@ -12,7 +12,7 @@ import type { CornerNames } from "./discoverCornerNames";
  * guide's own description, the At home line is the idea's title (a short thing to do),
  * With people names the soonest open Pursuit and At a place the nearest Space (or says
  * "Find people to go with" / "Find a place near you" when there is no name), and a tab
- * with nothing there says "Be the first".
+ * with nothing there is left out.
  */
 
 /** Corners with an idea (so a guide), not hidden from browsing, not 21 and over. */
@@ -47,8 +47,6 @@ export interface CornerTab {
   id: CornerTabId;
   label: string;
   line: string;
-  /** False when nothing is there yet: the tab says "Be the first" and starts something. */
-  supplied: boolean;
   to: string;
 }
 
@@ -62,8 +60,6 @@ export interface CornerCardModel {
 }
 
 export const TAB_LABELS: Record<CornerTabId, string> = { home: "At home", people: "With people", place: "At a place" };
-/** Approved Oct 31, 2026 (docs/glossary.md, Discover v2). */
-export const BE_THE_FIRST = "Be the first";
 /** What a tab says when there is something there but no name to show for it. */
 export const PEOPLE_FALLBACK = "Find people to go with";
 export const PLACE_FALLBACK = "Find a place near you";
@@ -77,21 +73,17 @@ export function cornerCardModel(c: DiscoverCorner, names?: CornerNames): CornerC
   const guide = cornerGuide(spaceSlug, slug);
   const idea = cornerIdea(spaceSlug, slug);
   const page = cornerPath(spaceSlug, slug);
-  const create = `hobby=${encodeURIComponent(spaceSlug)}&sub=${encodeURIComponent(slug)}`;
   return {
     key: c.cornerKey,
     spaceSlug,
     slug,
     name: cornerName(slug),
     hook: guide?.about ?? "",
+    // A tab with nothing behind it is left out, not filled with an invitation.
     tabs: [
-      { id: "home", label: TAB_LABELS.home, line: idea?.ideaTitle ?? guide?.step ?? BE_THE_FIRST, supplied: c.hasHome && !!guide, to: `${page}?section=home` },
-      c.hasGroup
-        ? { id: "people", label: TAB_LABELS.people, line: names?.people ?? PEOPLE_FALLBACK, supplied: true, to: `${page}?section=people` }
-        : { id: "people", label: TAB_LABELS.people, line: BE_THE_FIRST, supplied: false, to: `/pursuits/new?${create}&together=1` },
-      c.hasPlace
-        ? { id: "place", label: TAB_LABELS.place, line: names?.place ?? PLACE_FALLBACK, supplied: true, to: `${page}?section=place` }
-        : { id: "place", label: TAB_LABELS.place, line: BE_THE_FIRST, supplied: false, to: "/create-space" },
-    ],
+      c.hasHome && guide ? { id: "home", label: TAB_LABELS.home, line: idea?.ideaTitle ?? guide.step ?? "", to: `${page}?section=home` } : null,
+      c.hasGroup ? { id: "people", label: TAB_LABELS.people, line: names?.people ?? PEOPLE_FALLBACK, to: `${page}?section=people` } : null,
+      c.hasPlace ? { id: "place", label: TAB_LABELS.place, line: names?.place ?? PLACE_FALLBACK, to: `${page}?section=place` } : null,
+    ].filter((t): t is CornerTab => t !== null && t.line !== ""),
   };
 }

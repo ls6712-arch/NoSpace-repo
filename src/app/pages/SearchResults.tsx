@@ -1,3 +1,4 @@
+import { PageShell } from "../components/layout/PageShell";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { ArrowRight, Search } from "lucide-react";
@@ -35,7 +36,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
       <h2 id={id} className="mb-2 text-small font-semibold text-muted-foreground">
         {title}
       </h2>
-      <ul className="flex flex-col gap-2">{children}</ul>
+      <ul className="grid gap-2 desk:grid-cols-2 desk:gap-3">{children}</ul>
     </section>
   );
 }
@@ -127,7 +128,7 @@ export function SearchResults() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 pb-10 pt-4">
+    <PageShell title="Search">
       <form
         role="search"
         onSubmit={(e) => {
@@ -151,9 +152,6 @@ export function SearchResults() {
             className="min-h-12 w-full rounded-full border border-border bg-card py-3 pl-11 pr-4 text-body text-foreground outline-none focus-visible:border-accent"
           />
         </div>
-        <button type="button" onClick={() => void navigate(-1)} className="min-h-11 shrink-0 px-1 text-body text-muted-foreground hover:text-foreground">
-          Cancel
-        </button>
       </form>
 
       <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="Filters">
@@ -269,6 +267,6 @@ export function SearchResults() {
           )}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

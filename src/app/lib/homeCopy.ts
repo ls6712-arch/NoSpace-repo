@@ -10,7 +10,6 @@ export const ADD_FREE_TIME_COPY = "Add when you’re usually free";
 export const WEEK_VIEW = {
   title: "Your week",
   place: "New York",
-  backToHome: "Back to Home",
   keyPlan: "Plan",
   keyFree: "Free",
   cityPicks: "This week in New York",

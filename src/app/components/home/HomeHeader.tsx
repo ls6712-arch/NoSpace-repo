@@ -29,8 +29,8 @@ export function HomeHeader() {
   const name = profile?.display_name?.trim() ?? "";
 
   return (
-    <header className="-mx-1 mb-2 flex items-center justify-between rail:hidden">
-      <Link to="/my-space" aria-label={APP_NAME} className="px-1 text-display font-extrabold leading-none text-foreground" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.03em" }}>
+    <header className="-mx-1 flex min-h-[65px] items-center justify-between rail:hidden">
+      <Link to="/my-space" aria-label={APP_NAME} className="px-1 text-title font-extrabold leading-none text-foreground" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.03em" }}>
         {APP_NAME}
       </Link>
       <nav aria-label="Inbox and profile" className="flex items-center">

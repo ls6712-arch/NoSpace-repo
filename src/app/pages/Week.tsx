@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
+import { PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { ErrorNotice } from "../components/StateViews";
@@ -65,55 +65,45 @@ export function Week() {
   const hasPlans = contents.some((c) => c.plans.length > 0);
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-6 px-4 pb-8 pt-4 max-desk:pt-[calc(var(--safe-top)+1rem)]">
-      <header className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <Link to="/my-space" aria-label={WEEK_VIEW.backToHome} className="-ml-2 inline-flex size-11 items-center justify-center rounded-full text-foreground">
-            <ArrowLeft className="size-6" strokeWidth={1.75} aria-hidden="true" />
-          </Link>
-        </div>
-        <h1 className="text-title" style={{ fontFamily: "var(--font-display)", letterSpacing: "-0.02em" }}>
-          {WEEK_VIEW.title}
-        </h1>
-        <p className="text-body text-muted-foreground">
-          {rangeLine(days, data.now)} · {WEEK_VIEW.place}
-        </p>
-      </header>
-
+    <PageShell title={WEEK_VIEW.title} subtitle={`${rangeLine(days, data.now)} · ${WEEK_VIEW.place}`}>
       {data.status === "loading" && <WeekSkeleton />}
       {data.status === "error" && <ErrorNotice onRetry={data.reload} />}
       {data.status === "ready" && (
-        <>
-          <DayStrip days={contents} selected={selected} onSelect={onSelect} />
-          <GlanceCard goodHours={data.goodHours} windows={data.windows} budget={data.budget} spend={spend} onBudget={(b) => void onBudget(b)} />
-          <CityPicksRow picks={data.picks} />
+        <div className={PAGE_GRID}>
+          <div className={SPAN_GRID}>
+            <DayStrip days={contents} selected={selected} onSelect={onSelect} />
+          </div>
+          <div className={SPAN_GRID}>
+            <GlanceCard goodHours={data.goodHours} windows={data.windows} budget={data.budget} spend={spend} onBudget={(b) => void onBudget(b)} />
+          </div>
+          <div className={SPAN_GRID}>
+            <CityPicksRow picks={data.picks} />
+          </div>
           {noWindows && (
             <Link
               to="/week/free?from=week"
-              className="flex min-h-14 items-center rounded-card border-[1.5px] border-dashed border-border px-4 py-3 text-body font-semibold text-foreground"
+              className={`flex min-h-14 items-center rounded-card border-[1.5px] border-dashed border-border px-4 py-3 text-body font-semibold text-foreground ${SPAN_GRID}`}
             >
               {WEEK_VIEW.noFreeTitle}
             </Link>
           )}
           {noWindows && !hasPlans ? (
-            <Link to="/discover" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline">
+            <Link to="/discover" className={`inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline ${SPAN_GRID}`}>
               {WEEK_VIEW.findSomething}
             </Link>
           ) : (
             contents.map((c) => <DaySection key={c.day.offset} content={c} now={data.now} passes={data.passes} onBring={(p) => void onBring(p)} />)
           )}
-          <section className="flex flex-col gap-1 rounded-card border border-border bg-card p-4">
-            <h2 className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
-              {WEEK_VIEW.flipTitle}
-            </h2>
+          <section className={`flex flex-col gap-1 rounded-card border border-border bg-card p-4 ${SPAN_GRID}`}>
+            <h2 className="text-lead">{WEEK_VIEW.flipTitle}</h2>
             <p className="text-body text-muted-foreground">{WEEK_VIEW.flipBody}</p>
           </section>
-          <Link to="/week/free?from=week" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline">
+          <Link to="/week/free?from=week" className={`inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline ${SPAN_GRID}`}>
             {WEEK_VIEW.changeFree}
           </Link>
-        </>
+        </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

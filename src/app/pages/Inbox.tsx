@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
+import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useContent } from "../context/ContentContext";
@@ -130,13 +131,11 @@ export function Inbox() {
 
   if (isConfigured && !user) {
     return (
-      <div className="mx-auto w-full max-w-md px-4 py-10">
-        <h1 className="mb-2 text-title">Notifications</h1>
-        <p className="mb-6 text-small text-muted-foreground">Requests and activity live here once you have an account.</p>
+      <PageShell title="Notifications" subtitle="Requests and activity live here once you have an account.">
         <Link to="/login?next=/inbox" className="inline-flex min-h-11 items-center rounded-full bg-accent px-6 text-body font-semibold text-accent-foreground">
           Log in
         </Link>
-      </div>
+      </PageShell>
     );
   }
 
@@ -146,11 +145,7 @@ export function Inbox() {
   const earlier = social.notifications;
 
   return (
-    <div className="mx-auto w-full max-w-md px-4 pb-10 pt-4">
-      <Link to="/my-space" className="inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground">
-        ← Home
-      </Link>
-      <h1 className="mb-5 text-title">Notifications</h1>
+    <PageShell title="Notifications">
 
       <Loadable loading={followRequestsOrNull === null && !social.loaded} skeleton={<ListSkeleton count={4} />}>
         {needsCount > 0 && (
@@ -161,14 +156,14 @@ export function Inbox() {
             <ul className="flex flex-col">
               <AnimatePresence initial={false}>
                 {shownEvents.map((e) => (
-                  <Collapsing key={`event:${e.session.id}`} id={`event:${e.session.id}`} className="mb-3 rounded-card bg-accent p-4 text-accent-foreground">
+                  <Collapsing key={`event:${e.session.id}`} id={`event:${e.session.id}`} className="mb-3 rounded-card border border-border bg-card p-4">
                     <p className="text-body font-semibold">{`${e.title.slice(0, 80)} is ${formatDateTime(e.session.startsAt)}`}</p>
                     <p className="mt-1 text-small">{[e.session.place, e.session.going.length > 0 ? `${e.session.going.length} going` : undefined].filter(Boolean).join(" · ")}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <PillButton variant="ink" disabled={busy === `event:${e.session.id}`} onClick={() => void answerEvent(e, true)}>
+                      <PillButton variant="light" disabled={busy === `event:${e.session.id}`} onClick={() => void answerEvent(e, true)}>
                         I’m going
                       </PillButton>
-                      <PillButton variant="outline" className="border-foreground text-foreground" onClick={() => void answerEvent(e, false)}>
+                      <PillButton variant="outline" onClick={() => void answerEvent(e, false)}>
                         Can’t make it
                       </PillButton>
                     </div>
@@ -178,7 +173,7 @@ export function Inbox() {
                   <Collapsing key={`join:${j.pursuitId}:${j.userId}`} id={`join:${j.pursuitId}:${j.userId}`} className="mb-3 rounded-card bg-card p-4">
                     <p className="text-body font-semibold">{`${j.name.slice(0, 60)} wants to join “${j.pursuitTitle.slice(0, 80)}”`}</p>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <PillButton disabled={busy === j.userId + j.pursuitId} onClick={() => void answerJoin(j, true)}>
+                      <PillButton variant="light" disabled={busy === j.userId + j.pursuitId} onClick={() => void answerJoin(j, true)}>
                         Let in
                       </PillButton>
                       <PillButton variant="outline" onClick={() => void answerJoin(j, false)}>
@@ -196,7 +191,7 @@ export function Inbox() {
                   <Collapsing key={`follow:${r.followerId}`} id={`follow:${r.followerId}`} className="mb-3 rounded-card bg-card p-4">
                     <p className="text-body font-semibold">{`${r.displayName.slice(0, 60)} wants to follow you`}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <PillButton disabled={busy === r.followerId} onClick={() => void answerFollow(r.followerId, true)}>
+                      <PillButton variant="light" disabled={busy === r.followerId} onClick={() => void answerFollow(r.followerId, true)}>
                         Accept
                       </PillButton>
                       <PillButton variant="outline" disabled={busy === r.followerId} onClick={() => void answerFollow(r.followerId, false)}>
@@ -238,22 +233,23 @@ export function Inbox() {
                 </li>
               ))}
               {earlier.map((n) => (
-                <li key={n.id} className="flex items-center gap-3">
+                <li key={n.id} className={`flex items-center gap-3 rounded-card p-2 ${n.read ? "" : "bg-surface-raised"}`}>
                   <Avatar className="size-10 shrink-0">
                     {n.actorAvatar && <AvatarImage src={n.actorAvatar} alt="" className="object-cover" />}
                     <AvatarFallback className="text-small">{initials(n.actorName ?? "Someone")}</AvatarFallback>
                   </Avatar>
-                  <p className={`min-w-0 text-body ${n.read ? "text-muted-foreground" : ""}`}>
+                  <p className={`min-w-0 flex-1 text-body ${n.read ? "text-muted-foreground" : ""}`}>
                     {!n.read && <span className="sr-only">Unread. </span>}
                     {!(n.actorName && n.body.startsWith(n.actorName)) && <strong className="font-semibold">{n.actorName ?? "Someone"} </strong>}
                     {notificationText(n.body)}
                   </p>
+                  {!n.read && <span className="size-2 shrink-0 rounded-full [background-color:var(--accent-text)]" aria-hidden="true" />}
                 </li>
               ))}
             </ul>
           )}
         </section>
       </Loadable>
-    </div>
+    </PageShell>
   );
 }
