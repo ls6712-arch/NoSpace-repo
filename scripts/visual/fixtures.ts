@@ -164,5 +164,5 @@ export function buildFixtures(now = new Date()): Fixtures {
   // config.ts (which can't be imported here: it reads import.meta.env).
   const termsVersion = fs.readFileSync(new URL("../../src/app/config.ts", import.meta.url), "utf8").match(/TERMS_VERSION = "([^"]+)"/)?.[1] ?? "";
   const terms_acceptances = profiles.map((p) => ({ user_id: p.id, terms_version: termsVersion, accepted_at: ago(119) }));
-  return { ...empties, ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs } as unknown as Fixtures), profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
+  return { ...empties, ...({ pursuit_sessions, pursuit_session_rsvps: [], stubs, profile_private: [{ user_id: ME, city: "New York" }] } as unknown as Fixtures), profile_follows, terms_acceptances, profiles, posts, pursuits, pursuit_members, pursuit_plans, pursuit_progress, spaces, space_members, space_moments, space_events, event_rsvps, participations, messages, notifications, profile_settings, app_config, categories };
 }

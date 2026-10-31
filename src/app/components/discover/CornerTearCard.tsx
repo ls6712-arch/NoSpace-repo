@@ -1,15 +1,14 @@
 import { Link } from "react-router";
 import { SuggestionPhoto } from "../home/SuggestionPhoto";
 import { PillButton } from "../ui/PillButton";
-import { cornerStyle } from "../../lib/categoryStyle";
 import type { CornerCardModel } from "../../lib/discoverCorners";
 import { useShownOnce } from "../../lib/useShownOnce";
 
 /**
  * A tear-off card for a Corner new to you: the tile, its name and a hook line, a
  * Follow button, a dotted perforation, then three tabs (At home, With people, At a
- * place), each a link to the Corner page on that section. A tab with nothing there
- * says "Be the first" and opens Create a Pursuit or Create a Space.
+ * place), each a link to the Corner page on that section. A tab with nothing
+ * there is left out, so the row never shows an empty invitation.
  */
 export function CornerTearCard({
   model,
@@ -41,22 +40,25 @@ export function CornerTearCard({
           Follow
         </PillButton>
       </div>
-      <div className="mx-4 border-t-2 border-dotted border-border" aria-hidden="true" />
-      <ul className="grid grid-cols-3">
-        {model.tabs.map((tab, i) => (
-          <li key={tab.id} className={i > 0 ? "border-l-2 border-dotted border-border" : ""}>
-            <Link
-              to={tab.to}
-              onClick={() => onOpen(model, position)}
-              style={tab.supplied ? undefined : cornerStyle(model.spaceSlug, model.slug)}
-              className="flex min-h-16 flex-col gap-0.5 p-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-            >
-              <span className="text-caption text-muted-foreground">{tab.label}</span>
-              <span className={`line-clamp-3 text-small leading-snug ${tab.supplied ? "font-semibold" : "font-semibold text-accent-text"}`}>{tab.line}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {model.tabs.length > 0 && (
+        <>
+          <div className="mx-4 border-t-2 border-dotted border-border" aria-hidden="true" />
+          <ul className={`grid ${model.tabs.length === 1 ? "grid-cols-1" : model.tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+            {model.tabs.map((tab, i) => (
+              <li key={tab.id} className={i > 0 ? "border-l-2 border-dotted border-border" : ""}>
+                <Link
+                  to={tab.to}
+                  onClick={() => onOpen(model, position)}
+                  className="flex min-h-16 flex-col gap-0.5 p-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                >
+                  <span className="text-caption text-muted-foreground">{tab.label}</span>
+                  <span className="line-clamp-3 text-small font-semibold leading-snug">{tab.line}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </li>
   );
 }

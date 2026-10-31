@@ -72,6 +72,20 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
               session_place: "Indiranagar", people: [{ name: "Priya", avatar: null }, { name: "Sneha", avatar: null }, { name: "Arjun", avatar: null }], mine: null,
             }]
           : [];
+      // The profile page (public.get_profile): the owner's shape for the signed-in person, a public one for anyone else.
+      case "get_profile": {
+        const profiles = (fixtures.profiles ?? []) as AnyRow[];
+        const row = profiles.find((p) => p.username === args.p_username);
+        if (!row) return null;
+        const base = { id: row.id, username: row.username, displayName: row.display_name, avatarUrl: row.avatar_url ?? null, private: false, neighborhood: null, bio: row.bio ?? null, stubCount: 3, pursuitCount: 2, friendCount: 4, level: { index: 1, name: "Getting started" } };
+        return row.id === session.user.id
+          ? { ...base, role: "owner", followState: "none", stubsToNext: 2, planningPaused: false, isPrivate: false }
+          : { ...base, role: "public", followState: "none", followsYou: false };
+      }
+      case "get_profile_moments": return { total: 0, items: [] };
+      case "get_profile_stubs": return [];
+      case "get_profile_pursuits": return [];
+      case "get_my_planning": return { availability: [], freeHoursPerWeek: null, monthlyBudgetCents: null, memberships: [], shareMembershipsWithFriends: false, calendarConnected: false, planningPaused: false };
       // Only the caller's own owner-only profile columns (public.my_profile_private).
       case "my_profile_private": {
         const me = (fixtures.profiles as AnyRow[] | undefined)?.find((p) => p.id === session.user.id);

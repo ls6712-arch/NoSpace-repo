@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { SignUpPrompt } from "../SignUpPrompt";
+import { PageShell } from "../layout/PageShell";
 import { SETTINGS_SECTIONS } from "./sections";
 
 /**
@@ -40,13 +41,23 @@ export function SettingsShell({
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 tab:py-12">
+    <PageShell
+      title="Settings"
+      topBar={
+        isIndexRoute ? null : (
+          <Link
+            to="/settings"
+            className="mb-2 inline-flex min-h-11 items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground desk:hidden"
+          >
+            <ChevronLeft className="size-4" aria-hidden="true" />
+            Settings
+          </Link>
+        )
+      }
+    >
       {/* Desktop / lg+ */}
       <div className="hidden desk:grid desk:grid-cols-[220px_1fr] desk:gap-12">
         <nav aria-label="Settings sections" className="sticky top-24 self-start">
-          <h1 className="mb-5 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Settings
-          </h1>
           <ul className="space-y-0.5">
             {SETTINGS_SECTIONS.map((s) => {
               const isActive = s.key === active.key;
@@ -58,14 +69,14 @@ export function SettingsShell({
                     className={
                       "flex min-h-11 items-center gap-2.5 rounded-control px-3 py-2 text-small transition-colors " +
                       (isActive
-                        ? "bg-accent/10 text-foreground"
+                        ? "bg-foreground text-background"
                         : "text-muted-foreground hover:bg-surface-muted hover:text-foreground")
                     }
                   >
                     <span
                       className="ns-section-kicker w-4 shrink-0"
                       aria-hidden="true"
-                      style={{ color: isActive ? "var(--accent)" : undefined }}
+                      style={undefined}
                     >
                       {s.n}
                     </span>
@@ -76,16 +87,13 @@ export function SettingsShell({
             })}
           </ul>
         </nav>
-        <div className="max-w-[680px]">{children}</div>
+        <div className="min-w-0">{children}</div>
       </div>
 
       {/* Mobile / below lg */}
       <div className="desk:hidden">
         {isIndexRoute ? (
           <>
-            <h1 className="mb-6 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-              Settings
-            </h1>
             <ul className="divide-y divide-[var(--hairline)] rounded-control border border-border bg-card">
               {SETTINGS_SECTIONS.map((s) => (
                 <li key={s.key}>
@@ -108,18 +116,9 @@ export function SettingsShell({
             </ul>
           </>
         ) : (
-          <>
-            <Link
-              to="/settings"
-              className="mb-5 inline-flex min-h-11 items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <ChevronLeft className="size-4" aria-hidden="true" />
-              Settings
-            </Link>
-            {children}
-          </>
+          children
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }

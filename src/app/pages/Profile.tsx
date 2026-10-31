@@ -27,6 +27,7 @@ import { PlanTogetherSheet } from "../components/profile/PlanTogetherSheet";
 import { ProfileMenu } from "../components/profile/ProfileMenu";
 import { IdentitySkeleton, LevelSkeleton } from "../components/profile/Skeletons";
 import { NotFound } from "./NotFound";
+import { PageContainer, PageShell } from "../components/layout/PageShell";
 
 const TABS = [
   { value: "moments", label: "Moments" },
@@ -152,27 +153,25 @@ export function Profile() {
   }
   if (load.status === "missing") return <NotFound />;
 
-  const shell = "mx-auto w-full max-w-[640px] px-5 pb-24 pt-4 desk:max-w-[1120px]";
+  // Loading and failing look like the page: your own keeps its title, another person's is just the container.
+  const waitFrame = (kids: React.ReactNode) =>
+    param ? <PageContainer aria-busy="true">{kids}</PageContainer> : <PageShell title="You" aria-busy="true">{kids}</PageShell>;
   const grid = "flex flex-col gap-6 desk:grid desk:grid-cols-[360px_1fr] desk:gap-x-10";
 
   if (load.status === "loading") {
-    return (
-      <div className={shell} aria-busy="true">
+    return waitFrame(
+      <>
         <div className={grid}>
           <div className="flex flex-col gap-6">
             <IdentitySkeleton />
             <LevelSkeleton />
           </div>
         </div>
-      </div>
+      </>,
     );
   }
   if (load.status === "error") {
-    return (
-      <div className={shell}>
-        <ErrorNotice onRetry={() => fetchIt(false)} />
-      </div>
-    );
+    return waitFrame(<ErrorNotice onRetry={() => fetchIt(false)} />);
   }
 
   const p = load.profile;
@@ -223,7 +222,7 @@ export function Profile() {
   // A private account seen by a stranger: identity, level name, follow state.
   if (isClosed(p)) {
     return (
-      <div className={shell}>
+      <PageContainer>
         <TopBar title={name} onBack={() => navigate(-1)} />
         <div className="flex flex-col gap-4">
           <Identity name={name} avatarUrl={p.avatarUrl} />
@@ -232,7 +231,7 @@ export function Profile() {
           <p className="text-small text-muted-foreground">This profile is private.</p>
         </div>
         <UnfollowConfirm open={unfollowOpen} onOpenChange={setUnfollowOpen} name={name} onConfirm={doUnfollow} />
-      </div>
+      </PageContainer>
     );
   }
 
@@ -240,23 +239,24 @@ export function Profile() {
   const ownerP = owner ? (p as OwnerProfile) : null;
   const friend = p.role === "friend" ? (p as FriendProfile) : null;
 
+  const shareSettings = (
+    <div className="flex gap-2">
+      <Button variant="outline" size="icon" className="size-11" aria-label="Share" onClick={share}>
+        <Share2 className="size-4" aria-hidden="true" />
+      </Button>
+      <Button asChild variant="outline" size="icon" className="size-11">
+        <Link to="/settings" aria-label="Settings">
+          <SettingsIcon className="size-4" aria-hidden="true" />
+        </Link>
+      </Button>
+    </div>
+  );
+  const Frame = owner ? PageShell : PageContainer;
+  const frameProps = owner ? { title: "You", action: shareSettings } : {};
+
   return (
-    <div className={shell}>
-      {owner ? (
-        <header className="mb-4 flex items-center justify-between">
-          <h2 className="font-[family-name:var(--font-display)] text-title font-bold">Profile</h2>
-          <div className="flex gap-2">
-            <Button variant="outline" size="icon" className="size-11" aria-label="Share" onClick={share}>
-              <Share2 className="size-4" aria-hidden="true" />
-            </Button>
-            <Button asChild variant="outline" size="icon" className="size-11">
-              <Link to="/settings" aria-label="Settings">
-                <SettingsIcon className="size-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-        </header>
-      ) : (
+    <Frame {...(frameProps as { title: string })}>
+      {!owner && (
         <TopBar
           title={name}
           onBack={() => navigate(-1)}
@@ -274,7 +274,7 @@ export function Profile() {
 
       <div className={grid}>
         <div className="flex flex-col gap-5 desk:col-start-1">
-          <Identity name={name} avatarUrl={p.avatarUrl} neighborhood={p.neighborhood} bio={p.bio} addDetailsLink={owner} />
+          <Identity name={name} avatarUrl={p.avatarUrl} neighborhood={p.neighborhood} bio={p.bio} addDetailsLink={owner} heading={owner ? "h2" : "h1"} />
           {friend && <MutualLine profile={friend} />}
           {p.role === "follower" && p.mutualFriendCount > 0 && (
             <p className="text-small text-muted-foreground">{p.mutualFriendCount === 1 ? "1 friend in common" : `${p.mutualFriendCount} friends in common`}</p>
@@ -336,7 +336,7 @@ export function Profile() {
       {owner && <FollowListDialog open={friendsOpen} onOpenChange={setFriendsOpen} profileId={p.id} initialTab="following" />}
       {friend && <PlanTogetherSheet open={planOpen} onOpenChange={setPlanOpen} friendId={p.id} firstName={first} />}
       <UnfollowConfirm open={unfollowOpen} onOpenChange={setUnfollowOpen} name={name} onConfirm={doUnfollow} />
-    </div>
+    </Frame>
   );
 }
 

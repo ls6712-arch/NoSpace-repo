@@ -182,7 +182,7 @@ export function PlanningCard({ onPausedChange }: { onPausedChange?: (paused: boo
         <div role="note" className="mb-1 mt-2 rounded-control bg-card p-3">
           <p className="text-small">Add when you’re usually free to get plan suggestions.</p>
           <div className="mt-2 flex gap-2">
-            <Button size="sm" className="min-h-11" onClick={() => setEditing("availability")}>
+            <Button size="sm" variant="outline" className="min-h-11" onClick={() => setEditing("availability")}>
               Add
             </Button>
             <Button
