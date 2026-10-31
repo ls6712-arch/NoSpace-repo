@@ -16,11 +16,14 @@ export function DaySection({
   now,
   passes,
   onBring,
+  heading,
 }: {
   content: DayContent;
   now: number;
   passes: readonly Pass[];
   onBring: (plan: WeekPlanDetail) => void;
+  /** Overrides the heading and date (the calendar's own wording, with no "Tonight"). */
+  heading?: { title: string; date: string };
 }) {
   const { day, plans, free } = content;
   const id = `week-day-${day.offset}`;
@@ -38,10 +41,8 @@ export function DaySection({
   return (
     <section id={id} aria-labelledby={`${id}-h`} className="flex scroll-mt-4 flex-col gap-3">
       <h2 id={`${id}-h`} className="flex items-baseline gap-2">
-        <span className="text-lead">
-          {dayHeading(day, now)}
-        </span>
-        <span className="text-small font-normal text-muted-foreground">{dayDate(day, now)}</span>
+        <span className="text-lead">{heading?.title ?? dayHeading(day, now)}</span>
+        <span className="text-small font-normal text-muted-foreground">{heading?.date ?? dayDate(day, now)}</span>
       </h2>
       <ul className="flex flex-col gap-3">
         {items.map((it) =>

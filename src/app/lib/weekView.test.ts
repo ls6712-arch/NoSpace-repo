@@ -179,9 +179,9 @@ describe("what each day holds", () => {
 
   it("labels a tile for a screen reader", () => {
     const c = dayContents(days, [plan({ startsAt: ny(10, 31, 19) })], left, now);
-    expect(tileLabel(c[1])).toBe("Saturday 31, 1 plan, free daytime");
-    expect(tileLabel(c[3])).toBe("Monday 2, nothing on");
-    expect(tileLabel(c[0])).toBe("Today 30, free evening");
+    expect(tileLabel(c[1], now)).toBe("Saturday 31, 1 plan, free daytime");
+    expect(tileLabel(c[3], now)).toBe("Monday 2, nothing on");
+    expect(tileLabel(c[0], now)).toBe("Today 30, free evening");
   });
 
   it("links a free slot to Discover with its window", () => {

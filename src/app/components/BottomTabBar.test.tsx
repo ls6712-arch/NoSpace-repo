@@ -18,26 +18,26 @@ const at = (path: string) =>
   );
 
 describe("bottom tab bar", () => {
-  it("reads Home, Discover, Log, Week, You, in that order", () => {
-    expect(TABS.map((t) => t.label)).toEqual(["Home", "Discover", "Log", "Week", "You"]);
+  it("reads Home, Discover, Log, Calendar, You, in that order", () => {
+    expect(TABS.map((t) => t.label)).toEqual(["Home", "Discover", "Log", "Calendar", "You"]);
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
     const names = within(nav).getAllByRole("link").map((a) => a.getAttribute("aria-label") ?? a.textContent);
-    expect(names).toEqual(["Home", "Discover", "Log a Moment", "Week", "You"]);
-    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/discover", "/create", "/week", "/you"]);
+    expect(names).toEqual(["Home", "Discover", "Log a Moment", "Calendar", "You"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/discover", "/create", "/calendar", "/you"]);
   });
 
   it("marks the tab for the page you are on", () => {
-    at("/week");
+    at("/calendar");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    expect(within(nav).getByText("Week").closest("a")?.getAttribute("aria-current")).toBe("page");
+    expect(within(nav).getByText("Calendar").closest("a")?.getAttribute("aria-current")).toBe("page");
     expect(within(nav).getByText("Home").closest("a")?.getAttribute("aria-current")).toBeNull();
   });
 
-  it("keeps Week active on the free time screen", () => {
+  it("keeps Calendar active on the free time screen", () => {
     at("/week/free");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    expect(within(nav).getByText("Week").closest("a")?.getAttribute("aria-current")).toBe("page");
+    expect(within(nav).getByText("Calendar").closest("a")?.getAttribute("aria-current")).toBe("page");
   });
 
   it("gives every tab an icon", () => {

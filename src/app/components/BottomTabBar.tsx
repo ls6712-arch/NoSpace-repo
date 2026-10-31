@@ -6,7 +6,7 @@ import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { TAB_DESTINATIONS, type Destination } from "./nav/navItems";
 
 /**
- * Phone and tablet navigation: Home, Discover, Log, Week and You. Each tab is a
+ * Phone and tablet navigation: Home, Discover, Log, Calendar and You. Each tab is a
  * line icon over a short label, so it reads the same as the desktop top nav's
  * destinations in the same order (Profile hangs off the avatar there). The
  * desktop button reads "Log a Moment"; this tab says "Log" (the glossary's

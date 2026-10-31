@@ -97,10 +97,17 @@ export function rangeLine(days: readonly WeekDay[], now: number): string {
   return `${label(first)} to ${label(last)}`;
 }
 
+/** Whole days from today to this day (0 is today), in New York. A week that starts on another day still counts from today. */
+export function daysFromToday(day: WeekDay, now: number): number {
+  const t = nyParts(now);
+  return Math.round((day.noonMs - nyTimeToMs(t.y, t.m, t.d, 12)) / 86_400_000);
+}
+
 /** "Tonight" (from 6 PM), "Today", "Tomorrow", then the weekday's name. */
 export function dayHeading(day: WeekDay, now: number): string {
-  if (day.offset === 0) return nyParts(now).hour >= 18 ? "Tonight" : "Today";
-  if (day.offset === 1) return "Tomorrow";
+  const diff = daysFromToday(day, now);
+  if (diff === 0) return nyParts(now).hour >= 18 ? "Tonight" : "Today";
+  if (diff === 1) return "Tomorrow";
   return formatWeekday(day.noonMs, "long", HOME_TZ);
 }
 
@@ -157,8 +164,8 @@ export function dayContents(days: readonly WeekDay[], plans: readonly WeekPlanDe
 export const dayMark = (c: DayContent): "plan" | "free" | "none" => (c.plans.length > 0 ? "plan" : c.free.length > 0 ? "free" : "none");
 
 /** "Saturday 31, 1 plan, free daytime". */
-export function tileLabel(c: DayContent): string {
-  const name = c.day.offset === 0 ? "Today" : formatWeekday(c.day.noonMs, "long", HOME_TZ);
+export function tileLabel(c: DayContent, now: number): string {
+  const name = daysFromToday(c.day, now) === 0 ? "Today" : formatWeekday(c.day.noonMs, "long", HOME_TZ);
   const parts = [`${name} ${c.day.d}`];
   if (c.plans.length > 0) parts.push(plural(c.plans.length, "plan"));
   if (c.free.length > 0) parts.push(FREE_LABEL[c.free[0].part].toLowerCase());

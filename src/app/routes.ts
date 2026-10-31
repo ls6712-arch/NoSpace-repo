@@ -24,7 +24,7 @@ import { Log } from "./pages/Log";
 import { Profile } from "./pages/Profile";
 import { WhoCanSeeMyTime } from "./pages/WhoCanSeeMyTime";
 import { Onboarding } from "./pages/Onboarding";
-import { Week } from "./pages/Week";
+import { Calendar } from "./pages/Calendar";
 import { WeekFree } from "./pages/WeekFree";
 import { Messages } from "./pages/Messages";
 import { Inbox } from "./pages/Inbox";
@@ -100,7 +100,9 @@ export const router = createHashRouter([
       { path: "welcome", Component: Welcome },
       { path: "i/:code", Component: InviteArrival },
       { path: "my-space", Component: HomeFeed },
-      { path: "week", Component: Week },
+      { path: "calendar", Component: Calendar },
+      // The Week view became the calendar's Week view; old links keep working.
+      { path: "week", loader: () => redirect("/calendar?view=week") },
       { path: "week/free", Component: WeekFree },
       // The sheet-of-six grid Home used to be, until the feed replaced it.
       { path: "my-space/all", Component: MySpace },

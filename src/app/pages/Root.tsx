@@ -60,7 +60,8 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   // Discover v2 shows a signed-out visitor its Ideas, Corners and Spaces read only, and
   // opens the sign-up prompt on any action.
   pathname === "/discover" ||
-  // Week shows its own sign-up prompt, like You.
+  // The calendar (and the Week free time screen) show their own sign-up prompt, like You.
+  pathname === "/calendar" ||
   pathname === "/week" ||
   pathname.startsWith("/week/") ||
   pathname === "/studio" ||

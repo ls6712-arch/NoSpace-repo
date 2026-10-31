@@ -41,8 +41,8 @@ describe("the left rail", () => {
     const names = within(nav)
       .getAllByRole("link")
       .map((a) => a.getAttribute("aria-label"));
-    expect(names).toEqual(["Soosh", "Home", "Discover", "Log a Moment", "Week", "Chats", "You"]);
-    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/my-space", "/discover", "/create", "/week", "/messages", "/you"]);
+    expect(names).toEqual(["Soosh", "Home", "Discover", "Log a Moment", "Calendar", "Chats", "You"]);
+    expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/my-space", "/discover", "/create", "/calendar", "/messages", "/you"]);
     // The things that open something are buttons.
     expect(within(nav).getByRole("button", { name: "Search" })).toBeTruthy();
     expect(within(nav).getByRole("button", { name: "Notifications (3 unread)" })).toBeTruthy();
@@ -52,13 +52,13 @@ describe("the left rail", () => {
   it("puts words on every item for the 1280px layout and a tooltip for the icon-only one", () => {
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    for (const word of ["Home", "Discover", "Search", "Log", "Week", "Chats", "You", "More"]) {
+    for (const word of ["Home", "Discover", "Search", "Log", "Calendar", "Chats", "You", "More"]) {
       // One copy as the visible label (wide), one as the tooltip (narrower).
       expect(within(nav).getAllByText(word).length).toBeGreaterThanOrEqual(2);
     }
   });
 
-  it("marks the item for the page you are on, including the Week free time screen and Chats", () => {
+  it("marks the item for the page you are on, including the free time screen and Chats", () => {
     const current = () => {
       const nav = screen.getByRole("navigation", { name: "Main" });
       return within(nav)
@@ -70,7 +70,7 @@ describe("the left rail", () => {
     expect(current()).toEqual(["Home"]);
     cleanup();
     at("/week/free");
-    expect(current()).toEqual(["Week"]);
+    expect(current()).toEqual(["Calendar"]);
     cleanup();
     at("/corners/pottery");
     expect(current()).toEqual(["Discover"]);

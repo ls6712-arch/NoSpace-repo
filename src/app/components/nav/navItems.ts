@@ -35,11 +35,17 @@ export const LOG: Destination = {
   match: (p) => p.startsWith("/create") || p.startsWith("/log"),
   accent: true,
 };
-export const WEEK: Destination = { to: "/week", label: "Week", icon: CalendarDays, match: (p) => p.startsWith("/week") };
+export const CALENDAR: Destination = {
+  to: "/calendar",
+  label: "Calendar",
+  icon: CalendarDays,
+  // /week/free (when you are usually free) is part of the calendar too.
+  match: (p) => p.startsWith("/calendar") || p.startsWith("/week"),
+};
 export const YOU: Destination = { to: "/you", label: "You", icon: UserRound, match: (p) => p.startsWith("/you") };
 
 /** The bottom bar's order. */
-export const TAB_DESTINATIONS: readonly Destination[] = [HOME, DISCOVER, LOG, WEEK, YOU];
+export const TAB_DESTINATIONS: readonly Destination[] = [HOME, DISCOVER, LOG, CALENDAR, YOU];
 
 /** Pages where the member navigation (and so the rail) is not offered: they keep the top header as before. */
 export const NO_RAIL_PATHS = (pathname: string) => pathname === "/welcome" || pathname.startsWith("/i/");

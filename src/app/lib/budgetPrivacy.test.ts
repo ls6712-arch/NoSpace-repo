@@ -13,7 +13,9 @@ const ALLOWED = new Set([
   // The owner's own screens.
   "components/week/BudgetSlider.tsx",
   "components/week/GlanceCard.tsx",
-  "pages/Week.tsx",
+  // The calendar is the owner's own: its Week view carries the glance card and budget slider Week had.
+  "pages/Calendar.tsx",
+  "components/calendar/WeekExtras.tsx",
   "pages/WhoCanSeeMyTime.tsx",
   "pages/onboarding/screens/YoursScreen.tsx",
   // The owner-only card on your own profile (its section is not part of the public profile).
