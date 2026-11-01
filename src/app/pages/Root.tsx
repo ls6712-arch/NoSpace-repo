@@ -9,6 +9,8 @@ import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { AccountPrompts } from "../components/AccountPrompts";
 import { BottomTabBar } from "../components/BottomTabBar";
+import { StubbyDock } from "../components/stubby/StubbyDock";
+import { StubbyDockProvider } from "../components/stubby/StubbyDockContext";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
 import { AccountStatusBanner } from "../components/AccountStatusBanner";
@@ -202,22 +204,25 @@ export function Root() {
   const railPad = rail ? "rail:pl-[72px] railwide:pl-[240px]" : "";
 
   return (
-    <div className="min-h-viewport">
-      {rail && <SkipLink />}
-      {rail && <SideRail />}
-      <div className={railPad}>
-        <PreviewBanner />
-        <NetworkBanner />
-        <AccountStatusBanner />
+    <StubbyDockProvider>
+      <div className="min-h-viewport">
+        {rail && <SkipLink />}
+        {rail && <SideRail />}
+        <div className={railPad}>
+          <PreviewBanner />
+          <NetworkBanner />
+          <AccountStatusBanner />
+        </div>
+        <Header hideWithRail={rail} />
+        <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
+          <Outlet />
+        </main>
+        <CartDrawer />
+        <BadgeUnlockToast />
+        <AccountPrompts />
+        <BottomTabBar railEligible={rail} />
+        <StubbyDock />
       </div>
-      <Header hideWithRail={rail} />
-      <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
-        <Outlet />
-      </main>
-      <CartDrawer />
-      <BadgeUnlockToast />
-      <AccountPrompts />
-      <BottomTabBar railEligible={rail} />
-    </div>
+    </StubbyDockProvider>
   );
 }

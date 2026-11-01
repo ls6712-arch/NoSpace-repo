@@ -71,6 +71,8 @@ export function AdminCityPicks() {
   useEffect(() => {
     if (!isAdmin) return;
     void load();
+    // Left the page before the Corners arrived: don't set state on a page that is gone.
+    let live = true;
     if (supabase) {
       void supabase
         .from("corners")
@@ -78,8 +80,13 @@ export function AdminCityPicks() {
         .eq("hidden", false)
         .order("name")
         .limit(1000)
-        .then(({ data }) => setCorners((data ?? []) as { id: number; name: string }[]));
+        .then(({ data }) => {
+          if (live) setCorners((data ?? []) as { id: number; name: string }[]);
+        });
     }
+    return () => {
+      live = false;
+    };
   }, [isAdmin]);
 
   if (!user || !isAdmin) {
