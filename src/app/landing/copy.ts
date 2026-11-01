@@ -60,11 +60,11 @@ export const LANDING_COPY = {
     stamp: "You’re going",
     admitOne: "Admit one",
     admitTwo: "Admit two",
-    yesSolo: "Yes. It’s on your Home. Have fun.",
-    yesFriend: "Yes. It’s on your Home. I’ll get the invite ready, and you tap send.",
-    plusOnLine: "Nice. I’ll get an invite ready, and you tap send. Going?",
+    yesSolo: "It’s on your Home. Have fun.",
+    yesFriend: "It’s on your Home. The invite is ready. You tap send.",
+    plusOnLine: "The invite is ready. You tap send. Going?",
     plusOffLine: "Solo it is. Still a good night. Going?",
-    demoNah: "Fair. Change an answer above and I’ll find something else.",
+    demoNah: "Change an answer above to see another pick.",
   },
   heroPicks: [
     {
@@ -75,7 +75,7 @@ export const LANDING_COPY = {
       time: "6:30",
       day: "Thu",
       caption:
-        "Ok hear me out. Thursday 6:30, drop-in wheel class in Greenpoint. Everyone’s a beginner, so going solo is easy. Going?",
+        "Thursday 6:30, drop-in wheel class in Greenpoint. Everyone’s a beginner, so going solo is easy. Going?",
     },
     {
       title: "Silent book club",
@@ -84,7 +84,7 @@ export const LANDING_COPY = {
       cost: "Free, buy a coffee",
       time: "7:00",
       day: "Thu",
-      caption: "No problem. Something quieter? Silent book club Thursday at 7. Bring the book you keep not finishing. Going?",
+      caption: "Something quieter? Silent book club Thursday at 7. Bring the book you keep not finishing. Going?",
     },
     {
       title: "Late jazz set",
@@ -93,7 +93,7 @@ export const LANDING_COPY = {
       cost: "$15 cover",
       time: "9:30",
       day: "Thu",
-      caption: "Fair. How about music? Late jazz set Thursday. The bar seats go first, so get there early. Going?",
+      caption: "How about music? Late jazz set Thursday. The bar seats go first, so get there early. Going?",
     },
   ] satisfies ExamplePick[],
 
@@ -147,7 +147,7 @@ export const LANDING_COPY = {
   } satisfies Record<string, ExamplePick>,
 
   // How it works
-  howSays: "Takes about a minute to set up. Then I bring the picks.",
+  howSays: "Takes about a minute to set up. Then the picks start.",
   howHeading: `How ${APP_NAME} works`,
   steps: [
     { title: "Tell us your week", line: "Which evenings are free, what you want to spend in a month, and anything you already pay for, like a gym or a museum membership." },
@@ -159,7 +159,7 @@ export const LANDING_COPY = {
   // Stubby
   stubbyHeading: "This is Stubby.",
   stubbyLine:
-    "Stubby is the friend who always knows what’s on. You talk or type for about a minute, decide yes or no, and the plan lands on your Home.",
+    `Stubby is the friend who always knows what’s on. Tell ${APP_NAME} when you’re free. Stubby brings one pick, and cheers when you go.`,
   stubbyRules: [
     "Starts with a pick. You never have to explain what you want from scratch.",
     "Keeps it short, about 60 seconds, then sends you off to do the thing.",
