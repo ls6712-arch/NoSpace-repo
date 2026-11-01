@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { checkPicks, cleanText, linkKey, msToNyLocal, nyLocalToMs, readPicksBlock, rowFor, SCOUT_MAX_PICKS, type CheckContext, type RawPick } from "./picks.ts";
 import { runSearch, SearchError, systemPrompt, userPrompt } from "./search.ts";
-import { handleScout, readSettings, type ScoutDeps } from "./handler.ts";
+import { handleScout, MESSAGES, readSettings, type ScoutDeps } from "./handler.ts";
 
 // Sunday Nov 1, 2026, 10:00 in New York (the clocks went back at 2:00 this morning).
 const NOW = Date.UTC(2026, 10, 1, 15, 0);
@@ -118,10 +118,11 @@ describe("checking picks", () => {
     expect(dropped.filter((d) => d.reason.startsWith("Over the"))).toHaveLength(3);
   });
 
-  it("saves every pick as a scout draft with its source and check time", () => {
+  it("puts a clean pick live, and records who asked", () => {
     const [p] = checkPicks([pick()], ctx()).kept;
-    expect(rowFor(p, 9, "new-york", NOW)).toMatchObject({
-      published: false,
+    expect(rowFor(p, 9, "new-york", NOW, "u1")).toMatchObject({
+      published: true,
+      requested_by: "u1",
       found_by: "scout",
       source_url: PAGE,
       url: PAGE,
@@ -129,6 +130,11 @@ describe("checking picks", () => {
       color: "orange",
       corner_id: 7,
     });
+  });
+
+  it("keeps a pick with anything to double check as a draft", () => {
+    const [p] = checkPicks([pick({ price: null })], ctx()).kept;
+    expect(rowFor(p, 0, "new-york", NOW)).toMatchObject({ published: false, requested_by: null, scout_note: "Price not listed" });
   });
 });
 
@@ -180,62 +186,113 @@ describe("the search call", () => {
 });
 
 describe("the request", () => {
-  const goodText = `<picks>${JSON.stringify([pick(), pick({ url: "https://invented.example.com" })])}</picks>`;
-  function deps(over: Partial<ScoutDeps> = {}, dbOver: Partial<ScoutDeps["db"]> = {}) {
-    const saved: unknown[] = [];
+  const goodText = `<picks>${JSON.stringify([pick(), pick({ title: "No price class", price: null }), pick({ url: "https://invented.example.com" })])}</picks>`;
+  const settings = { enabled: true, hasKey: true, runsPerDay: 3, memberPerDay: 3, dailyLimit: 40, maxSearches: 8, sweepSearches: 5, memberSearches: 4 };
+  function deps(over: Partial<ScoutDeps> = {}, dbOver: Partial<ScoutDeps["db"]> = {}, authOver: Partial<ScoutDeps["auth"]> = {}) {
+    const saved: Record<string, unknown>[] = [];
+    const runs: Record<string, unknown>[] = [];
     const finished: unknown[] = [];
+    const marked: number[] = [];
+    const search = vi.fn(async (_f: string | null, _c: string[], _n: number) => ({ text: goodText, sourceLinks: new Set([linkKey(PAGE)!]), searches: 3 }));
     const d: ScoutDeps = {
-      settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 8 },
+      settings,
       now: () => NOW,
+      auth: { sweepTokenOk: async (t) => t === "good-token", caller: async () => ({ id: "admin-1", isAdmin: true }), ...authOver },
       db: {
         runsSince: async () => 0,
-        startRun: async () => 41,
+        startRun: async (r) => (runs.push(r), 41),
         finishRun: async (id, r) => void finished.push({ id, ...r }),
+        nextWatch: async () => ({ id: 5, query: "NYU events" }),
+        markWatch: async (id) => void marked.push(id),
         corners: async () => [{ id: 7, name: "Pottery" }],
         existingKeys: async () => new Set(),
         insertPick: async (row) => (saved.push(row), true),
         ...dbOver,
       },
-      search: async () => ({ text: goodText, sourceLinks: new Set([linkKey(PAGE)!]), searches: 4 }),
+      search,
       ...over,
     };
-    return { d, saved, finished };
+    return { d, saved, runs, finished, marked, search };
   }
-  const post = (body: unknown = {}, auth = true) =>
-    new Request("https://fn.example.com/stubby-scout", { method: "POST", headers: auth ? { authorization: "Bearer x" } : {}, body: JSON.stringify(body) });
+  const post = (body: unknown = {}, headers: Record<string, string> = { authorization: "Bearer x" }) =>
+    new Request("https://fn.example.com/stubby-scout", { method: "POST", headers, body: JSON.stringify(body) });
 
-  it("saves the checked picks as drafts and reports what it dropped", async () => {
-    const { d, saved, finished } = deps();
+  it("admin: saves clean finds live and noted ones as drafts, and reports what it dropped", async () => {
+    const { d, saved, runs, finished, search } = deps();
     const res = await handleScout(post({ focus: "pottery" }), d);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toMatchObject({ added: 1, found: 2, searches: 4 });
+    expect(body).toMatchObject({ added: 2, live: 1, found: 3, searches: 3 });
     expect(body.dropped).toHaveLength(1);
-    expect(saved).toHaveLength(1);
-    expect(saved[0]).toMatchObject({ published: false, found_by: "scout" });
-    expect(finished).toEqual([{ id: 41, searches: 4, found: 2, added: 1, error: null }]);
+    expect(saved.map((r) => [r.title, r.published, r.requested_by])).toEqual([
+      ["No price class", false, null],
+      ["Pottery in the park", true, null],
+    ]);
+    expect(runs[0]).toEqual({ kind: "admin", focus: "pottery", startedBy: "admin-1", watchId: null });
+    expect(search.mock.calls[0][2]).toBe(8);
+    expect(finished).toEqual([{ id: 41, searches: 3, found: 3, added: 2, error: null }]);
   });
 
-  it("is off unless switched on, and needs a key and a sign-in", async () => {
-    expect((await handleScout(post(), deps({ settings: { enabled: false, hasKey: true, runsPerDay: 3, maxSearches: 8 } }).d)).status).toBe(503);
-    expect((await handleScout(post(), deps({ settings: { enabled: true, hasKey: false, runsPerDay: 3, maxSearches: 8 } }).d)).status).toBe(503);
-    expect((await handleScout(post({}, false), deps().d)).status).toBe(401);
-    expect((await handleScout(new Request("https://fn.example.com", { method: "GET", headers: { authorization: "x" } }), deps().d)).status).toBe(405);
+  it("admin: refuses someone who isn't one, before searching", async () => {
+    const { d, search } = deps({}, {}, { caller: async () => ({ id: "m1", isAdmin: false }) });
+    expect((await handleScout(post({ focus: "x" }), d)).status).toBe(403);
+    expect(search).not.toHaveBeenCalled();
   });
 
-  it("keeps to the daily cap before spending anything", async () => {
-    const search = vi.fn();
-    const { d } = deps({ search }, { runsSince: async () => 3 });
-    const res = await handleScout(post(), d);
+  it("member: needs a focus, saves finds as theirs, and says how many asks are left", async () => {
+    const { d, saved, runs, search } = deps({}, { runsSince: async (_ms, f) => (f?.userId === "m1" ? 1 : 0) }, { caller: async () => ({ id: "m1", isAdmin: false }) });
+    expect((await (await handleScout(post({ mode: "member" }), d)).json()).error).toBe(MESSAGES.noFocus);
+    const res = await handleScout(post({ mode: "member", focus: "dog friendly things saturday" }), d);
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.asksLeft).toBe(1);
+    expect(body.picks.map((p: { title: string; live: boolean }) => [p.title, p.live])).toEqual([["No price class", false], ["Pottery in the park", true]]);
+    expect(saved.every((r) => r.requested_by === "m1")).toBe(true);
+    expect(runs[0]).toMatchObject({ kind: "member", startedBy: "m1" });
+    expect(search.mock.calls[0][2]).toBe(4);
+  });
+
+  it("member: stops at 3 asks a day, before anything is paid for", async () => {
+    const { d, search } = deps({}, { runsSince: async (_ms, f) => (f?.userId === "m1" ? 3 : 0) }, { caller: async () => ({ id: "m1", isAdmin: false }) });
+    const res = await handleScout(post({ mode: "member", focus: "pottery" }), d);
     expect(res.status).toBe(429);
+    expect((await res.json()).error).toBe(MESSAGES.memberCap(3));
     expect(search).not.toHaveBeenCalled();
   });
 
-  it("refuses anyone who isn't an admin before searching", async () => {
-    const search = vi.fn();
-    const { d } = deps({ search }, { startRun: async () => "forbidden" });
-    expect((await handleScout(post(), d)).status).toBe(403);
+  it("everyone stops at the app's daily limit", async () => {
+    const { d, search } = deps({}, { runsSince: async (_ms, f) => (f ? 0 : 40) });
+    const res = await handleScout(post({ focus: "x" }), d);
+    expect(res.status).toBe(429);
+    expect((await res.json()).error).toBe(MESSAGES.dailyCap);
     expect(search).not.toHaveBeenCalled();
+  });
+
+  it("sweep: with the token, searches the next watch, marks it first, and saves for everyone", async () => {
+    const { d, saved, runs, marked, search } = deps({}, {}, { caller: async () => { throw new Error("a sweep never asks who is signed in"); } });
+    const res = await handleScout(post({ mode: "sweep" }, { "x-scout-sweep": "good-token" }), d);
+    expect(res.status).toBe(200);
+    expect(marked).toEqual([5]);
+    expect(runs[0]).toEqual({ kind: "sweep", focus: "NYU events", startedBy: null, watchId: 5 });
+    expect(search.mock.calls[0][0]).toBe("NYU events");
+    expect(search.mock.calls[0][2]).toBe(5);
+    expect(saved.every((r) => r.requested_by === null)).toBe(true);
+  });
+
+  it("sweep: a wrong token is refused, and nothing waiting means no search", async () => {
+    expect((await handleScout(post({}, { "x-scout-sweep": "bad" }), deps().d)).status).toBe(401);
+    const { d, search } = deps({}, { nextWatch: async () => null });
+    const body = await (await handleScout(post({}, { "x-scout-sweep": "good-token" }), d)).json();
+    expect(body.idle).toBe(true);
+    expect(search).not.toHaveBeenCalled();
+  });
+
+  it("is off unless switched on with a key, needs a sign-in, and POST", async () => {
+    expect((await handleScout(post(), deps({ settings: { ...settings, enabled: false } }).d)).status).toBe(503);
+    expect((await handleScout(post(), deps({ settings: { ...settings, hasKey: false } }).d)).status).toBe(503);
+    expect((await handleScout(post({}, {}), deps().d)).status).toBe(401);
+    expect((await handleScout(post(), deps({}, {}, { caller: async () => null }).d)).status).toBe(401);
+    expect((await handleScout(new Request("https://fn.example.com", { method: "GET", headers: { authorization: "x" } }), deps().d)).status).toBe(405);
   });
 
   it("saves nothing when the answer can't be read, and logs why", async () => {
@@ -243,7 +300,7 @@ describe("the request", () => {
     const res = await handleScout(post(), d);
     expect(res.status).toBe(502);
     expect(saved).toEqual([]);
-    expect(finished[0]).toMatchObject({ searches: 2, added: 0, error: expect.stringMatching(/couldn't be read/) });
+    expect(finished[0]).toMatchObject({ searches: 2, added: 0, error: MESSAGES.unreadable });
   });
 
   it("counts a pick another run saved first as dropped, not added", async () => {
@@ -254,8 +311,8 @@ describe("the request", () => {
   });
 
   it("clamps its settings", () => {
-    const s = readSettings((k) => ({ STUBBY_SCOUT_ENABLED: "true", ANTHROPIC_API_KEY: "k", STUBBY_SCOUT_RUNS_PER_DAY: "999", STUBBY_SCOUT_MAX_SEARCHES: "abc" })[k]);
-    expect(s).toEqual({ enabled: true, hasKey: true, runsPerDay: 20, maxSearches: 8 });
+    const s = readSettings((k) => ({ STUBBY_SCOUT_ENABLED: "true", ANTHROPIC_API_KEY: "k", STUBBY_SCOUT_RUNS_PER_DAY: "999", STUBBY_SCOUT_MAX_SEARCHES: "abc", STUBBY_SCOUT_MEMBER_PER_DAY: "50" })[k]);
+    expect(s).toEqual({ enabled: true, hasKey: true, runsPerDay: 20, memberPerDay: 10, dailyLimit: 40, maxSearches: 8, sweepSearches: 5, memberSearches: 4 });
     expect(readSettings(() => undefined).enabled).toBe(false);
   });
 });

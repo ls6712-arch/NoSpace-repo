@@ -13,6 +13,10 @@ const api = vi.hoisted(() => ({
   setPublished: vi.fn(async () => ({ error: null })),
   deletePick: vi.fn(async () => ({ error: null })),
   runScout: vi.fn(),
+  fetchWatches: vi.fn(async () => ({ watches: [] as unknown[], error: null as string | null })),
+  addWatch: vi.fn(async (_q: string) => ({ error: null as string | null })),
+  setWatchActive: vi.fn(async (_id: number, _on: boolean) => ({ error: null as string | null })),
+  removeWatch: vi.fn(async (_id: number) => ({ error: null as string | null })),
 }));
 vi.mock("../lib/cityPicks", async (orig) => ({ ...(await orig<typeof import("../lib/cityPicks")>()), ...api }));
 
@@ -26,7 +30,8 @@ beforeEach(() => {
   auth.user = { id: "u1" };
   auth.isAdmin = true;
   api.fetchAllPicks.mockResolvedValue({ picks: [row(), row({ id: 2, title: "Marathon", published: true })], error: null });
-  for (const f of [api.savePick, api.setPublished, api.deletePick, api.runScout, api.fetchAllPicks]) f.mockClear();
+  for (const f of [api.savePick, api.setPublished, api.deletePick, api.runScout, api.fetchAllPicks, api.addWatch, api.setWatchActive, api.removeWatch]) f.mockClear();
+  api.fetchWatches.mockResolvedValue({ watches: [], error: null });
 });
 afterEach(cleanup);
 const show = () => render(<MemoryRouter><AdminCityPicks /></MemoryRouter>);
@@ -75,12 +80,12 @@ describe("AdminCityPicks", () => {
   });
 
   it("runs the scout with the focus, reloads, and says what it added and skipped", async () => {
-    api.runScout.mockResolvedValue({ report: { added: 2, found: 3, searches: 5, dropped: [{ title: "Old fair", reason: "More than 14 days away." }] }, error: null });
+    api.runScout.mockResolvedValue({ report: { added: 2, live: 1, found: 3, searches: 5, dropped: [{ title: "Old fair", reason: "More than 14 days away." }] }, error: null });
     show();
     await screen.findByText("Halloween parade");
     fireEvent.change(screen.getByLabelText(/^Look for/), { target: { value: "pottery" } });
     fireEvent.click(screen.getByRole("button", { name: "Find picks" }));
-    expect(await screen.findByText("Added 2 drafts.")).toBeTruthy();
+    expect(await screen.findByText("Added 2 picks: 1 live, 1 to check.")).toBeTruthy();
     expect(api.runScout).toHaveBeenCalledWith("pottery");
     expect(api.fetchAllPicks).toHaveBeenCalledTimes(2);
     expect(screen.getByText("Skipped 1 pick")).toBeTruthy();
@@ -106,5 +111,27 @@ describe("AdminCityPicks", () => {
     expect(screen.getByText(/Found by Stubby · Checked Nov 1/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Source" }).getAttribute("href")).toBe("https://example.com/pottery");
     expect(screen.getByText("Price not listed")).toBeTruthy();
+  });
+
+  it("lists the watch list, adds to it, pauses and removes", async () => {
+    api.fetchWatches.mockResolvedValue({
+      watches: [
+        { id: 1, query: "NYU events open to students", active: true, lastRunAt: null },
+        { id: 2, query: "Run clubs", active: false, lastRunAt: null },
+      ],
+      error: null,
+    });
+    show();
+    await screen.findByText("NYU events open to students");
+    expect(screen.getByText("Paused · Not looked yet")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    await waitFor(() => expect(api.setWatchActive).toHaveBeenCalledWith(1, false));
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+    await waitFor(() => expect(api.setWatchActive).toHaveBeenCalledWith(2, true));
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove" })[1]);
+    await waitFor(() => expect(api.removeWatch).toHaveBeenCalledWith(2));
+    fireEvent.change(screen.getByLabelText(/^Watch for/), { target: { value: "Pottery open studios" } });
+    fireEvent.click(screen.getByRole("button", { name: "Add to the watch list" }));
+    await waitFor(() => expect(api.addWatch).toHaveBeenCalledWith("Pottery open studios"));
   });
 });

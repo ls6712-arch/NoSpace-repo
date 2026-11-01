@@ -12,7 +12,7 @@ import { Label } from "../components/ui/label";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { ADMIN_PICKS } from "../lib/homeCopy";
-import { formatDate } from "../lib/dates";
+import { formatDate, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
 import {
   PICK_COLORS,
@@ -21,13 +21,18 @@ import {
   inputFor,
   isPickColor,
   pickPill,
+  addWatch,
+  fetchWatches,
   pickProblem,
+  removeWatch,
   runScout,
+  setWatchActive,
   savePick,
   setPublished,
   type AdminPick,
   type PickInput,
   type ScoutReport,
+  type Watch,
 } from "../lib/cityPicks";
 
 /**
@@ -152,6 +157,8 @@ export function AdminCityPicks() {
       </header>
 
       {error && <InlineError message={error} />}
+
+      <WatchList />
 
       <ScoutPanel focus={focus} setFocus={setFocus} busy={scouting} result={scoutResult} onSubmit={scout} />
 
@@ -331,7 +338,7 @@ function ScoutPanel({
           </p>
         )}
         {report && (
-          <p className="text-small font-semibold">{report.added > 0 ? `Added ${plural(report.added, "draft")}.` : ADMIN_PICKS.scoutNone}</p>
+          <p className="text-small font-semibold">{report.added > 0 ? `Added ${plural(report.added, "pick")}: ${report.live} live, ${report.added - report.live} to check.` : ADMIN_PICKS.scoutNone}</p>
         )}
         {report && report.dropped.length > 0 && (
           <details className="text-small text-muted-foreground">
@@ -348,6 +355,80 @@ function ScoutPanel({
           </details>
         )}
       </div>
+    </section>
+  );
+}
+
+function WatchList() {
+  const [watches, setWatches] = useState<Watch[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = async () => {
+    const r = await fetchWatches();
+    setWatches(r.watches);
+    setError(r.error);
+  };
+  useEffect(() => {
+    void load();
+  }, []);
+  const add = async (e: FormEvent) => {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    const r = await addWatch(text);
+    setBusy(false);
+    if (r.error) return setError(r.error);
+    setText("");
+    setError(null);
+    await load();
+  };
+  const act = async (fn: () => Promise<{ error: string | null }>) => {
+    const r = await fn();
+    if (r.error) setError(r.error);
+    else await load();
+  };
+  return (
+    <section aria-labelledby="watch-title" className="flex flex-col gap-3 rounded-card border border-border bg-card p-4">
+      <h2 id="watch-title" className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
+        {ADMIN_PICKS.watchTitle}
+      </h2>
+      <p className="text-small text-muted-foreground">{ADMIN_PICKS.watchLine}</p>
+      {watches.length === 0 ? (
+        <p className="text-small text-muted-foreground">{ADMIN_PICKS.watchEmpty}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {watches.map((w) => (
+            <li key={w.id} className="flex flex-wrap items-center gap-2 border-b border-border pb-2 last:border-0">
+              <div className="min-w-0 flex-1">
+                <p className="text-body font-semibold">{w.query}</p>
+                <p className="text-small text-muted-foreground">
+                  {[w.active ? null : ADMIN_PICKS.watchPaused, w.lastRunAt ? `${ADMIN_PICKS.watchLast} ${formatWhen(w.lastRunAt, { ago: true })}` : ADMIN_PICKS.watchNever].filter(Boolean).join(" · ")}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => void act(() => setWatchActive(w.id, !w.active))}>
+                {w.active ? ADMIN_PICKS.watchPause : ADMIN_PICKS.watchResume}
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void act(() => removeWatch(w.id))}>
+                {ADMIN_PICKS.watchRemove}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form onSubmit={(e) => void add(e)} className="flex flex-col gap-3">
+        <Field label={ADMIN_PICKS.watchAddLabel} hint={ADMIN_PICKS.watchAddHint}>
+          {(id) => <Input id={id} value={text} maxLength={200} onChange={(e) => setText(e.target.value)} disabled={busy} />}
+        </Field>
+        <Button type="submit" variant="outline" className="self-start" disabled={busy}>
+          {ADMIN_PICKS.watchAdd}
+        </Button>
+      </form>
+      {error && (
+        <p role="alert" className="text-small text-destructive">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

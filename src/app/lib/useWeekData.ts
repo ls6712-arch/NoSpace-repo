@@ -76,7 +76,7 @@ export function useWeekData(userId: string | undefined): WeekData {
       // From the 1st of this month, so the budget line can add up what is planned so far.
       const from = Math.min(nyTimeToMs(p.y, p.m, 1, 0), now);
       const to = Math.max(nyTimeToMs(p.y, p.m + 1, 1, 0), now + 7 * DAY);
-      const [taste, plans, picks] = await Promise.all([fetchTaste(userId), fetchWeekDetail(userId, from, to), fetchCityPicks(now, now + 7 * DAY)]);
+      const [taste, plans, picks] = await Promise.all([fetchTaste(userId), fetchWeekDetail(userId, from, to), fetchCityPicks(now, now + 7 * DAY, userId)]);
       let input: Awaited<ReturnType<typeof loadPlanInput>> | null = null;
       try {
         input = await loadPlanInput({ userId, names: new Map(taste.picks.map((k) => [k, cornerName(k)])), redirectTo: "" }, now);

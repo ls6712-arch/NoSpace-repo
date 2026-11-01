@@ -4,13 +4,13 @@ import type { Budget } from "../../lib/tasteModel";
 import type { Spend } from "../../lib/weekView";
 import type { CityPick } from "../../lib/cityPicks";
 import { SPAN_GRID } from "../layout/PageShell";
-import { CityPicksRow } from "../week/CityPicksRow";
+import { CityPicksSection } from "../week/AskStubby";
 import { GlanceCard } from "../week/GlanceCard";
 
 /**
  * What the Week view adds under the days when it is the week that starts today:
  * the at-a-glance card (good plan hours, free evenings, monthly budget), "This
- * week in New York", the Sunday night card and the link to change free time.
+ * week in New York" with a way to ask Stubby for something else, the Sunday night card and the link to change free time.
  */
 export function WeekExtras({
   goodHours,
@@ -32,7 +32,7 @@ export function WeekExtras({
   return (
     <div className="mt-6 flex flex-col gap-6">
       <GlanceCard goodHours={goodHours} windows={windows} budget={budget} spend={spend} onBudget={onBudget} />
-      <CityPicksRow picks={picks} />
+      <CityPicksSection picks={picks} />
       {noWindows && (
         <Link to="/week/free?from=week" className={`flex min-h-14 items-center rounded-card border-[1.5px] border-dashed border-border px-4 py-3 text-body font-semibold text-foreground ${SPAN_GRID}`}>
           {WEEK_VIEW.noFreeTitle}

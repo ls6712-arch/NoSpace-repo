@@ -15,7 +15,8 @@ import { ticketTime } from "./weekView";
  */
 
 export const CITY = "new-york";
-export const PICKS_MAX = 6;
+/** Enough room for the daily sweep (migration 20261101170000) without an endless row. */
+export const PICKS_MAX = 12;
 export const PICK_COLORS: readonly CatColor[] = ["rose", "orange", "violet", "blue", "amber", "lime", "teal", "pink"];
 
 export interface CityPick {
@@ -31,6 +32,8 @@ export interface CityPick {
   cornerKey: string | null;
   color: CatColor;
   published: boolean;
+  /** Found by Stubby for this person when they asked; they see it even before it goes live. */
+  mine?: boolean;
 }
 
 export const isPickColor = (c: unknown): c is CatColor => PICK_COLORS.includes(c as CatColor);
@@ -58,34 +61,87 @@ function toPick(r: Record<string, any>): CityPick {
 export const DEFAULT_PICK_HOURS = 3;
 
 /**
- * The picks that overlap [from, to), soonest first, at most 6. A pick with no
- * end counts as lasting 3 hours from its start. Unpublished ones never show here.
+ * The picks that overlap [from, to), soonest first, at most PICKS_MAX. A pick with no
+ * end counts as lasting 3 hours from its start. Unpublished ones show only to the
+ * person whose ask found them.
  */
 export function visiblePicks(picks: readonly CityPick[], from: number, to: number, limit = PICKS_MAX): CityPick[] {
   return picks
-    .filter((p) => p.published && p.startsAt < to && (p.endsAt ?? p.startsAt + DEFAULT_PICK_HOURS * 3_600_000) >= from)
+    .filter((p) => (p.published || p.mine) && p.startsAt < to && (p.endsAt ?? p.startsAt + DEFAULT_PICK_HOURS * 3_600_000) >= from)
     .sort((a, b) => a.startsAt - b.startsAt || a.id - b.id)
     .slice(0, limit);
 }
 
-/** The week's published picks of the city. Best effort: none on any failure. */
-export async function fetchCityPicks(from: number, to: number): Promise<CityPick[]> {
+/**
+ * The week's published picks of the city, plus what Stubby found for this person
+ * when they asked (requested_by, migration 20261101170000). Best effort: none on any
+ * failure; before that migration is live, the published ones only.
+ */
+export async function fetchCityPicks(from: number, to: number, userId?: string | null): Promise<CityPick[]> {
   if (!supabase) return [];
-  try {
-    const { data, error } = await supabase
+  const base = (cols: string) =>
+    supabase!
       .from("city_picks")
-      .select(COLUMNS)
+      .select(cols)
       .eq("city", CITY)
-      .eq("published", true)
       .lt("starts_at", new Date(to).toISOString())
+      .gte("starts_at", new Date(from - DEFAULT_PICK_HOURS * 3_600_000).toISOString())
       .order("starts_at", { ascending: true })
-      .limit(50);
-    if (error || !Array.isArray(data)) return [];
-    return visiblePicks((data as Record<string, any>[]).map(toPick), from, to);
+      .limit(100);
+  try {
+    let rows: Record<string, any>[] | null = null;
+    if (userId) {
+      const r = await base(`${COLUMNS}, requested_by`).or(`published.eq.true,requested_by.eq.${userId}`);
+      if (!r.error && Array.isArray(r.data)) rows = r.data as unknown as Record<string, any>[];
+    }
+    if (!rows) {
+      const r = await base(COLUMNS).eq("published", true);
+      if (r.error || !Array.isArray(r.data)) return [];
+      rows = r.data as unknown as Record<string, any>[];
+    }
+    return visiblePicks(
+      rows.map((r) => ({ ...toPick(r), mine: !!userId && r.requested_by === userId })),
+      from,
+      to,
+    );
   } catch {
     return [];
   }
 }
+
+// ── Asking Stubby (a member's own search, stubby-scout mode "member") ─────
+
+export interface AskResult {
+  added: number;
+  live: number;
+  /** null when the function didn't say. */
+  asksLeft: number | null;
+}
+
+/** The function's own error message from a non-2xx reply, or null. */
+async function functionError(error: unknown): Promise<string | null> {
+  try {
+    const body = await (error as { context?: Response }).context?.json?.();
+    return body && typeof body.error === "string" ? body.error : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Stubby looks for `focus` now. What he finds is saved for this person (and, when clean, for everyone). */
+export async function askStubby(focus: string): Promise<{ result: AskResult | null; error: string | null }> {
+  const text = focus.trim();
+  if (!text) return { result: null, error: ASK_EMPTY };
+  if (!supabase) return { result: null, error: ASK_OFF };
+  const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { mode: "member", focus: text.slice(0, 120) } });
+  if (error) return { result: null, error: (await functionError(error)) ?? ASK_OFF };
+  const r = data as { added?: unknown; live?: unknown; asksLeft?: unknown } | null;
+  if (!r || typeof r.added !== "number") return { result: null, error: ASK_OFF };
+  return { result: { added: r.added, live: typeof r.live === "number" ? r.live : 0, asksLeft: typeof r.asksLeft === "number" ? r.asksLeft : null }, error: null };
+}
+
+export const ASK_EMPTY = "Say what you're in the mood for.";
+export const ASK_OFF = "Stubby isn't looking right now. Try again later.";
 
 /** "Sat 31 · 7 PM · free": the pill on a card. No price, no price part. */
 export function pickPill(p: Pick<CityPick, "startsAt" | "price">): string {
@@ -196,29 +252,24 @@ export async function fetchAllPicks(): Promise<{ picks: AdminPick[]; error: stri
 
 export interface ScoutReport {
   added: number;
+  /** How many of those went live by themselves; the rest wait as drafts. */
+  live: number;
   found: number;
   searches: number;
   dropped: { title: string; reason: string }[];
 }
 
-/** Runs the scout once. It only ever adds drafts; the admin publishes. */
+/** Runs the scout once. Clean finds go live; anything to double check waits here as a draft. */
 export async function runScout(focus: string): Promise<{ report: ScoutReport | null; error: string | null }> {
   if (!supabase) return { report: null, error: "The scout needs the live app." };
   const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { focus: focus.trim() || null } });
   if (error) {
     // The function says what went wrong in its JSON body; the client only says "non-2xx".
-    let message: string | null = null;
-    try {
-      const body = await (error as { context?: Response }).context?.json?.();
-      if (body && typeof body.error === "string") message = body.error;
-    } catch {
-      message = null;
-    }
-    return { report: null, error: message ?? "The scout isn't set up yet, or couldn't be reached." };
+    return { report: null, error: (await functionError(error)) ?? "The scout isn't set up yet, or couldn't be reached." };
   }
   const r = data as Partial<ScoutReport> | null;
   if (!r || typeof r.added !== "number") return { report: null, error: "The scout's answer couldn't be read." };
-  return { report: { added: r.added, found: r.found ?? 0, searches: r.searches ?? 0, dropped: Array.isArray(r.dropped) ? r.dropped : [] }, error: null };
+  return { report: { added: r.added, live: r.live ?? 0, found: r.found ?? 0, searches: r.searches ?? 0, dropped: Array.isArray(r.dropped) ? r.dropped : [] }, error: null };
 }
 
 export async function savePick(input: PickInput, id?: number): Promise<{ error: string | null }> {
@@ -238,5 +289,53 @@ export async function setPublished(id: number, published: boolean): Promise<{ er
 export async function deletePick(id: number): Promise<{ error: string | null }> {
   if (!supabase) return { error: null };
   const { error } = await supabase.from("city_picks").delete().eq("id", id);
+  return { error: error ? friendlyError(error) : null };
+}
+
+// ── The watch list (scout_watches, migration 20261101170000). Admins only. ──
+
+export interface Watch {
+  id: number;
+  query: string;
+  active: boolean;
+  lastRunAt: number | null;
+}
+
+export async function fetchWatches(): Promise<{ watches: Watch[]; error: string | null }> {
+  if (!supabase) return { watches: [], error: null };
+  const { data, error } = await supabase.from("scout_watches").select("id, query, active, last_run_at").eq("city", CITY).order("created_at", { ascending: true }).limit(200);
+  // Before the migration is live there is no list: show none, quietly.
+  if (error) return { watches: [], error: error.code === "42P01" || error.code === "PGRST205" ? null : friendlyError(error) };
+  return {
+    watches: (data as Record<string, any>[]).map((r) => ({ id: r.id, query: r.query, active: !!r.active, lastRunAt: r.last_run_at ? Date.parse(r.last_run_at) : null })),
+    error: null,
+  };
+}
+
+export function watchProblem(query: string): string | null {
+  const q = query.trim();
+  if (q.length < 3) return "Say what to look for, 3 characters or more.";
+  if (q.length > 200) return "200 characters at most.";
+  return null;
+}
+
+export async function addWatch(query: string): Promise<{ error: string | null }> {
+  const problem = watchProblem(query);
+  if (problem) return { error: problem };
+  if (!supabase) return { error: null };
+  const { error } = await supabase.from("scout_watches").insert({ query: query.trim(), city: CITY });
+  if (error?.code === "23505") return { error: "That's already on the list." };
+  return { error: error ? friendlyError(error) : null };
+}
+
+export async function setWatchActive(id: number, active: boolean): Promise<{ error: string | null }> {
+  if (!supabase) return { error: null };
+  const { error } = await supabase.from("scout_watches").update({ active }).eq("id", id);
+  return { error: error ? friendlyError(error) : null };
+}
+
+export async function removeWatch(id: number): Promise<{ error: string | null }> {
+  if (!supabase) return { error: null };
+  const { error } = await supabase.from("scout_watches").delete().eq("id", id);
   return { error: error ? friendlyError(error) : null };
 }

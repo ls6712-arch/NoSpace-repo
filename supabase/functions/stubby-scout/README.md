@@ -1,48 +1,66 @@
 # stubby-scout
 
-Stubby's scout. An admin presses **Find picks** on the City picks admin page (`#/admin/city-picks`); the scout searches the web for real, dated things to do in New York in the next 14 days and saves what it finds as **City pick drafts**. Nothing is published. An admin reads each draft, opens its source link, fixes anything, and publishes it by hand.
+Stubby's scout finds real, dated things to do in New York on the web and saves them as City picks.
 
-## What it does, step by step
+## Three ways it runs
 
-1. Checks the caller is signed in, the scout is switched on, a key is set, and the daily run cap isn't reached. All before any search is paid for.
-2. Starts a run in `scout_runs` **as the caller**. The database only lets admins do this, so anyone else stops here.
-3. Asks Claude, with the web search tool and nothing else, for up to 12 activities, optionally around a focus ("pottery, running").
-4. Checks every pick in code (`picks.ts`), whatever the model said:
-   - a title (80 characters at most) and a New York start time between 1 hour and 14 days away;
-   - an https link that is **one of the pages the search actually returned**, so it can't invent a page;
-   - not already a City pick (same title and start), not a repeat;
-   - no price on the page stays no price (never "free"), with a note saying so.
-5. Saves each kept pick as a draft (`published = false`, `found_by = 'scout'`, `source_url`, `checked_at`, `scout_note`), as the caller.
-6. Returns what was added and why anything was dropped.
+| Who | How | Limit |
+| --- | --- | --- |
+| **The morning sweep** | pg_cron (`stubby-scout-sweep`, every 15 minutes, 09:00 to 13:45 UTC) calls `private.scout_sweep_call()`, which posts here with the sweep token from Vault. Each call searches the one active watch that has waited longest and not run in 20 hours. | 5 searches a watch |
+| **A member asks** | "Looking for something else?" under This week in New York. `{ "mode": "member", "focus": "..." }` with their session. | 3 asks a day each, 4 searches an ask |
+| **An admin** | Find picks on City picks. `{ "focus": "..." }` with their session. | 3 a day, 8 searches |
 
-Web pages are treated as data. The model can't touch the database, can't publish, and can't pick a URL to fetch; its whole answer goes through the checks above.
+All kinds together stop at the app's daily limit (40 runs), checked before anything is paid for.
 
-## Deploy (not done by any PR)
+## What happens to a find
 
-Needs `20261101155717_stubby_scout.sql` applied first.
+Every pick is checked in code (`picks.ts`), whatever the model said: a New York start time 1 hour to 14 days away; an https link that is one of the pages the search actually returned (so it can't invent a page); not already a City pick; no repeats. No price on the page stays no price, never "free".
+
+- **Clean** (nothing to double check): goes live for everyone at once (founder, Nov 1, 2026).
+- **With a note** (price not listed, end unclear, the model unsure): a draft. An admin checks it on City picks.
+- **Found by a member's ask**: `requested_by` is that member, so they see it at once, even as a draft.
+
+Admins can unpublish or delete anything. Web pages are data: the model has only the web search tool, no database, no publishing, no choosing URLs.
+
+## Auth
+
+Deployed **without gateway JWT verification** (the cron job has no user), so the function checks every caller itself before using the service role:
+- sweep: `x-scout-sweep` must match the Vault secret `stubby_scout_sweep_token` (`public.scout_sweep_token_ok`, service role only);
+- member and admin: the session in `Authorization` (`auth.getUser`), and `profiles.is_admin` for admin.
+
+## Setup
+
+Needs `20261101155717_stubby_scout.sql` and `20261101170000_stubby_scout_sweep.sql` applied.
 
 ```bash
-supabase functions deploy stubby-scout
-supabase secrets set ANTHROPIC_API_KEY=<key from console.anthropic.com>
-supabase secrets set STUBBY_SCOUT_ENABLED=true
+supabase functions deploy stubby-scout --no-verify-jwt
+supabase secrets set ANTHROPIC_API_KEY=<key> STUBBY_SCOUT_ENABLED=true
 ```
 
-Optional:
+Then, once, on the live project only (turns the sweep on; staging stays quiet without it):
 
-| Secret | Default | What it does |
-| --- | --- | --- |
-| `STUBBY_SCOUT_MODEL` | `claude-haiku-5-5` | Which Claude model searches. |
-| `STUBBY_SCOUT_RUNS_PER_DAY` | `3` (max 20) | Runs allowed in any 24 hours, across all admins. |
-| `STUBBY_SCOUT_MAX_SEARCHES` | `8` (max 20) | Web searches per run. |
+```sql
+select vault.create_secret('https://<project>.supabase.co/functions/v1/stubby-scout', 'stubby_scout_url');
+```
 
-Deploy with JWT verification on (the default). Never put the key in a `VITE_` variable.
+Optional secrets (clamped):
 
-**Kill switch:** `supabase secrets set STUBBY_SCOUT_ENABLED=false`. Takes effect on the next request, no deploy needed.
+| Secret | Default (max) |
+| --- | --- |
+| `STUBBY_SCOUT_MODEL` | `claude-haiku-5-5` |
+| `STUBBY_SCOUT_DAILY_LIMIT` | 40 (300) runs a day, every kind |
+| `STUBBY_SCOUT_MEMBER_PER_DAY` | 3 (10) asks per member |
+| `STUBBY_SCOUT_RUNS_PER_DAY` | 3 (20) admin runs |
+| `STUBBY_SCOUT_SWEEP_SEARCHES` | 5 (20) |
+| `STUBBY_SCOUT_MEMBER_SEARCHES` | 4 (10) |
+| `STUBBY_SCOUT_MAX_SEARCHES` | 8 (20), admin runs |
+
+**Kill switch:** `STUBBY_SCOUT_ENABLED=false`. Takes effect on the next request.
 
 ## Cost
 
-Web search is $10 per 1,000 searches plus model tokens (check current pricing). At the defaults, the most it can do is 3 runs a day × 8 searches = 24 searches, about $0.24 a day in search fees, plus tokens. Set a monthly spend limit in the Anthropic console as well; the cap here limits runs, not the bill.
+About $0.01 to $0.02 a search ($10 per 1,000) plus model tokens; a run is roughly $0.05 to $0.15. Six watches swept daily: about $10 to $20 a month. Each member ask: about $0.05 to $0.10. The daily limit caps the worst case; set a monthly spend limit in the Anthropic console too.
 
 ## Tests
 
-`stubby-scout.test.ts` (vitest, part of `npm test`) covers the checks, the search call with a fake fetch, and the whole request with a fake database. `index.ts` only wires real clients to `handler.ts`.
+`stubby-scout.test.ts` (vitest, part of `npm test`): the checks, the search call with a fake fetch, and every caller with a fake database. `supabase/verification/stubby_scout_check.sql` and `stubby_scout_sweep_check.sql` check the database side.

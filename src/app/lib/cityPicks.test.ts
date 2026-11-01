@@ -41,9 +41,9 @@ describe("visiblePicks", () => {
     expect(visiblePicks([pick({ id: 6, startsAt: ny(10, 30, 19), endsAt: ny(10, 30, 20) })], ny(10, 30, 21), to)).toHaveLength(0);
   });
 
-  it("shows at most 6", () => {
-    const many = Array.from({ length: 9 }, (_, i) => pick({ id: i + 1, startsAt: ny(11, 1, 9 + i) }));
-    expect(visiblePicks(many, from, to).map((p) => p.id)).toEqual([1, 2, 3, 4, 5, 6]);
+  it("shows at most 12, soonest first", () => {
+    const many = Array.from({ length: 15 }, (_, i) => pick({ id: i + 1, startsAt: ny(11, 1 + Math.floor(i / 5), 9 + (i % 5)) }));
+    expect(visiblePicks(many, from, to).map((p) => p.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
   });
 
   it("is empty with no picks, so the row is hidden", () => {

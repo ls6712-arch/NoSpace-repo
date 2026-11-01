@@ -248,8 +248,14 @@ export function checkPicks(raw: readonly RawPick[], ctx: CheckContext): { kept: 
   return { kept, dropped };
 }
 
-/** The row to insert: always a draft, always from the scout, with its source and when it was read. */
-export function rowFor(p: ScoutPick, index: number, city: string, checkedAt: number) {
+/**
+ * A pick goes live by itself only when it has nothing to double check (founder, Nov 1, 2026).
+ * Any note (price not listed, end unclear, the model unsure) means it waits for an admin.
+ */
+export const publishable = (p: ScoutPick) => p.note === null;
+
+/** The row to insert: from the scout, with its source and when it was read; live only when clean. */
+export function rowFor(p: ScoutPick, index: number, city: string, checkedAt: number, requestedBy: string | null = null) {
   return {
     city,
     title: p.title,
@@ -261,8 +267,9 @@ export function rowFor(p: ScoutPick, index: number, city: string, checkedAt: num
     source_url: p.url,
     corner_id: p.cornerId,
     color: PICK_COLORS[index % PICK_COLORS.length],
-    published: false,
+    published: publishable(p),
     found_by: "scout",
+    requested_by: requestedBy,
     checked_at: new Date(checkedAt).toISOString(),
     scout_note: p.note,
   };

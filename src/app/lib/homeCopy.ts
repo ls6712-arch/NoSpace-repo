@@ -23,6 +23,13 @@ export const WEEK_VIEW = {
   flipBody: "Your Stubs from this week become one card you can share, and next week fills with new ideas.",
   changeFree: "Change when you’re free",
   noFreeTitle: "Tell us when you’re usually free",
+  // Asking Stubby (stubby-scout, member mode). New Nov 1, 2026, for approval.
+  askTitle: "Looking for something else?",
+  askLabel: "What are you in the mood for?",
+  askHint: "Like pottery this weekend",
+  askButton: "Ask Stubby",
+  askBusy: "Looking",
+  askNone: "Nothing new for that. Try other words.",
 } as const;
 
 /** The Week page for someone not signed in. */
@@ -55,7 +62,7 @@ export const ADMIN_PICKS = {
   deleteBody: "This removes the pick for good.",
   // Stubby's scout (supabase/functions/stubby-scout). Admin only.
   scoutTitle: "Find picks",
-  scoutLine: "Stubby searches the web for things to do in the next 14 days and adds them here as drafts. Open each source and check it before you publish.",
+  scoutLine: "Stubby searches the web for things to do in the next 14 days. Clean finds go live; anything to double check waits here as a draft. You can unpublish anything.",
   scoutFocus: "Look for",
   scoutFocusHint: "Optional, like pottery or running",
   scoutButton: "Find picks",
@@ -65,4 +72,17 @@ export const ADMIN_PICKS = {
   foundBy: "Found by Stubby",
   source: "Source",
   checked: "Checked",
+  // The watch list (scout_watches). New Nov 1, 2026, for approval.
+  watchTitle: "Watch list",
+  watchLine: "Every morning Stubby looks for each of these and adds what he finds for the next 14 days. Clean finds go live; anything to double check waits here as a draft.",
+  watchAdd: "Add to the watch list",
+  watchAddLabel: "Watch for",
+  watchAddHint: "Like NYU events open to students",
+  watchPause: "Pause",
+  watchResume: "Resume",
+  watchRemove: "Remove",
+  watchPaused: "Paused",
+  watchNever: "Not looked yet",
+  watchLast: "Last looked",
+  watchEmpty: "Nothing on the watch list yet.",
 } as const;
