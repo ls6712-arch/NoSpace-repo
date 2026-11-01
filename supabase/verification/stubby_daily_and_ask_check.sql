@@ -165,7 +165,7 @@ begin
   v_i := v_i + 1;
   results := results || (v_i || case when v_n = 0 then ' PASS B reads no sources' else ' FAIL B read ' || v_n || ' sources' end);
 
-  -- As C: can't remove B's pick (0 rows).
+  -- As C: sees only their own pick, and can't edit anyone's.
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_c), true);
   v_n := (select count(*) from public.personal_picks p where p.title like 'SD pick %');
   v_i := v_i + 1;

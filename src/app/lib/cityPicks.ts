@@ -240,3 +240,76 @@ export async function deletePick(id: number): Promise<{ error: string | null }> 
   const { error } = await supabase.from("city_picks").delete().eq("id", id);
   return { error: error ? friendlyError(error) : null };
 }
+
+// ── Where the morning restock looks (scout_sources, migration 20261101180000) ──
+
+export interface ScoutSource {
+  id: number;
+  name: string;
+  focus: string;
+  /** Search only this site. Null: the whole web. */
+  searchDomain: string | null;
+  /** Pages on this site publish without review. Null: all drafts. */
+  trustedHost: string | null;
+  enabled: boolean;
+}
+
+export interface SourceInput {
+  name: string;
+  focus: string;
+  searchDomain: string;
+  trustedHost: string;
+}
+
+const HOST_RE = /^[a-z0-9.-]+\.[a-z]{2,}$/;
+
+/** "https://www.nypl.org/events" or "NYPL.org" to "nypl.org"; "" stays "". */
+export function bareHost(text: string): string {
+  const t = text.trim().toLowerCase();
+  if (!t) return "";
+  try {
+    return new URL(/^https?:\/\//.test(t) ? t : `https://${t}`).hostname.replace(/^www\./, "");
+  } catch {
+    return t;
+  }
+}
+
+export function sourceProblem(i: SourceInput): string | null {
+  if (!i.name.trim()) return "Add a name.";
+  if (i.name.trim().length > 60) return "The name is 60 characters at most.";
+  if (!i.focus.trim()) return "Say what to look for.";
+  if (i.focus.trim().length > 200) return "What to look for is 200 characters at most.";
+  for (const h of [i.searchDomain, i.trustedHost]) if (h.trim() && !HOST_RE.test(bareHost(h))) return "A site is a web address like nypl.org.";
+  return null;
+}
+
+/** Every source, admins only (the database returns nothing to anyone else). */
+export async function fetchSources(): Promise<{ sources: ScoutSource[]; error: string | null }> {
+  if (!supabase) return { sources: [], error: null };
+  const { data, error } = await supabase.from("scout_sources").select("id, name, focus, search_domain, trusted_host, enabled").order("id");
+  // Before the migration is live there is no table: show nothing rather than an error.
+  if (error) return { sources: [], error: error.code === "42P01" ? null : friendlyError(error) };
+  return {
+    sources: (data as Record<string, any>[]).map((r) => ({ id: r.id, name: r.name, focus: r.focus, searchDomain: r.search_domain ?? null, trustedHost: r.trusted_host ?? null, enabled: !!r.enabled })),
+    error: null,
+  };
+}
+
+export async function setSourceEnabled(id: number, enabled: boolean): Promise<{ error: string | null }> {
+  if (!supabase) return { error: null };
+  const { error } = await supabase.from("scout_sources").update({ enabled }).eq("id", id);
+  return { error: error ? friendlyError(error) : null };
+}
+
+export async function addSource(i: SourceInput): Promise<{ error: string | null }> {
+  if (!supabase) return { error: null };
+  const problem = sourceProblem(i);
+  if (problem) return { error: problem };
+  const { error } = await supabase.from("scout_sources").insert({
+    name: i.name.trim(),
+    focus: i.focus.trim(),
+    search_domain: bareHost(i.searchDomain) || null,
+    trusted_host: bareHost(i.trustedHost) || null,
+  });
+  return { error: error ? friendlyError(error) : null };
+}

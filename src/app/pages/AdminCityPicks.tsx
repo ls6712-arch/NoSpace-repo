@@ -22,8 +22,14 @@ import {
   isPickColor,
   pickPill,
   pickProblem,
+  addSource,
+  fetchSources,
   runScout,
   savePick,
+  setSourceEnabled,
+  sourceProblem,
+  type ScoutSource,
+  type SourceInput,
   setPublished,
   type AdminPick,
   type PickInput,
@@ -154,6 +160,8 @@ export function AdminCityPicks() {
       {error && <InlineError message={error} />}
 
       <ScoutPanel focus={focus} setFocus={setFocus} busy={scouting} result={scoutResult} onSubmit={scout} />
+
+      <SourcesPanel />
 
       {editing ? (
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4 rounded-card border border-border bg-card p-4">
@@ -348,6 +356,108 @@ function ScoutPanel({
           </details>
         )}
       </div>
+    </section>
+  );
+}
+
+const BLANK_SOURCE: SourceInput = { name: "", focus: "", searchDomain: "", trustedHost: "" };
+
+function SourcesPanel() {
+  const [sources, setSources] = useState<ScoutSource[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [adding, setAdding] = useState<SourceInput | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
+    const r = await fetchSources();
+    setSources(r.sources);
+    setError(r.error);
+  };
+  useEffect(() => {
+    void load();
+  }, []);
+
+  const toggle = async (s: ScoutSource) => {
+    const r = await setSourceEnabled(s.id, !s.enabled);
+    if (r.error) setError(r.error);
+    else await load();
+  };
+  const set = <K extends keyof SourceInput>(k: K, v: string) => setAdding((a) => (a ? { ...a, [k]: v } : a));
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!adding || busy) return;
+    const problem = sourceProblem(adding);
+    if (problem) return setFormError(problem);
+    setBusy(true);
+    const r = await addSource(adding);
+    setBusy(false);
+    if (r.error) return setFormError(r.error);
+    setAdding(null);
+    setFormError(null);
+    await load();
+  };
+
+  return (
+    <section aria-labelledby="sources-title" className="flex flex-col gap-3 rounded-card border border-border bg-card p-4">
+      <h2 id="sources-title" className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
+        {ADMIN_PICKS.sourcesTitle}
+      </h2>
+      <p className="text-small text-muted-foreground">{ADMIN_PICKS.sourcesLine}</p>
+      {error && <InlineError message={error} />}
+      {sources.length > 0 && (
+        <ul className="flex flex-col gap-2">
+          {sources.map((s) => (
+            <li key={s.id} className="flex items-start gap-3 rounded-control border border-border p-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-body font-semibold">
+                  {s.name}
+                  {!s.enabled && <span className="ml-2 text-caption font-normal text-muted-foreground">{ADMIN_PICKS.paused}</span>}
+                </p>
+                <p className="text-small text-muted-foreground">
+                  {[s.searchDomain ?? ADMIN_PICKS.wholeWeb, s.trustedHost ? `${ADMIN_PICKS.trustedOn} ${s.trustedHost}` : ADMIN_PICKS.allDrafts].join(" · ")}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => void toggle(s)}>
+                {s.enabled ? ADMIN_PICKS.pause : ADMIN_PICKS.resume}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {adding ? (
+        <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-3">
+          <Field label={ADMIN_PICKS.sourceName} hint="60 characters at most">
+            {(id) => <Input id={id} value={adding.name} maxLength={60} onChange={(e) => set("name", e.target.value)} />}
+          </Field>
+          <Field label={ADMIN_PICKS.sourceFocus}>
+            {(id) => <Input id={id} value={adding.focus} maxLength={200} onChange={(e) => set("focus", e.target.value)} />}
+          </Field>
+          <Field label={ADMIN_PICKS.sourceSearch} hint={ADMIN_PICKS.sourceSearchHint}>
+            {(id) => <Input id={id} value={adding.searchDomain} maxLength={100} onChange={(e) => set("searchDomain", e.target.value)} />}
+          </Field>
+          <Field label={ADMIN_PICKS.sourceTrusted} hint={ADMIN_PICKS.sourceTrustedHint}>
+            {(id) => <Input id={id} value={adding.trustedHost} maxLength={100} onChange={(e) => set("trustedHost", e.target.value)} />}
+          </Field>
+          {formError && (
+            <p role="alert" className="text-small text-destructive">
+              {formError}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <Button type="submit" disabled={busy}>
+              Save changes
+            </Button>
+            <Button type="button" variant="outline" onClick={() => (setAdding(null), setFormError(null))}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <Button variant="outline" className="self-start" onClick={() => setAdding(BLANK_SOURCE)}>
+          {ADMIN_PICKS.addSource}
+        </Button>
+      )}
     </section>
   );
 }

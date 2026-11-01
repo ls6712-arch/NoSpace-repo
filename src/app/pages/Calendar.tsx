@@ -57,6 +57,7 @@ import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
 import { keepPick, undoKeep } from "../lib/pickActions";
 import { StubbyBuddy, type StubbyBuddyHandle } from "../components/stubby/StubbyBuddy";
+import { AskStubby } from "../components/calendar/AskStubby";
 import { usePickDeclines } from "../lib/pickDeclines";
 import { stubbyPicks } from "../lib/stubbyPicks";
 import { announceChange } from "../lib/undo";
@@ -182,6 +183,7 @@ export function Calendar() {
   };
   // Stubby, top right, reacts to what you do here. He never talks; the words are elsewhere.
   const buddy = useRef<StubbyBuddyHandle>(null);
+  const [asking, setAsking] = useState(false);
   const onBring = async (plan: WeekPlanDetail) => {
     if (!owner) return;
     const r = await bringSomeone(plan, owner);
@@ -340,7 +342,7 @@ export function Calendar() {
     <PageShell
       title={viewTitle(view, anchor, now)}
       subtitle={subline}
-      action={<StubbyBuddy ref={buddy} waiting={data.status === "loading"} upset={data.status === "error" || (data.status === "ready" && extra.failed)} />}
+      action={<StubbyBuddy ref={buddy} waiting={data.status === "loading" || asking} upset={data.status === "error" || (data.status === "ready" && extra.failed)} />}
     >
       <CalendarToolbar
         view={view}
@@ -366,6 +368,7 @@ export function Calendar() {
           )}
           <div className="min-w-0 flex-1">
             {body()}
+            <AskStubby onBusy={setAsking} onReact={(r) => buddy.current?.react(r)} />
             {showWeekExtras && (
               <WeekExtras goodHours={data.goodHours} windows={data.windows} budget={data.budget} spend={spend} picks={data.picks} noWindows={noWindows} onBudget={(b) => void onBudget(b)} />
             )}
