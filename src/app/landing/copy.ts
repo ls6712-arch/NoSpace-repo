@@ -1,4 +1,5 @@
 import { APP_NAME } from "../config";
+import type { PhotoKey } from "./photos";
 
 /**
  * Every line on the signed-out landing page, in one place. Example picks, example
@@ -17,6 +18,8 @@ export interface ExamplePick {
   time: string;
   /** Short word on the stub over the time. */
   day: string;
+  /** Which picture the ticket shows (see photos.ts). */
+  image: PhotoKey;
   /** The line shown next to Stubby for this pick. */
   caption: string;
 }
@@ -68,7 +71,7 @@ export const LANDING_COPY = {
   },
   heroPicks: [
     {
-      title: "Drop-in wheel class",
+      title: "Drop-in wheel class", image: "ceramics",
       when: "Thu, 6:30 to 8:30 PM",
       where: "Greenpoint, Brooklyn",
       cost: "$35, clay included",
@@ -78,7 +81,7 @@ export const LANDING_COPY = {
         "Thursday 6:30, drop-in wheel class in Greenpoint. Everyone’s a beginner, so going solo is easy. Going?",
     },
     {
-      title: "Silent book club",
+      title: "Silent book club", image: "book-clubs",
       when: "Thu, 7:00 to 9:00 PM",
       where: "Fort Greene, Brooklyn",
       cost: "Free, buy a coffee",
@@ -87,7 +90,7 @@ export const LANDING_COPY = {
       caption: "Something quieter? Silent book club Thursday at 7. Bring the book you keep not finishing. Going?",
     },
     {
-      title: "Late jazz set",
+      title: "Late jazz set", image: "live-music",
       when: "Thu, 9:30 to 11:00 PM",
       where: "West Village",
       cost: "$15 cover",
@@ -136,14 +139,14 @@ export const LANDING_COPY = {
     who: { label: "Who", options: [{ v: "solo", label: "Just me" }, { v: "friend", label: "A friend" }] },
   },
   demoPicks: {
-    "tonight|25|solo": { kicker: "Tonight · Music", title: "Jazz at the bar", when: "Tonight, 8:30 PM", where: "West Village", cost: "$15 cover", time: "8:30", day: "Tonight", caption: "Easy to go alone, and you can leave whenever. Going?" },
-    "tonight|free|solo": { kicker: "Tonight · Reading", title: "Silent book club", when: "Tonight, 7:00 PM", where: "A café in Fort Greene", cost: "Free, buy a coffee", time: "7:00", day: "Tonight", caption: "Bring the book you keep not finishing. Going?" },
-    "sat|25|solo": { kicker: "Saturday · Climbing", title: "Bouldering session", when: "Sat, 11:00 AM", where: "Gowanus", cost: "Covered by your gym pass", time: "11:00", day: "Sat", caption: "Your pass covers it, and the morning’s quiet. Going?" },
-    "sat|free|solo": { kicker: "Saturday · Art", title: "Museum free hour", when: "Sat, 4:00 PM", where: "Ten minutes from you", cost: "Free", time: "4:00", day: "Sat", caption: "Pick one room and stay an hour. Going?" },
-    "tonight|25|friend": { kicker: "Tonight · Food", title: "Dumpling-folding night", when: "Tonight, 7:00 PM", where: "Lower East Side", cost: "$22 each", time: "7:00", day: "Tonight", caption: "Better with two. Want to ask Maya?" },
-    "tonight|free|friend": { kicker: "Tonight · Games", title: "Board games at a café", when: "Tonight, 7:30 PM", where: "Park Slope", cost: "Free, buy a drink", time: "7:30", day: "Tonight", caption: "Low effort, and you can talk the whole time. Who’s coming?" },
-    "sat|25|friend": { kicker: "Saturday · Pottery", title: "Wheel-throwing taster", when: "Sat, 2:00 PM", where: "Greenpoint", cost: "$25 each", time: "2:00", day: "Sat", caption: "You’ve both said you want to try this. Bring someone?" },
-    "sat|free|friend": { kicker: "Saturday · Outdoors", title: "Bike the waterfront", when: "Sat, 10:00 AM", where: "Hudson River Greenway", cost: "Free with your bikes", time: "10:00", day: "Sat", caption: "Sunny morning, and it’s flat the whole way. Who’s going?" },
+    "tonight|25|solo": { kicker: "Tonight · Music", title: "Jazz at the bar", image: "live-music", when: "Tonight, 8:30 PM", where: "West Village", cost: "$15 cover", time: "8:30", day: "Tonight", caption: "Easy to go alone, and you can leave whenever. Going?" },
+    "tonight|free|solo": { kicker: "Tonight · Reading", title: "Silent book club", image: "book-clubs", when: "Tonight, 7:00 PM", where: "A café in Fort Greene", cost: "Free, buy a coffee", time: "7:00", day: "Tonight", caption: "Bring the book you keep not finishing. Going?" },
+    "sat|25|solo": { kicker: "Saturday · Climbing", title: "Bouldering session", image: "climbing", when: "Sat, 11:00 AM", where: "Gowanus", cost: "Covered by your gym pass", time: "11:00", day: "Sat", caption: "Your pass covers it, and the morning’s quiet. Going?" },
+    "sat|free|solo": { kicker: "Saturday · Art", title: "Museum free hour", image: "museum", when: "Sat, 4:00 PM", where: "Ten minutes from you", cost: "Free", time: "4:00", day: "Sat", caption: "Pick one room and stay an hour. Going?" },
+    "tonight|25|friend": { kicker: "Tonight · Food", title: "Dumpling-folding night", image: "cooking", when: "Tonight, 7:00 PM", where: "Lower East Side", cost: "$22 each", time: "7:00", day: "Tonight", caption: "Better with two. Want to ask Maya?" },
+    "tonight|free|friend": { kicker: "Tonight · Games", title: "Board games at a café", image: "board-games", when: "Tonight, 7:30 PM", where: "Park Slope", cost: "Free, buy a drink", time: "7:30", day: "Tonight", caption: "Low effort, and you can talk the whole time. Who’s coming?" },
+    "sat|25|friend": { kicker: "Saturday · Pottery", title: "Wheel-throwing taster", image: "pottery", when: "Sat, 2:00 PM", where: "Greenpoint", cost: "$25 each", time: "2:00", day: "Sat", caption: "You’ve both said you want to try this. Bring someone?" },
+    "sat|free|friend": { kicker: "Saturday · Outdoors", title: "Bike the waterfront", image: "cycling", when: "Sat, 10:00 AM", where: "Hudson River Greenway", cost: "Free with your bikes", time: "10:00", day: "Sat", caption: "Sunny morning, and it’s flat the whole way. Who’s going?" },
   } satisfies Record<string, ExamplePick>,
 
   // How it works
@@ -179,12 +182,12 @@ export const LANDING_COPY = {
   shelfExample: "Example",
   shelfName: "Example Shelf of Stubs",
   stubs: [
-    { tag: "Pottery", title: "First wheel class", who: "Solo" },
-    { tag: "Reading", title: "Silent book club", who: "Solo" },
-    { tag: "Running", title: "First 5K with Ana", who: "+1" },
-    { tag: "Cooking", title: "Sunday dumplings", who: "+3" },
-    { tag: "Outdoors", title: "Sunrise on the pier", who: "Solo" },
-    { tag: "Art", title: "Museum free hour", who: "Solo" },
+    { tag: "Pottery", title: "First wheel class", image: "pottery", who: "Solo" },
+    { tag: "Reading", title: "Silent book club", image: "reading", who: "Solo" },
+    { tag: "Running", title: "First 5K with Ana", image: "running", who: "+1" },
+    { tag: "Cooking", title: "Sunday dumplings", image: "cooking", who: "+3" },
+    { tag: "Outdoors", title: "Sunrise on the pier", image: "pier", who: "Solo" },
+    { tag: "Art", title: "Museum free hour", image: "museum", who: "Solo" },
   ],
 
   // Are you on it
@@ -220,6 +223,23 @@ export const LANDING_COPY = {
     { q: "Who sees my Moments?", a: "You choose for each Moment: only you, followers or public. Nothing about your account has to be public." },
     { q: "What are Stubs?", a: "You get a Stub each time you do something. Your Shelf of Stubs is a record of what you’ve done." },
   ],
+
+  // Pictures. Activity-level alt text; the two illustrations are decorative.
+  photoAlt: {
+    pottery: "Clay pottery",
+    ceramics: "A clay pot",
+    reading: "An open book",
+    "book-clubs": "Books",
+    running: "A runner",
+    cooking: "Cooking in a kitchen",
+    climbing: "Climbing",
+    "board-games": "A board game",
+    cycling: "Cycling",
+    "live-music": "A crowd at a concert",
+  } as Partial<Record<PhotoKey, string>>,
+  photosLink: "Photos",
+  photosUnsplash: "Unsplash",
+  photosUnsplashUrl: "https://unsplash.com",
 
   // Final card
   finalHeading: `Are you on ${APP_NAME} yet?`,
