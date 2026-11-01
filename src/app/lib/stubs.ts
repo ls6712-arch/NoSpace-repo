@@ -2,6 +2,8 @@ import { supabase } from "../../lib/supabase";
 import { subHobbyLabel } from "../data/hobbies";
 import { formatMonth } from "./dates";
 import { cornerName } from "./homeItems";
+import type { EarnedStub } from "./stubFace";
+import { ERROR_LINE } from "./stateCopy";
 
 /** A Stub as the database holds it (migration 20261115000000: four kinds). */
 export type StubKind = "event" | "finish" | "drop" | "regular";
@@ -58,6 +60,58 @@ export async function fetchStubForPost(postId: number, tries = 2, waitMs = 400):
     await new Promise((r) => setTimeout(r, waitMs));
   }
   return null;
+}
+
+/**
+ * The Stub a Moment just earned, with what its artwork prints: the Pursuit's
+ * title and cover, the drop's title, colours and goal. The rarest when there are
+ * two (a 10th day that also finishes a Pursuit). Null when it earned none.
+ */
+export async function fetchEarnedStub(postId: number): Promise<EarnedStub | null> {
+  const client = supabase;
+  if (!client) return null;
+  try {
+    const { data, error } = await client
+      .from("stubs")
+      .select("id, kind, serial, issued_at, corner_key, period, edition, pursuits(title, cover_image_path, target_moments), drops(title, palette, target_moments)")
+      .eq("post_id", postId);
+    if (error || !data || data.length === 0) return null;
+    type Row = {
+      id: number;
+      kind: StubKind;
+      serial: number | null;
+      issued_at: string;
+      corner_key: string | null;
+      period: string | null;
+      edition: number | null;
+      pursuits: { title: string; cover_image_path: string | null; target_moments: number | null } | null;
+      drops: { title: string; palette: string[]; target_moments: number } | null;
+    };
+    const r = [...(data as unknown as Row[])].sort((a, b) => (RANK[b.kind] ?? 0) - (RANK[a.kind] ?? 0))[0];
+    return {
+      id: r.id,
+      kind: r.kind,
+      serial: r.serial,
+      issuedAt: r.issued_at,
+      cornerKey: r.corner_key ?? undefined,
+      period: r.period ?? undefined,
+      edition: r.edition ?? undefined,
+      pursuitTitle: r.pursuits?.title,
+      coverPath: r.pursuits?.cover_image_path ?? undefined,
+      goal: r.pursuits?.target_moments ?? undefined,
+      drop: r.drops ? { title: r.drops.title, palette: r.drops.palette, targetMoments: r.drops.target_moments } : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Put a Stub in your front row, or take it down. Resolves to an error message, or null. */
+export async function pinStub(stubId: number, pinned: boolean): Promise<string | null> {
+  if (!supabase) return ERROR_LINE;
+  const { error } = await supabase.rpc("pin_stub", { p_stub_id: stubId, p_pinned: pinned });
+  if (!error) return null;
+  return error.message === "Your front row is full. Take one down first." ? error.message : ERROR_LINE;
 }
 
 /** "No. 042". */
