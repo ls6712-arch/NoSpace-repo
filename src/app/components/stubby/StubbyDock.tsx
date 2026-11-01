@@ -186,7 +186,7 @@ export function StubbyDock() {
               onAnimationComplete={() => setRing(false)}
             />
           )}
-          <StubbyBuddy ref={buddy} size={DOCK_STUBBY} rest="ready" waiting={busy} followPointer={finePointer} className="relative mb-3" />
+          <StubbyBuddy ref={buddy} size={DOCK_STUBBY} rest="ready" waiting={busy} followPointer={finePointer} className="relative mb-1.5" />
         </button>
       </div>
 

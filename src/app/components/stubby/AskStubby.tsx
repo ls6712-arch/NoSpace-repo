@@ -120,7 +120,7 @@ export function AskStubby({
       {left !== null && !out && (
         <div role="group" aria-label={ASK_COPY.chipsLabel} className="flex flex-wrap gap-2">
           {ASK_COPY.chips.map((idea) => (
-            <Chip key={idea} aria-pressed={undefined} disabled={busy} onClick={() => quick(idea)}>
+            <Chip key={idea} aria-pressed={undefined} disabled={busy} onClick={() => quick(idea)} className="border border-border">
               {idea}
             </Chip>
           ))}
