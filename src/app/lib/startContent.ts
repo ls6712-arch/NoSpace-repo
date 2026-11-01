@@ -1,5 +1,6 @@
 import { cornerGuide, type GuideKind } from "../data/cornerGuides";
 import { CURATED_CORNERS } from "../data/curatedCorners";
+import { CORNER_PREP } from "../data/cornerPrep";
 import { allSubHobbies } from "../data/hobbies";
 import { formatDuration } from "./dates";
 
@@ -45,10 +46,13 @@ export function startContent(spaceSlug: string, cornerSlug: string): StartConten
   const known = allSubHobbies.find((s) => s.hobbySlug === spaceSlug && s.slug === cornerSlug);
   if (!curated && !known) return null;
   const guide = cornerGuide(spaceSlug, cornerSlug);
-  const outdoors = guide?.where === "outdoors" || curated?.setting === "outdoors";
+  // "At home" only for something you can do on your own at home: a curated Corner set to home, or a
+  // guide that is not outdoors and does not need other people. Martial arts (indoors, together) is not.
+  const atHome = curated ? curated.setting === "home" : !!guide && guide.where !== "outdoors" && guide.together !== "together";
   const minutes = curated?.durationMinutes ? formatDuration(curated.durationMinutes) : guide?.quick ? formatDuration(15) : "";
-  const meta = [outdoors ? "" : "At home", minutes ? `about ${minutes}` : ""].filter(Boolean).join(" · ");
-  const steps = [guide?.step, ...(curated?.steps ?? [])].map((s) => s?.trim() ?? "").filter(Boolean);
+  const meta = [atHome ? "At home" : "", minutes ? `about ${minutes}` : ""].filter(Boolean).join(" · ");
+  const prep = curated ? undefined : CORNER_PREP[`${spaceSlug}/${cornerSlug}`];
+  const steps = [guide?.step, ...(curated?.steps ?? prep?.steps ?? [])].map((s) => s?.trim() ?? "").filter(Boolean);
   return {
     spaceSlug,
     cornerSlug,
@@ -58,7 +62,7 @@ export function startContent(spaceSlug: string, cornerSlug: string): StartConten
     meta,
     example: EXAMPLES[cornerSlug] ?? (curated?.name ?? known?.label ?? cornerSlug).toLowerCase(),
     kind: guide?.kind ?? null,
-    needs: [...(curated?.needs ?? [])],
+    needs: [...(curated?.needs ?? prep?.needs ?? [])],
     steps: [...new Set(steps)],
   };
 }
