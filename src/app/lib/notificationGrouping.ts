@@ -43,6 +43,8 @@ const NEVER_MERGE_KINDS = new Set([
   // 24 hours and writes the count itself. It names nobody, so there is nothing
   // here to fold, and a client-built "and N others" line would be wrong.
   "save",
+  // One line per new Moment that was made after seeing yours; never "and N others".
+  "inspired",
 ]);
 
 function isMergeEligible(n: Notification): boolean {

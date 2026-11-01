@@ -854,6 +854,7 @@ What Start on a suggestion opens: `/start/:space/:corner`. It is the activity it
 | See full Moment | Small link in that sheet to the Moment's own page |
 | Do this | Pill on a Moment (Home, Discover, a Corner's Moments, a Moment's page) whose Corner has a guide. Opens the Start page for that Corner |
 | Open | On a plan sheet in the Calendar, for your own plan in an at-home Corner. Opens its Start page |
+| {Name} tried {corner} after seeing yours. | The "inspired" notification (approved Nov 1, 2026): the author of a Moment is told once for each new Moment made after seeing theirs, only if that Moment's audience includes them. Never a count, never "your Moment inspired N people". The Corner's name drops to lower case unless it is a name like D&D. Opens the new Moment |
 
 The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
 
