@@ -70,9 +70,11 @@ describe("Start content", () => {
     expect(content.meta).toContain(`about`);
   });
 
-  it("shows Cooking with its first step and no needs yet", () => {
+  it("shows Cooking with its first step, then its prep steps and generic needs", () => {
     const content = startContent("food-cooking", "cooking")!;
-    expect(content.steps).toEqual([cornerGuide("food-cooking", "cooking")!.step]);
+    expect(content.steps[0]).toBe(cornerGuide("food-cooking", "cooking")!.step);
+    expect(content.steps.length).toBeGreaterThan(1);
+    expect(content.needs).toContain("The ingredients for one recipe");
     expect(content.kind).toBe("making");
   });
 
