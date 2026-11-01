@@ -12,6 +12,8 @@ import { Label } from "../components/ui/label";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { ADMIN_PICKS } from "../lib/homeCopy";
+import { formatDate } from "../lib/dates";
+import { plural } from "../lib/plural";
 import {
   PICK_COLORS,
   deletePick,
@@ -20,10 +22,12 @@ import {
   isPickColor,
   pickPill,
   pickProblem,
+  runScout,
   savePick,
   setPublished,
-  type CityPick,
+  type AdminPick,
   type PickInput,
+  type ScoutReport,
 } from "../lib/cityPicks";
 
 /**
@@ -32,7 +36,7 @@ import {
  * is_admin (same guard as the other admin pages); the database enforces it
  * as well, so a non-admin could not write a pick even from the console.
  */
-type Row = CityPick & { cornerId: number | null };
+type Row = AdminPick;
 const BLANK: PickInput = { title: "", place: "", starts: "", ends: "", price: "", url: "", cornerId: null, color: "orange" };
 
 export function AdminCityPicks() {
@@ -47,6 +51,9 @@ export function AdminCityPicks() {
   const [formError, setFormError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState<Row | null>(null);
+  const [focus, setFocus] = useState("");
+  const [scouting, setScouting] = useState(false);
+  const [scoutResult, setScoutResult] = useState<{ report: ScoutReport | null; error: string | null } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -114,6 +121,16 @@ export function AdminCityPicks() {
     if (r.error) setError(r.error);
     else await load();
   };
+  const scout = async (e: FormEvent) => {
+    e.preventDefault();
+    if (scouting) return;
+    setScouting(true);
+    setScoutResult(null);
+    const r = await runScout(focus);
+    setScouting(false);
+    setScoutResult(r);
+    if (r.report && r.report.added > 0) await load();
+  };
   const confirmDelete = async () => {
     if (!deleting) return;
     const r = await deletePick(deleting.id);
@@ -135,6 +152,8 @@ export function AdminCityPicks() {
       </header>
 
       {error && <InlineError message={error} />}
+
+      <ScoutPanel focus={focus} setFocus={setFocus} busy={scouting} result={scoutResult} onSubmit={scout} />
 
       {editing ? (
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4 rounded-card border border-border bg-card p-4">
@@ -245,6 +264,7 @@ export function AdminCityPicks() {
                   <div className="min-w-0 flex-1">
                     <p className="text-body font-semibold">{r.title}</p>
                     <p className="text-small text-muted-foreground">{[pickPill(r), r.place].filter(Boolean).join(" · ")}</p>
+                    {r.scout && <ScoutDetails scout={r.scout} />}
                   </div>
                   <span className="rounded-full border border-border px-2.5 py-0.5 text-caption font-semibold">{r.published ? "Published" : "Draft"}</span>
                 </div>
@@ -272,6 +292,81 @@ export function AdminCityPicks() {
         description={ADMIN_PICKS.deleteBody}
         onConfirm={confirmDelete}
       />
+    </div>
+  );
+}
+
+function ScoutPanel({
+  focus,
+  setFocus,
+  busy,
+  result,
+  onSubmit,
+}: {
+  focus: string;
+  setFocus: (v: string) => void;
+  busy: boolean;
+  result: { report: ScoutReport | null; error: string | null } | null;
+  onSubmit: (e: FormEvent) => void;
+}) {
+  const report = result?.report;
+  return (
+    <section aria-labelledby="scout-title" className="flex flex-col gap-3 rounded-card border border-border bg-card p-4">
+      <h2 id="scout-title" className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
+        {ADMIN_PICKS.scoutTitle}
+      </h2>
+      <p className="text-small text-muted-foreground">{ADMIN_PICKS.scoutLine}</p>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+        <Field label={ADMIN_PICKS.scoutFocus} hint={ADMIN_PICKS.scoutFocusHint}>
+          {(id) => <Input id={id} value={focus} maxLength={200} onChange={(e) => setFocus(e.target.value)} disabled={busy} />}
+        </Field>
+        <Button type="submit" className="self-start" disabled={busy} aria-busy={busy}>
+          {busy ? ADMIN_PICKS.scoutBusy : ADMIN_PICKS.scoutButton}
+        </Button>
+      </form>
+      <div aria-live="polite" className="flex flex-col gap-2">
+        {result?.error && (
+          <p role="alert" className="text-small text-destructive">
+            {result.error}
+          </p>
+        )}
+        {report && (
+          <p className="text-small font-semibold">{report.added > 0 ? `Added ${plural(report.added, "draft")}.` : ADMIN_PICKS.scoutNone}</p>
+        )}
+        {report && report.dropped.length > 0 && (
+          <details className="text-small text-muted-foreground">
+            <summary className="cursor-pointer">
+              {ADMIN_PICKS.scoutSkipped} {plural(report.dropped.length, "pick")}
+            </summary>
+            <ul className="mt-2 flex flex-col gap-1">
+              {report.dropped.map((d, i) => (
+                <li key={i}>
+                  <span className="font-semibold text-foreground">{d.title}</span>: {d.reason}
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ScoutDetails({ scout }: { scout: NonNullable<AdminPick["scout"]> }) {
+  return (
+    <div className="mt-1 flex flex-col gap-0.5 text-small text-muted-foreground">
+      <p>
+        {[ADMIN_PICKS.foundBy, scout.checkedAt ? `${ADMIN_PICKS.checked} ${formatDate(scout.checkedAt)}` : null].filter(Boolean).join(" · ")}
+        {scout.sourceUrl && (
+          <>
+            {" · "}
+            <a href={scout.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+              {ADMIN_PICKS.source}
+            </a>
+          </>
+        )}
+      </p>
+      {scout.note && <p>{scout.note}</p>}
     </div>
   );
 }
