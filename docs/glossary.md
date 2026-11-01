@@ -858,6 +858,20 @@ What Start on a suggestion opens: `/start/:space/:corner`. It is the activity it
 
 The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
 
+## Landing page (Nov 1, 2026)
+
+The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms where they exist: "I’m going" (the RSVP), "Count me in", "Bring someone", "Undo", Home, Shelf, Stub, Moment, "Admit one". Stubby only reacts here too: the lines beside him are captions, not speech. **Every row below is a new string, approved by the founder on Nov 1, 2026.**
+
+| Term | Meaning |
+|---|---|
+| Free tonight? Stubby has a pick. | The landing hero line. "Stubby" is the character's name, so it is not a product noun |
+| Get your first pick | The landing buttons that go to sign-up (the hero and the last card). The nav button stays "Sign up" |
+| Good solo | Small badge on an example pick that works well on your own. Also the FAQ's wording ("marked Good solo") |
+| Going solo | The landing nav link to the section about picks that work alone |
+| Nah | The button on an example pick that moves to another pick. Landing examples only |
+| FAQ | The landing nav link to the questions section (the section heading is "Questions") |
+| Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
+
 ## Retired terms
 
 Never use these in UI copy.

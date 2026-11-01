@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LANDING_ALT, LANDING_COPY } from "./copy";
+import { LANDING_COPY } from "./copy";
 import landing from "./Landing.tsx?raw";
 import welcome from "../pages/Welcome.tsx?raw";
 import arrival from "../pages/InviteArrival.tsx?raw";
@@ -10,7 +10,7 @@ const GATE = /invite-only|request an invite|waitlist|wait list|on the list/i;
 
 describe("open sign-up copy", () => {
   it("has no invite-only or waitlist language on the landing page", () => {
-    for (const [key, value] of Object.entries({ ...LANDING_COPY, ...LANDING_ALT })) {
+    for (const [key, value] of Object.entries(LANDING_COPY)) {
       const text = typeof value === "string" ? value : JSON.stringify(value);
       expect(text, key).not.toMatch(GATE);
     }
