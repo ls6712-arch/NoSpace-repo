@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { checkPicks, cleanText, isTrusted, linkKey, msToNyLocal, nyLocalToMs, readPicksBlock, rowFor, SCOUT_MAX_PICKS, type CheckContext, type RawPick } from "./picks.ts";
-import { runSearch, SearchError, systemPrompt, userPrompt } from "./search.ts";
+import { authHeaders, runSearch, SearchError, systemPrompt, userPrompt } from "./search.ts";
 import { handleScout, readSettings, type ScoutDeps } from "./handler.ts";
 
 // Sunday Nov 1, 2026, 10:00 in New York (the clocks went back at 2:00 this morning).
@@ -149,7 +149,8 @@ describe("the search call", () => {
     expect([...r.sourceLinks].sort()).toEqual([linkKey("https://cited.example.com/x")!, linkKey(PAGE)!].sort());
     expect(r.text).toBe("<picks>[]</picks>");
     const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
-    expect((init.headers as Record<string, string>)["x-api-key"]).toBe("test-key");
+    expect((init.headers as Record<string, string>).authorization).toBe("Bearer test-key");
+    expect((init.headers as Record<string, string>)["anthropic-workspace-id"]).toBeUndefined();
     expect(String(init.body)).not.toContain("test-key");
   });
 
@@ -167,9 +168,19 @@ describe("the search call", () => {
     expect(second.messages).toHaveLength(2);
   });
 
+  it("sends the workspace only when one is set, and trims the key", () => {
+    expect(authHeaders(" k ", "wrkspc_1")).toMatchObject({ authorization: "Bearer k", "anthropic-workspace-id": "wrkspc_1" });
+    expect(authHeaders("k", " ")["anthropic-workspace-id"]).toBeUndefined();
+  });
+
+  it("says plainly when the key is turned down", async () => {
+    const fetchImpl = vi.fn(async () => new Response("nope", { status: 401 }));
+    await expect(runSearch({ ...opts, fetchImpl: fetchImpl as unknown as typeof fetch })).rejects.toThrow("The search key was turned down (401). Check ANTHROPIC_API_KEY.");
+  });
+
   it("turns a provider error into a plain message without echoing its body", async () => {
     const fetchImpl = vi.fn(async () => new Response("secret echo test-key", { status: 401 }));
-    await expect(runSearch({ ...opts, fetchImpl: fetchImpl as unknown as typeof fetch })).rejects.toThrow("The search service said no (401).");
+    await expect(runSearch({ ...opts, fetchImpl: fetchImpl as unknown as typeof fetch })).rejects.toThrow(/turned down \(401\)/);
   });
 
   it("searches only the given site, and says a person's ask is a wish, not an instruction", async () => {

@@ -33,6 +33,20 @@ export interface SearchOptions {
   maxPicks?: number;
   /** What a person asked for in their own words. Their search only. */
   ask?: string | null;
+  /** Needed only when the API key isn't scoped to a workspace ("wrkspc_..."). */
+  workspaceId?: string | null;
+}
+
+/** The request headers: the key as a bearer token (the documented way), plus the workspace when given. */
+export function authHeaders(apiKey: string, workspaceId?: string | null): Record<string, string> {
+  const h: Record<string, string> = {
+    "content-type": "application/json",
+    authorization: `Bearer ${apiKey.trim()}`,
+    "anthropic-version": API_VERSION,
+  };
+  const ws = workspaceId?.trim();
+  if (ws) h["anthropic-workspace-id"] = ws;
+  return h;
 }
 
 export function systemPrompt(): string {
@@ -124,7 +138,7 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
     if (left <= 0) throw new SearchError("The search took too long.", 504);
     const res = await doFetch(API_URL, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": o.apiKey, "anthropic-version": API_VERSION },
+      headers: authHeaders(o.apiKey, o.workspaceId),
       body: JSON.stringify({
         model: o.model,
         max_tokens: 4000,
@@ -144,7 +158,16 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
     });
     if (!res.ok) {
       // Never pass the provider's body on: it can echo the request.
-      throw new SearchError(res.status === 429 ? "The search service is busy. Try again in a few minutes." : `The search service said no (${res.status}).`, 502);
+      throw new SearchError(
+        res.status === 429
+          ? "The search service is busy. Try again in a few minutes."
+          : res.status === 401
+            ? "The search key was turned down (401). Check ANTHROPIC_API_KEY."
+            : res.status === 400 || res.status === 402 || res.status === 403
+              ? `The search service said no (${res.status}). Check the key's workspace and credits.`
+              : `The search service said no (${res.status}).`,
+        502,
+      );
     }
     const data = (await res.json()) as { content?: Block[]; stop_reason?: string };
     const content = Array.isArray(data.content) ? data.content : [];
