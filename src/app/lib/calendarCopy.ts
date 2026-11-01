@@ -96,4 +96,14 @@ export const ASK_COPY = {
   cardLabel: "Found for you",
   open: "Open",
   remove: "Remove",
+  /** Quick ideas above the field: each fills it in and asks (one ask, like typing). New, for approval. */
+  chipsLabel: "Quick ideas",
+  chips: ["Free tonight", "This weekend", "Something outdoors"],
+} as const;
+
+/** The Stubby dock (every main signed-in page). New, for approval. Captions beside Stubby, never his speech. */
+export const DOCK_COPY = {
+  button: "Ask Stubby",
+  nudge: "Free tonight? Ask Stubby.",
+  dismiss: "Dismiss",
 } as const;

@@ -68,6 +68,35 @@ describe("AskStubby", () => {
     expect((screen.getByRole("button", { name: "Ask Stubby" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it("a quick idea fills in the field and asks (one ask, like typing)", async () => {
+    const onReact = vi.fn();
+    api.askStubby.mockResolvedValue({ found: 2, asksLeft: 2, error: null });
+    render(<AskStubby variant="panel" onReact={onReact} />);
+    const chips = await screen.findByRole("group", { name: "Quick ideas" });
+    expect(Array.from(chips.querySelectorAll("button")).map((b) => b.textContent)).toEqual(["Free tonight", "This weekend", "Something outdoors"]);
+    fireEvent.click(screen.getByRole("button", { name: "This weekend" }));
+    expect(await screen.findByText("Found 2 things.")).toBeTruthy();
+    expect(api.askStubby).toHaveBeenCalledTimes(1);
+    expect(api.askStubby).toHaveBeenCalledWith("This weekend");
+    expect(onReact).toHaveBeenCalledWith("stamped");
+  });
+
+  it("hides the quick ideas at 0 asks left", async () => {
+    api.asksLeft.mockResolvedValue(0);
+    render(<AskStubby variant="panel" />);
+    await screen.findByText("That’s your 3 for today. Stubby can look again tomorrow.");
+    expect(screen.queryByRole("group", { name: "Quick ideas" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Free tonight" })).toBeNull();
+  });
+
+  it("as a panel it drops its own heading (the sheet has the title) and reports asks left", async () => {
+    const onAsksLeft = vi.fn();
+    render(<AskStubby variant="panel" onAsksLeft={onAsksLeft} />);
+    await screen.findByText("3 asks left today");
+    expect(screen.queryByRole("heading")).toBeNull();
+    expect(onAsksLeft).toHaveBeenCalledWith(3);
+  });
+
   it("removes a pick", async () => {
     api.fetchMyPicks.mockResolvedValue([pick]);
     render(<AskStubby />);

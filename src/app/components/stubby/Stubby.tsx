@@ -31,6 +31,11 @@ import { haptic } from "../../lib/motionTokens";
 
 export type StubbyState =
   | "idle" // waiting on any screen: breathes, blinks, glances around
+  | "ready" // the dock: waiting to help, smiling. Same idle life as idle, with the happy face
+  | "hello" // the dock appears for the first time in a session: one hop, happy
+  | "eager" // the dock is hovered or focused: a small hop and a giggle
+  | "excited" // the dock's panel opens: star eyes and a hop
+  | "peek" // something appeared beside him: a glance that way and a small bob
   | "stamped" // you picked something: crouch, jump, a star slams onto the tab
   | "unstamped" // you un-picked it: the stamp fades, a small sigh
   | "yours" // you added a pass you already have: winks, the tab is punched
@@ -53,6 +58,11 @@ type Stamp = "none" | "star" | "punch" | "check" | "hand";
 /** The look each state leaves behind once its reaction has played. */
 const REST: Record<StubbyState, { face: Face; stamp?: Stamp; torn?: boolean }> = {
   idle: { face: "idle" },
+  ready: { face: "happy" },
+  hello: { face: "happy" },
+  eager: { face: "happy" },
+  excited: { face: "happy" },
+  peek: { face: "happy" },
   stamped: { face: "idle", stamp: "star" },
   unstamped: { face: "idle", stamp: "none" },
   yours: { face: "idle", stamp: "punch" },
@@ -385,7 +395,7 @@ export function Stubby({
 
   const blink = useCallback(
     async (twice = false) => {
-      if (!["idle", "thinking", "tilt", "shrug", "surprised"].includes(faceNow.current)) return;
+      if (!["idle", "happy", "thinking", "tilt", "shrug", "surprised"].includes(faceNow.current)) return;
       const f = [{ transform: S(1, 1) }, { transform: S(1, 0.08) }, { transform: S(1, 1) }];
       await anim(refs.current.blink, f, { duration: 150, easing: EASE.sway });
       if (twice) {
@@ -606,6 +616,32 @@ export function Stubby({
           await blink();
           break;
         }
+        case "hello": {
+          showFace("happy");
+          void browPop(-6);
+          await hop(16);
+          break;
+        }
+        case "eager": {
+          showFace("giggle");
+          await hop(10);
+          break;
+        }
+        case "excited": {
+          showFace("starry");
+          void browPop(-6);
+          await hop(14);
+          await wait(250);
+          break;
+        }
+        case "peek": {
+          lookTo(-6, -2, 260);
+          void browPop(-5);
+          await anim(hopEl, [{ transform: T(0, 0) }, { transform: T(0, -5) }, { transform: T(0, 0) }], { duration: 420, easing: EASE.sway });
+          await wait(700);
+          lookTo(0, 0, 320);
+          break;
+        }
         case "sleep": {
           showFace("sleep");
           lookTo(0, 0, 300);
@@ -640,7 +676,7 @@ export function Stubby({
     prev.current = state;
     if (firstRun.current) {
       firstRun.current = false;
-      if (state === "idle" || state === "cool" || state === "sleep" || state === "thinking") return;
+      if (state === "idle" || state === "ready" || state === "cool" || state === "sleep" || state === "thinking") return;
     }
     queue.current = queue.current.then(async () => {
       if (!alive.current) return;
@@ -725,7 +761,7 @@ export function Stubby({
     };
     const glanceLoop = () => {
       g = setTimeout(async () => {
-        if (awake.current && !busy.current && faceNow.current === "idle" && Date.now() - lastPointer.current > 2500) {
+        if (awake.current && !busy.current && (faceNow.current === "idle" || (state === "ready" && faceNow.current === "happy")) && Date.now() - lastPointer.current > 2500) {
           lookTo(Math.random() < 0.5 ? -6 : 6, Math.random() < 0.3 ? -3 : 0, 260);
           await wait(900 + Math.random() * 700);
           if (Date.now() - lastPointer.current > 2500) lookTo(0, 0, 320);
@@ -783,7 +819,7 @@ export function Stubby({
     const onMove = (e: PointerEvent) => {
       lastPointer.current = Date.now();
       const svg = svgRef.current;
-      if (!svg || state === "sleep" || (busy.current && faceNow.current !== "idle")) return;
+      if (!svg || state === "sleep" || (busy.current && faceNow.current !== REST[state].face)) return;
       const b = svg.getBoundingClientRect();
       const dx = e.clientX - (b.left + b.width * 0.42), dy = e.clientY - (b.top + b.height * 0.5);
       const len = Math.hypot(dx, dy) || 1, k = Math.min(1, len / 260);

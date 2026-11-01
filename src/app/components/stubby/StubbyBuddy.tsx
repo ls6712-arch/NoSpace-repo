@@ -2,7 +2,16 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Stubby, type StubbyState } from "./Stubby";
 
 /** The reactions a screen can ask its Stubby for. Each plays once, then he settles back. */
-export type BuddyReaction = Extract<StubbyState, "stamped" | "unstamped" | "shrug" | "torn" | "tilt" | "done">;
+export type BuddyReaction = Extract<
+  StubbyState,
+  "stamped" | "unstamped" | "shrug" | "torn" | "tilt" | "done" | "hello" | "eager" | "excited" | "peek"
+>;
+
+/** The happy little moves the dock asks for. They give way the moment Stubby has real work (thinking). */
+const CHEERS: ReadonlySet<BuddyReaction> = new Set(["hello", "eager", "excited", "peek"]);
+
+/** How Stubby rests between reactions: `idle` on a screen, `ready` (smiling) in the dock. */
+export type BuddyRest = Extract<StubbyState, "idle" | "ready">;
 
 export interface StubbyBuddyHandle {
   react: (r: BuddyReaction) => void;
@@ -17,13 +26,13 @@ export const SETTLE_MS = 2600;
  * readers: whatever he reacts to already says so in words elsewhere.
  *
  * `waiting` shows him thinking while the screen loads; `upset` tilts his head when
- * it couldn't. After any reaction he settles back to resting, fresh (no stamp, no
+ * it couldn't. After any reaction he settles back to `rest`, fresh (no stamp, no
  * torn tab), so the next reaction always reads clearly. A tap squishes him.
  */
-export const StubbyBuddy = forwardRef<StubbyBuddyHandle, { size?: number; waiting?: boolean; upset?: boolean; className?: string }>(function StubbyBuddy(
-  { size = 56, waiting = false, upset = false, className },
-  ref,
-) {
+export const StubbyBuddy = forwardRef<
+  StubbyBuddyHandle,
+  { size?: number; waiting?: boolean; upset?: boolean; rest?: BuddyRest; followPointer?: boolean; className?: string }
+>(function StubbyBuddy({ size = 56, waiting = false, upset = false, rest = "idle", followPointer = false, className }, ref) {
   const [reaction, setReaction] = useState<BuddyReaction | null>(null);
   // A new key after a reaction gives a fresh, resting Stubby.
   const [round, setRound] = useState(0);
@@ -40,10 +49,11 @@ export const StubbyBuddy = forwardRef<StubbyBuddyHandle, { size?: number; waitin
   }, []);
   useImperativeHandle(ref, () => ({ react }), [react]);
 
-  const state: StubbyState = reaction ?? (upset ? "tilt" : waiting ? "thinking" : "idle");
+  const cheering = reaction !== null && CHEERS.has(reaction);
+  const state: StubbyState = (cheering && (waiting || upset) ? null : reaction) ?? (upset ? "tilt" : waiting ? "thinking" : rest);
   return (
     <span aria-hidden="true" className={className} data-stubby-state={state}>
-      <Stubby key={round} state={state} size={size} label="" />
+      <Stubby key={round} state={state} size={size} label="" followPointer={followPointer} />
     </span>
   );
 });

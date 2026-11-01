@@ -1,9 +1,10 @@
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { cn } from "./utils";
 import { DISMISS_OFFSET, DISMISS_VELOCITY, sheet } from "../../lib/motionTokens";
 import { captureOpener, restoreFocus } from "../../lib/returnFocus";
+import { markFullSheetOpen } from "../../lib/stubbyDock";
 
 /**
  * A bottom sheet that springs up on the `sheet` token (Make it a Pursuit,
@@ -24,6 +25,7 @@ export function BottomSheet({
   footer,
   children,
   className,
+  focusContent = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,9 +35,14 @@ export function BottomSheet({
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Focus the sheet itself on open, not its first field, so a phone keyboard doesn't jump up over it. */
+  focusContent?: boolean;
 }) {
   const controls = useDragControls();
   const opener = useRef<HTMLElement | null>(null);
+  const content = useRef<HTMLDivElement | null>(null);
+  // A full-screen sheet covers the page, so the Stubby dock steps aside while it is open.
+  useEffect(() => (open && full ? markFullSheetOpen() : undefined), [open, full]);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <AnimatePresence>
@@ -53,14 +60,20 @@ export function BottomSheet({
             <Dialog.Content
               asChild
               forceMount
-              onOpenAutoFocus={() => {
+              onOpenAutoFocus={(e) => {
                 opener.current = captureOpener();
+                if (focusContent) {
+                  e.preventDefault();
+                  content.current?.focus({ preventScroll: true });
+                }
               }}
               onCloseAutoFocus={(e) => {
                 if (restoreFocus(opener.current)) e.preventDefault();
               }}
             >
               <motion.div
+                ref={content}
+                tabIndex={-1}
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
