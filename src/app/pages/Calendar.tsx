@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
@@ -56,6 +56,7 @@ import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
 import { keepPick, undoKeep } from "../lib/pickActions";
+import { StubbyBuddy, type StubbyBuddyHandle } from "../components/stubby/StubbyBuddy";
 import { usePickDeclines } from "../lib/pickDeclines";
 import { stubbyPicks } from "../lib/stubbyPicks";
 import { announceChange } from "../lib/undo";
@@ -179,10 +180,17 @@ export function Calendar() {
     track({ name: "week_budget_changed" });
     if (!(await data.saveBudget(b))) notifyError(ERROR_LINE);
   };
+  // Stubby, top right, reacts to what you do here. He never talks; the words are elsewhere.
+  const buddy = useRef<StubbyBuddyHandle>(null);
   const onBring = async (plan: WeekPlanDetail) => {
     if (!owner) return;
     const r = await bringSomeone(plan, owner);
-    if (!r.ok) notifyError(r.error ?? ERROR_LINE);
+    if (!r.ok) {
+      buddy.current?.react("tilt");
+      notifyError(r.error ?? ERROR_LINE);
+      return;
+    }
+    buddy.current?.react("torn");
   };
   const retry = () => {
     data.reload();
@@ -200,9 +208,11 @@ export function Calendar() {
         next.delete(pick.id);
         return next;
       });
+      buddy.current?.react("tilt");
       notifyError(r.error);
       return;
     }
+    buddy.current?.react("stamped");
     reloadPlans();
     announceChange(r.requested ? CHANGED.requested : CHANGED.kept, {
       undo: () => {
@@ -211,6 +221,7 @@ export function Calendar() {
           next.delete(pick.id);
           return next;
         });
+        buddy.current?.react("unstamped");
         void undoKeep(pick, owner.id).then((e) => {
           if (e) notifyError(e);
           reloadPlans();
@@ -218,7 +229,11 @@ export function Calendar() {
       },
     });
   };
-  const declinePick = (slot: CalendarFreeSlot) => slot.pick && notThis(slot.slotKey, slot.pick.id);
+  const declinePick = (slot: CalendarFreeSlot) => {
+    if (!slot.pick) return;
+    buddy.current?.react("shrug");
+    return notThis(slot.slotKey, slot.pick.id);
+  };
 
   const open: Openers = {
     plan: (plan) => setSheet({ type: "plan", plan }),
@@ -322,7 +337,11 @@ export function Calendar() {
 
   const showWeekExtras = view === "week" && sameDay(days[0], now);
   return (
-    <PageShell title={viewTitle(view, anchor, now)} subtitle={subline}>
+    <PageShell
+      title={viewTitle(view, anchor, now)}
+      subtitle={subline}
+      action={<StubbyBuddy ref={buddy} waiting={data.status === "loading"} upset={data.status === "error" || (data.status === "ready" && extra.failed)} />}
+    >
       <CalendarToolbar
         view={view}
         showButton={!panel}
