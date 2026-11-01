@@ -19,7 +19,7 @@ Web pages are treated as data. The model can't touch the database, can't publish
 
 ## Deploy (not done by any PR)
 
-Needs `20261118000000_stubby_scout.sql` applied first.
+Needs `20261101155717_stubby_scout.sql` applied first.
 
 ```bash
 supabase functions deploy stubby-scout

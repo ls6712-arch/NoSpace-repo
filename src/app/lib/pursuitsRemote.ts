@@ -34,7 +34,7 @@ function rowToProject(row: any): Project {
     customSpace: row.custom_space ?? undefined,
     inspiredByPostId: row.inspired_by_post_id ?? undefined,
     shared: !!row.shared,
-    // Column from supabase/migrations/20261113000000_calendar_edits.sql; absent reads as a Pursuit.
+    // Column from supabase/migrations/20261031185723_calendar_edits.sql; absent reads as a Pursuit.
     plan: row.is_plan ? true : undefined,
     startedAt: new Date(row.started_at).getTime(),
     finishedAt: row.finished_at ? new Date(row.finished_at).getTime() : undefined,

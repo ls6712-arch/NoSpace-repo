@@ -5,7 +5,7 @@ import { cornerName } from "./homeItems";
 import type { EarnedStub } from "./stubFace";
 import { ERROR_LINE } from "./stateCopy";
 
-/** A Stub as the database holds it (migration 20261115000000: four kinds). */
+/** A Stub as the database holds it (migration 20261101134307: four kinds). */
 export type StubKind = "event" | "finish" | "drop" | "regular";
 
 export interface StubRow {

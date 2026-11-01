@@ -6,7 +6,7 @@ import { mergeSpans, planSpan, weekDays, windowsAcross, type Span, type WeekPlan
 
 /**
  * What changes a person's usual week: one-off or weekly free time ("I'm free
- * then"), "not free this time", and private blocks (migration 20261113000000).
+ * then"), "not free this time", and private blocks (migration 20261031185723).
  * `effectiveFreeTime` is the one place that says what is free: the usual week
  * plus free entries, minus busy entries, blocks, busy times from elsewhere and
  * plans. It is pure and runs in New York time.

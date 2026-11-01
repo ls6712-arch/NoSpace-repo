@@ -1,4 +1,4 @@
--- Verifies 20261031000000_profiles_column_privacy.sql. Run AFTER it.
+-- Verifies 20261031000001_profiles_column_privacy.sql. Run AFTER it.
 --
 -- Not a migration. One transaction, one do $$ ... $$ block, ends unconditionally
 -- in RAISE EXCEPTION 'RESULTS: ...' and rolls back. No SELECT/RETURNING INTO and

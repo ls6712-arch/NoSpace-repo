@@ -1,5 +1,5 @@
 -- Profile roles and planning: verification for
--- 20261110000000_profile_roles_and_planning.sql.
+-- 20261030210601_profile_roles_and_planning.sql.
 --
 -- Not a migration, nothing here alters the schema. Run AFTER that migration. Run
 -- before it, the script stops and says "NOT APPLIED"; it never creates anything then.
@@ -59,7 +59,7 @@ begin
     select 1 from information_schema.tables t
     where t.table_schema = 'public' and t.table_name = 'planning_prefs'
   ) then
-    raise exception 'RESULTS: NOT APPLIED (run 20261110000000_profile_roles_and_planning.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261030210601_profile_roles_and_planning.sql first, nothing was created)';
   end if;
 
   -- Fixtures ----------------------------------------------------------------

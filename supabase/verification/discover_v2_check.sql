@@ -2,7 +2,7 @@
 -- log_discover_event().
 --
 -- Not a migration; nothing here changes the schema or the data for good. Run this AFTER
--- 20261111000000_discover_v2.sql. Run before it, the script stops and says "NOT APPLIED"
+-- 20261030225537_discover_v2.sql. Run before it, the script stops and says "NOT APPLIED"
 -- and creates nothing.
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in
@@ -55,7 +55,7 @@ begin
      or to_regprocedure('public.discover_corners(integer,text[])') is null
      or to_regprocedure('public.discover_spaces(integer)') is null
      or to_regprocedure('public.log_discover_event(text,text,text,integer,text)') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261111000000_discover_v2.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261030225537_discover_v2.sql first, nothing was created)';
   end if;
 
   -- Fixture, as the connecting (owner) role, which bypasses RLS. ----------------------

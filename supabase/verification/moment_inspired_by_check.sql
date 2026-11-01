@@ -1,4 +1,4 @@
--- Soosh: "Inspired by" (20261117000000_moment_inspired_by.sql).
+-- Soosh: "Inspired by" (20261101134703_moment_inspired_by.sql).
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER that migration.
 -- Run before it, the script stops at the first check and says so ("NOT APPLIED").
@@ -46,7 +46,7 @@ begin
 
   if to_regprocedure('private.notify_inspired(bigint)') is null
      or not exists (select 1 from information_schema.columns c where c.table_schema = 'public' and c.table_name = 'posts' and c.column_name = 'inspired_by') then
-    raise exception 'RESULTS: NOT APPLIED (run 20261117000000_moment_inspired_by.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261101134703_moment_inspired_by.sql first, nothing was created)';
   end if;
 
   v_i := v_i + 1;

@@ -1,6 +1,6 @@
 -- Soosh core loop v1, PR 5: what a host can say about an event, and which Spaces have member Moments.
 --
--- Run AFTER 20261101000000_moment_audience_and_stubs.sql. Not applied until the
+-- Run AFTER 20261028204039_moment_audience_and_stubs.sql. Not applied until the
 -- founder approves this file by name (CLAUDE.md).
 --
 --   1. space_events.price (text), capacity (int) and booking_url (text). All three

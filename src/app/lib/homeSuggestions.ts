@@ -5,7 +5,7 @@ import { isPassKind, type PassKind } from "./tasteModel";
 /**
  * What Home v2 reads and logs: the ranked things to do this week from
  * `home_suggestions()` and the log of what was shown and done
- * (`suggestion_events`), both from migration 20261109000000. Best effort: a
+ * (`suggestion_events`), both from migration 20261030172959. Best effort: a
  * failure, or the migration not being live yet, means fewer suggestions and a
  * lost log row, never an error screen.
  */

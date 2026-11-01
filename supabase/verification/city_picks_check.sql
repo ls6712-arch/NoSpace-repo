@@ -1,7 +1,7 @@
 -- Week view, PR 2: public.city_picks.
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run this AFTER
--- 20261112000000_city_picks.sql. Run before it, the script stops and says "NOT APPLIED";
+-- 20261031001347_city_picks.sql. Run before it, the script stops and says "NOT APPLIED";
 -- it never creates anything then.
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in
@@ -31,7 +31,7 @@ begin
   v_owner_role := current_user;
 
   if to_regclass('public.city_picks') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261112000000_city_picks.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261031001347_city_picks.sql first, nothing was created)';
   end if;
 
   -- Fixture, as the connecting (owner) role, which bypasses RLS.
