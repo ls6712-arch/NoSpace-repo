@@ -71,7 +71,7 @@ refused, security definer with a pinned search_path.
 
 ## Home v2: what to do this week (Oct 30, 2026)
 
-`public.home_suggestions(p_limit)` (migration `20261109000000`) ranks events in
+`public.home_suggestions(p_limit)` (migration `20261030172959`) ranks events in
 open Spaces and open Pursuits with room, for the signed-in caller, over the next
 7 days. It reads only the caller's own private answers (`profile_private`:
 picks, free windows, area and city, monthly budget; `user_passes`) and never

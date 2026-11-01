@@ -156,12 +156,12 @@ export const POST_COLUMNS_WITH_MEDIA_PATHS = `${BASE_POST_COLUMNS}, media_paths`
  * Reflection's private column on the wire regardless of what the caller's
  * own mapper does with it (see the comment above this constant). */
 export const POST_COLUMNS_WITH_COUNTS = `${POST_COLUMNS_WITH_MEDIA_PATHS}, love_count, in_count`;
-/** Also who the Moment is for (posts.audience, migration 20261101000000).
+/** Also who the Moment is for (posts.audience, migration 20261028204039).
  * Dropped when that column is missing, so the counts and media paths keep
  * working. */
 export const POST_COLUMNS_WITH_AUDIENCE = `${POST_COLUMNS_WITH_COUNTS}, audience`;
 /** The top tier: also the city a Moment was made in (posts.city, migration
- * 20261111000000). Dropped first when that column is missing, so audience
+ * 20261030225537). Dropped first when that column is missing, so audience
  * keeps working. */
 export let POST_COLUMNS = `${POST_COLUMNS_WITH_AUDIENCE}, city`;
 /** True for any "column doesn't exist" error, not only a count column's —
@@ -761,7 +761,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // posts.city is the same: sent only when set, and dropped when its column is missing.
       const withAudience = input.audience ? { ...held, audience: input.audience } : held;
       const withCity = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
-      // posts.inspired_by (migration 20261117000000) is sent only when set, and dropped when its column is missing.
+      // posts.inspired_by (migration 20261101134703) is sent only when set, and dropped when its column is missing.
       const withInspired = input.inspiredBy ? { ...withCity, inspired_by: input.inspiredBy } : withCity;
       let { data, error } = await supabase
         .from("posts")

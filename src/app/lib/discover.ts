@@ -5,7 +5,7 @@ import { parsePassCorners, type PassCorners } from "./discoverIdeas";
 /**
  * What Discover v2 reads and logs: `discover_moments()`, `discover_corners()` and
  * `discover_spaces()`, and the Discover rows of `suggestion_events`, all from
- * migration 20261111000000. Best effort: a failure, or the migration not being live
+ * migration 20261030225537. Best effort: a failure, or the migration not being live
  * yet, means an empty list (the section hides) and a lost log row, never an error
  * screen. No function here returns a follower or member count.
  */

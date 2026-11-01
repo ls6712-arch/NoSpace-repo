@@ -2,7 +2,7 @@ import { supabase } from "../../lib/supabase";
 
 /**
  * Which of these accounts are test accounts (profiles.is_test, migration
- * 20261107000000). Public lists leave them out; nothing is deleted. A person
+ * 20261030144137). Public lists leave them out; nothing is deleted. A person
  * always sees their own account, test or not.
  *
  * Fails open: if the column isn't in this database yet, or the read fails, the

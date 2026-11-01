@@ -1,7 +1,7 @@
 -- Soosh core loop v1, PR 4: posts.audience and the session and gold Stubs.
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER
--- 20261101000000_moment_audience_and_stubs.sql. Run before it, the script stops at
+-- 20261028204039_moment_audience_and_stubs.sql. Run before it, the script stops at
 -- the first check and says so ("NOT APPLIED").
 --
 -- One transaction, one do $$ ... $$ block, ends unconditionally in RAISE EXCEPTION
@@ -44,7 +44,7 @@ begin
     select 1 from information_schema.columns c
     where c.table_schema = 'public' and c.table_name = 'stubs' and c.column_name = 'kind'
   ) then
-    raise exception 'RESULTS: NOT APPLIED (run 20261101000000_moment_audience_and_stubs.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261028204039_moment_audience_and_stubs.sql first, nothing was created)';
   end if;
 
   insert into auth.users

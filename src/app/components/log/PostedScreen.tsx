@@ -39,7 +39,7 @@ export const LOG_PHOTO_LAYOUT_ID = "log-photo";
  * draws), a card when someone loves the Moment while you are here, three rows
  * for what to do next, and a way home. A Moment earns a Stub only when it
  * finishes a Pursuit or a drop, or is a Corner's 10th day this month
- * (20261115000000); most Moments earn none, and then no ticket shows.
+ * (20261101134307); most Moments earn none, and then no ticket shows.
  */
 export function PostedScreen({
   postId,

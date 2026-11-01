@@ -1,7 +1,7 @@
 -- Calendar, PR 4: public.calendar_feed_tokens and public.set_calendar_feed_token().
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run this AFTER
--- 20261114000000_calendar_feed.sql. Run before it, the script stops and says "NOT APPLIED"; it never
+-- 20261031214055_calendar_feed.sql. Run before it, the script stops and says "NOT APPLIED"; it never
 -- creates anything then.
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in RAISE EXCEPTION 'RESULTS: ...' so a
@@ -32,7 +32,7 @@ begin
   v_owner_role := current_user;
 
   if to_regclass('public.calendar_feed_tokens') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261114000000_calendar_feed.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261031214055_calendar_feed.sql first, nothing was created)';
   end if;
 
   insert into auth.users

@@ -1,7 +1,7 @@
 -- Open sign-up: no birthdate, no activity.
 --
 -- Not a migration, nothing here alters the schema permanently. Run this AFTER
--- 20261108000000_require_birthdate.sql. Run before it, the script stops and says
+-- 20261030144151_require_birthdate.sql. Run before it, the script stops and says
 -- "NOT APPLIED"; it never creates anything then.
 --
 -- One transaction, one do $$ ... $$ block, ends unconditionally in RAISE EXCEPTION
@@ -24,7 +24,7 @@ declare
   v_old uuid := '00000000-0000-4000-8000-000000007102';
 begin
   if to_regprocedure('private.require_birthdate_to_finish()') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261108000000_require_birthdate.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261030144151_require_birthdate.sql first, nothing was created)';
   end if;
 
   insert into auth.users
