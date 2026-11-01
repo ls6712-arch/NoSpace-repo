@@ -284,7 +284,9 @@ export function Stubby({
 }) {
   const reduce = useReducedMotion() ?? false;
   const mark = size < 56;
-  const still = reduce || mark;
+  // Without the Web Animations API (an old browser, or a test runner) Stubby holds still instead of crashing.
+  const canAnimate = typeof Element !== "undefined" && typeof Element.prototype.animate === "function";
+  const still = reduce || mark || !canAnimate;
   const clipId = `stubby-tab-${useId().replace(/:/g, "")}`;
 
   const [face, setFace] = useState<Face>(REST[state].face);
