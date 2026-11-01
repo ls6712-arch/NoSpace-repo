@@ -29,11 +29,19 @@ export function PrivacyPolicy() {
         you open or join, for 90 days. We use it to make suggestions fit you better.
         Only you can see it, and it is deleted with your account.
       </p>
+      <p>
+        When you ask Stubby to find something, what you type is sent once to Anthropic, which
+        runs the search, and we don’t keep it. What Stubby finds is saved for you only, and
+        deleted two days after it happens. Things he finds can also be added to the picks
+        everyone sees, without your name or what you asked. We keep a count of your asks for
+        30 days so we can limit them to 3 a day.
+      </p>
 
       <h2>Who else sees it</h2>
       <p>
         {APP_NAME} runs on Supabase, which hosts our database, handles login, and
-        stores your photos, and on Vercel, which hosts the app itself. If you log in
+        stores your photos, and on Vercel, which hosts the app itself. Anthropic runs the web
+        search when you ask Stubby to find something. If you log in
         with Google, Google is involved in that one step. We don’t sell your
         information to anyone.
       </p>

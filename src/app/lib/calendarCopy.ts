@@ -82,3 +82,18 @@ export const SUBSCRIBE = {
   resetHint: "Your old link will stop working, including in any calendar using it.",
   elsewhere: "This device doesn’t have your link. Reset it to get a new one here.",
 } as const;
+
+/** "Something different?": asking Stubby to search right then (glossary, Calendar: asking Stubby). */
+export const ASK_COPY = {
+  title: "Something different?",
+  label: "What are you after?",
+  placeholder: "Pottery on Saturday, a free run, something outdoors",
+  button: "Ask Stubby",
+  busy: "Looking",
+  nothing: "Nothing fit this time. Try asking another way.",
+  none: "That’s your 3 for today. Stubby can look again tomorrow.",
+  listLabel: "Found for you",
+  cardLabel: "Found for you",
+  open: "Open",
+  remove: "Remove",
+} as const;
