@@ -5,29 +5,31 @@ import { RollNumber } from "../ui/RollNumber";
 import { cn } from "../ui/utils";
 import { haptic, pop, shared } from "../../lib/motionTokens";
 
-export type TicketVariant = "session" | "event" | "gold";
+export type TicketVariant = "event" | "finish" | "drop" | "regular";
 
 const STUB_WIDTH = 88; // px, the right-hand count
 const WIDE_STUB_WIDTH = 124; // px, when the total has two digits ("10/10")
 const COMPACT_STUB_WIDTH = 14; // px, the narrow tear-off edge on a grid tile
 const NOTCH = 9; // px, radius of the perforation cut-outs
 
-const GOLD = "#D7A03D"; // design-token-ignore: gold stub colour from the visual spec (the amber category colour, fixed in both themes)
+const GOLD = "#D7A03D"; // design-token-ignore: Finisher stub colour from the visual spec (the amber category colour, fixed in both themes)
 
 /**
  * A Stub as a ticket (core loop v1, §2.2). The body takes the category colour;
  * a notched perforation (CSS mask, no image) and a dashed divider split off
  * the count on the right. Text on it is always ink.
  *
- * - `session`: a Moment that counted toward a Pursuit.
  * - `event`: confirmed by a host (shows the check).
- * - `gold`: a finished Pursuit, amber with a slow foil sweep.
+ * - `finish`: a finished Pursuit, amber with a slow foil sweep.
+ * - `drop`: a drop finished inside its window; the foil sweep on its Corner colour.
+ * - `regular`: one Corner on 10 different days in a month.
+ * (Each kind's own material arrives with the Stub look PR; these are the interim faces.)
  *
  * `reveal` plays the Posted moment: the ticket drops in 40px on `pop`, the
  * perforation draws in 120ms, then the count rolls up by one.
  */
 export function Ticket({
-  variant = "session",
+  variant = "regular",
   serial,
   title,
   meta,
@@ -71,7 +73,7 @@ export function Ticket({
   // design-token-ignore: mask colours only set alpha; they are never painted
   const notch = (y: string) => `radial-gradient(circle ${NOTCH}px at ${x} ${y}, #0000 98%, #000)`;
   const style = {
-    background: variant === "gold" ? GOLD : color,
+    background: variant === "finish" ? GOLD : color,
     WebkitMask: `${notch("0")}, ${notch("100%")}`,
     mask: `${notch("0")}, ${notch("100%")}`,
     WebkitMaskComposite: "source-in",
@@ -126,7 +128,7 @@ export function Ticket({
         </div>
       )}
 
-      {variant === "gold" && (
+      {(variant === "finish" || variant === "drop") && (
         <motion.span
           aria-hidden="true"
           initial={{ x: "-120%" }}

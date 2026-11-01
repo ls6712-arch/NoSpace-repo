@@ -74,7 +74,7 @@ describe("Profile tabs", () => {
     expect(moments.getAttribute("aria-selected")).toBe("true");
     fireEvent.mouseDown(screen.getByRole("tab", { name: "Stubs" }), { button: 0, ctrlKey: false });
     await waitFor(() => expect(screen.getByTestId("where").textContent).toBe("/you?tab=stubs"));
-    expect(await screen.findByText("No Stubs yet. Log a Moment toward a Pursuit to earn one.")).toBeTruthy();
+    expect(await screen.findByText("No Stubs yet. Finish a Pursuit or go to an event to earn one.")).toBeTruthy();
     const stubs = screen.getByRole("tab", { name: "Stubs" });
     stubs.focus();
     fireEvent.keyDown(stubs, { key: "ArrowRight" });

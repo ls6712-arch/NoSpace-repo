@@ -557,7 +557,6 @@ function StubSheet({ stub, onClose }: { stub: StubCard; onClose: () => void }) {
         serial={stub.serial ?? undefined}
         title={stub.title}
         meta={stub.meta}
-        count={stub.count}
         color={`var(--cat-${stubColor(stub)})`}
       />
     </ResponsiveSheet>

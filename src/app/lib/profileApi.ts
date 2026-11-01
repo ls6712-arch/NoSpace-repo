@@ -95,14 +95,24 @@ export interface MomentPage<T> {
   items: T[];
 }
 
-interface StubItem {
+/** One Stub as get_profile_stubs returns it (20261115000000). Fields a viewer may not see are absent. */
+export interface StubItem {
   id: number;
-  /** Owner only. */
-  date: string | null;
-  /** YYYY-MM-DD. */
+  kind: "event" | "finish" | "drop" | "regular";
+  cornerKey?: string;
+  /** YYYY-MM-DD, New York. */
   day: string;
-  title: string | null;
-  category: string | null;
+  pinned: boolean;
+  /** Owner only. */
+  serial?: number;
+  /** A Finisher's or drop's Pursuit, or an event's title (members of a Closed Space only). */
+  title?: string;
+  goal?: number;
+  coverPath?: string;
+  /** A Regular's month, YYYY-MM. */
+  period?: string;
+  drop?: { slug: string; title: string; artPath?: string; palette: string[]; edition: number; closesAt: string; editionsTotal?: number };
+  event?: { full: true; spaceName: string; spaceSlug: string; neighborhood?: string; hostName?: string } | { full: false; month: string };
 }
 
 export interface PursuitItem {

@@ -205,7 +205,7 @@ export function PursuitRecap() {
         {/* The gold stub, on a soft amber glow (a static gradient: the animated shader is not used). */}
         <div className="rounded-card p-3" style={{ background: "radial-gradient(120% 120% at 50% 0%, color-mix(in srgb, var(--cat-amber) 28%, transparent), transparent 70%)" }}>
           <Ticket
-            variant="gold"
+            variant="finish"
             serial={Math.max(1, completed)}
             title={corner}
             meta={meta}

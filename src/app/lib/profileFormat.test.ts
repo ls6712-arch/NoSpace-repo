@@ -32,7 +32,7 @@ describe("moment meta (date coarsening)", () => {
     expect(visibleAtLabel(new Date(2026, 9, 30, 19, 42).toISOString())).toBe("Visible to others at 7:42 pm");
   });
   it("splits a Stub into a month and a day", () => {
-    expect(stubBlock({ date: null, day: "2026-10-24" })).toEqual({ month: "Oct", day: "24" });
+    expect(stubBlock({ day: "2026-10-24" })).toEqual({ month: "Oct", day: "24" });
   });
 });
 

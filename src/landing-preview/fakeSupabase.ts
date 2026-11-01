@@ -186,7 +186,7 @@ const previewPursuits = () => {
   ];
 };
 const previewStubs = () =>
-  previewRole() === "new" || flag("preview-empty") === "1" ? [] : [{ id: 1, date: previewRole() === "owner" ? "2026-10-24T19:00:00Z" : null, day: "2026-10-24", title: "Eleven miles along the river", category: "Running" }];
+  previewRole() === "new" || flag("preview-empty") === "1" ? [] : [{ id: 1, kind: "finish", cornerKey: "sports-fitness/running", day: "2026-10-24", pinned: false, title: "Eleven miles along the river", ...(previewRole() === "owner" ? { serial: 1 } : {}) }];
 
 const rpcResults: Record<string, (args: any) => any> = {
   my_profile_private: () => [ownPrivate(ME)],

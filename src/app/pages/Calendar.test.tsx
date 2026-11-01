@@ -266,7 +266,7 @@ import { MemoryRouter as Router, useLocation } from "react-router";
 import { FILTERS_KEY } from "../lib/calendarView";
 import type { StubCard } from "../lib/stubs";
 
-const stub = (over: Partial<StubCard> = {}): StubCard => ({ id: 1, kind: "session", serial: 1, title: "Pottery #2", meta: "", issuedAt: ny(10, 3, 15), corner: { spaceSlug: "crafts", slug: "pottery" }, ...over });
+const stub = (over: Partial<StubCard> = {}): StubCard => ({ id: 1, kind: "regular", serial: 1, title: "Pottery #2", meta: "", issuedAt: ny(10, 3, 15), corner: { spaceSlug: "crafts", slug: "pottery" }, ...over });
 const setWide = (wide: boolean) => {
   window.matchMedia = ((query: string) => ({ matches: wide && (query.includes("744") || query.includes("1128")), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
 };

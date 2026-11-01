@@ -1,37 +1,56 @@
 import { supabase } from "../../lib/supabase";
 import { subHobbyLabel } from "../data/hobbies";
+import { formatMonth } from "./dates";
+import { cornerName } from "./homeItems";
 
-/** A Stub as the database holds it (migration 20261101000000). */
+/** A Stub as the database holds it (migration 20261115000000: four kinds). */
+export type StubKind = "event" | "finish" | "drop" | "regular";
+
 export interface StubRow {
   id: number;
-  kind: "event" | "session" | "gold";
+  kind: StubKind;
   serial: number | null;
   postId?: number;
   pursuitId?: string;
+  /** A drop Stub's place in finishing order. */
+  edition?: number;
+  cornerKey?: string;
+  /** A Regular Stub's month, YYYY-MM-DD (the 1st). */
+  period?: string;
 }
 
+/** When one Moment earns more than one Stub, the rarest is the one to show. */
+const RANK: Record<StubKind, number> = { drop: 4, event: 3, finish: 2, regular: 1 };
+
 /**
- * The session Stub a posted Moment earned, if any. The database issues it when
- * the Moment is saved with a Pursuit, a moment after the insert returns, so this
- * looks a few times before giving up. Null when none was issued (no Pursuit, or
- * the migration is not live yet).
+ * The Stub a posted Moment earned, if any (a Finisher, a drop or a Regular). The
+ * database issues it in the same transaction as the Moment, so one look is enough;
+ * a second covers a slow replica. Null when it earned none.
  */
-export async function fetchStubForPost(postId: number, tries = 4, waitMs = 450): Promise<StubRow | null> {
+export async function fetchStubForPost(postId: number, tries = 2, waitMs = 400): Promise<StubRow | null> {
   const client = supabase;
   if (!client) return null;
   for (let i = 0; i < tries; i++) {
     try {
       const { data, error } = await client
         .from("stubs")
-        .select("id, kind, serial, post_id, pursuit_id")
-        .eq("post_id", postId)
-        .eq("kind", "session")
-        .maybeSingle();
+        .select("id, kind, serial, post_id, pursuit_id, edition, corner_key, period")
+        .eq("post_id", postId);
       // 42703 and 42P01: the columns or table are not there yet; no point asking again.
       if (error) return null;
-      if (data) {
-        const r = data as { id: number; kind: StubRow["kind"]; serial: number | null; post_id: number | null; pursuit_id: string | null };
-        return { id: r.id, kind: r.kind, serial: r.serial, postId: r.post_id ?? undefined, pursuitId: r.pursuit_id ?? undefined };
+      const rows = (data ?? []) as { id: number; kind: StubKind; serial: number | null; post_id: number | null; pursuit_id: string | null; edition: number | null; corner_key: string | null; period: string | null }[];
+      if (rows.length > 0) {
+        const r = [...rows].sort((a, b) => (RANK[b.kind] ?? 0) - (RANK[a.kind] ?? 0))[0];
+        return {
+          id: r.id,
+          kind: r.kind,
+          serial: r.serial,
+          postId: r.post_id ?? undefined,
+          pursuitId: r.pursuit_id ?? undefined,
+          edition: r.edition ?? undefined,
+          cornerKey: r.corner_key ?? undefined,
+          period: r.period ?? undefined,
+        };
       }
     } catch {
       return null;
@@ -40,6 +59,9 @@ export async function fetchStubForPost(postId: number, tries = 4, waitMs = 450):
   }
   return null;
 }
+
+/** "No. 042". */
+export const editionLabel = (n: number): string => `No. ${String(n).padStart(3, "0")}`;
 
 /** Who has loved a Moment, oldest first. Best effort: an empty list when it cannot be read. */
 export async function fetchLovers(postId: number): Promise<string[]> {
@@ -56,24 +78,26 @@ export async function fetchLovers(postId: number): Promise<string[]> {
 /** One Stub on You, ready for a Ticket. */
 export interface StubCard {
   id: number;
-  kind: "event" | "session" | "gold";
+  kind: StubKind;
   serial: number | null;
   title: string;
   meta: string;
-  /** "2/5" for a session Stub of a Pursuit with a goal. */
-  count?: { done: number; total: number };
   corner?: { spaceSlug: string; slug: string };
   issuedAt: number;
 }
 
 export interface RawStub {
   id: number;
-  kind: StubCard["kind"];
+  kind: StubKind;
   serial: number | null;
   issuedAt: number;
   eventTitle?: string;
   spaceName?: string;
   pursuitId?: string;
+  edition?: number;
+  cornerKey?: string;
+  /** YYYY-MM-DD, the 1st of a Regular Stub's month. */
+  period?: string;
 }
 export interface PursuitInfo {
   title: string;
@@ -83,42 +107,38 @@ export interface PursuitInfo {
   total?: number;
 }
 
+const cornerOf = (key?: string): { spaceSlug: string; slug: string } | undefined => {
+  const [spaceSlug, slug] = key?.split("/") ?? [];
+  return spaceSlug && slug ? { spaceSlug, slug } : undefined;
+};
+
 /**
- * Newest first. A session Stub reads "{Corner} #3": its place in the order the
- * Stubs of that Pursuit were issued to this person. Gold reads "{Pursuit}".
+ * Newest first. A Finisher and a drop read as their Pursuit, an event as its event,
+ * and a Regular as its Corner and month.
  */
-export function buildStubCards(raws: readonly RawStub[], pursuits: ReadonlyMap<string, PursuitInfo>, formatDay: (ms: number) => string): StubCard[] {
-  const sessionOrder = new Map<number, number>();
-  const perPursuit = new Map<string, number>();
-  for (const r of [...raws].filter((x) => x.kind === "session").sort((a, b) => a.issuedAt - b.issuedAt)) {
-    const n = (perPursuit.get(r.pursuitId ?? "") ?? 0) + 1;
-    perPursuit.set(r.pursuitId ?? "", n);
-    sessionOrder.set(r.id, n);
-  }
+export function buildStubCards(
+  raws: readonly RawStub[],
+  pursuits: ReadonlyMap<string, PursuitInfo>,
+  formatDay: (ms: number) => string,
+  formatPeriod: (ymd: string) => string = (ymd) => formatMonth(`${ymd}T12:00:00`),
+): StubCard[] {
   return [...raws]
     .sort((a, b) => b.issuedAt - a.issuedAt)
     .map((r) => {
       const p = r.pursuitId ? pursuits.get(r.pursuitId) : undefined;
-      const corner = p?.spaceSlug && p.cornerSlug ? { spaceSlug: p.spaceSlug, slug: p.cornerSlug } : undefined;
+      const corner = cornerOf(r.cornerKey) ?? (p?.spaceSlug && p.cornerSlug ? { spaceSlug: p.spaceSlug, slug: p.cornerSlug } : undefined);
       const day = formatDay(r.issuedAt);
-      if (r.kind === "event") {
-        return { id: r.id, kind: r.kind, serial: r.serial, title: (r.eventTitle ?? "Event").slice(0, 60), meta: [day, r.spaceName].filter(Boolean).join(" · "), issuedAt: r.issuedAt };
+      const base = { id: r.id, kind: r.kind, serial: r.serial, corner, issuedAt: r.issuedAt };
+      switch (r.kind) {
+        case "event":
+          return { ...base, title: (r.eventTitle ?? "Event").slice(0, 60), meta: [day, r.spaceName].filter(Boolean).join(" · ") };
+        case "drop":
+          return { ...base, title: (p?.title ?? "Pursuit").slice(0, 60), meta: [day, r.edition ? editionLabel(r.edition) : undefined].filter(Boolean).join(" · ") };
+        case "regular":
+          return { ...base, title: r.cornerKey ? cornerName(r.cornerKey) : "Corner", meta: r.period ? formatPeriod(r.period) : day };
+        default:
+          return { ...base, title: (p?.title ?? "Pursuit").slice(0, 60), meta: [day, "finished"].join(" · ") };
       }
-      if (r.kind === "gold") {
-        return { id: r.id, kind: r.kind, serial: r.serial, title: (p?.title ?? "Pursuit").slice(0, 60), meta: [day, "complete"].join(" · "), corner, issuedAt: r.issuedAt };
-      }
-      const n = sessionOrder.get(r.id) ?? 1;
-      const name = p?.cornerName ?? p?.title ?? "Session";
-      return {
-        id: r.id,
-        kind: r.kind,
-        serial: r.serial,
-        title: `${name.slice(0, 40)} #${n}`,
-        meta: [day, p?.title && p.cornerName ? p.title.slice(0, 30) : undefined].filter(Boolean).join(" · "),
-        count: p?.total && p.total > 0 ? { done: Math.min(n, p.total), total: p.total } : undefined,
-        corner,
-        issuedAt: r.issuedAt,
-      };
     });
 }
 
@@ -129,12 +149,12 @@ export async function fetchMyStubs(userId: string, formatDay: (ms: number) => st
   try {
     const { data, error } = await client
       .from("stubs")
-      .select("id, kind, serial, event_id, space_id, pursuit_id, issued_at")
+      .select("id, kind, serial, event_id, space_id, pursuit_id, issued_at, edition, corner_key, period")
       .eq("user_id", userId)
       .order("issued_at", { ascending: false })
       .limit(200);
     if (error || !data) return [];
-    const rows = data as { id: number; kind: StubRow["kind"]; serial: number | null; event_id: number | null; space_id: string | null; pursuit_id: string | null; issued_at: string }[];
+    const rows = data as { id: number; kind: StubKind; serial: number | null; event_id: number | null; space_id: string | null; pursuit_id: string | null; issued_at: string; edition: number | null; corner_key: string | null; period: string | null }[];
     const eventIds = [...new Set(rows.map((r) => r.event_id).filter((x): x is number => x != null))];
     const spaceIds = [...new Set(rows.map((r) => r.space_id).filter((x): x is string => !!x))];
     const pursuitIds = [...new Set(rows.map((r) => r.pursuit_id).filter((x): x is string => !!x))];
@@ -167,6 +187,9 @@ export async function fetchMyStubs(userId: string, formatDay: (ms: number) => st
         eventTitle: r.event_id != null ? eventTitle.get(r.event_id) : undefined,
         spaceName: r.space_id ? spaceName.get(r.space_id) : undefined,
         pursuitId: r.pursuit_id ?? undefined,
+        edition: r.edition ?? undefined,
+        cornerKey: r.corner_key ?? undefined,
+        period: r.period ?? undefined,
       })),
       info,
       formatDay,
