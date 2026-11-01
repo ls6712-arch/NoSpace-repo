@@ -63,10 +63,6 @@
   text-decoration: none;
 }
 .lp-logo-mark { display: inline-flex; }
-.lp-nav-links { display: none; gap: 28px; font-weight: 600; font-size: var(--text-small); }
-.lp-nav-links a { color: var(--muted-foreground); text-decoration: none; }
-.lp-nav-links a:hover { color: var(--foreground); }
-@media (min-width: 960px) { .lp-nav-links { display: flex; } }
 .lp-nav-actions { display: flex; align-items: center; gap: 14px; }
 .lp-login {
   color: var(--foreground);
