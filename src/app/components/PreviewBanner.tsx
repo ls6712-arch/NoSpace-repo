@@ -1,6 +1,7 @@
-import { PRODUCTION_HOSTNAMES as PRODUCTION_HOSTS } from "../config";
+import { PRODUCTION_HOSTNAMES as PRODUCTION_HOSTS, STAGING_HOSTNAMES as STAGING_HOSTS } from "../config";
 
 const PRODUCTION_HOSTNAMES = new Set(PRODUCTION_HOSTS);
+const STAGING_HOSTNAMES = new Set(STAGING_HOSTS);
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1"]);
 
 /** A slim "this isn't the live site" notice above the Header — shown on
@@ -14,7 +15,7 @@ export function PreviewBanner() {
   const hostname = window.location.hostname;
   if (PRODUCTION_HOSTNAMES.has(hostname)) return null;
 
-  const label = LOCAL_HOSTNAMES.has(hostname) ? "Local" : "Preview";
+  const label = LOCAL_HOSTNAMES.has(hostname) ? "Local" : STAGING_HOSTNAMES.has(hostname) ? "Staging" : "Preview";
 
   return (
     <div

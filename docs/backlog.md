@@ -6,24 +6,17 @@ same PR.
 
 ## Waiting on a decision
 
-### New domain to match the Soosh name (added Oct 1, 2026)
-The app is now Soosh but still lives at `trynospace.com`. Change the domain
-**before** setting up email (Step 4b), since Resend verifies one specific
-domain.
-
-- **Code (one small PR):** move the domain into one setting and use it in
-  `src/app/lib/invites.ts` (`SITE_ORIGIN`, invite links) and
-  `src/app/components/PreviewBanner.tsx` (`PRODUCTION_HOSTNAMES`).
-- **Outside the code:** buy the domain; Vercel → Domains (add the new one,
-  redirect `trynospace.com` to it); Supabase → Auth → URL configuration (site
-  URL + redirect URLs); Google Cloud OAuth (authorized redirect URIs);
-  Resend (verify the new domain, not the old one).
-- Keep `trynospace.com` redirecting so old links still work. As of Oct 1, no
-  invite links have been sent, so nothing in the wild breaks.
+### Finish the onsoosh.com move (added Oct 31, 2026)
+onsoosh.com is bought and live on Vercel from `main`; trynospace.com is now
+staging from `staging` (docs/deploys.md). `SITE_DOMAIN` is `onsoosh.com`.
+Still to do by hand: Supabase → Auth → URL configuration (Site URL
+`https://www.onsoosh.com`; redirect URLs for both domains); Google Cloud OAuth
+(authorized JavaScript origins, if any are set); Resend (verify onsoosh.com,
+not trynospace.com). This unblocks Step 4b.
 
 ## Blocked
 
-### Step 4b · Email (Resend) — blocked on the new domain
+### Step 4b · Email (Resend) — domain is ready (onsoosh.com)
 "Maya asked you something about your first moment," linking straight to the
 reply. Resend chosen Oct 1, 2026. Needs: Resend account, verified domain,
 `RESEND_API_KEY` in Supabase Edge Function secrets, and the sending address
