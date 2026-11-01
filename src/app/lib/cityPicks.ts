@@ -157,12 +157,68 @@ export function inputFor(p: CityPick, cornerId: number | null): PickInput {
   return { title: p.title, place: p.place ?? "", starts: toNyLocal(p.startsAt), ends: p.endsAt ? toNyLocal(p.endsAt) : "", price: p.price ?? "", url: p.url ?? "", cornerId, color: p.color };
 }
 
-/** Every pick, drafts included, soonest first. Admins only: anyone else just gets the published ones. */
-export async function fetchAllPicks(): Promise<{ picks: (CityPick & { cornerId: number | null })[]; error: string | null }> {
+/** Where an admin-list pick came from (migration 20261118000000). Null on an editor's pick, or before that migration is live. */
+export interface ScoutInfo {
+  sourceUrl: string | null;
+  checkedAt: number | null;
+  note: string | null;
+}
+export type AdminPick = CityPick & { cornerId: number | null; scout: ScoutInfo | null };
+
+const SCOUT_COLUMNS = `${COLUMNS}, found_by, source_url, checked_at, scout_note`;
+
+export function scoutInfo(r: Record<string, any>): ScoutInfo | null {
+  if (r.found_by !== "scout") return null;
+  return {
+    sourceUrl: typeof r.source_url === "string" ? r.source_url : null,
+    checkedAt: r.checked_at ? Date.parse(r.checked_at) : null,
+    note: typeof r.scout_note === "string" && r.scout_note.trim() ? r.scout_note : null,
+  };
+}
+
+/**
+ * Every pick, drafts included, soonest first. Admins only: anyone else just gets the published ones.
+ * Asks for the scout columns too; before their migration is live (undefined column) it asks again without them.
+ */
+export async function fetchAllPicks(): Promise<{ picks: AdminPick[]; error: string | null }> {
   if (!supabase) return { picks: [], error: null };
-  const { data, error } = await supabase.from("city_picks").select(COLUMNS).eq("city", CITY).order("starts_at", { ascending: false }).limit(200);
+  const query = (cols: string) => supabase!.from("city_picks").select(cols).eq("city", CITY).order("starts_at", { ascending: false }).limit(200);
+  let { data, error } = await query(SCOUT_COLUMNS);
+  if (error && error.code === "42703") ({ data, error } = await query(COLUMNS));
   if (error) return { picks: [], error: friendlyError(error) };
-  return { picks: (data as Record<string, any>[]).map((r) => ({ ...toPick(r), cornerId: (r.corner_id as number | null) ?? null })), error: null };
+  return {
+    picks: (data as unknown as Record<string, any>[]).map((r) => ({ ...toPick(r), cornerId: (r.corner_id as number | null) ?? null, scout: scoutInfo(r) })),
+    error: null,
+  };
+}
+
+// ── Stubby's scout (supabase/functions/stubby-scout) ─────────────────────
+
+export interface ScoutReport {
+  added: number;
+  found: number;
+  searches: number;
+  dropped: { title: string; reason: string }[];
+}
+
+/** Runs the scout once. It only ever adds drafts; the admin publishes. */
+export async function runScout(focus: string): Promise<{ report: ScoutReport | null; error: string | null }> {
+  if (!supabase) return { report: null, error: "The scout needs the live app." };
+  const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { focus: focus.trim() || null } });
+  if (error) {
+    // The function says what went wrong in its JSON body; the client only says "non-2xx".
+    let message: string | null = null;
+    try {
+      const body = await (error as { context?: Response }).context?.json?.();
+      if (body && typeof body.error === "string") message = body.error;
+    } catch {
+      message = null;
+    }
+    return { report: null, error: message ?? "The scout isn't set up yet, or couldn't be reached." };
+  }
+  const r = data as Partial<ScoutReport> | null;
+  if (!r || typeof r.added !== "number") return { report: null, error: "The scout's answer couldn't be read." };
+  return { report: { added: r.added, found: r.found ?? 0, searches: r.searches ?? 0, dropped: Array.isArray(r.dropped) ? r.dropped : [] }, error: null };
 }
 
 export async function savePick(input: PickInput, id?: number): Promise<{ error: string | null }> {

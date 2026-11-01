@@ -759,6 +759,7 @@ The wording of the Week view, taken from the founder's Week view brief. It is no
 | This week in New York | Heading of the hand-picked row on the Week view. Under it: "Picked by Soosh". The row is gone when there are no picks |
 | Sat 31 · 7 PM · free | The pill on a pick: day, time, then the editor's own price words. No price, no price part |
 | City picks | Admin page (Site admin list in Settings) for the picks. Add a pick · Edit pick · Published or Draft · Publish · Unpublish · Edit · Delete (with a confirm: "This removes the pick for good.") · Save changes · Cancel. Empty: "No picks yet." / "Add a pick, then publish it." |
+| Find picks | Section and button on City picks (admins only) that runs Stubby's scout: "Stubby searches the web for things to do in the next 14 days and adds them here as drafts. Open each source and check it before you publish." Field: Look for (Optional, like pottery or running). While running: Looking. After: "Added {n} drafts." or "Nothing new this time.", then Skipped {n} picks with each reason. A scout draft reads Found by Stubby · Checked {date} · Source, then its note. New, for approval |
 | Something went wrong. Try again. | The existing error line, as a toast, when the budget does not save |
 
 ## Calendar (brief of Oct 31, 2026)
@@ -827,6 +828,49 @@ A private link that puts your plans and Pursuit sessions in Google, Apple or Out
 | This device doesn’t have your link. Reset it to get a new one here. | On a device that did not make the link: the link is only kept where it was made (the database holds only its hash, because the feed shows where someone will be), so only Reset link is offered (approved Nov 1, 2026) |
 
 What the feed holds, and never holds: the next 60 days of your plans and Pursuit sessions, each as its title, place, time and a link to that day on your calendar. Never blocks, free time, budget, notes or other people's names.
+
+### Start page (brief of Nov 1, 2026)
+
+What Start on a suggestion opens: `/start/:space/:corner`. It is the activity itself (what you need, how to start, when, with whom). The camera is never here; it comes at the end, from "Done? Log it".
+
+| Term | Use |
+|---|---|
+| Start page | The page Start opens. Not "Start screen" or "prep page" |
+| Start | The button on an at-home card. It now means it: the page opens, nothing is counted as going |
+| Start now | The bottom button before anything is chosen. Same as choosing Now |
+| Done? Log it | The bottom button when the person chose Now, or on the day of a plan. The only way to the Log form from this page |
+| Add to my week | The bottom button when Tonight, Tomorrow or a day is chosen. Makes a plan on the Calendar. Toast: On your calendar for {Thu evening} · Undo |
+| Add to calendar | The bottom button on a plan before its day (the `.ics` download) |
+| What you’ll need | The person's own list. Starts from the Corner's needs. Rows can be ticked ("got it"), added (+ Add) and removed |
+| Share list | Text link above the list. Shares the list as plain text |
+| How to start | The numbered steps: the guide's first step, then the Corner's steps |
+| What are you making? | One optional field, only for Corners that are about making. Becomes the plan title and the Moment's starting caption |
+| Now / Tonight / Tomorrow / Pick a day | The When choices. Day choices add Daytime / Evening |
+| Doing it now | Under the header after Now is chosen. The list collapses to "{n} of {m} got" |
+| Change / Cancel plan | Text links on a planned page |
+| Or do it with people | Muted line over an upcoming event or open Pursuit in this Corner. Never a count of people, never a price |
+| With / Invite a friend | The last section. The invite says "{Name} is making {dish} {day}. Want in?" and carries the list |
+| Made by others | The strip of Moments in this Corner. No count anywhere |
+| Make this too | The one button in the sheet that opens over the strip. Closes the sheet and shows "Inspired by {name}" under the header |
+| See full Moment | Small link in that sheet to the Moment's own page |
+| Do this | Pill on a Moment (Home, Discover, a Corner's Moments, a Moment's page) whose Corner has a guide. Opens the Start page for that Corner |
+| Open | On a plan sheet in the Calendar, for your own plan in an at-home Corner. Opens its Start page |
+| {Name} tried {corner} after seeing yours. | The "inspired" notification (approved Nov 1, 2026): the author of a Moment is told once for each new Moment made after seeing theirs, only if that Moment's audience includes them. Never a count, never "your Moment inspired N people". The Corner's name drops to lower case unless it is a name like D&D. Opens the new Moment |
+
+The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
+
+## Landing page (Nov 1, 2026)
+
+The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms where they exist: "I’m going" (the RSVP), "Count me in", "Bring someone", "Undo", Home, Shelf, Stub, Moment, "Admit one". Stubby only reacts here too: the lines beside him are captions, not speech. **Every row below is a new string, approved by the founder on Nov 1, 2026.**
+
+| Term | Meaning |
+|---|---|
+| Free tonight? Stubby has a pick. | The landing hero line. "Stubby" is the character's name, so it is not a product noun |
+| Get your first pick | The landing buttons that go to sign-up (the hero and the last card). The nav button stays "Sign up" |
+| Good solo | Small badge on an example pick that works well on your own. Also used in the Questions answers ("marked Good solo") |
+| Nah | The button on an example pick that moves to another pick. Landing examples only |
+| Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
+| Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
 
 ## Retired terms
 

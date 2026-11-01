@@ -11,6 +11,7 @@ import {
   Heart,
   MessageCircleQuestion,
   MessagesSquare,
+  Sparkles,
   Sprout,
   Target,
   UserCheck,
@@ -65,6 +66,7 @@ const ICON: Record<string, typeof Bell> = {
   love: Heart,
   save: Bookmark,
   stub_earned: Ticket,
+  inspired: Sparkles,
 };
 
 const initials = (name: string) =>

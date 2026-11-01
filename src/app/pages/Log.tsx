@@ -1,3 +1,4 @@
+import { recordStartAction } from "../lib/startActions";
 import { PaperStamp } from "../components/corners/MomentStamp";
 import { formatDate } from "../lib/dates";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -356,7 +357,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // call sites below (the default caption, the Pursuit-attach copy, the
   // confirmation line) don't each need to know tags is now a list.
   const interest = tags[0] ?? "";
-  const [thought, setThought] = useState("");
+  // The Start page hands over what the person said they were making (?caption=).
+  const [thought, setThought] = useState(() => (searchParams.get("caption") ?? "").slice(0, 80));
   const [progress, setProgress] = useState("");
   const [changed, setChanged] = useState("");
   // Starts at the account's own default (Settings → Privacy → "Default
@@ -969,6 +971,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         shareNow: circle !== "private" && shareNow,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
+        // Made after seeing someone else's Moment (from the Start page). The database checks it.
+        inspiredBy: /^\d{1,15}$/.test(searchParams.get("inspired") ?? "") ? Number(searchParams.get("inspired")) : undefined,
         // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
         // are readable by everyone today. Only the existing Activity fields may write them;
         // do not add an exact place or time for a plain Moment until that ticket is done.
@@ -1027,6 +1031,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setSavedPostId(entry.id);
+      // A Moment posted from the Start page ("Done? Log it") is the "logged" the page's analytics count.
+      if (!entry.unsaved && searchParams.get("ref") === "start") recordStartAction("logged", [hobbySlug, corner || subHobby].filter(Boolean).join("/"));
       haptic();
       // A post that did not reach the database keeps the honest "Not saved" screen.
       setScreen(entry.unsaved ? "saved" : "posted");

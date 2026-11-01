@@ -14,13 +14,14 @@ import { formatWhen } from "../../lib/dates";
 import { haptic, pop } from "../../lib/motionTokens";
 import { cornerPath } from "../../lib/cornerPath";
 import type { FeedSource } from "../../lib/homeFeed";
+import { DoThisLink } from "../start/DoThisLink";
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 }
 
 /** The "Love this" reaction: a heart burst, the count rolls, a light tap on a phone. */
-function LoveThis({ post }: { post: Post }) {
+export function LoveThis({ post }: { post: Post }) {
   const { mine, toggle } = useReactionState(post.id);
   const loved = mine.includes("love");
   const count = post.loveCount ?? 0;
@@ -146,6 +147,7 @@ export function FeedCard({
 
       <div className="mt-3 flex flex-wrap gap-2">
         <LoveThis post={post} />
+        <DoThisLink post={post} />
         {discover ? (
           <Link
             to={discover.tryTo}

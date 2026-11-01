@@ -115,6 +115,8 @@ export interface NewPostInput {
    * inline "Start a Pursuit" flow) still happens after the fact, since the
    * Pursuit doesn't exist until the post does — see attachPostToPursuit. */
   pursuitId?: string;
+  /** The Moment this one was made after seeing (the Start page's "Make this too" or "Do this"). The database keeps it only when the poster could see that Moment. */
+  inspiredBy?: number;
 }
 
 function loadFromStorage<T>(key: string): T[] {
@@ -759,11 +761,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // posts.city is the same: sent only when set, and dropped when its column is missing.
       const withAudience = input.audience ? { ...held, audience: input.audience } : held;
       const withCity = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
+      // posts.inspired_by (migration 20261117000000) is sent only when set, and dropped when its column is missing.
+      const withInspired = input.inspiredBy ? { ...withCity, inspired_by: input.inspiredBy } : withCity;
       let { data, error } = await supabase
         .from("posts")
-        .insert(withCity as typeof row)
+        .insert(withInspired as typeof row)
         .select(POST_COLUMNS)
         .single();
+      if (input.inspiredBy && error && /inspired_by/.test(error.message ?? "")) {
+        ({ data, error } = await supabase.from("posts").insert(withCity as typeof row).select(POST_COLUMNS).single());
+      }
       if (input.city?.trim() && error && isMissingCountColumn(error)) {
         ({ data, error } = await supabase.from("posts").insert(withAudience as typeof row).select(POST_COLUMNS).single());
       }

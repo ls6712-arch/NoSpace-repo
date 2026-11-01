@@ -20,7 +20,7 @@ function installAnimations() {
   const animate = function () {
     started += 1;
     const finished = new Promise<void>((resolve) => (gate.open ? resolve() : gate.waiting.push(resolve)));
-    return { finished, cancel() {}, commitStyles() {} };
+    return { finished, cancel() {}, commitStyles() {}, pause() {}, play() {} };
   };
   Element.prototype.animate = animate as unknown as Element["animate"];
   Element.prototype.getAnimations = () => [];
@@ -43,6 +43,21 @@ afterEach(() => {
 });
 
 describe("Stubby", () => {
+  it("rests its idle life while the tab is hidden, and wakes again", async () => {
+    render(<Stubby state="idle" />);
+    await settleAll();
+    const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    act(() => void document.dispatchEvent(new Event("visibilitychange")));
+    const before = started;
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    expect(started).toBe(before);
+    hidden.mockReturnValue(false);
+    act(() => void document.dispatchEvent(new Event("visibilitychange")));
+    await act(() => vi.advanceTimersByTimeAsync(30_000));
+    expect(started).toBeGreaterThan(before);
+    hidden.mockRestore();
+  });
+
   it.each(STATES)("renders the %s state without throwing", async (state) => {
     const { container, unmount } = render(<Stubby state={state} size={160} />);
     await settleAll();

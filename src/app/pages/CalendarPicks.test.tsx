@@ -108,6 +108,40 @@ const pickLabel = (title: string) => new RegExp(`^Stubby’s pick, .*${title}`);
 describe("Stubby's picks", () => {
   beforeEach(() => setWide(true));
 
+  const stubbyState = () => document.querySelector("[data-stubby-state]")?.getAttribute("data-stubby-state");
+
+  it("has Stubby on the page, hidden from screen readers, resting once loaded", () => {
+    withEvents([event(1)]);
+    show("/calendar?view=week");
+    const el = document.querySelector("[data-stubby-state]")!;
+    expect(el.getAttribute("aria-hidden")).toBe("true");
+    expect(stubbyState()).toBe("idle");
+  });
+
+  it("Stubby stamps on Keep, sighs on Undo, and shrugs on Not this", async () => {
+    withEvents([event(1), event(2, { startsAt: ny(10, 31, 21), endsAt: ny(10, 31, 23), title: "Late climbing" })]);
+    show("/calendar?view=week");
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    await flush();
+    expect(stubbyState()).toBe("stamped");
+    lastToast().undo();
+    await flush();
+    expect(stubbyState()).toBe("unstamped");
+    fireEvent.click(screen.getByRole("button", { name: pickLabel("Climbing 1") }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not this" }));
+    await flush();
+    expect(stubbyState()).toBe("shrug");
+  });
+
+  it("Stubby tilts his head when a Keep can't be made", async () => {
+    withEvents([event(1)]);
+    picks.keepPick.mockResolvedValueOnce({ error: "Something went wrong. Try again." });
+    show("/calendar?view=week");
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    await flush();
+    expect(stubbyState()).toBe("tilt");
+  });
+
   it("puts one pick in a free stretch, with the label, the thing and Keep", () => {
     withEvents([event(1)]);
     show("/calendar?view=week");

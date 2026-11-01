@@ -53,4 +53,16 @@ export const ADMIN_PICKS = {
   emptyTitle: "No picks yet.",
   emptyBody: "Add a pick, then publish it.",
   deleteBody: "This removes the pick for good.",
+  // Stubby's scout (supabase/functions/stubby-scout). Admin only.
+  scoutTitle: "Find picks",
+  scoutLine: "Stubby searches the web for things to do in the next 14 days and adds them here as drafts. Open each source and check it before you publish.",
+  scoutFocus: "Look for",
+  scoutFocusHint: "Optional, like pottery or running",
+  scoutButton: "Find picks",
+  scoutBusy: "Looking",
+  scoutNone: "Nothing new this time.",
+  scoutSkipped: "Skipped",
+  foundBy: "Found by Stubby",
+  source: "Source",
+  checked: "Checked",
 } as const;

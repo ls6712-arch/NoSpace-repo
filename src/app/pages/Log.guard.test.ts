@@ -44,3 +44,10 @@ describe("Share now in Log", () => {
     expect(log).toContain('shareNow: circle !== "private" && shareNow,');
   });
 });
+
+describe("Log passes ?inspired= on only as a number", () => {
+  it("validates the parameter before sending it", () => {
+    expect(log).toContain('/^\\d{1,15}$/.test(searchParams.get("inspired")');
+    expect(log.match(/inspiredBy:/g)).toHaveLength(1);
+  });
+});

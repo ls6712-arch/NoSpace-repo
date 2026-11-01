@@ -1,3 +1,4 @@
+import { DoThisLink } from "./start/DoThisLink";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { pursuitTogetherHref } from "../lib/pursuitsRemote";
@@ -325,6 +326,7 @@ export function MomentDetail({
                 action doesn’t set inspiredByPostId at all. Without this,
                 My Space’s "You Inspired" rail could never have a real row to
                 show — this button is what actually produces one. */}
+            {!owned && <DoThisLink post={post} className="min-h-11 px-4 text-small" />}
             {!owned && (
               <button
                 type="button"

@@ -284,7 +284,9 @@ export function Stubby({
 }) {
   const reduce = useReducedMotion() ?? false;
   const mark = size < 56;
-  const still = reduce || mark;
+  // Without the Web Animations API (an old browser, or a test runner) Stubby holds still instead of crashing.
+  const canAnimate = typeof Element !== "undefined" && typeof Element.prototype.animate === "function";
+  const still = reduce || mark || !canAnimate;
   const clipId = `stubby-tab-${useId().replace(/:/g, "")}`;
 
   const [face, setFace] = useState<Face>(REST[state].face);
@@ -663,6 +665,37 @@ export function Stubby({
   }, [state, play, still, anim, lookTo, browPop, showFace]);
 
   // ---------- idle life ----------
+  // Idle life rests while Stubby is off screen or the tab is hidden, to save
+  // battery. Reactions (stamps, hops) still play whenever they are asked for.
+  const awake = useRef(true);
+  const breathAnim = useRef<Animation | null>(null);
+  useEffect(() => {
+    if (still) return;
+    const svg = svgRef.current;
+    let onScreen = true;
+    const update = () => {
+      const next = onScreen && !document.hidden;
+      if (next === awake.current) return;
+      awake.current = next;
+      if (next) breathAnim.current?.play();
+      else breathAnim.current?.pause();
+    };
+    const io =
+      svg && typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver((entries) => {
+            onScreen = entries[entries.length - 1].isIntersecting;
+            update();
+          })
+        : null;
+    if (svg) io?.observe(svg);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      io?.disconnect();
+      document.removeEventListener("visibilitychange", update);
+      awake.current = true;
+    };
+  }, [still]);
+
   useEffect(() => {
     if (still) return;
     const breath = refs.current.breath;
@@ -671,7 +704,12 @@ export function Stubby({
       [{ transform: S(1, 1) }, { transform: S(1.012, slow ? 0.965 : 0.982) }, { transform: S(1, 1) }],
       { duration: slow ? 3600 : 2600, iterations: Infinity, easing: EASE.sway },
     );
-    return () => a?.cancel();
+    breathAnim.current = a ?? null;
+    if (a && !awake.current) a.pause();
+    return () => {
+      a?.cancel();
+      if (breathAnim.current === a) breathAnim.current = null;
+    };
   }, [still, state]);
 
   const lastPointer = useRef(0);
@@ -681,13 +719,13 @@ export function Stubby({
     let g: ReturnType<typeof setTimeout>;
     const blinkLoop = () => {
       t = setTimeout(async () => {
-        if (!busy.current && state !== "sleep") await blink(Math.random() < 0.25);
+        if (awake.current && !busy.current && state !== "sleep") await blink(Math.random() < 0.25);
         blinkLoop();
       }, 1800 + Math.random() * 3800);
     };
     const glanceLoop = () => {
       g = setTimeout(async () => {
-        if (!busy.current && faceNow.current === "idle" && Date.now() - lastPointer.current > 2500) {
+        if (awake.current && !busy.current && faceNow.current === "idle" && Date.now() - lastPointer.current > 2500) {
           lookTo(Math.random() < 0.5 ? -6 : 6, Math.random() < 0.3 ? -3 : 0, 260);
           await wait(900 + Math.random() * 700);
           if (Date.now() - lastPointer.current > 2500) lookTo(0, 0, 320);
