@@ -9,6 +9,7 @@ vi.mock("motion/react", () => ({ useReducedMotion: () => reduced }));
 const STATES: StubbyState[] = [
   "idle", "stamped", "unstamped", "yours", "shrug", "torn", "rejoined", "tilt",
   "arrived", "knock", "checkedIn", "done", "letGo", "sleep", "thinking", "cool",
+  "ready", "hello", "eager", "excited", "peek",
 ];
 
 // jsdom has no Web Animations API. Each animation is a promise the test can hold open.
@@ -87,6 +88,26 @@ describe("Stubby", () => {
     await settleAll();
     expect(started).toBe(0);
     expect(has(container, RIPPED)).toBe(true);
+  });
+
+  it("in the dock: under reduced motion the hello is the happy face, with no hop", async () => {
+    reduced = true;
+    const { container, rerender } = render(<Stubby state="ready" />);
+    expect(has(container, GRIN)).toBe(true);
+    rerender(<Stubby state="hello" />);
+    await settleAll();
+    expect(started).toBe(0);
+    expect(has(container, GRIN)).toBe(true);
+  });
+
+  it("in the dock: the hello hops, then he rests smiling", async () => {
+    const { container, rerender } = render(<Stubby state="ready" />);
+    await settleAll();
+    const before = started;
+    rerender(<Stubby state="hello" />);
+    await settleAll();
+    expect(started).toBeGreaterThan(before);
+    expect(has(container, GRIN)).toBe(true);
   });
 
   it("starts no animation for the mark", async () => {

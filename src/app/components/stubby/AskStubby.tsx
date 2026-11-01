@@ -1,44 +1,74 @@
-import { useCallback, useEffect, useId, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { ExternalLink, X } from "lucide-react";
 import { Button } from "../ui/button";
+import { Chip } from "../ui/Chip";
 import { Input } from "../ui/input";
+import { cn } from "../ui/utils";
 import { plural } from "../../lib/plural";
 import { pickPill } from "../../lib/cityPicks";
 import { ASK_COPY } from "../../lib/calendarCopy";
 import { ASK_MAX_LENGTH, askStubby, asksLeft as readAsksLeft, fetchMyPicks, removeMyPick, type MyPick } from "../../lib/stubbyAsk";
-import type { BuddyReaction } from "../stubby/StubbyBuddy";
+import type { BuddyReaction } from "./StubbyBuddy";
 
 /**
- * "Something different?": type what you're after and Stubby searches right then. He never
- * talks: while he looks, the page's Stubby thinks (onBusy), and when he's done he reacts
- * (onReact). What he found shows here as your own picks, with a link out and Remove.
+ * "Something different?": type what you're after (or tap a quick idea) and Stubby searches
+ * right then. He never talks: while he looks, the dock's Stubby thinks (onBusy), and when
+ * he's done he reacts (onReact). What he found shows here as your own picks, with a link
+ * out and Remove.
+ *
+ * `card` is the box on its own (with its heading); `panel` sits inside the dock's sheet or
+ * side panel, which already carries the title, so it drops the border, padding and heading.
  */
-export function AskStubby({ onBusy, onReact }: { onBusy?: (busy: boolean) => void; onReact?: (r: BuddyReaction) => void }) {
+export function AskStubby({
+  variant = "card",
+  onBusy,
+  onReact,
+  onAsksLeft,
+  autoFocus = false,
+}: {
+  variant?: "card" | "panel";
+  onBusy?: (busy: boolean) => void;
+  onReact?: (r: BuddyReaction) => void;
+  /** Called whenever the count of asks left today is known or changes. */
+  onAsksLeft?: (left: number) => void;
+  /** Focus the field once it can be typed in. */
+  autoFocus?: boolean;
+}) {
   const inputId = useId();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [left, setLeft] = useState<number | null>(null);
+  const [left, setLeftState] = useState<number | null>(null);
   const [picks, setPicks] = useState<MyPick[]>([]);
+  const report = useRef(onAsksLeft);
+  report.current = onAsksLeft;
+  const setLeft = useCallback((n: number) => {
+    setLeftState(n);
+    report.current?.(n);
+  }, []);
 
   const load = useCallback(async () => {
     const [p, n] = await Promise.all([fetchMyPicks(), readAsksLeft()]);
     setPicks(p);
     setLeft(n);
-  }, []);
+  }, [setLeft]);
   useEffect(() => {
     void load();
   }, [load]);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const out = left === 0;
+  useEffect(() => {
+    if (autoFocus && left !== null && !out) document.getElementById(inputId)?.focus({ preventScroll: true });
+  }, [autoFocus, left, out, inputId]);
+
+  const ask = async (what: string) => {
     if (busy) return;
     setBusy(true);
     onBusy?.(true);
     setError(null);
     setStatus(null);
-    const r = await askStubby(text);
+    const r = await askStubby(what);
     setBusy(false);
     onBusy?.(false);
     if (r.error) {
@@ -57,6 +87,14 @@ export function AskStubby({ onBusy, onReact }: { onBusy?: (busy: boolean) => voi
     }
     setPicks(await fetchMyPicks());
   };
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void ask(text);
+  };
+  const quick = (idea: string) => {
+    setText(idea);
+    void ask(idea);
+  };
 
   const remove = async (p: MyPick) => {
     setPicks((all) => all.filter((x) => x.id !== p.id));
@@ -67,13 +105,28 @@ export function AskStubby({ onBusy, onReact }: { onBusy?: (busy: boolean) => voi
     }
   };
 
-  const out = left === 0;
+  const panel = variant === "panel";
   return (
-    <section aria-labelledby={`${inputId}-title`} className="mt-6 flex flex-col gap-3 rounded-card border border-border bg-card p-4">
-      <h2 id={`${inputId}-title`} className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
-        {ASK_COPY.title}
-      </h2>
-      <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-2 tab:flex-row tab:items-end">
+    <section
+      aria-labelledby={panel ? undefined : `${inputId}-title`}
+      aria-label={panel ? ASK_COPY.title : undefined}
+      className={cn("flex flex-col gap-3", panel ? "" : "mt-6 rounded-card border border-border bg-card p-4")}
+    >
+      {!panel && (
+        <h2 id={`${inputId}-title`} className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
+          {ASK_COPY.title}
+        </h2>
+      )}
+      {left !== null && !out && (
+        <div role="group" aria-label={ASK_COPY.chipsLabel} className="flex flex-wrap gap-2">
+          {ASK_COPY.chips.map((idea) => (
+            <Chip key={idea} aria-pressed={undefined} disabled={busy} onClick={() => quick(idea)}>
+              {idea}
+            </Chip>
+          ))}
+        </div>
+      )}
+      <form onSubmit={submit} className={cn("flex flex-col gap-2", panel ? "" : "tab:flex-row tab:items-end")}>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <label htmlFor={inputId} className="text-small font-semibold">
             {ASK_COPY.label}
@@ -87,7 +140,7 @@ export function AskStubby({ onBusy, onReact }: { onBusy?: (busy: boolean) => voi
             disabled={busy || out}
           />
         </div>
-        <Button type="submit" disabled={busy || out || text.trim().length < 2} aria-busy={busy} className="tab:self-end">
+        <Button type="submit" disabled={busy || out || text.trim().length < 2} aria-busy={busy} className={panel ? "" : "tab:self-end"}>
           {busy ? ASK_COPY.busy : ASK_COPY.button}
         </Button>
       </form>

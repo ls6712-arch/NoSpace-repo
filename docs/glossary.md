@@ -891,7 +891,7 @@ New, for approval. Stubby still never talks: while he looks, the calendar's Stub
 
 | Wording | Where |
 |---|---|
-| Something different? | Heading of the box under the calendar |
+| Something different? | Title of the Ask Stubby panel the Stubby dock opens (it was the heading of a box under the calendar until the dock replaced it) |
 | What are you after? | Label of its text field. Placeholder: "Pottery on Saturday, a free run, something outdoors" |
 | Ask Stubby | Its button. While looking: Looking |
 | {n} asks left today | Under the field, with plural(). At 0: "That’s your 3 for today. Stubby can look again tomorrow." |
@@ -899,3 +899,15 @@ New, for approval. Stubby still never talks: while he looks, the calendar's Stub
 | Nothing fit this time. Try asking another way. | After an ask that found nothing |
 | Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
 | Say what you’re after, like pottery on Saturday. | Error with an empty or one-letter ask |
+
+### The Stubby dock (Nov 1, 2026)
+
+New, for approval. Stubby waits in the bottom right corner of Home, Discover, Calendar, You, a Space, a Corner page and People, signed in only. Tapping him opens Ask Stubby (the strings above). He still never talks: the lines below are a button name and a caption beside him, never his speech.
+
+| Wording | Where |
+|---|---|
+| Ask Stubby | Accessible name of the dock (Stubby himself is the button). Same words as the panel's button |
+| Quick ideas | Accessible name of the row of quick ideas above the field; not shown as text. New, for approval |
+| Free tonight · This weekend · Something outdoors | The quick ideas: each fills in the field and asks (one ask, like typing). Hidden at 0 asks left. New, for approval |
+| Free tonight? Ask Stubby. | The once-a-day caption beside the dock, on Home and Calendar from 744px wide, after 4 seconds. Tapping it opens the panel; it fades after 8 seconds. Never at 0 asks left. New, for approval |
+| Dismiss | Accessible name of the caption's X. New, for approval |

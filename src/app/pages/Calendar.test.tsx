@@ -65,6 +65,14 @@ beforeEach(() => {
 afterEach(cleanup);
 const show = (url = "/calendar?view=week") => render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);
 
+describe("Calendar and Stubby", () => {
+  it("has no Stubby and no Ask Stubby box of its own: both live in the dock", () => {
+    show();
+    expect(document.querySelector("[data-stubby-state]")).toBeNull();
+    expect(screen.queryByText("Something different?")).toBeNull();
+  });
+});
+
 describe("Calendar, Week view on a phone", () => {
   it("asks someone who is signed out to make an account", () => {
     auth.value = { user: null, isConfigured: true };
@@ -441,8 +449,8 @@ describe("Calendar, the four views", () => {
     it("lists the next 30 days, leaving out days with nothing", () => {
       hook.value = data({ plans: [plan()], windows: [] });
       at("/calendar?view=list");
-      // Day headings only: the "Something different?" box under the calendar has its own heading.
-      const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent).filter((t) => t !== "Something different?");
+      // Day headings only. Ask Stubby lives in the dock now, not under the calendar.
+      const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
       expect(headings).toEqual(["TomorrowOct 31"]);
     });
 
