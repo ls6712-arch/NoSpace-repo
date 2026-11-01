@@ -30,6 +30,11 @@ describe("Corner prep (what you'll need and steps for the Start page)", () => {
     }
   });
 
+  it("lists things to get or people to bring, never a length of time", () => {
+    const time = /^(about |ten |twenty |fifteen |\d+ (min|hour)|an? (hour|day)$|an? bit of time|time (to|for)|\w+ quiet minutes)|^an? (\w+ )*time\b|^\w+ (minutes|hours)$/i;
+    for (const [k, v] of Object.entries(CORNER_PREP)) for (const n of v.needs) expect(n, `${k}: ${n}`).not.toMatch(time);
+  });
+
   it("keeps to the trust rules: no prices or cost words, no dashes, no result or feeling claims", () => {
     const text = Object.entries(CORNER_PREP).flatMap(([k, v]) => [...v.needs, ...v.steps].map((t) => [k, t] as const));
     for (const [k, t] of text) {
