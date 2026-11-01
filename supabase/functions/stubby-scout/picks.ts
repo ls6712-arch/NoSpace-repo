@@ -146,6 +146,10 @@ export const pickKey = (title: string, startsAt: number) => `${title.trim().toLo
 
 export interface CheckContext {
   now: number;
+  /** How far ahead a pick may start. Default SCOUT_DAYS. */
+  days?: number;
+  /** How many to keep. Default SCOUT_MAX_PICKS. */
+  maxPicks?: number;
   /** linkKey() of every page the web search returned or cited this run. */
   sourceLinks: ReadonlySet<string>;
   /** Corner names (any case) to their ids. */
@@ -159,7 +163,9 @@ export function checkPicks(raw: readonly RawPick[], ctx: CheckContext): { kept: 
   const kept: ScoutPick[] = [];
   const dropped: Dropped[] = [];
   const seen = new Set<string>();
-  const latest = ctx.now + SCOUT_DAYS * 24 * HOUR;
+  const days = ctx.days ?? SCOUT_DAYS;
+  const maxPicks = ctx.maxPicks ?? SCOUT_MAX_PICKS;
+  const latest = ctx.now + days * 24 * HOUR;
 
   for (const r of raw) {
     const title = cleanText(r.title);
@@ -185,7 +191,7 @@ export function checkPicks(raw: readonly RawPick[], ctx: CheckContext): { kept: 
       continue;
     }
     if (startsAt > latest) {
-      drop(`More than ${SCOUT_DAYS} days away.`);
+      drop(`More than ${days} days away.`);
       continue;
     }
 
@@ -244,12 +250,26 @@ export function checkPicks(raw: readonly RawPick[], ctx: CheckContext): { kept: 
   }
 
   kept.sort((a, b) => a.startsAt - b.startsAt || a.title.localeCompare(b.title));
-  for (const extra of kept.splice(SCOUT_MAX_PICKS)) dropped.push({ title: extra.title, reason: `Over the ${SCOUT_MAX_PICKS} pick limit for one run.` });
+  for (const extra of kept.splice(maxPicks)) dropped.push({ title: extra.title, reason: `Over the ${maxPicks} pick limit for one run.` });
   return { kept, dropped };
 }
 
-/** The row to insert: always a draft, always from the scout, with its source and when it was read. */
-export function rowFor(p: ScoutPick, index: number, city: string, checkedAt: number) {
+/** True when the link's host is one of `hosts` or a subdomain of one: those pages publish without review. */
+export function isTrusted(url: string, hosts: readonly string[]): boolean {
+  let host: string;
+  try {
+    host = new URL(url).hostname.toLowerCase();
+  } catch {
+    return false;
+  }
+  return hosts.some((h) => {
+    const t = h.trim().toLowerCase();
+    return !!t && (host === t || host.endsWith(`.${t}`));
+  });
+}
+
+/** The row to insert: from the scout, with its source and when it was read. A draft unless `published`. */
+export function rowFor(p: ScoutPick, index: number, city: string, checkedAt: number, published = false) {
   return {
     city,
     title: p.title,
@@ -261,9 +281,24 @@ export function rowFor(p: ScoutPick, index: number, city: string, checkedAt: num
     source_url: p.url,
     corner_id: p.cornerId,
     color: PICK_COLORS[index % PICK_COLORS.length],
-    published: false,
+    published,
     found_by: "scout",
     checked_at: new Date(checkedAt).toISOString(),
     scout_note: p.note,
+  };
+}
+
+/** A personal pick row for the person who asked. Never published, never shown to anyone else. */
+export function personalRowFor(p: ScoutPick, userId: string) {
+  return {
+    user_id: userId,
+    title: p.title,
+    place: p.place,
+    starts_at: new Date(p.startsAt).toISOString(),
+    ends_at: p.endsAt === null ? null : new Date(p.endsAt).toISOString(),
+    price: p.price,
+    url: p.url,
+    corner_id: p.cornerId,
+    note: p.note,
   };
 }

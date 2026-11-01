@@ -760,6 +760,7 @@ The wording of the Week view, taken from the founder's Week view brief. It is no
 | Sat 31 · 7 PM · free | The pill on a pick: day, time, then the editor's own price words. No price, no price part |
 | City picks | Admin page (Site admin list in Settings) for the picks. Add a pick · Edit pick · Published or Draft · Publish · Unpublish · Edit · Delete (with a confirm: "This removes the pick for good.") · Save changes · Cancel. Empty: "No picks yet." / "Add a pick, then publish it." |
 | Find picks | Section and button on City picks (admins only) that runs Stubby's scout: "Stubby searches the web for things to do in the next 14 days and adds them here as drafts. Open each source and check it before you publish." Field: Look for (Optional, like pottery or running). While running: Looking. After: "Added {n} drafts." or "Nothing new this time.", then Skipped {n} picks with each reason. A scout draft reads Found by Stubby · Checked {date} · Source, then its note. New, for approval |
+| Each morning | Section on City picks (admins only): where Stubby looks every morning for the next 7 days. Line: "Stubby checks these every morning for the next 7 days. Finds from a trusted site publish on their own; the rest wait here as drafts." Each place: its site or Whole web · Publishes on its own from {site} or Drafts only; Paused. Buttons: Pause · Resume · Add a place (Name · What to look for · Search only this site · Publish on its own from). New, for approval |
 | Something went wrong. Try again. | The existing error line, as a toast, when the budget does not save |
 
 ## Calendar (brief of Oct 31, 2026)
@@ -883,3 +884,18 @@ Never use these in UI copy.
 | We sent a 6-digit code to {email}. | Oct 30, 2026 | Check your inbox at {email}. |
 | Send a new code in {n} seconds | Oct 30, 2026 | Send a new code in {m:ss} |
 | That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |
+
+### Calendar: asking Stubby (Nov 1, 2026)
+
+New, for approval. Stubby still never talks: while he looks, the calendar's Stubby thinks; when he is done he stamps (found something), shrugs (nothing fit) or tilts (it failed).
+
+| Wording | Where |
+|---|---|
+| Something different? | Heading of the box under the calendar |
+| What are you after? | Label of its text field. Placeholder: "Pottery on Saturday, a free run, something outdoors" |
+| Ask Stubby | Its button. While looking: Looking |
+| {n} asks left today | Under the field, with plural(). At 0: "That’s your 3 for today. Stubby can look again tomorrow." |
+| Found {n} things. | After an ask that found something |
+| Nothing fit this time. Try asking another way. | After an ask that found nothing |
+| Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
+| Say what you’re after, like pottery on Saturday. | Error with an empty or one-letter ask |

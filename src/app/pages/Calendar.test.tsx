@@ -441,7 +441,8 @@ describe("Calendar, the four views", () => {
     it("lists the next 30 days, leaving out days with nothing", () => {
       hook.value = data({ plans: [plan()], windows: [] });
       at("/calendar?view=list");
-      const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+      // Day headings only: the "Something different?" box under the calendar has its own heading.
+      const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent).filter((t) => t !== "Something different?");
       expect(headings).toEqual(["TomorrowOct 31"]);
     });
 

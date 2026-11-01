@@ -13,6 +13,9 @@ const api = vi.hoisted(() => ({
   setPublished: vi.fn(async () => ({ error: null })),
   deletePick: vi.fn(async () => ({ error: null })),
   runScout: vi.fn(),
+  fetchSources: vi.fn(async () => ({ sources: [] as unknown[], error: null })),
+  setSourceEnabled: vi.fn(async () => ({ error: null })),
+  addSource: vi.fn(async () => ({ error: null })),
 }));
 vi.mock("../lib/cityPicks", async (orig) => ({ ...(await orig<typeof import("../lib/cityPicks")>()), ...api }));
 
@@ -106,5 +109,32 @@ describe("AdminCityPicks", () => {
     expect(screen.getByText(/Found by Stubby · Checked Nov 1/)).toBeTruthy();
     expect(screen.getByRole("link", { name: "Source" }).getAttribute("href")).toBe("https://example.com/pottery");
     expect(screen.getByText("Price not listed")).toBeTruthy();
+  });
+
+  it("lists where Stubby looks each morning, pauses one, and adds one", async () => {
+    api.fetchSources.mockResolvedValue({
+      sources: [
+        { id: 1, name: "NYC Parks", focus: "parks", searchDomain: "nycgovparks.org", trustedHost: "nycgovparks.org", enabled: true },
+        { id: 2, name: "Around the city", focus: "a mix", searchDomain: null, trustedHost: null, enabled: false },
+      ],
+      error: null,
+    });
+    show();
+    expect(await screen.findByText("NYC Parks")).toBeTruthy();
+    expect(screen.getByText("nycgovparks.org · Publishes on its own from nycgovparks.org")).toBeTruthy();
+    expect(screen.getByText("Whole web · Drafts only")).toBeTruthy();
+    expect(screen.getByText("Paused")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Pause" }));
+    await waitFor(() => expect(api.setSourceEnabled).toHaveBeenCalledWith(1, false));
+    fireEvent.click(screen.getByRole("button", { name: "Resume" }));
+    await waitFor(() => expect(api.setSourceEnabled).toHaveBeenCalledWith(2, true));
+
+    fireEvent.click(screen.getByRole("button", { name: "Add a place" }));
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: "Queens Library" } });
+    fireEvent.change(screen.getByLabelText(/^What to look for/), { target: { value: "free classes at Queens Public Library" } });
+    fireEvent.change(screen.getByLabelText(/^Search only this site/), { target: { value: "https://www.queenslibrary.org/calendar" } });
+    fireEvent.click(screen.getAllByRole("button", { name: "Save changes" }).at(-1)!);
+    await waitFor(() => expect(api.addSource).toHaveBeenCalledTimes(1));
+    expect((api.addSource.mock.calls[0] as unknown[])[0]).toMatchObject({ name: "Queens Library", searchDomain: "https://www.queenslibrary.org/calendar" });
   });
 });
