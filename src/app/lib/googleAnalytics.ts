@@ -1,6 +1,7 @@
 /**
- * Google Analytics 4. Off unless VITE_GA_MEASUREMENT_ID is set (Vercel, Production
- * only), and only ever runs on the live site, never on staging, previews or
+ * Google Analytics 4. The measurement id is public (it is in the page source of
+ * any site that uses it); VITE_GA_MEASUREMENT_ID overrides it, and an empty
+ * value turns analytics off. It only ever runs on the live site, never on staging, previews or
  * localhost. Skipped for anyone whose browser sends Do Not Track or Global
  * Privacy Control.
  *
@@ -12,6 +13,7 @@
  */
 import { PRODUCTION_HOSTNAMES, SITE_ORIGIN } from "../config";
 
+const DEFAULT_ID = "G-8YTJ1TY113";
 const ID_PATTERN = /^G-[A-Z0-9]{4,}$/;
 
 /** "#/moment/123?x=1" becomes "/moment". Anything that is not a route becomes "/". */
@@ -31,7 +33,7 @@ export function shouldLoadAnalytics(
 type Gtag = (...args: unknown[]) => void;
 
 export function initGoogleAnalytics() {
-  const id = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
+  const id = (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined) ?? DEFAULT_ID;
   const nav = navigator as Navigator & { globalPrivacyControl?: boolean };
   const optedOut = nav.doNotTrack === "1" || nav.globalPrivacyControl === true;
   if (!shouldLoadAnalytics(id, window.location.hostname, optedOut)) return;

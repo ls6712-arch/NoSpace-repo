@@ -10,7 +10,7 @@ import { APP_NAME } from "../config";
 
 export function PrivacyPolicy() {
   return (
-    <LegalPage title="Privacy Policy" lastUpdated="October 30, 2026">
+    <LegalPage title="Privacy Policy" lastUpdated="November 1, 2026">
       <h2>What we collect</h2>
       <p>
         Your email, display name, and password (or your Google account, if you log in
@@ -36,6 +36,13 @@ export function PrivacyPolicy() {
         stores your photos, and on Vercel, which hosts the app itself. If you log in
         with Google, Google is involved in that one step. We don’t sell your
         information to anyone.
+      </p>
+      <p>
+        We use Google Analytics on {APP_NAME} to count visits and see which parts of
+        the app get used. It sets cookies in your browser and records the part of
+        the app you opened, such as Spaces or Moments. It never receives what you
+        write, your username, or the ID of a Moment. It is turned off if your
+        browser sends Do Not Track or Global Privacy Control.
       </p>
       <p>
         The Moments you save are stored with your account, so they are there on every
