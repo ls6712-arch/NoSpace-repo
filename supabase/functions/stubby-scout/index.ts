@@ -10,7 +10,7 @@
 // The admin and ask modes check the caller's token themselves (auth.getUser(token)), and the
 // restock can only ever search each source once a day.
 //
-// Secrets (see README.md): ANTHROPIC_API_KEY, STUBBY_SCOUT_ENABLED=true; optional limits.
+// Secrets (see README.md): ANTHROPIC_API_KEY, STUBBY_SCOUT_ENABLED=true; optional ANTHROPIC_WORKSPACE_ID and limits.
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { CITY, handleScout, readSettings } from "./handler.ts";
@@ -129,6 +129,7 @@ Deno.serve((req) => {
         days: r.days,
         maxPicks: r.maxPicks,
         ask: r.ask,
+        workspaceId: env("ANTHROPIC_WORKSPACE_ID") || null,
         now: Date.now(),
       }),
   });
