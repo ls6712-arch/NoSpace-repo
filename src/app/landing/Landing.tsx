@@ -5,6 +5,8 @@ import { LANDING_COPY as COPY } from "./copy";
 import { LandingStubby, type StubbyHandle } from "./LandingStubby";
 import { useOnceInView, replayClass } from "./motion";
 import { DemoStage, HeroStage } from "./PickStages";
+import { LandingPhoto } from "./LandingPhoto";
+import { PHOTOS, usedCredits, type PhotoKey } from "./photos";
 import "./landing.css";
 
 /** The six Shelf colors, in order, as app tokens. */
@@ -235,9 +237,16 @@ function Keep() {
                 ref={last ? newest : undefined}
                 className={`lp-stub lp-stub-${STUB_TONES[i % STUB_TONES.length]} ${last && dropped ? "lp-stub-new" : ""}`}
               >
-                <small>{s.tag}</small>
-                <b>{s.title}</b>
-                <em>{s.who}</em>
+                <div className="lp-stub-photo">
+                  <LandingPhoto image={s.image} widths={[400, 800]} sizes="(min-width: 960px) 150px, 30vw" />
+                  <div className="lp-stub-pills">
+                    <span className="lp-pill-tag">{s.tag}</span>
+                    <span className="lp-pill-tag">{s.who}</span>
+                  </div>
+                </div>
+                <div className="lp-stub-body">
+                  <b>{s.title}</b>
+                </div>
               </div>
             );
           })}
@@ -336,6 +345,43 @@ function Final() {
   );
 }
 
+/** Every picture the page uses, once. */
+function usedKeys(): PhotoKey[] {
+  const keys = new Set<PhotoKey>();
+  for (const p of COPY.heroPicks) keys.add(p.image);
+  for (const p of Object.values(COPY.demoPicks)) keys.add(p.image);
+  for (const s of COPY.stubs) keys.add(s.image);
+  return [...keys].filter((k) => PHOTOS[k].photo || PHOTOS[k].local);
+}
+
+function PhotoCredits() {
+  const [open, setOpen] = useState(false);
+  const credits = usedCredits(usedKeys());
+  return (
+    <div className="lp-credits">
+      <button type="button" className="lp-credits-btn" aria-expanded={open} aria-controls="lp-credits-list" onClick={() => setOpen((o) => !o)}>
+        {COPY.photosLink}
+      </button>
+      {open && (
+        <ul id="lp-credits-list" className="lp-credits-list">
+          {credits.map((c) => (
+            <li key={c.source}>
+              <a href={c.source} target="_blank" rel="noopener noreferrer">
+                {c.credit}
+              </a>
+            </li>
+          ))}
+          <li>
+            <a href={COPY.photosUnsplashUrl} target="_blank" rel="noopener noreferrer">
+              {COPY.photosUnsplash}
+            </a>
+          </li>
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Footer() {
   const links: { label: string; href: string; external?: boolean }[] = [
     { label: "Privacy Policy", href: "/privacy-policy" },
@@ -359,6 +405,7 @@ function Footer() {
           ),
         )}
       </nav>
+      <PhotoCredits />
     </footer>
   );
 }

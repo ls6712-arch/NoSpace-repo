@@ -51,7 +51,7 @@ export function HeroStage() {
       <p className="lp-caption lp-stage-caption" aria-live="polite">
         {caption}
       </p>
-      <PickTicket pick={picks[i]} swaps={swaps} torn={torn} friend={friend} badge={!friend} onGoing={going} onNah={nah} onPlus={plus} onUndo={undo} />
+      <PickTicket eager={swaps === 0} pick={picks[i]} swaps={swaps} torn={torn} friend={friend} badge={!friend} onGoing={going} onNah={nah} onPlus={plus} onUndo={undo} />
       <span className="lp-tag lp-stage-tag">{COPY.stageTag}</span>
     </div>
   );

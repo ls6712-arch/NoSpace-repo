@@ -871,6 +871,7 @@ The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms whe
 | Nah | The button on an example pick that moves to another pick. Landing examples only |
 | FAQ | The landing nav link to the questions section (the section heading is "Questions") |
 | Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
+| Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
 
 ## Retired terms
 
