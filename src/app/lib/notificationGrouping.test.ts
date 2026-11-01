@@ -360,3 +360,15 @@ describe("groupNotifications: faces", () => {
     expect(groups[0].actors).toEqual([]);
   });
 });
+
+describe("groupNotifications: inspired notifications", () => {
+  // One line per new Moment, as the database wrote it. Never a tally.
+  it("never folds inspired rows into an 'and N others' line, even on the same Moment", () => {
+    const now = Date.now();
+    const groups = groupNotifications([
+      notif({ kind: "inspired", href: "/moment/20", actorName: "Priya", createdAt: now, body: "Priya tried cooking after seeing yours." }),
+      notif({ kind: "inspired", href: "/moment/20", actorName: "Sneha", createdAt: now - 1000, body: "Sneha tried cooking after seeing yours." }),
+    ]);
+    expect(groups.map((g) => g.body)).toEqual(["Priya tried cooking after seeing yours.", "Sneha tried cooking after seeing yours."]);
+  });
+});

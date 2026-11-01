@@ -172,6 +172,21 @@ describe("the Start page", () => {
     expect(screen.getByTestId("strip")).toBeTruthy();
   });
 
+  it("carries a Moment it may show through to Log as ?inspired=", () => {
+    h.feed.value = [{ id: 1, hobbySlug: "food-cooking", corner: "cooking", type: "photo", media: "https://example.invalid/1.jpg", creator: "Sneha K", caption: "", likes: 0, createdAt: 1, visibility: "public", userId: "u1" }];
+    show("/start/food-cooking/cooking?inspired=1");
+    fireEvent.click(screen.getByRole("button", { name: "Start now" }));
+    fireEvent.click(screen.getByRole("button", { name: "Done? Log it" }));
+    expect(screen.getByTestId("where").textContent).toBe("/create?hobby=food-cooking&sub=cooking&inspired=1&ref=start");
+  });
+
+  it("does not carry an unknown ?inspired= to Log", () => {
+    show("/start/food-cooking/cooking?inspired=999");
+    fireEvent.click(screen.getByRole("button", { name: "Start now" }));
+    fireEvent.click(screen.getByRole("button", { name: "Done? Log it" }));
+    expect(screen.getByTestId("where").textContent).not.toContain("inspired");
+  });
+
   it("ignores ?inspired= with an unknown id, and names the person for a Moment it may show", () => {
     show("/start/food-cooking/cooking?inspired=999");
     expect(document.body.textContent).not.toMatch(/Inspired by/);

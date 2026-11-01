@@ -971,6 +971,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         shareNow: circle !== "private" && shareNow,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
+        // Made after seeing someone else's Moment (from the Start page). The database checks it.
+        inspiredBy: /^\d{1,15}$/.test(searchParams.get("inspired") ?? "") ? Number(searchParams.get("inspired")) : undefined,
         // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
         // are readable by everyone today. Only the existing Activity fields may write them;
         // do not add an exact place or time for a plain Moment until that ticket is done.

@@ -159,6 +159,7 @@ function StartBody({ content }: { content: NonNullable<ReturnType<typeof startCo
     const q = new URLSearchParams({ hobby: content.spaceSlug, sub: content.cornerSlug });
     if (plan) q.set("pursuit", plan.pursuitId);
     if (draft.dish.trim()) q.set("caption", draft.dish.trim());
+    if (inspired) q.set("inspired", String(inspired.id));
     q.set("ref", "start");
     navigate(`/create?${q.toString()}`);
   };
