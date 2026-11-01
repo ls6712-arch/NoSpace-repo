@@ -867,10 +867,8 @@ The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms whe
 |---|---|
 | Free tonight? Stubby has a pick. | The landing hero line. "Stubby" is the character's name, so it is not a product noun |
 | Get your first pick | The landing buttons that go to sign-up (the hero and the last card). The nav button stays "Sign up" |
-| Good solo | Small badge on an example pick that works well on your own. Also the FAQ's wording ("marked Good solo") |
-| Going solo | The landing nav link to the section about picks that work alone |
+| Good solo | Small badge on an example pick that works well on your own. Also used in the Questions answers ("marked Good solo") |
 | Nah | The button on an example pick that moves to another pick. Landing examples only |
-| FAQ | The landing nav link to the questions section (the section heading is "Questions") |
 | Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
 | Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
 

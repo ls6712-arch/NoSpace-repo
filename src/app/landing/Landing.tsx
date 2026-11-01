@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL } from "../config";
 import { LANDING_COPY as COPY } from "./copy";
 import { LandingStubby, type StubbyHandle } from "./LandingStubby";
-import { useOnceInView, replayClass } from "./motion";
+import { reducedMotion, replayClass, useOnceInView } from "./motion";
 import { DemoStage, HeroStage } from "./PickStages";
 import { LandingPhoto } from "./LandingPhoto";
 import { PHOTOS, usedCredits, type PhotoKey } from "./photos";
@@ -35,13 +35,6 @@ function Nav() {
           </span>
           {APP_NAME}
         </Link>
-        <nav className="lp-nav-links" aria-label="Sections">
-          {COPY.navLinks.map((l) => (
-            <a key={l.href} href={l.href}>
-              {l.label}
-            </a>
-          ))}
-        </nav>
         <div className="lp-nav-actions">
           <Link to="/login" className="lp-login">
             {COPY.logIn}
@@ -66,6 +59,10 @@ function Says({ text, stubbyRef, onDark = false }: { text: string; stubbyRef?: R
   );
 }
 
+function scrollToHow() {
+  document.getElementById("how")?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
+}
+
 function Hero() {
   return (
     <section className="lp-hero">
@@ -83,9 +80,10 @@ function Hero() {
           <p className="lp-hero-sub">{COPY.heroSub}</p>
           <div className="lp-cta-row">
             <SignUpButton large>{COPY.heroCta}</SignUpButton>
-            <a className="lp-btn lp-btn-lg lp-btn-ghost" href="#how">
+            {/* The app uses hash routing, so a "#how" link would be read as a route. Scroll to the section instead. */}
+            <button type="button" className="lp-btn lp-btn-lg lp-btn-ghost" onClick={scrollToHow}>
               {COPY.heroSecondary}
-            </a>
+            </button>
           </div>
         </div>
         <HeroStage />

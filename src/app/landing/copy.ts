@@ -27,13 +27,6 @@ export interface ExamplePick {
 export const LANDING_COPY = {
   signUp: "Sign up",
   logIn: "Log in",
-  navLinks: [
-    { label: "Going solo", href: "#solo" },
-    { label: "How it works", href: "#how" },
-    { label: "Stubby", href: "#stubby" },
-    { label: `Are you on ${APP_NAME}?`, href: "#ask" },
-    { label: "FAQ", href: "#faq" },
-  ],
   stubbyLabel: "Stubby",
 
   // Hero
