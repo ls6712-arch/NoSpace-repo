@@ -90,7 +90,7 @@ export const LANDING_COPY = {
       caption: "Something quieter? Silent book club Thursday at 7. Bring the book you keep not finishing. Going?",
     },
     {
-      title: "Late jazz set", image: "live-music",
+      title: "Late jazz set", image: "jazz-set",
       when: "Thu, 9:30 to 11:00 PM",
       where: "West Village",
       cost: "$15 cover",
@@ -139,7 +139,7 @@ export const LANDING_COPY = {
     who: { label: "Who", options: [{ v: "solo", label: "Just me" }, { v: "friend", label: "A friend" }] },
   },
   demoPicks: {
-    "tonight|25|solo": { kicker: "Tonight · Music", title: "Jazz at the bar", image: "live-music", when: "Tonight, 8:30 PM", where: "West Village", cost: "$15 cover", time: "8:30", day: "Tonight", caption: "Easy to go alone, and you can leave whenever. Going?" },
+    "tonight|25|solo": { kicker: "Tonight · Music", title: "Jazz at the bar", image: "jazz-bar", when: "Tonight, 8:30 PM", where: "West Village", cost: "$15 cover", time: "8:30", day: "Tonight", caption: "Easy to go alone, and you can leave whenever. Going?" },
     "tonight|free|solo": { kicker: "Tonight · Reading", title: "Silent book club", image: "book-clubs", when: "Tonight, 7:00 PM", where: "A café in Fort Greene", cost: "Free, buy a coffee", time: "7:00", day: "Tonight", caption: "Bring the book you keep not finishing. Going?" },
     "sat|25|solo": { kicker: "Saturday · Climbing", title: "Bouldering session", image: "climbing", when: "Sat, 11:00 AM", where: "Gowanus", cost: "Covered by your gym pass", time: "11:00", day: "Sat", caption: "Your pass covers it, and the morning’s quiet. Going?" },
     "sat|free|solo": { kicker: "Saturday · Art", title: "Museum free hour", image: "museum", when: "Sat, 4:00 PM", where: "Ten minutes from you", cost: "Free", time: "4:00", day: "Sat", caption: "Pick one room and stay an hour. Going?" },
@@ -187,7 +187,7 @@ export const LANDING_COPY = {
     { tag: "Running", title: "First 5K with Ana", image: "running", who: "+1" },
     { tag: "Cooking", title: "Sunday dumplings", image: "cooking", who: "+3" },
     { tag: "Outdoors", title: "Sunrise on the pier", image: "pier", who: "Solo" },
-    { tag: "Art", title: "Museum free hour", image: "museum", who: "Solo" },
+    { tag: "Art", title: "Museum free hour", image: "museum-stub", who: "Solo" },
   ],
 
   // Are you on it
@@ -224,7 +224,7 @@ export const LANDING_COPY = {
     { q: "What are Stubs?", a: "You get a Stub each time you do something. Your Shelf of Stubs is a record of what you’ve done." },
   ],
 
-  // Pictures. Activity-level alt text; the two illustrations are decorative.
+  // Pictures. Alt text describes each photo; an illustration used as a fallback is decoration.
   photoAlt: {
     pottery: "Clay pottery",
     ceramics: "A clay pot",
@@ -235,7 +235,11 @@ export const LANDING_COPY = {
     climbing: "Climbing",
     "board-games": "A board game",
     cycling: "Cycling",
-    "live-music": "A crowd at a concert",
+    "jazz-set": "A jazz band playing on a stage",
+    "jazz-bar": "Saxophone players on stage",
+    pier: "A pier at sunrise over calm water",
+    "museum-stub": "Visitors looking at a painting in a museum",
+    museum: "A visitor looking at framed paintings in a gallery",
   } as Partial<Record<PhotoKey, string>>,
   photosLink: "Photos",
   photosUnsplash: "Unsplash",

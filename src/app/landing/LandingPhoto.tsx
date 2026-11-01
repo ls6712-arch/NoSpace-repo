@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SubHobbyArt } from "../components/SubHobbyArt";
 import { LANDING_COPY } from "./copy";
-import { PHOTOS, photoSrc, photoSrcSet, type PhotoKey } from "./photos";
+import { PHOTOS, localSrc, localSrcSet, photoSrc, photoSrcSet, type PhotoKey } from "./photos";
 
 /**
  * Fills its parent (which sets the shape). A photo gets one shared soft, warm
@@ -23,16 +23,16 @@ export function LandingPhoto({
 }) {
   const spec = PHOTOS[image];
   const [failed, setFailed] = useState(false);
-  const showPhoto = !!spec.photo && !failed;
+  const showPhoto = !!(spec.photo || spec.local) && !failed;
   const alt = (LANDING_COPY.photoAlt as Partial<Record<PhotoKey, string>>)[image];
 
-  if (showPhoto && spec.photo) {
+  if (showPhoto) {
     return (
       <span className={`lp-photo lp-photo-real ${className}`}>
         {/* design-token-ignore: plain img with srcSet; its own onError swaps in the illustration, the fixed-size box is set by the parent */}
         <img
-          src={photoSrc(spec.photo, widths[0])}
-          srcSet={photoSrcSet(spec.photo, widths)}
+          src={spec.local ? localSrc(spec.local, widths[0]) : photoSrc(spec.photo!, widths[0])}
+          srcSet={spec.local ? localSrcSet(spec.local, widths) : photoSrcSet(spec.photo!, widths)}
           sizes={sizes}
           alt={alt ?? ""}
           loading={eager ? "eager" : "lazy"}

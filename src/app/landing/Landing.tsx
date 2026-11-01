@@ -351,7 +351,7 @@ function usedKeys(): PhotoKey[] {
   for (const p of COPY.heroPicks) keys.add(p.image);
   for (const p of Object.values(COPY.demoPicks)) keys.add(p.image);
   for (const s of COPY.stubs) keys.add(s.image);
-  return [...keys].filter((k) => PHOTOS[k].photo);
+  return [...keys].filter((k) => PHOTOS[k].photo || PHOTOS[k].local);
 }
 
 function PhotoCredits() {
