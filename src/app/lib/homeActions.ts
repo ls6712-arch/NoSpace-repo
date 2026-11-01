@@ -6,6 +6,7 @@ import type { HomeItem } from "./homeItems";
 import { logSuggestionEvent, type LoggedKind, type SuggestionAction } from "./homeSuggestions";
 import { track } from "./analytics";
 import { ERROR_LINE } from "./stateCopy";
+import { startPath } from "./startContent";
 
 /** What a tap on a Home card does, and what is recorded about it. */
 
@@ -42,7 +43,7 @@ export function planFromItem(item: HomeItem): Plan {
   };
 }
 
-/** I'm going (an event), Ask to join (an open Pursuit). Start is not here: it opens the Log form. */
+/** I'm going (an event), Ask to join (an open Pursuit). Start is not here: it opens the Start page. */
 export async function commitToItem(item: HomeItem, owner: Owner): Promise<{ ok: true; requested: boolean } | { ok: false; error: string }> {
   if (item.kind === "at_home") return { ok: false, error: ERROR_LINE };
   const r = await goToPlan(planFromItem(item), owner);
@@ -84,5 +85,15 @@ export function openPathFor(item: HomeItem): string {
   return `/space/${item.spaceSlug ?? ""}${item.kind === "event" ? "?tab=events" : ""}`;
 }
 
-/** Start: the Log form in that Corner. */
-export const startPathFor = (item: HomeItem) => `/create?hobby=${encodeURIComponent(item.corner.spaceSlug)}&sub=${encodeURIComponent(item.corner.slug)}`;
+/** Start: the Corner's Start page. Never the camera. */
+export const startPathFor = (item: HomeItem) => startPath(item.corner.spaceSlug, item.corner.slug, { ref: "home" });
+
+/**
+ * Start on an at-home card. It opens the Start page and records a "start": the
+ * person has begun looking, not committed. "going" is recorded only when they
+ * make a plan there.
+ */
+export function openStart(item: HomeItem, position: number, navigate: (to: string) => void): void {
+  recordSuggestion("start", item, position);
+  navigate(startPathFor(item));
+}

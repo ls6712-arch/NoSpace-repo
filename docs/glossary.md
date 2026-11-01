@@ -828,6 +828,35 @@ A private link that puts your plans and Pursuit sessions in Google, Apple or Out
 
 What the feed holds, and never holds: the next 60 days of your plans and Pursuit sessions, each as its title, place, time and a link to that day on your calendar. Never blocks, free time, budget, notes or other people's names.
 
+### Start page (brief of Nov 1, 2026)
+
+What Start on a suggestion opens: `/start/:space/:corner`. It is the activity itself (what you need, how to start, when, with whom). The camera is never here; it comes at the end, from "Done? Log it".
+
+| Term | Use |
+|---|---|
+| Start page | The page Start opens. Not "Start screen" or "prep page" |
+| Start | The button on an at-home card. It now means it: the page opens, nothing is counted as going |
+| Start now | The bottom button before anything is chosen. Same as choosing Now |
+| Done? Log it | The bottom button when the person chose Now, or on the day of a plan. The only way to the Log form from this page |
+| Add to my week | The bottom button when Tonight, Tomorrow or a day is chosen. Makes a plan on the Calendar. Toast: On your calendar for {Thu evening} · Undo |
+| Add to calendar | The bottom button on a plan before its day (the `.ics` download) |
+| What you’ll need | The person's own list. Starts from the Corner's needs. Rows can be ticked ("got it"), added (+ Add) and removed |
+| Share list | Text link above the list. Shares the list as plain text |
+| How to start | The numbered steps: the guide's first step, then the Corner's steps |
+| What are you making? | One optional field, only for Corners that are about making. Becomes the plan title and the Moment's starting caption |
+| Now / Tonight / Tomorrow / Pick a day | The When choices. Day choices add Daytime / Evening |
+| Doing it now | Under the header after Now is chosen. The list collapses to "{n} of {m} got" |
+| Change / Cancel plan | Text links on a planned page |
+| Or do it with people | Muted line over an upcoming event or open Pursuit in this Corner. Never a count of people, never a price |
+| With / Invite a friend | The last section. The invite says "{Name} is making {dish} {day}. Want in?" and carries the list |
+| Made by others | The strip of Moments in this Corner. No count anywhere |
+| Make this too | The one button in the sheet that opens over the strip. Closes the sheet and shows "Inspired by {name}" under the header |
+| See full Moment | Small link in that sheet to the Moment's own page |
+| Do this | Pill on a Moment (Home, Discover, a Corner's Moments, a Moment's page) whose Corner has a guide. Opens the Start page for that Corner |
+| Open | On a plan sheet in the Calendar, for your own plan in an at-home Corner. Opens its Start page |
+
+The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
+
 ## Retired terms
 
 Never use these in UI copy.

@@ -21,7 +21,7 @@ import { haptic, pop } from "../lib/motionTokens";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
 import { useHomeData } from "../lib/useHomeData";
-import { commitToItem, inviteToItem, recordSuggestion, startPathFor } from "../lib/homeActions";
+import { commitToItem, inviteToItem, openStart, recordSuggestion } from "../lib/homeActions";
 import { formatDate } from "../lib/dates";
 import { GREETING_NO_NAME } from "../lib/homeCopy";
 import { HOME_TZ } from "../lib/homeWeek";
@@ -90,8 +90,8 @@ export function HomeFeed() {
   const onPrimary = async (item: HomeItem, position: number) => {
     if (!owner) return;
     if (item.kind === "at_home") {
-      recordSuggestion("going", item, position);
-      navigate(startPathFor(item));
+      // Start opens the activity. It is a start, not a commitment: going is recorded only when a plan is made there.
+      openStart(item, position, navigate);
       return;
     }
     setCard(item.id, "busy");

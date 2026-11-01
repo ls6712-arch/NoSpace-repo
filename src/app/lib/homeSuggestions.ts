@@ -18,7 +18,8 @@ const isReason = (v: unknown): v is ReasonCode => typeof v === "string" && (REAS
 export type SuggestionKind = "event" | "open_pursuit";
 /** What the log records, which adds the at-home rows the app fills in. */
 export type LoggedKind = SuggestionKind | "friend_pursuit" | "at_home";
-export type SuggestionAction = "shown" | "opened" | "going" | "invite" | "dismissed";
+/** "start" is a tap on Start (the Start page opened); "going" is a plan made; "logged" is a Moment posted from the Start page. */
+export type SuggestionAction = "shown" | "opened" | "start" | "going" | "invite" | "dismissed" | "logged";
 
 export interface HomeSuggestion {
   kind: SuggestionKind;

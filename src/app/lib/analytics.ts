@@ -17,7 +17,9 @@ export type AnalyticsEvent =
   | { name: "moment_quick_react_opened"; postId: number }
   | { name: "home_suggestion_shown"; kind: string; position: number }
   | { name: "home_suggestion_opened"; kind: string; position: number }
+  | { name: "home_suggestion_start"; kind: string; position: number }
   | { name: "home_suggestion_going"; kind: string; position: number }
+  | { name: "home_suggestion_logged"; kind: string; position: number }
   | { name: "home_suggestion_invite"; kind: string; position: number }
   | { name: "home_suggestion_dismissed"; kind: string; position: number }
   | { name: "calendar_opened"; view: "day" | "week" | "month" | "list" }
