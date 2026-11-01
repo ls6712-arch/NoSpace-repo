@@ -12,6 +12,7 @@ const api = vi.hoisted(() => ({
   savePick: vi.fn(async () => ({ error: null })),
   setPublished: vi.fn(async () => ({ error: null })),
   deletePick: vi.fn(async () => ({ error: null })),
+  runScout: vi.fn(),
 }));
 vi.mock("../lib/cityPicks", async (orig) => ({ ...(await orig<typeof import("../lib/cityPicks")>()), ...api }));
 
@@ -25,7 +26,7 @@ beforeEach(() => {
   auth.user = { id: "u1" };
   auth.isAdmin = true;
   api.fetchAllPicks.mockResolvedValue({ picks: [row(), row({ id: 2, title: "Marathon", published: true })], error: null });
-  for (const f of [api.savePick, api.setPublished, api.deletePick]) f.mockClear();
+  for (const f of [api.savePick, api.setPublished, api.deletePick, api.runScout, api.fetchAllPicks]) f.mockClear();
 });
 afterEach(cleanup);
 const show = () => render(<MemoryRouter><AdminCityPicks /></MemoryRouter>);
@@ -71,5 +72,39 @@ describe("AdminCityPicks", () => {
     expect(screen.getByText("This removes the pick for good.")).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "Delete" }).at(-1)!);
     await waitFor(() => expect(api.deletePick).toHaveBeenCalledWith(1));
+  });
+
+  it("runs the scout with the focus, reloads, and says what it added and skipped", async () => {
+    api.runScout.mockResolvedValue({ report: { added: 2, found: 3, searches: 5, dropped: [{ title: "Old fair", reason: "More than 14 days away." }] }, error: null });
+    show();
+    await screen.findByText("Halloween parade");
+    fireEvent.change(screen.getByLabelText(/^Look for/), { target: { value: "pottery" } });
+    fireEvent.click(screen.getByRole("button", { name: "Find picks" }));
+    expect(await screen.findByText("Added 2 drafts.")).toBeTruthy();
+    expect(api.runScout).toHaveBeenCalledWith("pottery");
+    expect(api.fetchAllPicks).toHaveBeenCalledTimes(2);
+    expect(screen.getByText("Skipped 1 pick")).toBeTruthy();
+    expect(screen.getByText("Old fair")).toBeTruthy();
+  });
+
+  it("shows the scout's error and does not reload", async () => {
+    api.runScout.mockResolvedValue({ report: null, error: "The scout is switched off." });
+    show();
+    await screen.findByText("Halloween parade");
+    fireEvent.click(screen.getByRole("button", { name: "Find picks" }));
+    expect((await screen.findByRole("alert")).textContent).toBe("The scout is switched off.");
+    expect(api.fetchAllPicks).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks a scout draft with its source link, check date and note", async () => {
+    api.fetchAllPicks.mockResolvedValue({
+      picks: [row({ scout: { sourceUrl: "https://example.com/pottery", checkedAt: Date.UTC(2026, 10, 1, 15), note: "Price not listed" } })],
+      error: null,
+    });
+    show();
+    await screen.findByText("Halloween parade");
+    expect(screen.getByText(/Found by Stubby · Checked Nov 1/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Source" }).getAttribute("href")).toBe("https://example.com/pottery");
+    expect(screen.getByText("Price not listed")).toBeTruthy();
   });
 });

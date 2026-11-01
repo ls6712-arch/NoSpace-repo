@@ -759,6 +759,7 @@ The wording of the Week view, taken from the founder's Week view brief. It is no
 | This week in New York | Heading of the hand-picked row on the Week view. Under it: "Picked by Soosh". The row is gone when there are no picks |
 | Sat 31 · 7 PM · free | The pill on a pick: day, time, then the editor's own price words. No price, no price part |
 | City picks | Admin page (Site admin list in Settings) for the picks. Add a pick · Edit pick · Published or Draft · Publish · Unpublish · Edit · Delete (with a confirm: "This removes the pick for good.") · Save changes · Cancel. Empty: "No picks yet." / "Add a pick, then publish it." |
+| Find picks | Section and button on City picks (admins only) that runs Stubby's scout: "Stubby searches the web for things to do in the next 14 days and adds them here as drafts. Open each source and check it before you publish." Field: Look for (Optional, like pottery or running). While running: Looking. After: "Added {n} drafts." or "Nothing new this time.", then Skipped {n} picks with each reason. A scout draft reads Found by Stubby · Checked {date} · Source, then its note. New, for approval |
 | Something went wrong. Try again. | The existing error line, as a toast, when the budget does not save |
 
 ## Calendar (brief of Oct 31, 2026)
