@@ -157,7 +157,7 @@ export function inputFor(p: CityPick, cornerId: number | null): PickInput {
   return { title: p.title, place: p.place ?? "", starts: toNyLocal(p.startsAt), ends: p.endsAt ? toNyLocal(p.endsAt) : "", price: p.price ?? "", url: p.url ?? "", cornerId, color: p.color };
 }
 
-/** Where an admin-list pick came from (migration 20261117000000). Null on an editor's pick, or before that migration is live. */
+/** Where an admin-list pick came from (migration 20261118000000). Null on an editor's pick, or before that migration is live. */
 export interface ScoutInfo {
   sourceUrl: string | null;
   checkedAt: number | null;

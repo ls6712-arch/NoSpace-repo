@@ -1,7 +1,7 @@
 -- Stubby's scout: city_picks scout columns and public.scout_runs.
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run this AFTER
--- 20261117000000_stubby_scout.sql. Run before it, the script stops and says "NOT APPLIED";
+-- 20261118000000_stubby_scout.sql. Run before it, the script stops and says "NOT APPLIED";
 -- it never creates anything then.
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in
@@ -26,7 +26,7 @@ declare
   v_when timestamptz := now() + interval '3 days';
 begin
   if to_regclass('public.scout_runs') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261117000000_stubby_scout.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261118000000_stubby_scout.sql first, nothing was created)';
   end if;
 
   -- Fixture, as the connecting (owner) role, which bypasses RLS.

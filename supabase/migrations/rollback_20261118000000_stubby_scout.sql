@@ -1,4 +1,4 @@
--- Rollback for 20261117000000_stubby_scout.sql.
+-- Rollback for 20261118000000_stubby_scout.sql.
 -- Drops the run log and the scout columns. Scout picks stay as ordinary City picks (drafts
 -- stay drafts); they only lose their source link, checked time and note.
 
