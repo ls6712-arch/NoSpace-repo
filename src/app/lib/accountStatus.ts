@@ -2,7 +2,7 @@ import { supabase } from "../../lib/supabase";
 import { OFFLINE_LINE } from "./stateCopy";
 
 /** Extra profile columns the owner's own profile load reads. Both are
- * readable on the row already (see 20261031000000_profiles_column_privacy). */
+ * readable on the row already (see 20261031000001_profiles_column_privacy). */
 export const ACCOUNT_STATUS_COLUMNS = "paused_at, deletion_requested_at";
 
 /** Days between asking to delete and the nightly job removing the account

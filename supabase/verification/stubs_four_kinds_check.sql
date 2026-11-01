@@ -1,4 +1,4 @@
--- Soosh: the four Stubs (20261115000000_stubs_four_kinds.sql).
+-- Soosh: the four Stubs (20261101134307_stubs_four_kinds.sql).
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER that migration.
 -- Run before it, the script stops at the first check and says so ("NOT APPLIED").
@@ -48,7 +48,7 @@ begin
   if to_regclass('public.drops') is null
      or to_regprocedure('public.join_drop(bigint)') is null
      or to_regprocedure('public.pin_stub(bigint, boolean)') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261115000000_stubs_four_kinds.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261101134307_stubs_four_kinds.sql first, nothing was created)';
   end if;
 
   -- ───────────────────────────────────────────────────────────────────────

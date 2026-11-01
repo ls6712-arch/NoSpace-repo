@@ -95,7 +95,7 @@ export interface MomentPage<T> {
   items: T[];
 }
 
-/** One Stub as get_profile_stubs returns it (20261115000000). Fields a viewer may not see are absent. */
+/** One Stub as get_profile_stubs returns it (20261101134307). Fields a viewer may not see are absent. */
 export interface StubItem {
   id: number;
   kind: "event" | "finish" | "drop" | "regular";

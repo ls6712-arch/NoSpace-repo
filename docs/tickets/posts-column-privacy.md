@@ -28,7 +28,7 @@ The Log flow must not write an exact place or time for an ordinary Moment until 
 
 ## Proposed design
 
-1. **Rows first (shipped in the profile PR, migration `20261110000000`).** Add `coalesce(posts.visible_at, posts.created_at) <= now()`
+1. **Rows first (shipped in the profile PR, migration `20261030210601`).** Add `coalesce(posts.visible_at, posts.created_at) <= now()`
    to both non-owner read policies on `posts` ("posts are readable by their audience" and "group posts are readable by the group").
    The owner keeps full access. This alone satisfies goal 2: a Moment inside its delay cannot be selected, so its
    `created_at` cannot be read.

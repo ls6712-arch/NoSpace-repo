@@ -1,4 +1,4 @@
--- Soosh: the "start" and "logged" suggestion actions (20261116000000_suggestion_events_start_logged.sql).
+-- Soosh: the "start" and "logged" suggestion actions (20261101134316_suggestion_events_start_logged.sql).
 --
 -- Not a migration, nothing here alters the schema. Run this AFTER that migration.
 -- Run before it, the script stops at the first check and says so ("NOT APPLIED").
@@ -29,7 +29,7 @@ begin
   v_def := (select pg_get_constraintdef(c.oid) from pg_constraint c
              where c.conrelid = 'public.suggestion_events'::regclass and c.conname = 'suggestion_events_action_check');
   if v_def is null or v_def not like '%''start''%' then
-    raise exception 'RESULTS: NOT APPLIED (run 20261116000000_suggestion_events_start_logged.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261101134316_suggestion_events_start_logged.sql first, nothing was created)';
   end if;
 
   v_i := v_i + 1;

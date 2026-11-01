@@ -8,7 +8,7 @@ import { ticketTime } from "./weekView";
 
 /**
  * "This week in New York": a few hand-picked things the founder or an admin
- * adds each week (migration 20261112000000). Signed-in people read the
+ * adds each week (migration 20261031001347). Signed-in people read the
  * published ones; admins read and write all of them. Reads are best effort:
  * before the migration is live, or on any failure, there are no picks and the
  * Week view simply hides the row.
@@ -157,7 +157,7 @@ export function inputFor(p: CityPick, cornerId: number | null): PickInput {
   return { title: p.title, place: p.place ?? "", starts: toNyLocal(p.startsAt), ends: p.endsAt ? toNyLocal(p.endsAt) : "", price: p.price ?? "", url: p.url ?? "", cornerId, color: p.color };
 }
 
-/** Where an admin-list pick came from (migration 20261118000000). Null on an editor's pick, or before that migration is live. */
+/** Where an admin-list pick came from (migration 20261101155717). Null on an editor's pick, or before that migration is live. */
 export interface ScoutInfo {
   sourceUrl: string | null;
   checkedAt: number | null;

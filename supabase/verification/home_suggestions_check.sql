@@ -1,7 +1,7 @@
 -- Home v2, PR 1: home_suggestions(), suggestion_events and log_suggestion_event().
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run this AFTER
--- 20261109000000_home_suggestions.sql. Run before it, the script stops and says
+-- 20261030172959_home_suggestions.sql. Run before it, the script stops and says
 -- "NOT APPLIED"; it never creates anything then.
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in
@@ -69,7 +69,7 @@ begin
   if to_regprocedure('public.home_suggestions(integer)') is null
      or to_regprocedure('public.log_suggestion_event(text,text,text,integer,double precision,text[],text)') is null
      or to_regclass('public.suggestion_events') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261109000000_home_suggestions.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261030172959_home_suggestions.sql first, nothing was created)';
   end if;
 
   -- ───────────────────────────────────────────────────────────────────────
@@ -87,7 +87,7 @@ begin
   update public.profiles p set display_name = 'Priya Fixture' where p.id = v_b;
   update public.profiles p set is_test = true where p.id = v_d;
 
-  -- A birthdate on file makes an account active (20261108000000). H gets none.
+  -- A birthdate on file makes an account active (20261030144151). H gets none.
   insert into public.profile_private (user_id, birthdate) values
     (v_a, (current_date - interval '25 years')::date), (v_b, (current_date - interval '25 years')::date),
     (v_c, (current_date - interval '25 years')::date), (v_d, (current_date - interval '25 years')::date),
