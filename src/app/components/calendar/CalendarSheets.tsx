@@ -8,6 +8,7 @@ import type { CalendarEntry, EntryRepeat, Occurrence } from "../../lib/calendarE
 import { NOTE_MAX } from "../../lib/calendarEntries";
 import { dateParam, dayListDate, dayListHeading, isPursuitSession, parseDateParam, shortTime, stubColor, type CalendarFreeSlot } from "../../lib/calendarView";
 import { formatWeekday } from "../../lib/dates";
+import { isAtHomeCorner, startPath } from "../../lib/startContent";
 import { HOME_TZ, nyTimeToMs } from "../../lib/homeWeek";
 import { fetchConnections, type Connection } from "../../lib/planEdits";
 import { fetchTaste } from "../../lib/tasteRemote";
@@ -296,7 +297,7 @@ function PlanForm({ startMs, dayMs, now, actions, onClose }: { startMs?: number;
 // ---------- a plan you tap ----------
 
 /** A day and a time to move a plan to. */
-function WhenFields({ startMs, onSave, saveLabel }: { startMs: number; onSave: (ms: number) => void; saveLabel: string }) {
+export function WhenFields({ startMs, onSave, saveLabel }: { startMs: number; onSave: (ms: number) => void; saveLabel: string }) {
   const [day, setDay] = useState(dateParam(startMs));
   const [clock, setClock] = useState(clockOf(startMs));
   const c = parseClock(clock);
@@ -333,6 +334,9 @@ function PlanSheet({ plan, actions, passes, onBring, onClose }: { plan: WeekPlan
   const kind = kindLine(plan);
   const where = placeLine(plan, passes);
   const who = goingLine(plan.going);
+  // Your own plan in an at-home Corner opens its Start page (steps, what you need, Done? Log it).
+  const [planSpace = "", planCorner = ""] = (plan.cornerKey ?? "").split("/");
+  const startLink = plan.kind === "session" && plan.mine && plan.pursuitId && !isPursuitSession(plan) && isAtHomeCorner(planSpace, planCorner) ? startPath(planSpace, planCorner, { plan: plan.pursuitId }) : null;
   const label: Record<PlanAction, string> = {
     change: plan.going.total > 1 ? SHEET.changeMyTime : SHEET.changeTime,
     move: SHEET.moveSession,
@@ -371,6 +375,11 @@ function PlanSheet({ plan, actions, passes, onBring, onClose }: { plan: WeekPlan
           {plan.pursuitId && isPursuitSession(plan) && (
             <Link to={`/pursuit/${plan.pursuitId}`} className={ROW}>
               {SHEET.openPursuit}
+            </Link>
+          )}
+          {startLink && (
+            <Link to={startLink} className={ROW}>
+              {SHEET.openStart}
             </Link>
           )}
           {offered.map((a) => (

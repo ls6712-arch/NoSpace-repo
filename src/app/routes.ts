@@ -21,6 +21,7 @@ import { SearchResults } from "./pages/SearchResults";
 import { MySpace } from "./pages/MySpace";
 import { HomeFeed } from "./pages/HomeFeed";
 import { Log } from "./pages/Log";
+import { StartPage } from "./pages/StartPage";
 import { Profile } from "./pages/Profile";
 import { WhoCanSeeMyTime } from "./pages/WhoCanSeeMyTime";
 import { Onboarding } from "./pages/Onboarding";
@@ -112,6 +113,8 @@ export const router = createHashRouter([
       { path: "circles", loader: () => redirect("/discover") },
       { path: "circles/*", loader: () => redirect("/discover") },
       { path: "create", Component: Log },
+      // What Start on a suggestion opens: the activity itself, never the camera.
+      { path: "start/:spaceSlug/:cornerSlug", Component: StartPage },
       { path: "people", Component: People },
       // Spaces are the categories now, so there is one page and one URL.
       { path: "category/:slug", loader: ({ params }) => redirect(`/space/${params.slug}`) },

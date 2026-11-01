@@ -36,6 +36,7 @@ export const SHEET = {
   leavePlan: "Leave this plan",
   skipSession: "Skip this session",
   openPursuit: "Open Pursuit",
+  openStart: "Open",
   changeTimes: "Change the times",
   notFree: (day: string) => `Not free this ${day}`,
   removeUsual: "Remove from my usual week",
