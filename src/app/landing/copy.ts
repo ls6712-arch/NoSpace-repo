@@ -165,7 +165,6 @@ export const LANDING_COPY = {
     "Keeps it short, about 60 seconds, then sends you off to do the thing.",
     "Only tells you details it actually has. If it’s unsure, it says to check at the door.",
     "Never books, pays or messages anyone until you tap.",
-    "Works by text too, so you can use it on the train.",
   ],
   stubbyCaption: "Tap Stubby.",
 
@@ -215,7 +214,7 @@ export const LANDING_COPY = {
   faq: [
     { q: `Can I use ${APP_NAME} on my own?`, a: "Yes. Many picks are marked Good solo, like drop-in classes, counter dinners and run clubs. You can always add a friend later." },
     { q: `Where is ${APP_NAME} available?`, a: "New York first. More cities after that." },
-    { q: "Do I have to talk to Stubby out loud?", a: "No. Everything works by text too." },
+    { q: "What does Stubby do?", a: "Stubby brings your picks and cheers when you go. You choose everything with a tap." },
     { q: `Will ${APP_NAME} book, buy or message anyone for me?`, a: "Not without your tap. Stubby can get an invite ready, and you decide whether to send it." },
     { q: "Is this for meeting strangers?", a: `No. ${APP_NAME} helps you get out more, alone or with friends you already have.` },
     { q: "Who sees my Moments?", a: "You choose for each Moment: only you, followers or public. Nothing about your account has to be public." },
