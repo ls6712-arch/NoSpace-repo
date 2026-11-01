@@ -35,6 +35,7 @@ Optional:
 
 | Secret | Default | What it does |
 | --- | --- | --- |
+| `ANTHROPIC_WORKSPACE_ID` | none | Only if the API key isn't scoped to a workspace (`wrkspc_...`). Not a secret, but kept here with the key. |
 | `STUBBY_SCOUT_MODEL` | `claude-haiku-5-5` | Which Claude model searches. |
 | `STUBBY_SCOUT_RUNS_PER_DAY` | `3` (max 20) | Runs allowed in any 24 hours, across all admins. |
 | `STUBBY_SCOUT_MAX_SEARCHES` | `5` (max 20) | Web searches per Find picks run or ask. |
