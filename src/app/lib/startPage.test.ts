@@ -70,6 +70,14 @@ describe("Start content", () => {
     expect(content.meta).toContain(`about`);
   });
 
+  it("says At home only for Corners you can do alone at home", () => {
+    expect(startContent("food-cooking", "pasta")!.meta).toMatch(/^At home/);
+    expect(startContent("food-cooking", "cooking")!.meta).toMatch(/^At home/);
+    expect(startContent("sports-fitness", "martial-arts")!.meta).not.toContain("At home");
+    expect(startContent("sports-fitness", "running")!.meta).not.toContain("At home");
+    expect(startContent("sports-fitness", "climbing")!.meta).not.toContain("At home");
+  });
+
   it("shows Cooking with its first step and no needs yet", () => {
     const content = startContent("food-cooking", "cooking")!;
     expect(content.steps).toEqual([cornerGuide("food-cooking", "cooking")!.step]);

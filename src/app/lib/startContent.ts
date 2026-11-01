@@ -45,9 +45,11 @@ export function startContent(spaceSlug: string, cornerSlug: string): StartConten
   const known = allSubHobbies.find((s) => s.hobbySlug === spaceSlug && s.slug === cornerSlug);
   if (!curated && !known) return null;
   const guide = cornerGuide(spaceSlug, cornerSlug);
-  const outdoors = guide?.where === "outdoors" || curated?.setting === "outdoors";
+  // "At home" only for something you can do on your own at home: a curated Corner set to home, or a
+  // guide that is not outdoors and does not need other people. Martial arts (indoors, together) is not.
+  const atHome = curated ? curated.setting === "home" : !!guide && guide.where !== "outdoors" && guide.together !== "together";
   const minutes = curated?.durationMinutes ? formatDuration(curated.durationMinutes) : guide?.quick ? formatDuration(15) : "";
-  const meta = [outdoors ? "" : "At home", minutes ? `about ${minutes}` : ""].filter(Boolean).join(" · ");
+  const meta = [atHome ? "At home" : "", minutes ? `about ${minutes}` : ""].filter(Boolean).join(" · ");
   const steps = [guide?.step, ...(curated?.steps ?? [])].map((s) => s?.trim() ?? "").filter(Boolean);
   return {
     spaceSlug,
