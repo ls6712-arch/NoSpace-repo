@@ -1,6 +1,6 @@
 -- Stubby's scout: finds real New York things on the web and leaves them as City pick drafts.
 --
--- Run AFTER 20261116000000_suggestion_events_start_logged.sql. Applied only with the founder's
+-- Run AFTER 20261117000000_moment_inspired_by.sql. Applied only with the founder's
 -- written approval naming this file (CLAUDE.md).
 --
 -- The scout (Edge Function stubby-scout) runs when an admin asks it to, from the City picks
@@ -17,7 +17,7 @@
 --      even if two runs overlap.
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
--- Rollback: rollback_20261117000000_stubby_scout.sql.
+-- Rollback: rollback_20261118000000_stubby_scout.sql.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. city_picks: where a pick came from
