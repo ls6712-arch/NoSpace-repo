@@ -1,4 +1,4 @@
--- Verifies 20261109000000_log_punch_cards.sql. Run AFTER it.
+-- Verifies 20261110000000_log_punch_cards.sql. Run AFTER it.
 --
 -- Not a migration. One transaction, one do $$ ... $$ block, ends unconditionally in
 -- RAISE EXCEPTION 'RESULTS: ...' and rolls back. No SELECT/RETURNING INTO and no DELETE
@@ -29,7 +29,7 @@ begin
   v_owner_role := current_user;
 
   if to_regprocedure('public.log_progress()') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261109000000_log_punch_cards.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261110000000_log_punch_cards.sql first, nothing was created)';
   end if;
 
   -- Noon on the 1st of this New York month. On the 1st itself, that is today, so one day.

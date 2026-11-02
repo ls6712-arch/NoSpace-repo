@@ -33,7 +33,7 @@
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Verification: supabase/verification/log_punch_cards_check.sql.
--- Rollback: rollback_20261109000000_log_punch_cards.sql.
+-- Rollback: rollback_20261110000000_log_punch_cards.sql.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. A Moment may have no Space, but never a Corner without one
