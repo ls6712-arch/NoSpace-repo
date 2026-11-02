@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { ERRORS, HEIC_LIMIT, MAX_PIXELS, checkHeicRequest, handleHeic, heifPixels, looksLikeHeif, readCapped, type Claim, type HeicDeps } from "../../../api/heicCheck";
+import fs from "node:fs";
+import path from "node:path";
+import { ERRORS, HEIC_LIMIT, MAX_PIXELS, TIMEOUT_MS, checkHeicRequest, handleHeic, heifPixels, looksLikeHeif, readCapped, type Claim, type HeicDeps } from "../../../api/heicCheck";
 import { HEIC_MAX_BYTES } from "./heicServer";
 
 // A minimal HEIF file, box by box: ftyp, then meta > iprp > ipco > ispe (the declared size).
@@ -151,5 +153,14 @@ describe("/api/heic: the conversion", () => {
     const text = await res.text();
     expect(text).toBe(JSON.stringify({ error: ERRORS[422] }));
     expect(text).not.toMatch(/libheif|offset|node_modules/);
+  });
+});
+
+describe("/api/heic: deployment", () => {
+  it("declares its config as literal values Vercel can read, with the same 10 second limit", () => {
+    const src = fs.readFileSync(path.resolve(__dirname, "../../../api/heic.ts"), "utf8");
+    const m = /export const config = \{ runtime: "nodejs", maxDuration: (\d+) \};/.exec(src);
+    expect(m).not.toBeNull();
+    expect(Number(m![1]) * 1000).toBe(TIMEOUT_MS);
   });
 });

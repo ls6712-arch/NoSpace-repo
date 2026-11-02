@@ -6,10 +6,12 @@
 // Nothing is stored or logged. Members only: claim_heic_conversion() needs migration
 // 20261111000050_member_gate.sql; until it is applied every request is refused.
 import convert from "heic-convert";
-import { handleHeic, TIMEOUT_MS, type Claim } from "./heicCheck";
+import { handleHeic, type Claim } from "./heicCheck";
 
-// The platform stops the function at 10 seconds too, if the converter never yields.
-export const config = { runtime: "nodejs", maxDuration: TIMEOUT_MS / 1000 };
+// The platform stops the function at 10 seconds too, if the converter never yields. Vercel reads
+// this object without running the file, so it must stay literal values (heicApi.test.ts checks
+// that it matches TIMEOUT_MS).
+export const config = { runtime: "nodejs", maxDuration: 10 };
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL ?? "";
 const ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
