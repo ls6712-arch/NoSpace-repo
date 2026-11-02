@@ -162,7 +162,8 @@ function MouthArt({ kind }: { kind: Mouth }) {
     case "tiny":
       return <ellipse cx={94} cy={92} rx={3.6} ry={3.2} fill={INK} />;
     case "hmm":
-      return line("M88 92 Q94 90 100 92");
+      // Concentrating, not cross: a small line that lifts at one corner (a downward arch read as a frown).
+      return line("M88 92 Q94 94 101 90");
     case "smirk":
       return line("M86 91 Q96 95 104 87");
     case "winky":
@@ -182,7 +183,8 @@ const FACES: Record<Face, { brows: [string, string]; eyes: [Eye, Eye]; mouth: Mo
   shrug: { brows: ["M66 46 L84 46", "M102 40 L120 36"], eyes: ["open", "open"], mouth: "flat" },
   tilt: { brows: ["M66 46 L82 40", "M104 40 L120 46"], eyes: ["open", "open"], mouth: "o" },
   surprised: { brows: ["M66 35 L84 32", "M102 32 L120 35"], eyes: ["tall", "tall"], mouth: "big" },
-  thinking: { brows: ["M66 40 L84 40", "M102 36 L120 40"], eyes: ["open", "open"], mouth: "hmm" },
+  // One brow raised, the other relaxed, eyes glancing up (lookTo in "thinking"): working it out, happily.
+  thinking: { brows: ["M66 41 L84 39", "M102 34 Q111 29 120 33"], eyes: ["open", "open"], mouth: "hmm" },
   sleep: { brows: ["M66 50 L84 50", "M102 50 L120 50"], eyes: ["closed", "closed"], mouth: "tiny" },
   cool: { brows: ["M66 50 L84 50", "M102 50 L120 50"], eyes: ["half", "half"], mouth: "smirk" },
   brace: { brows: ["M66 46 L84 50", "M102 50 L120 46"], eyes: ["squintL", "squintR"], mouth: "wavy" },
@@ -651,7 +653,7 @@ export function Stubby({
         }
         case "thinking": {
           showFace("thinking");
-          lookTo(5, -4, 260);
+          lookTo(4, -6, 260);
           return; // the loop below bobs and spins until the state changes
         }
         case "cool": {

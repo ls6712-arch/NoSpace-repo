@@ -14,6 +14,8 @@ export interface SearchResult {
   /** linkKey() of every page the search returned or cited. */
   sourceLinks: Set<string>;
   searches: number;
+  /** Tokens used across every turn, for the cost of an ask. */
+  usage?: { input: number; output: number };
 }
 
 export interface SearchOptions {
@@ -35,6 +37,8 @@ export interface SearchOptions {
   ask?: string | null;
   /** Needed only when the API key isn't scoped to a workspace ("wrkspc_..."). */
   workspaceId?: string | null;
+  /** A person's ask, fully written (askPrompt): used in place of the scout's own prompts. */
+  prompt?: { system: string; user: string } | null;
 }
 
 /** The request headers: the key as a bearer token (the documented way), plus the workspace when given. */
@@ -119,19 +123,22 @@ function collectLinks(content: Block[], into: Set<string>): number {
 }
 
 export class SearchError extends Error {
-  constructor(message: string, readonly status: number) {
+  readonly status: number;
+  constructor(message: string, status: number) {
     super(message);
+    this.status = status;
   }
 }
 
 export async function runSearch(o: SearchOptions): Promise<SearchResult> {
   const doFetch = o.fetchImpl ?? fetch;
   const deadline = Date.now() + (o.timeoutMs ?? 110_000);
-  const messages: Block[] = [{ role: "user", content: userPrompt(o.focus, o.cornerNames, o.now, { days: o.days, maxPicks: o.maxPicks, ask: o.ask }) }];
+  const messages: Block[] = [{ role: "user", content: o.prompt?.user ?? userPrompt(o.focus, o.cornerNames, o.now, { days: o.days, maxPicks: o.maxPicks, ask: o.ask }) }];
   const domains = (o.allowedDomains ?? []).filter(Boolean);
   const sourceLinks = new Set<string>();
   let searches = 0;
   let text = "";
+  const usage = { input: 0, output: 0 };
 
   for (let turn = 0; turn <= MAX_CONTINUES; turn++) {
     const left = deadline - Date.now();
@@ -142,7 +149,7 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
       body: JSON.stringify({
         model: o.model,
         max_tokens: 4000,
-        system: systemPrompt(),
+        system: o.prompt?.system ?? systemPrompt(),
         messages,
         tools: [
           {
@@ -169,7 +176,9 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
         502,
       );
     }
-    const data = (await res.json()) as { content?: Block[]; stop_reason?: string };
+    const data = (await res.json()) as { content?: Block[]; stop_reason?: string; usage?: { input_tokens?: number; output_tokens?: number } };
+    usage.input += data.usage?.input_tokens ?? 0;
+    usage.output += data.usage?.output_tokens ?? 0;
     const content = Array.isArray(data.content) ? data.content : [];
     searches += collectLinks(content, sourceLinks);
     text += content.filter((b) => b?.type === "text" && typeof b.text === "string").map((b) => b.text).join("");
@@ -178,5 +187,5 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
     messages.push({ role: "assistant", content });
   }
 
-  return { text, sourceLinks, searches };
+  return { text, sourceLinks, searches, usage };
 }

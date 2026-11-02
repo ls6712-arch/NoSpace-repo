@@ -2,7 +2,9 @@
 //
 //   POST /functions/v1/stubby-scout
 //     { "focus": "pottery" }                 an admin's Find picks (signed in, admins only)
-//     { "mode": "ask", "ask": "outdoors..." } a person asks for something different (signed in)
+//     { "mode": "ask", "ask": "outdoors...",  a person asks (signed in). "answers": {"who": "solo"} is their
+//       "answers"?, "questions"? }           answer to Stubby's one question; "questions": true asks to be
+//                                            asked that question first, which uses no ask.
 //     { "mode": "restock" }                  the morning schedule (no sign-in; see handler.ts)
 //
 // Deploy WITHOUT gateway JWT verification, because the morning schedule has no sign-in:
@@ -13,7 +15,7 @@
 // Secrets (see README.md): ANTHROPIC_API_KEY, STUBBY_SCOUT_ENABLED=true; optional ANTHROPIC_WORKSPACE_ID and limits.
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { CITY, handleScout, readSettings } from "./handler.ts";
+import { CITY, EMPTY_PROFILE, handleScout, readSettings, type PersonProfile } from "./handler.ts";
 import { pickKey } from "./picks.ts";
 import { runSearch } from "./search.ts";
 
@@ -32,9 +34,44 @@ async function existingKeys(client: typeof server, fromMs: number, toMs: number)
   return new Set(((data ?? []) as { title: string; starts_at: string }[]).map((r) => pickKey(r.title, Date.parse(r.starts_at))));
 }
 async function corners(client: typeof server) {
-  const { data, error } = await client.from("corners").select("id, name").eq("hidden", false).order("name").limit(1000);
+  const { data, error } = await client.from("corners").select("id, name, space_slug, slug").eq("hidden", false).order("name").limit(1000);
   if (error) throw error;
-  return (data ?? []) as { id: number; name: string }[];
+  return ((data ?? []) as { id: number; name: string; space_slug: string | null; slug: string | null }[]).map((c) => ({
+    id: c.id,
+    name: c.name,
+    spaceSlug: c.space_slug ?? undefined,
+    slug: c.slug ?? undefined,
+  }));
+}
+
+/** The caller's own profile, passes and Pursuits, read as them: the database's rules keep it to their own rows. */
+async function profileOf(client: typeof server, userId: string): Promise<PersonProfile> {
+  const [priv, passes, pursuits] = await Promise.all([
+    client.from("profile_private").select("picks, free_windows, monthly_budget, city, area").eq("user_id", userId).maybeSingle(),
+    client.from("user_passes").select("label, place").eq("user_id", userId).limit(20),
+    client
+      .from("pursuits")
+      .select("id, title")
+      .eq("user_id", userId)
+      .is("finished_at", null)
+      .is("paused_at", null)
+      .is("let_go_at", null)
+      .is("archived_at", null)
+      .eq("is_plan", false)
+      .limit(10),
+  ]);
+  const p = (priv.data ?? {}) as Record<string, unknown>;
+  const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  return {
+    ...EMPTY_PROFILE,
+    picks: strings(p.picks),
+    windows: strings(p.free_windows),
+    monthlyBudget: typeof p.monthly_budget === "number" ? p.monthly_budget : null,
+    city: typeof p.city === "string" ? p.city : null,
+    area: typeof p.area === "string" ? p.area : null,
+    passes: ((passes.data ?? []) as { label: string; place: string | null }[]).map((r) => ({ label: r.label, place: r.place ?? null })),
+    pursuits: ((pursuits.data ?? []) as { id: string; title: string }[]).map((r) => ({ id: r.id, title: r.title })),
+  };
 }
 async function insertOnce(client: typeof server, table: string, row: Record<string, unknown>) {
   const { error } = await client.from(table).insert(row);
@@ -83,6 +120,7 @@ Deno.serve((req) => {
       corners: () => corners(caller as typeof server),
       existingKeys: (a, b) => existingKeys(caller as typeof server, a, b),
       insertPick: (row) => insertOnce(caller as typeof server, "city_picks", row),
+      profile: (id) => profileOf(caller as typeof server, id),
     },
     server: {
       async claimSource() {
@@ -129,6 +167,7 @@ Deno.serve((req) => {
         days: r.days,
         maxPicks: r.maxPicks,
         ask: r.ask,
+        prompt: r.prompt,
         workspaceId: env("ANTHROPIC_WORKSPACE_ID") || null,
         now: Date.now(),
       }),

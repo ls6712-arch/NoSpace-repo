@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { createRef } from "react";
+import { MemoryRouter } from "react-router";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -49,7 +50,11 @@ afterEach(() => {
 });
 
 const stage = (over: Partial<Parameters<typeof StubbyStage>[0]> = {}, ref = createRef<StubbyStageHandle>()) => {
-  render(<StubbyStage ref={ref} greeting={{ now: NOW, windows: ["sun-eve"], plans: [] }} {...over} />);
+  render(
+    <MemoryRouter>
+      <StubbyStage ref={ref} greeting={{ now: NOW, windows: ["sun-eve"], plans: [] }} {...over} />
+    </MemoryRouter>,
+  );
   return ref;
 };
 const line = () => document.querySelector("[data-stubby-line]")?.textContent;
@@ -173,3 +178,80 @@ describe("hello", () => {
     expect(document.querySelector("[data-stubby-stage] .border-accent")).toBeNull();
   });
 });
+
+describe("smarter picks on the stage", () => {
+  const ask = async (text = "something fun with my girlfriend tonight") => {
+    await screen.findByText("3 asks left today");
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: text } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+  };
+
+  it("nothing fit tonight: he shrugs and says so, and the soonest after are shown with no count", async () => {
+    api.askStubby.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after" });
+    api.fetchMyPicks.mockResolvedValue([{ ...pick, kind: "event", why: "A class for two, near you.", after: true }]);
+    stage();
+    await ask();
+    await waitFor(() => expect(line()).toBe("Nothing tonight that fits. Here’s the soonest after."));
+    expect(state()).toBe("shrug");
+    expect(screen.queryByText(/^Found \d/)).toBeNull();
+    expect(screen.getByText("A class for two, near you.")).toBeTruthy();
+  });
+
+  it("an idea is labelled An idea, shows no date, and its Soosh page opens in the app", async () => {
+    api.askStubby.mockResolvedValue({ found: 2, asksLeft: 2, error: null, outcome: "found" });
+    api.fetchMyPicks.mockResolvedValue([
+      { ...pick, kind: "event", why: "Coming alone is normal here.", after: false },
+      { id: 10, title: "An easy evening run", place: "Hudson River Park", startsAt: NOW + 3_600_000, endsAt: null, price: null, url: "/start/sports-fitness/running", note: null, kind: "idea", why: "A short loop, no booking.", after: false },
+    ]);
+    stage();
+    await ask("something to do tonight on my own");
+    const idea = (await screen.findByText("An easy evening run")).closest("li")!;
+    expect(idea.getAttribute("data-pick-kind")).toBe("idea");
+    expect(idea.textContent).toContain("An idea");
+    expect(idea.textContent).toContain("Hudson River Park");
+    expect(idea.textContent).not.toMatch(/PM|AM/);
+    const open = idea.querySelector("a")!;
+    expect(open.getAttribute("href")).toBe("/start/sports-fitness/running");
+    expect(open.getAttribute("target")).toBeNull();
+    const event = screen.getByText("Wheel night").closest("li")!;
+    expect(event.textContent).toContain("Found for you");
+    expect(event.textContent).toContain("Coming alone is normal here.");
+    expect(event.querySelector("a")!.getAttribute("target")).toBe("_blank");
+  });
+});
+
+describe("the ask on a phone", () => {
+  it("shows asks left beside the field, inside the form", async () => {
+    stage();
+    const left = await screen.findByText("3 asks left today");
+    expect(left.closest("form")).not.toBeNull();
+  });
+
+  it("puts the quick ideas on one row that scrolls sideways (wrapping from 744px)", async () => {
+    stage();
+    const row = await screen.findByRole("group", { name: "Quick ideas" });
+    expect(row.className).toContain("overflow-x-auto");
+    expect(row.className).toContain("tab:flex-wrap");
+    expect(row.className).not.toMatch(/(^| )flex-wrap/);
+  });
+
+  it("doesn't repeat \"What are you in the mood for?\" as the label when his line already asks it", async () => {
+    render(
+      <MemoryRouter>
+        <StubbyStage greeting={{ now: NOW, windows: [], plans: [] }} />
+      </MemoryRouter>,
+    );
+    await waitFor(() => expect(line()).toBe("What are you in the mood for?"));
+    const label = document.querySelector("label")!;
+    expect(label.className).toContain("sr-only");
+    // Still the field's name for screen readers.
+    expect(screen.getByLabelText("What are you in the mood for?")).toBeTruthy();
+  });
+
+  it("shows the label when his line says something else", async () => {
+    stage();
+    await waitFor(() => expect(line()).toBe("You’re free tonight from 6. Want ideas?"));
+    expect(document.querySelector("label")!.className).not.toContain("sr-only");
+  });
+});
+

@@ -93,6 +93,8 @@ export const ASK_COPY = {
   nothing: "Nothing fit this time. Try asking another way.",
   listLabel: "Found for you",
   cardLabel: "Found for you",
+  /** The label on a do-it-yourself pick, instead of a dated ticket (approved Nov 2, 2026). */
+  ideaLabel: "An idea",
   open: "Open",
   remove: "Remove",
   /** Quick ideas under the field: each fills it in and asks (one ask, like typing). New, for approval. */
