@@ -897,9 +897,9 @@ Superseded on Nov 2, 2026 by the Stubby rule (he talks in Ask Stubby, on the Cal
 |---|---|
 | Something different? | Retired (Nov 2, 2026, Stubby plan PR 4): no longer shown. Stubby's line in the bubble does that job |
 | What are you after? | Retired (Nov 2, 2026). Use What are you in the mood for? |
-| What are you in the mood for? | Label of its text field, everywhere the field appears (approved Nov 2, 2026). Placeholder: "Pottery on Saturday, a free run, something outdoors" |
+| What are you in the mood for? | Label of its text field, everywhere the field appears (approved Nov 2, 2026). When Stubby's own line is already "What are you in the mood for?", the label is for screen readers only, so it isn't shown twice. Placeholder: "Pottery on Saturday, a free run, something outdoors" |
 | Ask Stubby | Its button, and the stage's accessible name. While looking: Looking |
-| {n} asks left today | Under the quick ideas, with plural(). At 0 it goes away and Stubby's line says "That’s 3 for today. I’ll look again tomorrow." (the old "That’s your 3 for today. Stubby can look again tomorrow." is retired, Nov 2, 2026) |
+| {n} asks left today | Beside the field's label, with plural() (Stubby plan PR 1, so the calendar shows in a phone's first screen). At 0 it goes away and Stubby's line says "That’s 3 for today. I’ll look again tomorrow." (the old "That’s your 3 for today. Stubby can look again tomorrow." is retired, Nov 2, 2026) |
 | Found {n} things. | After an ask that found something |
 | Nothing fit this time. Try asking another way. | After an ask that found nothing: Stubby's line in the bubble (he shrugs) |
 | Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
@@ -912,7 +912,7 @@ Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-
 | Wording | Where |
 |---|---|
 | Quick ideas | Accessible name of the row of quick ideas under the stage's field; not shown as text. New, for approval |
-| Free tonight · This weekend · Something outdoors | The quick ideas: each fills in the field and asks (one ask, like typing). Hidden at 0 asks left. New, for approval |
+| Free tonight · This weekend · Something outdoors | The quick ideas: each fills in the field and asks (one ask, like typing). On a phone, one row that scrolls sideways; from 744px they wrap. Hidden at 0 asks left. New, for approval |
 
 ## Ask Stubby: the Stubby plan (Nov 2, 2026)
 

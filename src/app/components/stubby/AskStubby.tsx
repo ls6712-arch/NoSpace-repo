@@ -2,13 +2,17 @@ import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from 
 import { Button } from "../ui/button";
 import { Chip } from "../ui/Chip";
 import { Input } from "../ui/input";
+import { cn } from "../ui/utils";
 import { plural } from "../../lib/plural";
 import { ASK_COPY } from "../../lib/calendarCopy";
 import { ASK_MAX_LENGTH, askStubby, asksLeft as readAsksLeft, fetchMyPicks, removeMyPick, type MyPick } from "../../lib/stubbyAsk";
 import type { BuddyReaction } from "./StubbyBuddy";
 
-/** How the last ask ended, for Stubby's line: found something, found nothing, or failed. */
-export type AskOutcome = "found" | "nothing" | "error" | null;
+/**
+ * How the last ask ended, for Stubby's line: found something, found only the soonest after
+ * tonight, found nothing, or failed.
+ */
+export type AskOutcome = "found" | "after" | "nothing" | "error" | null;
 
 export interface AskState {
   text: string;
@@ -70,7 +74,12 @@ export function useAskStubby({ onReact }: { onReact?: (r: BuddyReaction) => void
       return;
     }
     if (r.asksLeft !== null) setLeft(r.asksLeft);
-    if (r.found > 0) {
+    if (r.found > 0 && r.outcome === "after") {
+      // Nothing fit tonight: Stubby's line says so, and these are the soonest after.
+      setText("");
+      setOutcome("after");
+      react.current?.("shrug");
+    } else if (r.found > 0) {
       setStatus(`Found ${plural(r.found, "thing")}.`);
       setText("");
       setOutcome("found");
@@ -96,20 +105,24 @@ export function useAskStubby({ onReact }: { onReact?: (r: BuddyReaction) => void
 }
 
 /**
- * The ask, in the page: the field ("What are you in the mood for?"), Ask Stubby, the
- * quick ideas, and how many asks are left today. At 0 the field is off and the quick
- * ideas are gone; Stubby's own line says so (STUBBY_LINES.outOfAsks), so it isn't
- * repeated here.
+ * The ask, in the page: the field ("What are you in the mood for?"), how many asks are left
+ * today beside it, Ask Stubby, and the quick ideas. On a phone the quick ideas are one row
+ * that scrolls sideways, so the calendar still shows in the first screen. At 0 the field is
+ * off and the quick ideas are gone; Stubby's own line says so (STUBBY_LINES.outOfAsks), so it
+ * isn't repeated here.
  */
 export function AskStubby({
   state,
   inputId: givenId,
   onFieldFocus,
+  hideLabel = false,
 }: {
   state: AskState;
   /** The field's id, so the page can focus it (the sticky bar). */
   inputId?: string;
   onFieldFocus?: () => void;
+  /** Stubby is already asking the same question: the label stays for screen readers only. */
+  hideLabel?: boolean;
 }) {
   const ownId = useId();
   const inputId = givenId ?? ownId;
@@ -128,9 +141,12 @@ export function AskStubby({
   return (
     <div className="flex flex-col gap-3">
       <form onSubmit={submit} className="flex flex-col gap-1.5">
-        <label htmlFor={inputId} className="text-small font-semibold">
-          {ASK_COPY.label}
-        </label>
+        <div className="flex items-baseline justify-between gap-3">
+          <label htmlFor={inputId} className={cn("text-small font-semibold", hideLabel && "sr-only")}>
+            {ASK_COPY.label}
+          </label>
+          {left !== null && !out && <p className="ml-auto shrink-0 text-caption text-muted-foreground">{`${plural(left, "ask")} left today`}</p>}
+        </div>
         <div className="flex gap-2">
           <Input
             id={inputId}
@@ -148,15 +164,19 @@ export function AskStubby({
         </div>
       </form>
       {left !== null && !out && (
-        <div role="group" aria-label={ASK_COPY.chipsLabel} className="flex flex-wrap gap-2">
+        // A phone: one row that scrolls sideways, edge to edge. From 744px: wraps.
+        <div
+          role="group"
+          aria-label={ASK_COPY.chipsLabel}
+          className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] tab:mx-0 tab:flex-wrap tab:overflow-visible tab:px-0 tab:pb-0 [&::-webkit-scrollbar]:hidden"
+        >
           {ASK_COPY.chips.map((idea) => (
-            <Chip key={idea} aria-pressed={undefined} disabled={busy} onClick={() => quick(idea)} className="border border-border">
+            <Chip key={idea} aria-pressed={undefined} disabled={busy} onClick={() => quick(idea)} className="shrink-0 snap-start border border-border">
               {idea}
             </Chip>
           ))}
         </div>
       )}
-      {left !== null && !out && <p className="text-caption text-muted-foreground">{`${plural(left, "ask")} left today`}</p>}
     </div>
   );
 }

@@ -20,7 +20,16 @@ export interface MyPick {
   price: string | null;
   url: string;
   note: string | null;
+  /** An event (a dated thing with its own page) or an idea (do-it-yourself, no booking). */
+  kind: "event" | "idea";
+  /** Why it fits this person, in one line. */
+  why: string | null;
+  /** One of the soonest after tonight, shown because nothing fit tonight. */
+  after: boolean;
 }
+
+/** How an ask went: picks in the time asked for, only the soonest after tonight, or nothing. */
+export type AskOutcome = "found" | "after" | "nothing";
 
 const toPick = (r: Record<string, any>): MyPick => ({
   id: r.id,
@@ -31,20 +40,32 @@ const toPick = (r: Record<string, any>): MyPick => ({
   price: r.price ?? null,
   url: r.url,
   note: r.note ?? null,
+  kind: r.kind === "idea" ? "idea" : "event",
+  why: typeof r.why === "string" ? r.why : null,
+  after: r.soonest_after === true,
 });
 
-/** Your picks from Stubby that haven't ended yet, soonest first. Best effort: none on any failure. */
+const NEW_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, kind, why, soonest_after, rank, ask_id";
+const OLD_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note";
+
+/**
+ * Your picks from Stubby that haven't ended yet: the latest ask's first, best fit first within
+ * an ask, then soonest. Before the smarter-picks migration is live, the old columns, soonest
+ * first. Best effort: none on any failure.
+ */
 export async function fetchMyPicks(now = Date.now()): Promise<MyPick[]> {
   if (!supabase) return [];
+  const since = new Date(now - 6 * 3_600_000).toISOString();
+  const read = (columns: string, ranked: boolean) => {
+    let q = supabase!.from("personal_picks").select(columns).gte("starts_at", since);
+    if (ranked) q = q.order("ask_id", { ascending: false, nullsFirst: false }).order("rank", { ascending: true, nullsFirst: false });
+    return q.order("starts_at", { ascending: true }).limit(50);
+  };
   try {
-    const { data, error } = await supabase
-      .from("personal_picks")
-      .select("id, title, place, starts_at, ends_at, price, url, note")
-      .gte("starts_at", new Date(now - 6 * 3_600_000).toISOString())
-      .order("starts_at", { ascending: true })
-      .limit(50);
+    let { data, error } = await read(NEW_COLUMNS, true);
+    if (error) ({ data, error } = await read(OLD_COLUMNS, false));
     if (error || !Array.isArray(data)) return [];
-    return (data as Record<string, any>[]).map(toPick).filter((p) => (p.endsAt ?? p.startsAt + 3 * 3_600_000) >= now);
+    return (data as unknown as Record<string, any>[]).map(toPick).filter((p) => (p.endsAt ?? p.startsAt + 3 * 3_600_000) >= now);
   } catch {
     return [];
   }
@@ -72,7 +93,7 @@ export async function removeMyPick(id: number): Promise<{ error: string | null }
 }
 
 /** Asks Stubby. On success, how many he found and asks left; the picks themselves are re-read from the table. */
-export async function askStubby(text: string): Promise<{ found: number; asksLeft: number | null; error: string | null }> {
+export async function askStubby(text: string): Promise<{ found: number; asksLeft: number | null; error: string | null; outcome?: AskOutcome }> {
   const ask = text.trim().slice(0, ASK_MAX_LENGTH);
   if (ask.length < 2) return { found: 0, asksLeft: null, error: "Say what you’re after, like pottery on Saturday." };
   if (!supabase) return { found: 0, asksLeft: null, error: "Stubby needs the live app." };
@@ -87,6 +108,8 @@ export async function askStubby(text: string): Promise<{ found: number; asksLeft
     }
     return { found: 0, asksLeft: null, error: message ?? "Stubby couldn’t look just now. Try again in a bit." };
   }
-  const r = data as { picks?: unknown[]; asksLeft?: number } | null;
-  return { found: Array.isArray(r?.picks) ? r!.picks!.length : 0, asksLeft: typeof r?.asksLeft === "number" ? r.asksLeft : null, error: null };
+  const r = data as { picks?: unknown[]; asksLeft?: number; outcome?: unknown } | null;
+  const found = Array.isArray(r?.picks) ? r!.picks!.length : 0;
+  const outcome: AskOutcome = r?.outcome === "after" || r?.outcome === "nothing" || r?.outcome === "found" ? r.outcome : found > 0 ? "found" : "nothing";
+  return { found, asksLeft: typeof r?.asksLeft === "number" ? r.asksLeft : null, error: null, outcome };
 }

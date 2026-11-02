@@ -25,6 +25,7 @@ export function stageLine(state: Pick<AskState, "busy" | "left" | "outcome">, gr
   if (state.busy) return STUBBY_LINES.looking;
   if (state.left === 0) return STUBBY_LINES.outOfAsks;
   if (state.outcome === "found") return STUBBY_LINES.found;
+  if (state.outcome === "after") return STUBBY_LINES.nothingFits;
   if (state.outcome === "nothing") return ASK_COPY.nothing;
   if (state.outcome === "error") return STUBBY_LINES.error;
   return greeting;
@@ -151,7 +152,8 @@ export const StubbyStage = forwardRef<
         </div>
 
         <div className="col-span-2 row-start-2 tab:col-span-1 tab:col-start-2">
-          <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} />
+          {/* When his line already asks "What are you in the mood for?", the label isn't shown twice. */}
+          <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} hideLabel={line === ASK_COPY.label} />
         </div>
       </section>
 
