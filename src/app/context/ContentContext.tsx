@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { Post, Visibility } from "../data/posts";
-import { currentSpaceSlug } from "../data/hobbies";
+import { currentSpaceSlug, defaultSpaceSlug } from "../data/hobbies";
 import { Product, products as seedProducts } from "../data/products";
 import { useRewards } from "./RewardsContext";
 import { useAuth } from "./AuthContext";
@@ -774,6 +774,13 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         .insert(withInspired as typeof row)
         .select(POST_COLUMNS)
         .single();
+      // Before 20261109000000_log_punch_cards.sql runs, posts.hobby_slug is still
+      // required (23502): a Moment with nothing picked falls back to the old default
+      // Space, as it always did, rather than failing to save.
+      if (!input.hobbySlug && error && error.code === "23502" && /hobby_slug/.test(error.message ?? "")) {
+        const fallback = { ...(withInspired as typeof row), hobby_slug: defaultSpaceSlug() };
+        ({ data, error } = await supabase.from("posts").insert(fallback).select(POST_COLUMNS).single());
+      }
       if (input.inspiredBy && error && /inspired_by/.test(error.message ?? "")) {
         ({ data, error } = await supabase.from("posts").insert(withCity as typeof row).select(POST_COLUMNS).single());
       }
