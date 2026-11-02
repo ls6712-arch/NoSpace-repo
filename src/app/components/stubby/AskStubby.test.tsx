@@ -120,7 +120,7 @@ describe("AskStubby", () => {
     api.fetchMyPicks.mockResolvedValue([pick]);
     render(<Harness />);
     fireEvent.click(await screen.findByRole("button", { name: "Remove: Wheel night" }));
-    await waitFor(() => expect(api.removeMyPick).toHaveBeenCalledWith(9));
+    await waitFor(() => expect((api.removeMyPick.mock.calls[0] as unknown[] | undefined)?.[0]).toBe(9));
     expect(screen.queryByText("Wheel night")).toBeNull();
   });
 });

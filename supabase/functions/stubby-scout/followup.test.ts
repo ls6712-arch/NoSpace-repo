@@ -19,6 +19,8 @@ function deps(o: { free?: boolean; claim?: number | null; text?: string; links?:
     settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
     now: () => NOW,
     userId: async () => "user-1",
+    whoIs: async () => ({ guest: false, member: true }),
+    ipHash: async () => null,
     db: { runsSince: async () => 0, startRun: async () => 1, finishRun: async () => undefined, corners: async () => [], existingKeys: async () => new Set(), insertPick: async () => true, profile: async () => ({ ...EMPTY_PROFILE, monthlyBudget: 80 }) },
     server: {
       claimSource: async () => null,
@@ -81,12 +83,13 @@ describe("follow-ups", () => {
     expect(claimFreeFollowUp).toHaveBeenCalled();
   });
 
-  it("ignores a follow-up that isn't well formed (and treats it as a new ask)", async () => {
+  it("refuses a follow-up of the wrong shape, and treats an unknown kind as a new ask", async () => {
     const { d, claimFreeFollowUp, claimAsk } = deps();
-    await handleScout(post({ mode: "ask", ask: "pottery tonight", followUp: { of: "42", kind: "cheaper" } }), d);
+    // The body schema is strict: a wrong type is a 400 before anything is claimed.
+    expect((await handleScout(post({ mode: "ask", ask: "pottery tonight", followUp: { of: "42", kind: "cheaper" } }), d)).status).toBe(400);
     await handleScout(post({ mode: "ask", ask: "pottery tonight", followUp: { of: 42, kind: "pricier" } }), d);
     expect(claimFreeFollowUp).not.toHaveBeenCalled();
-    expect(claimAsk).toHaveBeenCalledTimes(2);
+    expect(claimAsk).toHaveBeenCalledTimes(1);
   });
 
   it("Cheaper halves the ceiling (or sets a cheap one); Later starts two hours on", () => {

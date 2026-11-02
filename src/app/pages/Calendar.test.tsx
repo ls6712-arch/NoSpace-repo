@@ -81,10 +81,12 @@ describe("Calendar and Stubby", () => {
 });
 
 describe("Calendar, Week view on a phone", () => {
-  it("asks someone who is signed out to make an account", () => {
+  it("gives someone who is signed out Stubby as a guest, with no sign-up wall first", () => {
     auth.value = { user: null, isConfigured: true };
     show();
-    expect(screen.getByRole("heading", { name: CALENDAR_SIGNED_OUT.title })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: CALENDAR_SIGNED_OUT.title })).toBeNull();
+    expect(screen.getByRole("heading", { level: 1, name: "Ask Stubby" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sign up" })).toBeTruthy();
   });
 
   it("has the title and the range in New York, and no back arrow on a tab page", () => {

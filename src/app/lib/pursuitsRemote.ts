@@ -85,6 +85,9 @@ export async function mirrorPursuit(userId: string, project: Project) {
       custom_space: project.customSpace ?? null,
       inspired_by_post_id: project.inspiredByPostId ?? null,
       shared: !!project.shared,
+      // A one-off plan says so from its first write: a Stubby account may only make plans
+      // (20261111000000_member_gate.sql), and markAsPlan below still runs for older rows.
+      ...(project.plan ? { is_plan: true } : {}),
       started_at: new Date(project.startedAt).toISOString(),
       finished_at: project.finishedAt ? new Date(project.finishedAt).toISOString() : null,
       goal_shape: project.goal?.shape ?? null,

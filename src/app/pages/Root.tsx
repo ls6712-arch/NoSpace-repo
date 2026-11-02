@@ -18,6 +18,8 @@ import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
 import { resumeCalendarChanges } from "../lib/calendarPending";
+import { FinishSettingUp, stubbyAccountMayOpen } from "../components/stubby/FinishSettingUp";
+import { SignUpReturnEffect } from "../components/stubby/SignUpReturnEffect";
 import { sooshOnboardingEnabled } from "../config";
 
 // Only the landing page, the login/signup screen, and the two legal pages
@@ -158,6 +160,12 @@ export function Root() {
     return <Navigate to="/welcome" replace />;
   }
 
+  // A Stubby account (a guest who signed up from Stubby, onboarding not finished) isn't sent into
+  // onboarding: it uses Stubby, and anything else says "Finish setting up". The database is what
+  // actually keeps it out of member features (20261111000000_member_gate.sql).
+  const stubbyAccount = !!user && !!profile && !profile.onboarding_completed && profile.signed_up_from === "stubby";
+  if (stubbyAccount && location.pathname === "/") return <Navigate to="/calendar" replace />;
+
   // Post-signup onboarding (sql/onboarding-v2.sql), enforced here so it
   // can't be dodged by deep-linking straight past it. Only for a signed-in
   // visitor whose profile has actually loaded and confirms it's not done —
@@ -172,6 +180,7 @@ export function Root() {
     user &&
     profile &&
     !profile.onboarding_completed &&
+    !stubbyAccount &&
     location.pathname !== "/onboarding" &&
     !(sooshOnboardingEnabled && location.pathname === "/login")
   ) {
@@ -191,6 +200,7 @@ export function Root() {
         <main>
           <Outlet />
         </main>
+        <SignUpReturnEffect />
       </div>
     );
   }
@@ -212,8 +222,9 @@ export function Root() {
       </div>
       <Header hideWithRail={rail} />
       <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
-        <Outlet />
+        {stubbyAccount && !stubbyAccountMayOpen(location.pathname) ? <FinishSettingUp /> : <Outlet />}
       </main>
+      <SignUpReturnEffect />
       <CartDrawer />
       <BadgeUnlockToast />
       <AccountPrompts />

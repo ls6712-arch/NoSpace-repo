@@ -15,10 +15,14 @@
 // The admin and ask modes check the caller's token themselves (auth.getUser(token)), and the
 // restock can only ever search each source once a day.
 //
-// Secrets (see README.md): ANTHROPIC_API_KEY, STUBBY_SCOUT_ENABLED=true; optional ANTHROPIC_WORKSPACE_ID and limits.
+// Secrets (see README.md): ANTHROPIC_API_KEY, STUBBY_SCOUT_ENABLED=true, STUBBY_IP_SALT (32+ random
+// characters; without it guests are refused); optional ANTHROPIC_WORKSPACE_ID, ALLOWED_ORIGINS and limits
+// (GUEST_DAILY_MESSAGE_LIMIT, USER_DAILY_MESSAGE_LIMIT, GUEST_GLOBAL_DAILY_CAP and the rest in readSettings).
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { CITY, EMPTY_PROFILE, handleScout, readSettings, type PersonProfile } from "./handler.ts";
+import { CITY, EMPTY_PROFILE, handleScout, readSettings, type ClaimResult, type LimitCode, type PersonProfile } from "./handler.ts";
+import { readSignals, readTaste } from "./taste.ts";
+import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, originAllowed, type Access } from "../_shared/access.ts";
 import { pickKey } from "./picks.ts";
 import { runSearch } from "./search.ts";
 
@@ -83,24 +87,62 @@ async function insertOnce(client: typeof server, table: string, row: Record<stri
   throw error;
 }
 
-Deno.serve((req) => {
+const ORIGINS = allowedOrigins(env("ALLOWED_ORIGINS"));
+const LIMIT_CODES: readonly LimitCode[] = ["GUEST_LIMIT_REACHED", "USER_LIMIT_REACHED", "GUEST_GLOBAL_CAP", "GLOBAL_CAP"];
+
+/** The response with CORS for this origin only (the handler's own "*" is replaced). */
+function withCors(res: Response, origin: string | null): Response {
+  const headers = new Headers(res.headers);
+  headers.delete("access-control-allow-origin");
+  for (const [k, v] of Object.entries(corsFor(origin, ORIGINS))) headers.set(k, v);
+  return new Response(res.body, { status: res.status, headers });
+}
+
+Deno.serve(async (req) => {
+  const origin = req.headers.get("origin");
+  if (!originAllowed(origin, ORIGINS)) return new Response(JSON.stringify({ error: "Not allowed." }), { status: 403, headers: { "content-type": "application/json" } });
+  try {
+    return withCors(await serve(req), origin);
+  } catch (e) {
+    // Never a stack, a query or a provider's error body: the name of the error goes to the log, nothing to the client.
+    console.error("stubby-scout: unhandled", (e as Error)?.name ?? "unknown");
+    return withCors(new Response(JSON.stringify({ error: "Something went wrong. Try again in a bit." }), { status: 500, headers: { "content-type": "application/json" } }), origin);
+  }
+});
+
+function serve(req: Request): Promise<Response> {
   const auth = req.headers.get("authorization") ?? "";
   const token = auth.replace(/^Bearer\s+/i, "").trim();
   // As the caller: every read and write here goes through the database's own rules.
   const caller = createClient(env("SUPABASE_URL")!, env("SUPABASE_ANON_KEY")!, { ...opts, global: { headers: { Authorization: auth } } });
   const settings = readSettings(env);
-  let me: string | null | undefined;
-  const userId = async () => {
+  let me: Access | null | undefined;
+  const access = async () => {
     if (me !== undefined) return me;
-    if (!token) return (me = null);
-    const { data } = await caller.auth.getUser(token);
-    return (me = data?.user?.id ?? null);
+    me = await accessOf(
+      token,
+      async (t) => {
+        const { data } = await caller.auth.getUser(t);
+        return data?.user ? { id: data.user.id, is_anonymous: (data.user as { is_anonymous?: boolean }).is_anonymous } : null;
+      },
+      async () => {
+        const { data, error } = await caller.rpc("my_access");
+        return error ? null : (data as { member?: unknown; guest?: unknown });
+      },
+    );
+    return me;
   };
+  const userId = async () => (await access())?.id ?? null;
 
   return handleScout(req, {
     settings,
     now: () => Date.now(),
     userId,
+    async whoIs() {
+      const a = await access();
+      return { guest: a?.guest ?? true, member: a?.member ?? false };
+    },
+    ipHash: () => ipHash(clientIp(req.headers), env("STUBBY_IP_SALT")),
     db: {
       async runsSince(ms) {
         const { count, error } = await caller.from("scout_runs").select("id", { count: "exact", head: true }).eq("kind", "admin").gte("started_at", iso(ms));
@@ -124,6 +166,14 @@ Deno.serve((req) => {
       existingKeys: (a, b) => existingKeys(caller as typeof server, a, b),
       insertPick: (row) => insertOnce(caller as typeof server, "city_picks", row),
       profile: (id) => profileOf(caller as typeof server, id),
+      async taste(id) {
+        const { data } = await caller.from("stubby_profiles").select("city, interests, timing, budget").eq("user_id", id).maybeSingle();
+        return readTaste(data);
+      },
+      async signals(id) {
+        const { data } = await caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id).order("created_at", { ascending: false }).limit(20);
+        return readSignals(data);
+      },
     },
     server: {
       async claimSource() {
@@ -133,10 +183,22 @@ Deno.serve((req) => {
         if (!r?.run_id) return null;
         return { runId: r.run_id, name: r.name, focus: r.focus, searchDomain: r.search_domain ?? null, trustedHost: r.trusted_host ?? null };
       },
-      async claimAsk(user, perPerson, perDay) {
-        const { data, error } = await server.rpc("claim_stubby_ask", { p_user: user, p_per_user: perPerson, p_global: perDay });
+      async claimAsk(user, l): Promise<ClaimResult> {
+        const { data, error } = await server.rpc("claim_stubby_turn", {
+          p_user: user,
+          p_guest: l.guest,
+          p_ip_hash: l.ipHash,
+          p_per_user: l.perPerson,
+          p_per_ip: l.perIp,
+          p_new_guests_per_ip_hour: l.newGuestsPerIpHour,
+          p_guest_global: l.guestCap,
+          p_global: l.global,
+        });
         if (error) throw error;
-        return (data as number | null) ?? null;
+        const r = (Array.isArray(data) ? data[0] : data) as { ask_id: number | null; code: string; resets_at: string | null } | null;
+        if (r?.ask_id) return { askId: r.ask_id };
+        const code = (LIMIT_CODES as readonly string[]).includes(r?.code ?? "") ? (r!.code as LimitCode) : l.guest ? "GUEST_LIMIT_REACHED" : "USER_LIMIT_REACHED";
+        return { askId: null, code, resetsAt: r?.resets_at ?? null };
       },
       async claimFreeFollowUp(user, askId, sinceMs) {
         const { data, error } = await server
@@ -165,6 +227,12 @@ Deno.serve((req) => {
         if (error) throw error;
         return count ?? 0;
       },
+      async oldestAskSince(user, ms) {
+        const { data, error } = await server.from("stubby_asks").select("asked_at").eq("user_id", user).gte("asked_at", iso(ms)).order("asked_at", { ascending: true }).limit(1);
+        if (error) throw error;
+        const at = (data as { asked_at: string }[] | null)?.[0]?.asked_at;
+        return at ? Date.parse(at) : null;
+      },
       async trustedHosts() {
         const { data, error } = await server.from("scout_sources").select("trusted_host").eq("enabled", true).not("trusted_host", "is", null);
         if (error) throw error;
@@ -192,4 +260,4 @@ Deno.serve((req) => {
         now: Date.now(),
       }),
   });
-});
+}

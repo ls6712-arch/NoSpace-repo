@@ -58,6 +58,13 @@ export interface Profile {
    * server-side. Root.tsx routes a pending account to /welcome and nowhere
    * else. */
   access?: "active" | "pending";
+  /**
+   * "stubby" for an account made by a guest signing up from Stubby (migration
+   * 20261111000000_member_gate.sql). Read only while onboarding isn't finished: such an account
+   * isn't sent into onboarding, it uses Stubby and is asked to finish setting up when it tries
+   * anything else.
+   */
+  signed_up_from?: "stubby" | null;
   invited_by?: string | null;
   invite_allowance?: number;
   /** Own-only (see lib/ownProfile.ts): nobody else can read these any more. */
@@ -206,6 +213,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const row = data
         ? ({ ...(data as object), ...(own.status === "ok" ? own.data : {}) } as Profile)
         : null;
+      if (row && !row.onboarding_completed) {
+        // Its own read, so a database without the column yet changes nothing.
+        const from = await supabase.from("profiles").select("signed_up_from").eq("id", userId).maybeSingle();
+        row.signed_up_from = !from.error && (from.data as { signed_up_from?: unknown } | null)?.signed_up_from === "stubby" ? "stubby" : null;
+      }
       if (row) {
         setProfile(row);
         lastRow = row;

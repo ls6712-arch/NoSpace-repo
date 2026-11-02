@@ -54,3 +54,45 @@ jobs:
           name: visual-webkit
           path: visual-out
           if-no-files-found: ignore
+
+  # Guest Stubby, end to end (scripts/e2e/guest-stubby.ts): a production build behind vercel.json's
+  # real headers (CSP included), Supabase mocked: 3 asks, the inline card, the limit, Google
+  # sign-up (mocked), back in the same chat with the blocked ask sent.
+  e2e-guest-stubby:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright-core install --with-deps chromium
+      - run: npm run e2e:guest
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-guest-stubby
+          path: e2e-guest-stubby-failure.png
+          if-no-files-found: ignore
+
+  # The member gate, checked on a real database (supabase/verification/member_gate_check.sql):
+  # every table, view, RPC, bucket and Realtime channel against the allowlist, and the guest,
+  # Stubby-account and member cases. Runs only when STAGING_DB_URL is set (a staging project or a
+  # Supabase branch, never production). The script always rolls back.
+  db-access:
+    runs-on: ubuntu-latest
+    env:
+      DB_URL: ${{ secrets.STAGING_DB_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Member gate and guest checks
+        run: |
+          if [ -z "$DB_URL" ]; then echo "STAGING_DB_URL not set: skipped (the static check in npm test still ran)."; exit 0; fi
+          sudo apt-get install -y postgresql-client >/dev/null
+          for f in member_gate_check stubby_guests_check; do
+            out=$(psql "$DB_URL" -v ON_ERROR_STOP=0 -f "supabase/verification/$f.sql" 2>&1 || true)
+            echo "$out" | grep -o "RESULTS:.*" | tr ',' '\n'
+            echo "$out" | grep -q "RESULTS:" || { echo "$f: no results"; exit 1; }
+            if echo "$out" | grep -o "RESULTS:.*" | grep -qE "FAIL|ERROR|NOT APPLIED"; then echo "$f failed"; exit 1; fi
+          done

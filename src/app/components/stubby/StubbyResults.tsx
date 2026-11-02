@@ -1,6 +1,6 @@
 import { useId, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useReducedMotion } from "motion/react";
-import { Check, ChevronDown, ExternalLink, LoaderCircle, X } from "lucide-react";
+import { Check, ChevronDown, ExternalLink, LoaderCircle, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "../ui/button";
 import { Chip } from "../ui/Chip";
@@ -11,10 +11,14 @@ import { ASK_COPY, EMPTY_COPY, SHEET, UNDERSTOOD_COPY } from "../../lib/calendar
 import { cardCount, frontCard, selectionFull } from "../../lib/stubbyDeck";
 import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
+import { GUEST_COPY } from "../../lib/guestCopy";
 import type { AskState, StepRow } from "./AskStubby";
 
 /** A Soosh page (an idea's Corner start page or Pursuit) opens in the app; anything else opens the outside page. */
-const isSooshLink = (url: string) => url.startsWith("/");
+/** A Soosh page Stubby may link to (the database allows only these two kinds of path). */
+const isSooshLink = (url: string) => /^\/(start|pursuit)\/[A-Za-z0-9_/-]+$/.test(url);
+/** Anything else must be an https page; a pick with any other link shows no link at all. */
+const isWebLink = (url: string) => /^https:\/\/[^\s"'<>]+$/i.test(url);
 
 const stepText = (s: StepRow) =>
   s.kind === "search" ? ASK_COPY.lookingFor(s.query ?? "") : s.kind === "pages" ? `Checking ${plural(s.count ?? 0, "page")}` : ASK_COPY.picking;
@@ -209,7 +213,7 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
             className={cn("relative touch-pan-y select-none rounded-card border-[1.5px] border-dashed border-accent-text bg-card p-4", !reduce && dx === 0 && "transition-transform")}
             style={dx && !reduce ? { transform: `translateX(${dx}px) rotate(${dx / 24}deg)` } : undefined}
           >
-            <Card pick={front} count={count} onRemove={() => void remove(front)} />
+            <Card pick={front} count={count} onRemove={() => void remove(front)} rated={state.rated[front.id] ?? null} onRate={(s) => state.rate(front.id, s)} />
             {nudgeId === front.id && onBring && (
               <Button type="button" variant="outline" className="mt-3" onClick={() => onBring(front)}>
                 {SHEET.bringSomeone}
@@ -260,7 +264,19 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
 }
 
 /** One card: what, when, where, price, why, and Open. An idea is never shown as a dated ticket. */
-function Card({ pick: p, count, onRemove }: { pick: MyPick; count: { n: number; total: number } | null; onRemove: () => void }) {
+function Card({
+  pick: p,
+  count,
+  onRemove,
+  rated = null,
+  onRate,
+}: {
+  pick: MyPick;
+  count: { n: number; total: number } | null;
+  onRemove: () => void;
+  rated?: "up" | "down" | null;
+  onRate?: (s: "up" | "down") => void;
+}) {
   const idea = p.kind === "idea";
   const meta = idea ? [p.place, p.price?.trim() || null] : [pickPill(p), p.place];
   const linkClass = "mt-1 inline-flex min-h-8 items-center gap-1 text-small font-semibold underline underline-offset-2";
@@ -279,11 +295,33 @@ function Card({ pick: p, count, onRemove }: { pick: MyPick; count: { n: number; 
           <Link to={p.url} className={linkClass}>
             {ASK_COPY.open}
           </Link>
-        ) : (
+        ) : isWebLink(p.url) ? (
           <a href={p.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
             {ASK_COPY.open}
             <ExternalLink className="size-3.5" aria-hidden="true" />
           </a>
+        ) : null}
+        {onRate && (
+          <div className="mt-2 flex gap-1">
+            <button
+              type="button"
+              aria-label={GUEST_COPY.goodPick}
+              aria-pressed={rated === "up"}
+              onClick={() => onRate("up")}
+              className={cn("inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground", rated === "up" && "text-accent-text")}
+            >
+              <ThumbsUp className="size-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label={GUEST_COPY.notForMe}
+              aria-pressed={rated === "down"}
+              onClick={() => onRate("down")}
+              className={cn("inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground", rated === "down" && "text-accent-text")}
+            >
+              <ThumbsDown className="size-5" aria-hidden="true" />
+            </button>
+          </div>
         )}
       </div>
       <button type="button" onClick={onRemove} aria-label={`${ASK_COPY.remove}: ${p.title}`} className="-mr-2 -mt-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground">

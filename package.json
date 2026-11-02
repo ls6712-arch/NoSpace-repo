@@ -17,7 +17,8 @@
     "visual:search": "node scripts/visual/search.ts dist docs/qa/one-skin/search",
     "visual:pages:selftest": "node scripts/visual/page-shell.ts --selftest",
     "build:app": "vite build",
-    "landing:screens": "node scripts/landing-screens/capture.mjs"
+    "landing:screens": "node scripts/landing-screens/capture.mjs",
+    "e2e:guest": "node scripts/e2e/guest-stubby.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",

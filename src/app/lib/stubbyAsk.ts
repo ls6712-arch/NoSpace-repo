@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase, supabaseAnonKey, supabaseUrl } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
 
@@ -8,8 +9,32 @@ import { friendlyError } from "./friendlyError";
  * or remove, and which are deleted two days after they happen.
  */
 
-export const ASKS_PER_DAY = 3;
+/** The day's allowance before the server says otherwise (mode "status"). Members and Stubby accounts. */
+export const ASKS_PER_DAY = 6;
+/** A guest's allowance before the server says otherwise. */
+export const GUEST_ASKS_PER_DAY = 3;
 export const ASK_MAX_LENGTH = 200;
+
+/** Which client Stubby talks through: the main one, or the guest's own (src/lib/guestSupabase.ts). */
+type Client = SupabaseClient | null;
+
+/** Why an ask was refused before searching (the server's 429 or 403 code). */
+export type LimitCode = "GUEST_LIMIT_REACHED" | "USER_LIMIT_REACHED" | "GUEST_GLOBAL_CAP" | "GLOBAL_CAP" | "SIGNUP_REQUIRED";
+export interface AskLimit {
+  code: LimitCode;
+  /** When the oldest ask in the last 24 hours ages out, if there is one. */
+  resetsAt: number | null;
+}
+const LIMIT_CODES: readonly LimitCode[] = ["GUEST_LIMIT_REACHED", "USER_LIMIT_REACHED", "GUEST_GLOBAL_CAP", "GLOBAL_CAP", "SIGNUP_REQUIRED"];
+
+/** Reads a refusal's code and reset time, or null if it isn't one. */
+export function readLimit(body: unknown): AskLimit | null {
+  if (!body || typeof body !== "object") return null;
+  const b = body as { code?: unknown; resetsAt?: unknown };
+  if (typeof b.code !== "string" || !(LIMIT_CODES as readonly string[]).includes(b.code)) return null;
+  const at = typeof b.resetsAt === "string" ? Date.parse(b.resetsAt) : NaN;
+  return { code: b.code as LimitCode, resetsAt: Number.isFinite(at) ? at : null };
+}
 
 export interface MyPick {
   id: number;
@@ -70,11 +95,11 @@ const COLUMN_TIERS: { columns: string; ranked: boolean }[] = [
  * an ask, then soonest. Before the smarter-picks migration is live, the old columns, soonest
  * first. Best effort: none on any failure.
  */
-export async function fetchMyPicks(now = Date.now()): Promise<MyPick[]> {
-  if (!supabase) return [];
+export async function fetchMyPicks(now = Date.now(), client: Client = supabase): Promise<MyPick[]> {
+  if (!client) return [];
   const since = new Date(now - 6 * 3_600_000).toISOString();
   const read = (columns: string, ranked: boolean) => {
-    let q = supabase!.from("personal_picks").select(columns).gte("starts_at", since);
+    let q = client.from("personal_picks").select(columns).gte("starts_at", since);
     if (ranked) q = q.order("ask_id", { ascending: false, nullsFirst: false }).order("rank", { ascending: true, nullsFirst: false });
     return q.order("starts_at", { ascending: true }).limit(50);
   };
@@ -93,24 +118,124 @@ export async function fetchMyPicks(now = Date.now()): Promise<MyPick[]> {
 }
 
 /** How many asks are left in the last 24 hours. Before the migration is live, the full amount. */
-export async function asksLeft(now = Date.now()): Promise<number> {
-  if (!supabase) return ASKS_PER_DAY;
+export async function asksLeft(now = Date.now(), client: Client = supabase, perDay = ASKS_PER_DAY): Promise<number> {
+  if (!client) return perDay;
   try {
-    const { count, error } = await supabase
+    const { count, error } = await client
       .from("stubby_asks")
       .select("id", { count: "exact", head: true })
       .gte("asked_at", new Date(now - 24 * 3_600_000).toISOString());
-    if (error) return ASKS_PER_DAY;
-    return Math.max(0, ASKS_PER_DAY - (count ?? 0));
+    if (error) return perDay;
+    return Math.max(0, perDay - (count ?? 0));
   } catch {
-    return ASKS_PER_DAY;
+    return perDay;
   }
 }
 
-export async function removeMyPick(id: number): Promise<{ error: string | null }> {
-  if (!supabase) return { error: null };
-  const { error } = await supabase.from("personal_picks").delete().eq("id", id);
+/** The bearer token for this client's session, or null. */
+async function tokenOf(client: Client): Promise<string | null> {
+  if (!client) return null;
+  try {
+    const { data } = await client.auth.getSession();
+    return data.session?.access_token ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Asks left today and the day's allowance, from the server (an ask with status: no search, no ask
+ * used), so a limit changed in the function's settings shows without a new build. Null without a session.
+ */
+export async function askStatus(client: Client = supabase): Promise<{ left: number; perDay: number; accountPerDay: number; resetsAt: number | null } | null> {
+  const token = await tokenOf(client);
+  if (!token || !supabaseUrl || !supabaseAnonKey) return null;
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/stubby-scout`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
+      // An ask with no words and status: the function before this one answers 400, never a search.
+      body: JSON.stringify({ mode: "ask", status: true }),
+    });
+    if (!res.ok) return null;
+    const b = (await res.json()) as { asksLeft?: unknown; perDay?: unknown; accountPerDay?: unknown; resetsAt?: unknown };
+    if (typeof b.asksLeft !== "number" || typeof b.perDay !== "number") return null;
+    const at = typeof b.resetsAt === "string" ? Date.parse(b.resetsAt) : NaN;
+    return { left: b.asksLeft, perDay: b.perDay, accountPerDay: typeof b.accountPerDay === "number" ? b.accountPerDay : ASKS_PER_DAY, resetsAt: Number.isFinite(at) ? at : null };
+  } catch {
+    return null;
+  }
+}
+
+export async function removeMyPick(id: number, client: Client = supabase): Promise<{ error: string | null }> {
+  if (!client) return { error: null };
+  const { error } = await client.from("personal_picks").delete().eq("id", id);
   return { error: error ? friendlyError(error) : null };
+}
+
+/** A thumbs up or down on a pick, or a Keep. Only the pick and the signal are sent; the database fills the rest. */
+export async function sendFeedback(pickId: number, signal: "up" | "down" | "save", client: Client = supabase): Promise<boolean> {
+  if (!client) return false;
+  try {
+    const { error } = await client.from("stubby_feedback").insert({ pick_id: pickId, signal });
+    // Already given (the unique index): that's fine.
+    return !error || error.code === "23505";
+  } catch {
+    return false;
+  }
+}
+
+/** The 8 mood ids (src/app/data/moods.ts); the database takes nothing else. */
+export type Interest = "make" | "move" | "people" | "alone" | "outside" | "learn" | "play" | "haveIt";
+export type Timing = "tonight" | "weekend" | "anytime";
+export interface Taste {
+  city: string | null;
+  interests: Interest[];
+  timing: Timing | null;
+}
+const INTERESTS: readonly Interest[] = ["make", "move", "people", "alone", "outside", "learn", "play", "haveIt"];
+
+/** Your taste profile (stubby_profiles), or null if there isn't one yet. */
+export async function readTaste(client: Client = supabase): Promise<Taste | null> {
+  if (!client) return null;
+  try {
+    const { data, error } = await client.from("stubby_profiles").select("city, interests, timing").maybeSingle();
+    if (error || !data) return null;
+    const r = data as { city: string | null; interests: string[] | null; timing: string | null };
+    return {
+      city: r.city ?? null,
+      interests: (r.interests ?? []).filter((i): i is Interest => (INTERESTS as readonly string[]).includes(i)),
+      timing: r.timing === "tonight" || r.timing === "weekend" || r.timing === "anytime" ? r.timing : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** True when Stubby knows nothing about you yet: the quick-context card shows. */
+export const tasteIsEmpty = (t: Taste | null) => !t || (!t.city && t.interests.length === 0 && !t.timing);
+
+/** No coordinates, ever: a city name only, 80 characters at most. */
+export function cleanCityName(v: string): string | null {
+  const s = v.replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+  if (s.length < 2 || /\d+[.,]\d+/.test(s)) return null;
+  return s;
+}
+
+/** Saves your taste profile (your own row only). Skip saves nothing. */
+export async function saveTaste(t: Taste, client: Client = supabase): Promise<boolean> {
+  if (!client) return false;
+  const { data } = await client.auth.getUser();
+  const id = data.user?.id;
+  if (!id) return false;
+  const row = {
+    user_id: id,
+    city: t.city ? cleanCityName(t.city) : null,
+    interests: t.interests.filter((i) => (INTERESTS as readonly string[]).includes(i)).slice(0, 10),
+    timing: t.timing,
+  };
+  const { error } = await client.from("stubby_profiles").upsert(row, { onConflict: "user_id" });
+  return !error;
 }
 
 /** Asks Stubby. On success, how many he found and asks left; the picks themselves are re-read from the table. */
@@ -160,6 +285,8 @@ export interface AskResult {
   question?: "who" | "when" | "what";
   /** When nothing fits: the 3 most common kinds of reason, with counts. */
   reasons?: { key: string; count: number }[];
+  /** Refused before searching: the daily limit, the guest cap, or a feature that needs an account. */
+  limit?: AskLimit;
   /** The time he understood ("tonight", "weekend"...), for which "nothing fits" line to say. */
   when?: string | null;
 }
@@ -203,13 +330,19 @@ function resultOf(
  */
 export async function askStubbyStream(
   text: string,
-  { signal, onStep, answers, questions, followUp }: { signal?: AbortSignal; onStep: (s: AskStep) => void; answers?: AskAnswers | null; questions?: boolean; followUp?: AskFollowUp | null },
+  {
+    signal,
+    onStep,
+    answers,
+    questions,
+    followUp,
+    client = supabase,
+  }: { signal?: AbortSignal; onStep: (s: AskStep) => void; answers?: AskAnswers | null; questions?: boolean; followUp?: AskFollowUp | null; client?: Client },
 ): Promise<AskResult> {
   const ask = text.trim().slice(0, ASK_MAX_LENGTH);
   if (ask.length < 2) return { found: 0, asksLeft: null, error: "Say what you’re after, like pottery on Saturday." };
-  if (!supabase || !supabaseUrl || !supabaseAnonKey) return { found: 0, asksLeft: null, error: "Stubby needs the live app." };
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
+  if (!client || !supabaseUrl || !supabaseAnonKey) return { found: 0, asksLeft: null, error: "Stubby needs the live app." };
+  const token = await tokenOf(client);
   if (!token) return { found: 0, asksLeft: null, error: "Sign in first." };
 
   let res: Response;
@@ -232,7 +365,11 @@ export async function askStubbyStream(
     } catch {
       body = null;
     }
-    if (!res.ok) return { found: 0, asksLeft: null, error: readError(body) ?? "Stubby couldn’t look just now. Try again in a bit." };
+    if (!res.ok) {
+      const limit = readLimit(body);
+      if (limit) return { found: 0, asksLeft: limit.code === "SIGNUP_REQUIRED" ? null : 0, error: null, limit };
+      return { found: 0, asksLeft: null, error: readError(body) ?? "Stubby couldn’t look just now. Try again in a bit." };
+    }
     return resultOf(body as Parameters<typeof resultOf>[0]);
   }
 

@@ -289,6 +289,8 @@ function deps(o: {
     settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
     now: () => NOW,
     userId: async () => "user-1",
+    whoIs: async () => ({ guest: false, member: true }),
+    ipHash: async () => null,
     db: {
       runsSince: async () => 0,
       startRun: async () => 1,

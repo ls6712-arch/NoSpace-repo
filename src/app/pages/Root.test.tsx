@@ -14,6 +14,7 @@ vi.mock("../components/BadgeUnlockToast", () => ({ BadgeUnlockToast: () => null 
 vi.mock("../components/AccountPrompts", () => ({ AccountPrompts: () => null }));
 vi.mock("../components/BottomTabBar", () => ({ BottomTabBar: ({ railEligible }: { railEligible?: boolean }) => <nav data-testid="tabbar" data-rail-eligible={String(!!railEligible)} /> }));
 vi.mock("../components/PreviewBanner", () => ({ PreviewBanner: () => null }));
+vi.mock("../components/stubby/SignUpReturnEffect", () => ({ SignUpReturnEffect: () => null }));
 vi.mock("../components/NetworkBanner", () => ({ NetworkBanner: () => null }));
 vi.mock("../components/AccountStatusBanner", () => ({ AccountStatusBanner: () => null }));
 vi.mock("../lib/truncation", () => ({ useTruncationReveal: () => undefined }));
