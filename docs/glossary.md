@@ -942,11 +942,23 @@ Being removed in Stubby plan PR 4 (`docs/briefs/claude-code-brief-stubby-calenda
 
 ### Stubby's lines
 
-Kept in `src/app/lib/stubbyLines.ts`. The greeting lines in `docs/briefs/claude-code-brief-stubby-calendar-hero.md` §2 are approved too.
+Kept in `src/app/lib/stubbyLines.ts`.
+
+His greeting line on the Calendar stage (from `docs/briefs/claude-code-brief-stubby-calendar-hero.md` §2), picked from what the calendar already shows. The exclamation mark in "Busy week!" is approved with the string (style guide rule 4).
+
+| Situation | Line |
+|---|---|
+| Free window later today | You’re free tonight from 7. Want ideas? (the start time from the window) |
+| A plan today | Pottery at 7 tonight. Want something after? (the first plan’s title, cut to fit) |
+| Free this weekend, nothing planned | Your weekend’s open. Want ideas? |
+| Nothing free this week | Busy week! Want something for next week? |
+| Fallback | What are you in the mood for? |
+| Out of asks | That’s 3 for today. I’ll look again tomorrow. |
+
+His other lines:
 
 | When | Line |
 |---|---|
-| Calendar opens | A line about your week (hero brief §2), or "What are you in the mood for?" |
 | Missing who | Going solo or with someone? |
 | Missing when | When are you free? |
 | Missing what kind | What kind of fun? |
