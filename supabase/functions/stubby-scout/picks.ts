@@ -50,7 +50,12 @@ export interface ScoutPick {
 export interface Dropped {
   title: string;
   reason: string;
+  /** Asks only: which kind of reason, for the short reasons a person sees when nothing fits. */
+  key?: ReasonKey;
 }
+
+/** The kinds of reason a pick is dropped for. "other" is never shown to the person. */
+export type ReasonKey = "listing" | "midnight" | "time" | "budget" | "adult" | "nopage" | "notime" | "family" | "other";
 
 // ── text ──────────────────────────────────────────────────────────────────
 

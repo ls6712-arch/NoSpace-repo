@@ -192,7 +192,7 @@ describe("smarter picks on the stage", () => {
   };
 
   it("nothing fit tonight: he shrugs and says so, and the soonest after are shown with no count", async () => {
-    api.askStubbyStream.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after", askId: 7 });
+    api.askStubbyStream.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after", askId: 7, when: "tonight" });
     api.fetchMyPicks.mockResolvedValue([{ ...pick, kind: "event", why: "A class for two, near you.", after: true }]);
     stage();
     await ask();

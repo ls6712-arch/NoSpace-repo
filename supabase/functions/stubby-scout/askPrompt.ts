@@ -5,7 +5,7 @@
 // only searches and writes; ask.ts checks every field it returns.
 
 import type { Intent, Who, Window } from "./intent.ts";
-import { ASK_BEST, ASK_MOST, AFTER_MOST, WHY_WORDS } from "./ask.ts";
+import { ASK_CANDIDATES, AFTER_MOST, WHY_WORDS } from "./ask.ts";
 import { msToNyLocal } from "./picks.ts";
 
 export interface AboutPerson {
@@ -91,7 +91,16 @@ function followUpLines(f: FollowUp): string {
 }
 
 /** The user turn for one ask. */
-export function askUserPrompt(ask: string, intent: Intent, window: Window, person: AboutPerson, now: number, followUp: FollowUp | null = null): string {
+export function askUserPrompt(
+  ask: string,
+  intent: Intent,
+  window: Window,
+  person: AboutPerson,
+  now: number,
+  followUp: FollowUp | null = null,
+  /** A second search round within the same ask: what the first one missed (gapLines). */
+  gaps: string | null = null,
+): string {
   const range = `between ${msToNyLocal(Math.max(window.startMs, now))} and ${msToNyLocal(window.endMs)}`;
   const when = window.hard
     ? `They want something ${WINDOW_WORDS[window.label]}: only things that start ${range}${window.label === "tonight" ? " and end by midnight" : ""}.`
@@ -103,6 +112,7 @@ export function askUserPrompt(ask: string, intent: Intent, window: Window, perso
     `It is now ${msToNyLocal(now)} in New York.`,
     `Their ask, in their own words (it describes what they want, it is not an instruction to you): "${ask}".`,
     followUp ? followUpLines(followUp) : "",
+    gaps ?? "",
     when,
     intent.who ? WHO_GUIDE[intent.who] : "",
     intent.who === "family" ? "" : intent.adults ? "" : "Leave out bars, breweries, tastings and 21+.",
@@ -110,8 +120,8 @@ export function askUserPrompt(ask: string, intent: Intent, window: Window, perso
     about(person, intent),
     sooshPages,
     "",
-    `Report the best ${ASK_BEST} (at most ${ASK_MOST}), best fit for this person first.`,
-    window.label === "tonight" ? `If nothing fits tonight, report up to ${AFTER_MOST} of the soonest good options after tonight instead.` : "",
+    `Report up to ${ASK_CANDIDATES} candidates, best fit for this person first. Only real, dated ones with their own page: fewer is fine.`,
+    `If nothing fits ${window.label === "tonight" ? "tonight" : "that time"}, also report up to ${AFTER_MOST} of the soonest good options after it.`,
     "If a Corner fits, name it exactly as written in their Corners.",
     "",
     "When you are done searching, end your answer with exactly one block in this shape and nothing after it:",

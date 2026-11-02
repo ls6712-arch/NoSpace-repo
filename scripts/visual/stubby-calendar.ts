@@ -9,6 +9,7 @@
 //   asking             mid-ask: "On it. Checking a few places.", the field busy and Stop
 //   picks-inline       the picks right under the stage as a deck, not in a dialog or sheet
 //   deck-selection     after Keep: the next card in front ("2 of 3") and Your selection below
+//   empty              nothing fits: Stubby shrugs, the honest line and why in the results, three ways on
 //   out-of-asks        0 asks left: his out-of-asks line, the field off, no quick ideas
 //   sticky             scrolled down: the slim sticky bar, clear of the header and the tab bar
 //   home-no-stubby     Home with no floating Stubby
@@ -47,7 +48,7 @@ const PICKS = [
 ];
 
 /** The asks used in the last 24 hours (3 a day), the picks (none until an ask finds them), and the scout, which waits until released. */
-async function stubbyRoutes(ctx: BrowserContext, state: { used: number; found: boolean; release: (() => void) | null }) {
+async function stubbyRoutes(ctx: BrowserContext, state: { used: number; found: boolean; release: (() => void) | null; empty?: boolean }) {
   const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "content-range" };
   await ctx.route(`${FIXTURE_ORIGIN}/rest/v1/stubby_asks**`, (route) =>
     route.fulfill({ status: 200, headers: { ...cors, "content-type": "application/json", "content-range": `*/${state.used}` }, body: "[]" }),
@@ -57,6 +58,11 @@ async function stubbyRoutes(ctx: BrowserContext, state: { used: number; found: b
   );
   await ctx.route(`${FIXTURE_ORIGIN}/functions/v1/**`, async (route) => {
     if (route.request().method() === "OPTIONS") return route.fulfill({ status: 200, headers: cors });
+    if (state.empty) {
+      // Nothing survived: the empty state, with why.
+      state.used += 1;
+      return route.fulfill({ status: 200, headers: { ...cors, "content-type": "application/json" }, body: JSON.stringify({ picks: [], asksLeft: 3 - state.used, outcome: "nothing", askId: 2, understood: { when: "tonight" }, reasons: [{ key: "listing", count: 2 }, { key: "midnight", count: 1 }] }) });
+    }
     await new Promise<void>((r) => (state.release = r));
     state.used += 1;
     state.found = true;
@@ -79,7 +85,7 @@ async function main() {
   try {
     for (const th of THEMES) for (const w of WIDTHS) {
       const phone = w < 744;
-      const state = { used: 1, found: false, release: null as (() => void) | null };
+      const state = { used: 1, found: false, release: null as (() => void) | null, empty: false };
       const ctx = await browser.newContext({ viewport: { width: w, height: HEIGHT[w] ?? 900 }, hasTouch: phone, isMobile: phone, colorScheme: th, reducedMotion: "reduce", timezoneId: "America/New_York" });
       await installSupabaseMock(ctx, buildFixtures(new Date(), { calendarQa: true }), path.join(HERE, "database.types.ts"));
       await stubbyRoutes(ctx, state);
@@ -170,6 +176,20 @@ async function main() {
       }
       await sticky.click();
       await page.waitForFunction(() => document.activeElement?.getAttribute("id") === document.querySelector("[data-stubby-stage] input")?.id, null, { timeout: 5000 });
+
+      // 4b. Nothing fits: Stubby shrugs, and the results say so too, with why and three ways on.
+      state.empty = true;
+      state.used = 0;
+      await field.fill("pottery tonight");
+      await stage.getByRole("button", { name: "Ask Stubby" }).click();
+      const empty = page.locator("[data-stubby-empty]");
+      await empty.waitFor({ timeout: 10000 });
+      await empty.getByText("2 were listing pages, 1 was after midnight").waitFor({ timeout: 5000 });
+      if ((await empty.getByRole("button").count()) !== 3) throw new Error("the empty state doesn't offer three ways on");
+      await page.getByText("Nothing fit this time. Try asking another way.").first().waitFor({ timeout: 5000 });
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await shot("empty");
+      state.empty = false;
 
       // 5. Out of asks.
       state.used = 3;

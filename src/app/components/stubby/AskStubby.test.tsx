@@ -71,8 +71,10 @@ describe("AskStubby", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
     await waitFor(() => expect(screen.getByTestId("outcome").textContent).toBe("nothing"));
     expect(onReact).toHaveBeenCalledWith("shrug");
-    // Stubby's own line says nothing fit (the stage), so the results don't repeat it.
-    expect(screen.queryByText("Nothing fit this time. Try asking another way.")).toBeNull();
+    // Never a blank area: the results say so too, with the ways on.
+    const empty = document.querySelector("[data-stubby-empty]")!;
+    expect(empty.textContent).toContain("Nothing fit this time. Try asking another way.");
+    expect([...empty.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["This weekend", "Surprise me", "Try different words"]);
   });
 
   it("tilts and says why when the ask fails", async () => {

@@ -84,7 +84,7 @@ describe("askStubbyStream", () => {
       { type: "pages", count: 9 },
       { type: "picking" },
     ]);
-    expect(r).toEqual({ found: 2, asksLeft: 2, error: null, outcome: "found", askId: 42, free: false });
+    expect(r).toEqual({ found: 2, asksLeft: 2, error: null, outcome: "found", askId: 42, free: false, reasons: [], when: null });
     expect(fetchMock.mock.calls[0][0]).toBe("https://proj.supabase.co/functions/v1/stubby-scout");
     vi.unstubAllGlobals();
   });

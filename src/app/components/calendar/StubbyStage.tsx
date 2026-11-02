@@ -21,7 +21,7 @@ export interface StubbyStageHandle {
   react: (r: BuddyReaction) => void;
 }
 
-type LineState = Pick<AskState, "busy" | "left" | "outcome" | "stalled"> & Partial<Pick<AskState, "question" | "deck" | "nudgeId">>;
+type LineState = Pick<AskState, "busy" | "left" | "outcome" | "stalled"> & Partial<Pick<AskState, "question" | "deck" | "nudgeId" | "tonight">>;
 
 /**
  * What Stubby says right now, the first that fits: he's looking; his one question; the card in
@@ -35,7 +35,7 @@ export function stageLine(state: LineState, greeting: string): string {
   if (deck && deck.all.length > 0 && frontCard(deck) === null) return STUBBY_LINES.deckRunOut;
   if (state.left === 0) return STUBBY_LINES.outOfAsks;
   if (state.outcome === "found") return STUBBY_LINES.found;
-  if (state.outcome === "after") return STUBBY_LINES.nothingFits;
+  if (state.outcome === "after") return state.tonight === false ? STUBBY_LINES.nothingThen : STUBBY_LINES.nothingFits;
   if (state.outcome === "nothing") return ASK_COPY.nothing;
   if (state.outcome === "error") return STUBBY_LINES.error;
   return greeting;
@@ -169,7 +169,16 @@ export const StubbyStage = forwardRef<
         </div>
       </section>
 
-      <StubbyResults state={ask} onMakePlans={onMakePlans} onBring={onBring} />
+      <StubbyResults
+        state={ask}
+        onMakePlans={onMakePlans}
+        onBring={onBring}
+        onTryDifferent={() => {
+          const field = document.getElementById(inputId) as HTMLInputElement | null;
+          field?.focus();
+          field?.select();
+        }}
+      />
     </>
   );
 });
