@@ -1,4 +1,6 @@
-import { CalendarDays, Compass, House, Plus, UserRound, type LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
+import { Compass, House, Plus, UserRound, type LucideIcon } from "lucide-react";
+import { StubbyNavIcon } from "./StubbyNavIcon";
 
 /**
  * The destinations every signed-in screen offers, in one place: the bottom
@@ -7,13 +9,16 @@ import { CalendarDays, Compass, House, Plus, UserRound, type LucideIcon } from "
  * Chats, Notifications and Search are not routes of their own in the same way;
  * the rail adds them, the phone's top bar already has them.
  */
+/** A destination's icon: a Lucide icon, or one of ours that takes the same props (Stubby on Calendar). */
+export type NavIcon = LucideIcon | ComponentType<{ className?: string; strokeWidth?: number | string; "aria-hidden"?: boolean | "true" | "false" }>;
+
 export interface Destination {
   to: string;
   /** What is written under the icon, and on the rail from 1280px. */
   label: string;
   /** The accessible name when it is not the label. */
   aria?: string;
-  icon: LucideIcon;
+  icon: NavIcon;
   match: (pathname: string) => boolean;
   /** The one solid shape: Log a Moment. */
   accent?: boolean;
@@ -38,7 +43,8 @@ export const LOG: Destination = {
 export const CALENDAR: Destination = {
   to: "/calendar",
   label: "Calendar",
-  icon: CalendarDays,
+  // Stubby lives on Calendar, so its icon is his mark (founder, Nov 2, 2026).
+  icon: StubbyNavIcon,
   // /week/free (when you are usually free) is part of the calendar too.
   match: (p) => p.startsWith("/calendar") || p.startsWith("/week"),
 };

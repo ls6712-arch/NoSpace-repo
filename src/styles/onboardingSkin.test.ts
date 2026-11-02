@@ -59,10 +59,12 @@ describe("onboarding contrast, both themes", () => {
 });
 
 describe("one skin on the onboarding screens", () => {
-  it("has every --stubby-* value as a var()", () => {
+  it("has every --stubby-* value as a var() (or a keyword that adds no colour, for the rail icon)", () => {
     const tokens = [...css.matchAll(/--stubby-[a-z-]+:\s*([^;]+);/g)].map((m) => m[1].trim());
     expect(tokens.length).toBeGreaterThanOrEqual(8);
-    for (const t of tokens) expect(t).toMatch(/^var\(--[a-z-]+\)$/);
+    // Calendar's rail icon turns the body off (transparent), draws in the rail's colour (currentColor)
+    // and goes back to the tokens on its page (inherit). None of them is a colour of its own.
+    for (const t of tokens) expect(t).toMatch(/^(var\(--[a-z-]+\)|transparent|currentColor|inherit)$/);
   });
 
   it("keeps no Transfer scope, token, font or hex", () => {

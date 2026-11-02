@@ -1400,6 +1400,24 @@ summary:focus-visible,
 .dark {
   --stubby-tab: var(--foreground);
 }
+/* Calendar's rail icon (StubbyNavIcon): off its page, an outline in the rail's own colour like the
+   icons beside it, coral body off. On its page (its link is aria-current="page") it inherits the
+   values above, so it is the full coral mark in either theme. */
+.stubby-nav-icon {
+  --stubby-body: transparent;
+  --stubby-tab: transparent;
+  --stubby-ink: currentColor;
+}
+/* The mark's outline is 9 of 240 units, under 1px at 22px wide: drawn at the rail's own weight
+   (Lucide's 1.75px on 24px) so it sits with the icons beside it. Same path, heavier line. */
+.stubby-nav-icon path[fill="none"] {
+  stroke-width: 18;
+}
+[aria-current="page"] .stubby-nav-icon {
+  --stubby-body: inherit;
+  --stubby-tab: inherit;
+  --stubby-ink: inherit;
+}
 
 /* ── Onboarding and login ────────────────────────────────────────────────────
    Same tokens, type scale and components as the rest of the app, in either

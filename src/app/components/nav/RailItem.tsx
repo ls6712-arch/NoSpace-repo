@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
-import type { LucideIcon } from "lucide-react";
+import type { NavIcon } from "./navItems";
 import { formatBadgeCount } from "../../lib/messageSync";
 
 /**
@@ -21,7 +21,7 @@ export function RailItem({
   accent = false,
   leading,
 }: {
-  icon?: LucideIcon;
+  icon?: NavIcon;
   label: string;
   /** The accessible name when it is not the label. */
   aria?: string;
