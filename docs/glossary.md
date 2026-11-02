@@ -940,6 +940,20 @@ Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-
 | Ask Stubby… | Placeholder on the slim sticky bar that appears when the stage scrolls out of view. Tapping it scrolls back to the stage and focuses the field (approved Nov 2, 2026) |
 | What are you in the mood for? | The ask field's label on the stage (see Calendar: asking Stubby, above) |
 
+### While he looks (stubby-plan §7, approved Nov 2, 2026)
+
+| Term | Use |
+|---|---|
+| Looking for: {what he searched} | A step: each web search, as it runs |
+| Checking {n} pages | A step: the pages read so far, with plural(); it counts up in place |
+| Picking the best for you | A step: the last one, while the picks are written and checked |
+| Still looking. Good finds take a moment. | Stubby's line after 12 seconds with no new step |
+| Stop | Button while he looks. Stops listening; the ask still counts |
+| Try again | After an error (the shared retry button): asks the same thing again |
+| Earlier today | Folded heading over today's picks from earlier asks. Only this ask's picks show above it |
+
+What he understood shows as chips while he looks, in the words of his question chips (Tonight, Tomorrow, This weekend; Just me, With my partner, With friends, With family). Anything else he understood has no chip yet.
+
 ### Stubby's question chips
 
 | Question | Chips |

@@ -14,3 +14,7 @@ export const isSupabaseConfigured = Boolean(url && anonKey);
 export const supabase = isSupabaseConfigured
   ? createClient(url!, anonKey!, { global: { fetch: trackedFetch } })
   : null;
+
+/** For the few calls that stream (Ask Stubby's steps), which supabase-js can't read as they arrive. */
+export const supabaseUrl = url ?? null;
+export const supabaseAnonKey = anonKey ?? null;

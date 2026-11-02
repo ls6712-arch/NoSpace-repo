@@ -5,10 +5,10 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-libra
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
-  askStubby: vi.fn(),
+  askStubbyStream: vi.fn(),
   asksLeft: vi.fn(async () => 3),
   fetchMyPicks: vi.fn(async () => [] as unknown[]),
-  removeMyPick: vi.fn(async () => ({ error: null })),
+  removeMyPick: vi.fn(async () => ({ error: null, askId: 7 })),
 }));
 vi.mock("../../lib/stubbyAsk", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyAsk")>()), ...api }));
 const motion = vi.hoisted(() => ({ reduced: false }));
@@ -21,7 +21,7 @@ import { StubbyStage, type StubbyStageHandle } from "./StubbyStage";
 
 // Fixed clock: Sunday Nov 1, 2026, 5:00 pm New York.
 const NOW = nyTimeToMs(2026, 11, 1, 17);
-const pick = { id: 9, title: "Wheel night", place: "Greenpoint, Brooklyn", startsAt: NOW + 7_200_000, endsAt: null, price: "$35", url: "https://example.com/wheel", note: null };
+const pick = { id: 9, title: "Wheel night", place: "Greenpoint, Brooklyn", startsAt: NOW + 7_200_000, endsAt: null, price: "$35", url: "https://example.com/wheel", note: null, kind: "event" as const, why: null, after: false, askId: 7, createdAt: NOW };
 
 // IntersectionObserver, driven by hand.
 let observed: ((entries: Partial<IntersectionObserverEntry>[]) => void) | null = null;
@@ -34,6 +34,9 @@ class FakeObserver {
 }
 
 beforeEach(() => {
+  // Date only (timers stay real): "today" is the fixed clock's day, never a midnight straddle.
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(NOW);
   window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
   (window as unknown as { IntersectionObserver: unknown }).IntersectionObserver = FakeObserver;
   observed = null;
@@ -79,7 +82,7 @@ describe("the Stubby stage", () => {
 
   it("an ask: he says he's on it and thinks, then stamps, and the results land inline under the stage", async () => {
     let finish: (v: unknown) => void = () => {};
-    api.askStubby.mockReturnValue(new Promise((r) => (finish = r)));
+    api.askStubbyStream.mockReturnValue(new Promise((r) => (finish = r)));
     stage();
     await screen.findByText("3 asks left today");
     fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery" } });
@@ -87,7 +90,7 @@ describe("the Stubby stage", () => {
     expect(line()).toBe("On it. Checking a few places.");
     expect(state()).toBe("thinking");
     api.fetchMyPicks.mockResolvedValue([pick]);
-    await act(async () => finish({ found: 1, asksLeft: 2, error: null }));
+    await act(async () => finish({ found: 1, asksLeft: 2, error: null, askId: 7 }));
     await screen.findByText("Wheel night");
     expect(line()).toBe("Here’s what I’d pick for you.");
     expect(state()).toBe("stamped");
@@ -100,7 +103,7 @@ describe("the Stubby stage", () => {
   });
 
   it("nothing fits: he shrugs and says so honestly", async () => {
-    api.askStubby.mockResolvedValue({ found: 0, asksLeft: 2, error: null });
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: 2, error: null, askId: 7 });
     stage();
     await screen.findByText("3 asks left today");
     fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "underwater chess" } });
@@ -110,7 +113,7 @@ describe("the Stubby stage", () => {
   });
 
   it("an error: he tilts and gives his error line", async () => {
-    api.askStubby.mockResolvedValue({ found: 0, asksLeft: null, error: "The scout is switched off." });
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: "The scout is switched off." });
     stage();
     await screen.findByText("3 asks left today");
     fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "running" } });
@@ -128,7 +131,9 @@ describe("the Stubby stage", () => {
   });
 
   it("plays what the page asks for (Keep, Not this, a torn tab, an error), then settles back to smiling", () => {
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
+    vi.setSystemTime(NOW);
     const ref = stage();
     for (const r of ["stamped", "shrug", "torn", "tilt"] as const) {
       act(() => ref.current!.react(r));
@@ -187,7 +192,7 @@ describe("smarter picks on the stage", () => {
   };
 
   it("nothing fit tonight: he shrugs and says so, and the soonest after are shown with no count", async () => {
-    api.askStubby.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after" });
+    api.askStubbyStream.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after", askId: 7 });
     api.fetchMyPicks.mockResolvedValue([{ ...pick, kind: "event", why: "A class for two, near you.", after: true }]);
     stage();
     await ask();
@@ -198,10 +203,10 @@ describe("smarter picks on the stage", () => {
   });
 
   it("an idea is labelled An idea, shows no date, and its Soosh page opens in the app", async () => {
-    api.askStubby.mockResolvedValue({ found: 2, asksLeft: 2, error: null, outcome: "found" });
+    api.askStubbyStream.mockResolvedValue({ found: 2, asksLeft: 2, error: null, outcome: "found", askId: 7 });
     api.fetchMyPicks.mockResolvedValue([
       { ...pick, kind: "event", why: "Coming alone is normal here.", after: false },
-      { id: 10, title: "An easy evening run", place: "Hudson River Park", startsAt: NOW + 3_600_000, endsAt: null, price: null, url: "/start/sports-fitness/running", note: null, kind: "idea", why: "A short loop, no booking.", after: false },
+      { id: 10, title: "An easy evening run", place: "Hudson River Park", startsAt: NOW + 3_600_000, endsAt: null, price: null, url: "/start/sports-fitness/running", note: null, kind: "idea", why: "A short loop, no booking.", after: false, askId: 7, createdAt: NOW },
     ]);
     stage();
     await ask("something to do tonight on my own");

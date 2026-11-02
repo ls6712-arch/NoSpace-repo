@@ -29,7 +29,7 @@ import {
   SCOUT_DAYS,
   type Dropped,
 } from "./picks.ts";
-import { SearchError, type SearchResult } from "./search.ts";
+import { SearchError, type SearchProgress, type SearchResult } from "./search.ts";
 import { askRowFor, checkAskPicks, type AskPick } from "./ask.ts";
 import { askSystemPrompt, askUserPrompt, type AboutPerson } from "./askPrompt.ts";
 import { readIntent, searchWindow, type Answers, type Intent, type Who } from "./intent.ts";
@@ -69,6 +69,8 @@ export interface SearchRequest {
   ask?: string | null;
   /** A person's ask, fully written: used in place of the scout's own prompts. */
   prompt?: { system: string; user: string } | null;
+  /** Live steps while it searches (asks that stream only). */
+  onProgress?: (e: SearchProgress) => void;
 }
 
 /** What the edge function reads about the person who asks, as them (their own rows only). */
@@ -160,6 +162,8 @@ export interface AskReport {
   understood: { when: string | null; who: Who | null; budget: number | null; free: boolean };
   dropped: Dropped[];
   asksLeft: number;
+  /** Which ask this was, so the app shows this ask's picks apart from earlier ones. */
+  askId: number;
 }
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
@@ -174,6 +178,55 @@ export const CORS = {
   "access-control-allow-methods": "POST, OPTIONS",
 };
 
+/**
+ * An ask can stream its steps (Stubby plan §7) as server-sent events, in this order:
+ *   understood {when, who, budget, free}   at once, before any search
+ *   search {query}                         each web search, as the model runs it
+ *   pages {count}                          pages read so far
+ *   picking                                the model is writing its picks; code checks follow
+ *   done {AskReport}  or  error {error, status}
+ * with a comment line every 10 seconds to keep the connection open. If the person stops, the
+ * work carries on and is saved: the ask was paid for and still counts.
+ */
+export type Emit = (event: string, data: unknown) => void;
+export const SSE_HEADERS = { ...CORS, "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache, no-transform" };
+const KEEPALIVE_MS = 10_000;
+
+function sse(run: (emit: Emit) => Promise<void>): Response {
+  const enc = new TextEncoder();
+  let closed = false;
+  let ping: ReturnType<typeof setInterval> | undefined;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const send = (text: string) => {
+        if (closed) return;
+        try {
+          controller.enqueue(enc.encode(text));
+        } catch {
+          closed = true;
+        }
+      };
+      const emit: Emit = (event, data) => send(`event: ${event}\ndata: ${JSON.stringify(data ?? {})}\n\n`);
+      ping = setInterval(() => send(": keepalive\n\n"), KEEPALIVE_MS);
+      void run(emit).finally(() => {
+        clearInterval(ping);
+        if (closed) return;
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          // Already gone.
+        }
+      });
+    },
+    cancel() {
+      closed = true;
+      clearInterval(ping);
+    },
+  });
+  return new Response(stream, { status: 200, headers: SSE_HEADERS });
+}
+
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "content-type": "application/json" } });
 const fail = (status: number, error: string) => json(status, { error });
@@ -184,7 +237,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return fail(405, "Use POST.");
 
-  let body: { mode?: unknown; focus?: unknown; ask?: unknown; answers?: unknown; questions?: unknown } = {};
+  let body: { mode?: unknown; focus?: unknown; ask?: unknown; answers?: unknown; questions?: unknown; stream?: unknown } = {};
   try {
     body = ((await req.json()) ?? {}) as typeof body;
   } catch {
@@ -199,7 +252,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
 
   const userId = await deps.userId();
   if (!userId) return fail(401, "Sign in first.");
-  if (mode === "ask") return ask(deps, userId, body.ask, readAnswers(body.answers), body.questions === true);
+  if (mode === "ask") return ask(deps, userId, body.ask, readAnswers(body.answers), body.questions === true, body.stream === true);
   return admin(deps, cleanText(body.focus).slice(0, 200) || null);
 }
 
@@ -336,7 +389,7 @@ const understoodOf = (intent: Intent): AskReport["understood"] => ({
   free: intent.budget?.free ?? false,
 });
 
-async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answers | null, questions: boolean): Promise<Response> {
+async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answers | null, questions: boolean, stream = false): Promise<Response> {
   // Their own words, one plain line. Double quotes become single so the prompt stays one quote.
   const text = cleanText(raw).replace(/"/g, "'").slice(0, 200);
   if (text.length < 2) return fail(400, "Say what you're after, like pottery on Saturday.");
@@ -361,16 +414,25 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
   if (askId === null) return fail(429, `That's ${asksPerPerson} for today. I'll look again tomorrow.`);
 
   let found = 0;
-  try {
+  // Everything from the search to the saved picks. Streams its steps through `emit` when asked.
+  const work = async (emit: Emit): Promise<AskReport> => {
     const window = searchWindow(intent, now);
     const person = aboutPerson(profile, picked);
+    let picking = false;
     const result = await deps.search({
       focus: null,
       ask: text,
       cornerNames: corners.map((c) => c.name),
       maxSearches: deps.settings.maxSearches,
       prompt: { system: askSystemPrompt(), user: askUserPrompt(text, intent, window, person, now) },
+      onProgress: stream
+        ? (e) => {
+            if (e.type === "picking") picking = true;
+            emit(e.type, e);
+          }
+        : undefined,
     });
+    if (stream && !picking) emit("picking", { type: "picking" });
     const rawPicks = readPicksBlock(result.text);
     if (!rawPicks) throw new SearchError("Stubby couldn't read what he found. Try asking another way.", 502);
     found = rawPicks.length;
@@ -401,7 +463,7 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
     }
 
     await deps.server.finishAsk(askId, { found, added: mine.length, failed: false });
-    const report: AskReport = {
+    return {
       picks: kept.map((p) => ({
         kind: p.kind,
         title: p.title,
@@ -419,12 +481,30 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
       understood: understoodOf(intent),
       dropped,
       asksLeft: Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS))),
+      askId,
     };
-    return json(200, report);
-  } catch (e) {
-    await deps.server.finishAsk(askId, { found, added: 0, failed: true }).catch(() => undefined);
-    return fail(statusOf(e), message(e, "Something went wrong. Try again in a bit."));
+  };
+  const failed = (e: unknown) => {
+    void deps.server.finishAsk(askId, { found, added: 0, failed: true }).catch(() => undefined);
+    return { error: message(e, "Something went wrong. Try again in a bit."), status: statusOf(e) };
+  };
+
+  if (!stream) {
+    try {
+      return json(200, await work(() => undefined));
+    } catch (e) {
+      const f = failed(e);
+      return fail(f.status, f.error);
+    }
   }
+  return sse(async (emit) => {
+    emit("understood", understoodOf(intent));
+    try {
+      emit("done", await work(emit));
+    } catch (e) {
+      emit("error", failed(e));
+    }
+  });
 }
 
 const cornerMap = (corners: readonly { id: number; name: string }[]) => new Map(corners.map((c) => [c.name.trim().toLowerCase(), c.id]));

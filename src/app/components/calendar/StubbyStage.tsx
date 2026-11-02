@@ -21,8 +21,8 @@ export interface StubbyStageHandle {
 }
 
 /** What Stubby says right now: the ask first, then 0 asks left, then how the last ask went, then his greeting. */
-export function stageLine(state: Pick<AskState, "busy" | "left" | "outcome">, greeting: string): string {
-  if (state.busy) return STUBBY_LINES.looking;
+export function stageLine(state: Pick<AskState, "busy" | "left" | "outcome" | "stalled">, greeting: string): string {
+  if (state.busy) return state.stalled ? STUBBY_LINES.stillLooking : STUBBY_LINES.looking;
   if (state.left === 0) return STUBBY_LINES.outOfAsks;
   if (state.outcome === "found") return STUBBY_LINES.found;
   if (state.outcome === "after") return STUBBY_LINES.nothingFits;
