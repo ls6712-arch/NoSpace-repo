@@ -48,7 +48,22 @@ export interface Intent {
 
 export interface Answers {
   who?: Who;
-  when?: "tonight" | "tomorrow" | "weekend";
+  /** A chip (tonight, tomorrow, this weekend) or a day picked ("2026-11-07"). */
+  when?: "tonight" | "tomorrow" | "weekend" | string;
+  /** Surprise me, or an answer typed into the ask: no question, he searches. */
+  skip?: boolean;
+}
+
+/** A day picked as "YYYY-MM-DD": that whole day in New York (from now, if it's today). Null if not a real day. */
+export function dayWindow(day: string, now: number): Window | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!m) return null;
+  const [y, mo, d] = m.slice(1).map(Number);
+  const start = nyTime(y, mo, d, 0);
+  const end = nyTime(y, mo, d + 1, 0);
+  const p = nyParts(start);
+  if (p.y !== y || p.m !== mo || p.d !== d || end <= now) return null;
+  return { startMs: Math.max(start, now), endMs: end, label: "day", hard: true };
 }
 
 export interface IntentContext {
@@ -166,7 +181,7 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
   if (answers?.who) who = answers.who;
 
   let when = readWhen(text, ctx.now);
-  if (answers?.when) when = readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now);
+  if (answers?.when) when = dayWindow(answers.when, ctx.now) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now) ?? when;
 
   const vibes = VIBES.filter(([, re]) => re.test(text)).map(([v]) => v);
   const corners = (ctx.cornerNames ?? []).map((c) => c.toLowerCase()).filter((c) => c.length > 2);
@@ -183,7 +198,7 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
   const hasWindows = (ctx.windows ?? []).length > 0;
   let missing: Missing | null = null;
   // One question per ask: once they have answered, he searches.
-  if (!answers?.who && !answers?.when) {
+  if (!answers?.who && !answers?.when && !answers?.skip) {
     if (!specific && !who) missing = "who";
     else if (!specific && !when && !hasWindows) missing = "when";
     else if (!specific && content.length === 0 && who && when) missing = "what";

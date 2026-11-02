@@ -7,7 +7,8 @@
 // Per width and theme it saves, and FAILS (exit 1) when what the name claims is not on screen:
 //   calendar-stage     Calendar's top: one Stubby, above the toolbar, with his greeting in a bubble
 //   asking             mid-ask: "On it. Checking a few places.", the field busy and Stop
-//   picks-inline       the picks right under the stage, not in a dialog or sheet
+//   picks-inline       the picks right under the stage as a deck, not in a dialog or sheet
+//   deck-selection     after Keep: the next card in front ("2 of 2") and Your selection below
 //   out-of-asks        0 asks left: his out-of-asks line, the field off, no quick ideas
 //   sticky             scrolled down: the slim sticky bar, clear of the header and the tab bar
 //   home-no-stubby     Home with no floating Stubby
@@ -130,11 +131,17 @@ async function main() {
       while (!state.release) await page.waitForTimeout(50);
       state.release();
       await page.getByText("Here’s what I’d pick for you.").waitFor({ timeout: 10000 });
-      await page.locator("[data-stubby-results]").getByText("Wheel night at a Greenpoint studio").waitFor({ timeout: 10000 });
+      await page.locator("[data-stubby-results]").getByText("Wheel night at a Greenpoint studio", { exact: true }).waitFor({ timeout: 10000 });
       if (await page.getByRole("dialog").count()) throw new Error("the picks opened in a dialog");
       const results = (await page.locator("[data-stubby-results]").boundingBox())!;
       if (results.y < stageBox.y + stageBox.height - 1) throw new Error("the picks are not under the stage");
       await shot("picks-inline");
+
+      // 3b. The deck: Keep the front card into Your selection; the next comes forward.
+      await page.locator("[data-stubby-deck-front]").getByRole("button", { name: "Keep" }).click();
+      await page.getByRole("heading", { name: "Your selection" }).waitFor({ timeout: 5000 });
+      await page.locator("[data-stubby-deck-front]").getByText("2 of 2").waitFor({ timeout: 5000 });
+      await shot("deck-selection");
 
       // 4. The sticky bar, once the stage has scrolled away; clear of the header and the tab bar.
       await page.evaluate(() => window.scrollTo(0, 1200));

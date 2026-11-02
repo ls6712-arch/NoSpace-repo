@@ -210,7 +210,13 @@ describe("smarter picks on the stage", () => {
     ]);
     stage();
     await ask("something to do tonight on my own");
-    const idea = (await screen.findByText("An easy evening run")).closest("li")!;
+    // The deck shows one card at a time: the event first, then the idea after Not now.
+    const event = (await screen.findByText("Wheel night")).closest("[data-pick-kind]")!;
+    expect(event.textContent).toContain("Found for you");
+    expect(event.textContent).toContain("Coming alone is normal here.");
+    expect(event.querySelector("a")!.getAttribute("target")).toBe("_blank");
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    const idea = (await screen.findByText("An easy evening run")).closest("[data-pick-kind]")!;
     expect(idea.getAttribute("data-pick-kind")).toBe("idea");
     expect(idea.textContent).toContain("An idea");
     expect(idea.textContent).toContain("Hudson River Park");
@@ -218,10 +224,6 @@ describe("smarter picks on the stage", () => {
     const open = idea.querySelector("a")!;
     expect(open.getAttribute("href")).toBe("/start/sports-fitness/running");
     expect(open.getAttribute("target")).toBeNull();
-    const event = screen.getByText("Wheel night").closest("li")!;
-    expect(event.textContent).toContain("Found for you");
-    expect(event.textContent).toContain("Coming alone is normal here.");
-    expect(event.querySelector("a")!.getAttribute("target")).toBe("_blank");
   });
 });
 

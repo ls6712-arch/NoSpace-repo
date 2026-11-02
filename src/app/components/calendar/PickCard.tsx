@@ -6,8 +6,8 @@ import { cn } from "../ui/utils";
 export const PICK_BORDER = "border-[1.5px] border-dashed border-accent-text bg-card";
 
 /**
- * Stubby's pick inside a free stretch: the label, the thing, when, and Keep.
- * Tapping the card opens the pick (reason, place, Not this); Keep makes it a plan.
+ * Stubby's pick inside a free stretch: the label, the thing, when, and Make it a plan.
+ * Tapping the card opens the pick (reason, place, Not now); Make it a plan makes it a plan.
  */
 export function PickCard({ slot, onOpen, onKeep, className }: { slot: CalendarFreeSlot; onOpen: (slot: CalendarFreeSlot) => void; onKeep: (slot: CalendarFreeSlot) => void; className?: string }) {
   const pick = slot.pick;

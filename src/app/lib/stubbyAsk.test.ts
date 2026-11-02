@@ -43,8 +43,9 @@ describe("fetchMyPicks", () => {
     calls.failNew = true;
     calls.rows = [row()];
     const [p] = await fetchMyPicks(NOW);
-    expect(calls.selects).toHaveLength(2);
-    expect(calls.selects[1]).not.toContain("kind");
+    // Newest columns first, then each older set, until one is live.
+    expect(calls.selects).toHaveLength(3);
+    expect(calls.selects[2]).not.toContain("kind");
     expect(p).toMatchObject({ kind: "event", why: null, after: false });
   });
 });
@@ -83,7 +84,7 @@ describe("askStubbyStream", () => {
       { type: "pages", count: 9 },
       { type: "picking" },
     ]);
-    expect(r).toEqual({ found: 2, asksLeft: 2, error: null, outcome: "found", askId: 42 });
+    expect(r).toEqual({ found: 2, asksLeft: 2, error: null, outcome: "found", askId: 42, free: false });
     expect(fetchMock.mock.calls[0][0]).toBe("https://proj.supabase.co/functions/v1/stubby-scout");
     vi.unstubAllGlobals();
   });

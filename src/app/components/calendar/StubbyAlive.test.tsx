@@ -3,7 +3,7 @@
 // looking, Stop works, errors offer Try again, picks come in one by one, and only this ask's
 // picks are shown (today's earlier ones fold away).
 import { MemoryRouter } from "react-router";
-import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { AskStep, MyPick } from "../../lib/stubbyAsk";
 
@@ -21,7 +21,7 @@ vi.mock("motion/react", async (orig) => ({ ...(await orig<typeof import("motion/
 
 import { nyTimeToMs } from "../../lib/homeWeek";
 import { HELLO_KEY } from "../../lib/stubbyStage";
-import { REVEAL_MS, STALL_MS } from "../stubby/AskStubby";
+import { STALL_MS } from "../stubby/AskStubby";
 import { StubbyStage } from "./StubbyStage";
 
 // A fixed clock, Date included, so "today" never straddles midnight: Sunday Nov 1, 2026, 5:00 pm New York.
@@ -29,7 +29,7 @@ const NOW = nyTimeToMs(2026, 11, 1, 17);
 const DAY = 86_400_000;
 const pick = (id: number, askId: number | null, over: Partial<MyPick> = {}): MyPick => ({
   id, title: `Pick ${id}`, place: "Brooklyn", startsAt: NOW + 3 * 3_600_000, endsAt: null, price: "Free", url: `https://example.com/${id}`, note: null,
-  kind: "event", why: null, after: false, askId, createdAt: NOW - 60_000, ...over,
+  kind: "event", why: null, after: false, askId, createdAt: NOW - 60_000, betterWithFriend: false, cornerKey: null, ...over,
 });
 
 beforeEach(() => {
@@ -142,30 +142,39 @@ describe("while he looks", () => {
 });
 
 describe("what he found", () => {
-  it("comes in one by one, Stubby stamping on the first, and the count matches what's shown", async () => {
+  it("comes as a deck: one card in front with its count, Stubby stamping, and the count matches what's shown", async () => {
     await show();
     ask("pottery tonight");
     api.fetchMyPicks.mockResolvedValue([pick(1, 8), pick(2, 8), pick(3, 8)]);
     await act(async () => calls[0].finish({ found: 3, asksLeft: 2, error: null, outcome: "found", askId: 8 }));
     await flush();
-    const shown = () => screen.queryAllByText(/^Pick \d$/).map((e) => e.textContent);
+    const shown = () => [...(document.querySelector("[data-stubby-deck-front]")?.querySelectorAll(".text-lead") ?? [])].map((e) => e.textContent);
+    // One card at a time: the next ones only peek out behind it.
     expect(shown()).toEqual(["Pick 1"]);
+    expect(screen.getByText("1 of 3")).toBeTruthy();
     expect(state()).toBe("stamped");
     expect(screen.getByText("Found 3 things.")).toBeTruthy();
-    act(() => void vi.advanceTimersByTime(REVEAL_MS));
-    expect(shown()).toEqual(["Pick 1", "Pick 2"]);
-    act(() => void vi.advanceTimersByTime(REVEAL_MS));
-    expect(shown()).toEqual(["Pick 1", "Pick 2", "Pick 3"]);
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    expect(shown()).toEqual(["Pick 2"]);
+    expect(screen.getByText("2 of 3")).toBeTruthy();
+    // Kept: now a small ticket in Your selection.
+    expect(screen.getByRole("heading", { name: "Your selection" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Pick 1/, pressed: false })).toBeTruthy();
   });
 
-  it("under reduced motion, everything appears at once", async () => {
+  it("under reduced motion, a swipe moves nothing and cards switch at once", async () => {
     motion.reduced = true;
     await show();
     ask("pottery tonight");
-    api.fetchMyPicks.mockResolvedValue([pick(1, 8), pick(2, 8), pick(3, 8)]);
-    await act(async () => calls[0].finish({ found: 3, asksLeft: 2, error: null, outcome: "found", askId: 8 }));
+    api.fetchMyPicks.mockResolvedValue([pick(1, 8), pick(2, 8)]);
+    await act(async () => calls[0].finish({ found: 2, asksLeft: 2, error: null, outcome: "found", askId: 8 }));
     await flush();
-    expect(screen.queryAllByText(/^Pick \d$/)).toHaveLength(3);
+    const card = screen.getByText("Pick 1").closest("[data-pick-kind]")!.parentElement as HTMLElement;
+    fireEvent.pointerDown(card, { clientX: 100, pointerId: 1 });
+    fireEvent.pointerMove(card, { clientX: 160, pointerId: 1 });
+    expect(card.style.transform).toBe("");
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    expect(screen.getByText("Pick 2")).toBeTruthy();
   });
 
   it("shows only this ask's picks; today's earlier ones fold under Earlier today, and older ones aren't shown", async () => {
@@ -174,9 +183,8 @@ describe("what he found", () => {
     api.fetchMyPicks.mockResolvedValue([pick(5, 9), pick(6, 9), pick(1, 4), pick(2, 4), pick(3, 2, { createdAt: NOW - 2 * DAY, title: "From two days ago" })]);
     await act(async () => calls[0].finish({ found: 2, asksLeft: 1, error: null, outcome: "found", askId: 9 }));
     await flush();
-    act(() => void vi.advanceTimersByTime(REVEAL_MS * 3));
-    const current = screen.getByRole("list", { name: "Found for you" });
-    expect(within(current).getAllByRole("listitem").map((li) => li.querySelector(".text-body")?.textContent)).toEqual(["Pick 5", "Pick 6"]);
+    expect(screen.getByText("Pick 5")).toBeTruthy();
+    expect(screen.getByText("1 of 2")).toBeTruthy();
     expect(screen.getByText("Found 2 things.")).toBeTruthy();
     const earlier = screen.getByRole("button", { name: "Earlier today" });
     expect(earlier.getAttribute("aria-expanded")).toBe("false");

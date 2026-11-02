@@ -61,7 +61,7 @@ export function CalendarSheets({
   actions: CalendarActions;
   passes: readonly Pass[];
   onBring: (plan: WeekPlanDetail) => void;
-  /** Stubby's pick: Keep makes it a plan, Not this swaps in the next match. */
+  /** Stubby's pick: Make it a plan makes it a plan, Not now swaps in the next match. */
   onKeep: (slot: CalendarFreeSlot) => void;
   onNotThis: (slot: CalendarFreeSlot) => void;
 }) {
