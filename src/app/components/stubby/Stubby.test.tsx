@@ -9,6 +9,7 @@ vi.mock("motion/react", () => ({ useReducedMotion: () => reduced }));
 const STATES: StubbyState[] = [
   "idle", "stamped", "unstamped", "yours", "shrug", "torn", "rejoined", "tilt",
   "arrived", "knock", "checkedIn", "done", "letGo", "sleep", "thinking", "cool",
+  "ready", "hello", "eager", "excited", "peek",
 ];
 
 // jsdom has no Web Animations API. Each animation is a promise the test can hold open.
@@ -48,6 +49,9 @@ describe("Stubby", () => {
     await settleAll();
     const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
     act(() => void document.dispatchEvent(new Event("visibilitychange")));
+    // A blink or glance that began just before the tab was hidden may still be finishing (each
+    // is under 2 seconds). Let it end, then count: nothing new may start while hidden.
+    await act(() => vi.advanceTimersByTimeAsync(3_000));
     const before = started;
     await act(() => vi.advanceTimersByTimeAsync(30_000));
     expect(started).toBe(before);
@@ -87,6 +91,26 @@ describe("Stubby", () => {
     await settleAll();
     expect(started).toBe(0);
     expect(has(container, RIPPED)).toBe(true);
+  });
+
+  it("in the dock: under reduced motion the hello is the happy face, with no hop", async () => {
+    reduced = true;
+    const { container, rerender } = render(<Stubby state="ready" />);
+    expect(has(container, GRIN)).toBe(true);
+    rerender(<Stubby state="hello" />);
+    await settleAll();
+    expect(started).toBe(0);
+    expect(has(container, GRIN)).toBe(true);
+  });
+
+  it("in the dock: the hello hops, then he rests smiling", async () => {
+    const { container, rerender } = render(<Stubby state="ready" />);
+    await settleAll();
+    const before = started;
+    rerender(<Stubby state="hello" />);
+    await settleAll();
+    expect(started).toBeGreaterThan(before);
+    expect(has(container, GRIN)).toBe(true);
   });
 
   it("starts no animation for the mark", async () => {

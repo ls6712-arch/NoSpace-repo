@@ -5,10 +5,15 @@
 //   restock  The morning schedule. No sign-in: each call takes the next source not yet searched
 //            today (claim_scout_source), and each source can only be searched once a day, so
 //            calling it more often does nothing. Trusted pages publish, the rest are drafts.
-//   ask      A signed-in person asks for something different. 3 a day each (claim_stubby_ask),
-//            and a total for everyone. What Stubby finds is saved as their own picks, and also
-//            added to the City picks for everyone (published from trusted pages, a draft from
-//            anywhere else) with no trace of who asked or what they typed.
+//   ask      A signed-in person asks. 3 a day each (claim_stubby_ask), and a total for everyone.
+//            The ask is read in code first (intent.ts: when, who, budget, what), with their own
+//            profile read as them (picked Corners, free time, budget, neighborhood, passes,
+//            Pursuits). The search is told who is coming and what fits them (askPrompt.ts), and
+//            every pick is checked in code (ask.ts): the time asked for, the event's own page, no
+//            21+ unless asked, the budget, ideas only in their Corners. The best 3 (at most 5)
+//            are saved as their own picks, with a why line each. Events are also added to the
+//            City picks for everyone (published from trusted pages, a draft otherwise) with no
+//            trace of who asked or what they typed; ideas never are.
 //
 // Everything outside (database, search, clock, settings) comes in through ScoutDeps, so every
 // path is tested without a network (stubby-scout.test.ts).
@@ -23,15 +28,17 @@ import {
   rowFor,
   SCOUT_DAYS,
   type Dropped,
-  type ScoutPick,
 } from "./picks.ts";
-import { SearchError, type SearchResult } from "./search.ts";
+import { SearchError, type SearchProgress, type SearchResult } from "./search.ts";
+import { askRowFor, checkAskPicks, type AskPick } from "./ask.ts";
+import { askSystemPrompt, askUserPrompt, type AboutPerson, type FollowUp, type FollowUpKind } from "./askPrompt.ts";
+import { readIntent, searchWindow, type Answers, type Intent, type Who, type Window } from "./intent.ts";
 
 export const CITY = "new-york";
 /** The morning restock fills this many days ahead. */
 export const RESTOCK_DAYS = 7;
-/** A person's ask returns at most this many. */
-export const ASK_MAX_PICKS = 6;
+/** How far ahead "the soonest after tonight" may go. */
+const AFTER_DAYS = 7;
 const DAY_MS = 24 * 3_600_000;
 
 export interface ScoutSettings {
@@ -60,6 +67,33 @@ export interface SearchRequest {
   days?: number;
   maxPicks?: number;
   ask?: string | null;
+  /** A person's ask, fully written: used in place of the scout's own prompts. */
+  prompt?: { system: string; user: string } | null;
+  /** Live steps while it searches (asks that stream only). */
+  onProgress?: (e: SearchProgress) => void;
+}
+
+/** What the edge function reads about the person who asks, as them (their own rows only). */
+export interface PersonProfile {
+  /** Corner keys, "space-slug/corner-slug". */
+  picks: string[];
+  /** The usual week: "sat-eve" and the like. */
+  windows: string[];
+  monthlyBudget: number | null;
+  city: string | null;
+  area: string | null;
+  passes: { label: string; place: string | null }[];
+  /** Their own Pursuits that are going (not finished, paused, let go, archived or a one-off plan). */
+  pursuits: { id: string; title: string }[];
+}
+
+export const EMPTY_PROFILE: PersonProfile = { picks: [], windows: [], monthlyBudget: null, city: null, area: null, passes: [], pursuits: [] };
+
+export interface CornerRow {
+  id: number;
+  name: string;
+  spaceSlug?: string;
+  slug?: string;
 }
 
 type CityRow = ReturnType<typeof rowFor>;
@@ -80,20 +114,27 @@ export interface ScoutDeps {
     existingKeys(fromMs: number, toMs: number): Promise<Set<string>>;
     /** True when saved, false when it was already there (the unique index). */
     insertPick(row: CityRow): Promise<boolean>;
+    /** The caller's own profile, Corners, passes and Pursuits. Read as them. */
+    profile(userId: string): Promise<PersonProfile>;
   };
   /** As the server: only for the restock and asks, after their own checks. */
   server: {
     claimSource(): Promise<Source | null>;
     claimAsk(userId: string, perPerson: number, perDay: number): Promise<number | null>;
+    /**
+     * Marks this person's ask's free follow-up used, in one update that only succeeds once (and
+     * only for an ask of theirs from the last day). True when it was free; false means it costs an ask.
+     */
+    claimFreeFollowUp(userId: string, askId: number, sinceMs: number): Promise<boolean>;
     finishRun(id: number, r: { searches: number; found: number; added: number; error: string | null }): Promise<void>;
     finishAsk(id: number, r: { found: number; added: number; failed: boolean }): Promise<void>;
     /** How many asks this person has made since `ms`. */
     asksSince(userId: string, ms: number): Promise<number>;
     trustedHosts(): Promise<string[]>;
-    corners(): Promise<{ id: number; name: string }[]>;
+    corners(): Promise<CornerRow[]>;
     existingKeys(fromMs: number, toMs: number): Promise<Set<string>>;
     insertPick(row: CityRow): Promise<boolean>;
-    insertPersonal(row: PersonalRow): Promise<boolean>;
+    insertPersonal(row: PersonalRow | ReturnType<typeof askRowFor>): Promise<boolean>;
   };
   search(r: SearchRequest): Promise<SearchResult>;
 }
@@ -105,9 +146,36 @@ export interface ScoutReport {
   dropped: Dropped[];
 }
 
-/** What a person gets back from an ask: their new picks, soonest first. */
+/** What a person gets back from an ask: their new picks, best fit first. */
 export interface AskReport {
-  picks: { title: string; place: string | null; startsAt: string; endsAt: string | null; price: string | null; url: string; note: string | null }[];
+  picks: {
+    kind: "event" | "idea";
+    title: string;
+    place: string | null;
+    startsAt: string;
+    endsAt: string | null;
+    price: string | null;
+    url: string;
+    note: string | null;
+    why: string | null;
+    betterWithFriend: boolean;
+    after: boolean;
+  }[];
+  /** found: picks in the time asked for; after: nothing fit tonight, these are the soonest after; nothing. */
+  outcome: "found" | "after" | "nothing";
+  /** What Stubby understood, for the chips. */
+  understood: { when: string | null; who: Who | null; budget: number | null; free: boolean };
+  dropped: Dropped[];
+  asksLeft: number;
+  /** Which ask this was, so the app shows this ask's picks apart from earlier ones. A free follow-up shares its ask's id. */
+  askId: number;
+  /** A follow-up that cost nothing (the first after an ask). */
+  free: boolean;
+}
+
+/** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
+export interface AskQuestion {
+  question: "who" | "when" | "what";
   asksLeft: number;
 }
 
@@ -116,6 +184,55 @@ export const CORS = {
   "access-control-allow-headers": "authorization, x-client-info, apikey, content-type",
   "access-control-allow-methods": "POST, OPTIONS",
 };
+
+/**
+ * An ask can stream its steps (Stubby plan §7) as server-sent events, in this order:
+ *   understood {when, who, budget, free}   at once, before any search
+ *   search {query}                         each web search, as the model runs it
+ *   pages {count}                          pages read so far
+ *   picking                                the model is writing its picks; code checks follow
+ *   done {AskReport}  or  error {error, status}
+ * with a comment line every 10 seconds to keep the connection open. If the person stops, the
+ * work carries on and is saved: the ask was paid for and still counts.
+ */
+export type Emit = (event: string, data: unknown) => void;
+export const SSE_HEADERS = { ...CORS, "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache, no-transform" };
+const KEEPALIVE_MS = 10_000;
+
+function sse(run: (emit: Emit) => Promise<void>): Response {
+  const enc = new TextEncoder();
+  let closed = false;
+  let ping: ReturnType<typeof setInterval> | undefined;
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      const send = (text: string) => {
+        if (closed) return;
+        try {
+          controller.enqueue(enc.encode(text));
+        } catch {
+          closed = true;
+        }
+      };
+      const emit: Emit = (event, data) => send(`event: ${event}\ndata: ${JSON.stringify(data ?? {})}\n\n`);
+      ping = setInterval(() => send(": keepalive\n\n"), KEEPALIVE_MS);
+      void run(emit).finally(() => {
+        clearInterval(ping);
+        if (closed) return;
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          // Already gone.
+        }
+      });
+    },
+    cancel() {
+      closed = true;
+      clearInterval(ping);
+    },
+  });
+  return new Response(stream, { status: 200, headers: SSE_HEADERS });
+}
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "content-type": "application/json" } });
@@ -127,7 +244,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return fail(405, "Use POST.");
 
-  let body: { mode?: unknown; focus?: unknown; ask?: unknown } = {};
+  let body: { mode?: unknown; focus?: unknown; ask?: unknown; answers?: unknown; questions?: unknown; stream?: unknown; followUp?: unknown } = {};
   try {
     body = ((await req.json()) ?? {}) as typeof body;
   } catch {
@@ -142,7 +259,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
 
   const userId = await deps.userId();
   if (!userId) return fail(401, "Sign in first.");
-  if (mode === "ask") return ask(deps, userId, body.ask);
+  if (mode === "ask") return ask(deps, userId, body.ask, readAnswers(body.answers), body.questions === true, body.stream === true, readFollowUp(body.followUp));
   return admin(deps, cleanText(body.focus).slice(0, 200) || null);
 }
 
@@ -228,48 +345,176 @@ async function restock(deps: ScoutDeps): Promise<Response> {
 
 // ── ask: one person wants something different ─────────────────────────────
 
-async function ask(deps: ScoutDeps, userId: string, raw: unknown): Promise<Response> {
+const WHO_VALUES: readonly Who[] = ["solo", "partner", "friends", "family"];
+const WHEN_VALUES = ["tonight", "tomorrow", "weekend"] as const;
+
+/** The person's answer to Stubby's one question, if they gave one. Anything else is ignored. */
+function readAnswers(v: unknown): Answers | null {
+  if (!v || typeof v !== "object") return null;
+  const a = v as Record<string, unknown>;
+  const out: Answers = {};
+  if (typeof a.who === "string" && (WHO_VALUES as readonly string[]).includes(a.who)) out.who = a.who as Who;
+  if (typeof a.when === "string" && ((WHEN_VALUES as readonly string[]).includes(a.when) || /^\d{4}-\d{2}-\d{2}$/.test(a.when))) out.when = a.when;
+  if (a.skip === true) out.skip = true;
+  return out.who || out.when || out.skip ? out : null;
+}
+
+const FOLLOW_UP_KINDS: readonly FollowUpKind[] = ["cheaper", "closer", "later", "different", "more"];
+
+/** A follow-up on the deck: which ask it follows, what to change, and the titles already shown. */
+function readFollowUp(v: unknown): (FollowUp & { of: number }) | null {
+  if (!v || typeof v !== "object") return null;
+  const f = v as Record<string, unknown>;
+  if (typeof f.of !== "number" || !Number.isInteger(f.of) || f.of <= 0) return null;
+  if (typeof f.kind !== "string" || !(FOLLOW_UP_KINDS as readonly string[]).includes(f.kind)) return null;
+  const titles = Array.isArray(f.titles) ? f.titles.filter((t): t is string => typeof t === "string").map((t) => cleanText(t).slice(0, 80)).filter(Boolean).slice(0, 10) : [];
+  return { of: f.of, kind: f.kind as FollowUpKind, titles };
+}
+
+/** What a follow-up changes before the search: Cheaper halves the ceiling, Later starts two hours on. */
+export function applyFollowUp(intent: Intent, window: Window, kind: FollowUpKind, now: number): { intent: Intent; window: Window } {
+  if (kind === "cheaper") {
+    const budget = intent.budget ? { ...intent.budget, max: Math.floor(intent.budget.max / 2), from: "ask" as const } : { max: 20, free: false, from: "ask" as const };
+    return { intent: { ...intent, budget }, window };
+  }
+  if (kind === "later") {
+    const start = Math.max(window.startMs, now) + 2 * 3_600_000;
+    return { intent, window: start < window.endMs ? { ...window, startMs: start } : window };
+  }
+  return { intent, window };
+}
+
+const DAY_WORDS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+const SLOT_WORDS: Record<string, string> = { day: "daytime", eve: "evening" };
+/** "sat-eve" to "Saturday evening". Anything else is left out. */
+export function windowWords(windows: readonly string[]): string[] {
+  return windows.flatMap((w) => {
+    const [d, s] = w.split("-");
+    return DAY_WORDS[d] && SLOT_WORDS[s] ? [`${DAY_WORDS[d]} ${SLOT_WORDS[s]}`] : [];
+  });
+}
+
+const SAFE_SLUG = /^[A-Za-z0-9_-]+$/;
+
+/** What the prompt says about the person, and the Soosh pages an idea may link to. */
+export function aboutPerson(profile: PersonProfile, picked: CornerRow[]): AboutPerson {
+  const sooshPages: AboutPerson["sooshPages"] = [];
+  for (const c of picked) {
+    if (c.spaceSlug && c.slug && SAFE_SLUG.test(c.spaceSlug) && SAFE_SLUG.test(c.slug)) sooshPages.push({ label: `${c.name}, how to start`, url: `/start/${c.spaceSlug}/${c.slug}` });
+  }
+  for (const p of profile.pursuits.slice(0, 10)) {
+    if (SAFE_SLUG.test(p.id)) sooshPages.push({ label: `Their Pursuit: ${cleanText(p.title).replace(/"/g, "'").slice(0, 80)}`, url: `/pursuit/${p.id}` });
+  }
+  return {
+    corners: picked.map((c) => c.name),
+    freeTimes: windowWords(profile.windows),
+    neighborhood: cleanText(profile.area).slice(0, 60) || null,
+    city: cleanText(profile.city).slice(0, 60) || null,
+    passes: profile.passes.slice(0, 10).map((p) => cleanText(p.place ? `${p.label} (${p.place})` : p.label).replace(/"/g, "'").slice(0, 80)).filter(Boolean),
+    sooshPages,
+  };
+}
+
+const understoodOf = (intent: Intent): AskReport["understood"] => ({
+  when: intent.when?.label ?? null,
+  who: intent.who,
+  budget: intent.budget ? intent.budget.max : null,
+  free: intent.budget?.free ?? false,
+});
+
+async function ask(
+  deps: ScoutDeps,
+  userId: string,
+  raw: unknown,
+  answers: Answers | null,
+  questions: boolean,
+  stream = false,
+  followUp: (FollowUp & { of: number }) | null = null,
+): Promise<Response> {
   // Their own words, one plain line. Double quotes become single so the prompt stays one quote.
   const text = cleanText(raw).replace(/"/g, "'").slice(0, 200);
   if (text.length < 2) return fail(400, "Say what you're after, like pottery on Saturday.");
 
+  const now = deps.now();
   const { asksPerPerson, asksPerDay } = deps.settings;
-  const askId = await deps.server.claimAsk(userId, asksPerPerson, asksPerDay);
-  if (askId === null) {
-    return fail(429, `That's your ${asksPerPerson} for today. Stubby can look again tomorrow.`);
+  // Read as them, from their own rows only. Best effort: without it, he still searches.
+  const profile = await deps.db.profile(userId).catch(() => EMPTY_PROFILE);
+  const corners = await deps.server.corners();
+  const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
+  const picked = profile.picks.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []));
+  const intent = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
+
+  // One question first, when the app can ask it and something worth asking is missing. No ask is used.
+  if (questions && intent.missing && !followUp) {
+    const left = Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS)));
+    const q: AskQuestion = { question: intent.missing, asksLeft: left };
+    return json(200, q);
   }
 
-  const now = deps.now();
+  // A follow-up: the first after an ask is free and joins that ask's picks; later ones use an ask.
+  const free = followUp ? await deps.server.claimFreeFollowUp(userId, followUp.of, now - DAY_MS) : false;
+  const askId = free ? followUp!.of : await deps.server.claimAsk(userId, asksPerPerson, asksPerDay);
+  if (askId === null) return fail(429, `That's ${asksPerPerson} for today. I'll look again tomorrow.`);
+  // A free follow-up's picks rank after its ask's own.
+  const rankFrom = free ? 10 : 0;
+
   let found = 0;
-  try {
-    const corners = await deps.server.corners();
+  // Everything from the search to the saved picks. Streams its steps through `emit` when asked.
+  const work = async (emit: Emit): Promise<AskReport> => {
+    const changed = followUp ? applyFollowUp(intent, searchWindow(intent, now), followUp.kind, now) : { intent, window: searchWindow(intent, now) };
+    const window = changed.window;
+    const asked = changed.intent;
+    const person = aboutPerson(profile, picked);
+    let picking = false;
     const result = await deps.search({
       focus: null,
       ask: text,
       cornerNames: corners.map((c) => c.name),
       maxSearches: deps.settings.maxSearches,
-      maxPicks: ASK_MAX_PICKS,
+      prompt: { system: askSystemPrompt(), user: askUserPrompt(text, asked, window, person, now, followUp) },
+      onProgress: stream
+        ? (e) => {
+            if (e.type === "picking") picking = true;
+            emit(e.type, e);
+          }
+        : undefined,
     });
+    if (stream && !picking) emit("picking", { type: "picking" });
     const rawPicks = readPicksBlock(result.text);
     if (!rawPicks) throw new SearchError("Stubby couldn't read what he found. Try asking another way.", 502);
     found = rawPicks.length;
-    // For this person, nothing is "already a City pick": they get everything that checks out.
-    const { kept } = checkPicks(rawPicks, { now, maxPicks: ASK_MAX_PICKS, sourceLinks: result.sourceLinks, corners: cornerMap(corners), existing: new Set() });
+    const { kept, dropped, outcome } = checkAskPicks(rawPicks, {
+      now,
+      intent: asked,
+      window,
+      sourceLinks: result.sourceLinks,
+      sooshLinks: new Set(person.sooshPages.map((p) => p.url)),
+      corners: cornerMap(corners),
+      pickedCornerIds: new Set(picked.map((c) => c.id)),
+      askText: text,
+      latestMs: window.endMs + AFTER_DAYS * DAY_MS,
+      exclude: followUp?.titles,
+    });
 
-    const mine: ScoutPick[] = [];
-    for (const p of kept) if (await deps.server.insertPersonal(personalRowFor(p, userId))) mine.push(p);
+    const mine: AskPick[] = [];
+    for (const [rank, p] of kept.entries()) if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
 
-    // Shared with everyone, without who asked: published from a trusted page, a draft otherwise.
-    const hosts = await deps.server.trustedHosts();
-    const existing = await deps.server.existingKeys(now - DAY_MS, now + (SCOUT_DAYS + 1) * DAY_MS);
-    for (const [i, p] of kept.entries()) {
-      if (existing.has(pickKey(p.title, p.startsAt))) continue;
-      await deps.server.insertPick(rowFor(p, i, CITY, now, isTrusted(p.url, hosts))).catch(() => false);
+    // Shared with everyone, without who asked: events only, never ideas. Published from a trusted page, a draft otherwise.
+    const events = kept.filter((p) => p.kind === "event");
+    if (events.length) {
+      const hosts = await deps.server.trustedHosts();
+      const existing = await deps.server.existingKeys(now - DAY_MS, now + (SCOUT_DAYS + 1) * DAY_MS);
+      for (const [i, p] of events.entries()) {
+        if (existing.has(pickKey(p.title, p.startsAt))) continue;
+        await deps.server.insertPick(rowFor(p, i, CITY, now, isTrusted(p.url, hosts))).catch(() => false);
+      }
     }
 
-    await deps.server.finishAsk(askId, { found, added: mine.length, failed: false });
-    const report: AskReport = {
+    // A free follow-up isn't an ask of its own: its ask's counts stay as they were.
+    if (!free) await deps.server.finishAsk(askId, { found, added: mine.length, failed: false });
+    return {
       picks: kept.map((p) => ({
+        kind: p.kind,
         title: p.title,
         place: p.place,
         startsAt: new Date(p.startsAt).toISOString(),
@@ -277,17 +522,42 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown): Promise<Respo
         price: p.price,
         url: p.url,
         note: p.note,
+        why: p.why,
+        betterWithFriend: p.betterWithFriend,
+        after: p.after,
       })),
+      outcome,
+      understood: understoodOf(asked),
+      dropped,
       asksLeft: Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS))),
+      askId,
+      free,
     };
-    return json(200, report);
-  } catch (e) {
-    await deps.server.finishAsk(askId, { found, added: 0, failed: true }).catch(() => undefined);
-    return fail(statusOf(e), message(e, "Something went wrong. Try again in a bit."));
+  };
+  const failed = (e: unknown) => {
+    if (!free) void deps.server.finishAsk(askId, { found, added: 0, failed: true }).catch(() => undefined);
+    return { error: message(e, "Something went wrong. Try again in a bit."), status: statusOf(e) };
+  };
+
+  if (!stream) {
+    try {
+      return json(200, await work(() => undefined));
+    } catch (e) {
+      const f = failed(e);
+      return fail(f.status, f.error);
+    }
   }
+  return sse(async (emit) => {
+    emit("understood", understoodOf(intent));
+    try {
+      emit("done", await work(emit));
+    } catch (e) {
+      emit("error", failed(e));
+    }
+  });
 }
 
-const cornerMap = (corners: { id: number; name: string }[]) => new Map(corners.map((c) => [c.name.trim().toLowerCase(), c.id]));
+const cornerMap = (corners: readonly { id: number; name: string }[]) => new Map(corners.map((c) => [c.name.trim().toLowerCase(), c.id]));
 
 /** The settings from the environment, clamped so a typo can't open the tap. */
 export function readSettings(env: (k: string) => string | undefined): ScoutSettings {

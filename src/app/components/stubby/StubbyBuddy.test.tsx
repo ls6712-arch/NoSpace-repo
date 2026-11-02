@@ -45,6 +45,29 @@ describe("StubbyBuddy", () => {
     expect(state(container)).toBe("shrug");
   });
 
+  it("in the dock he rests smiling, and settles back to smiling after a tilt", () => {
+    const ref = createRef<StubbyBuddyHandle>();
+    const { container } = render(<StubbyBuddy ref={ref} rest="ready" />);
+    expect(state(container)).toBe("ready");
+    act(() => ref.current!.react("tilt"));
+    expect(state(container)).toBe("tilt");
+    act(() => void vi.advanceTimersByTime(SETTLE_MS));
+    expect(state(container)).toBe("ready");
+  });
+
+  it("a happy move gives way the moment he has to think", () => {
+    const ref = createRef<StubbyBuddyHandle>();
+    const { container, rerender } = render(<StubbyBuddy ref={ref} rest="ready" />);
+    act(() => ref.current!.react("excited"));
+    expect(state(container)).toBe("excited");
+    rerender(<StubbyBuddy ref={ref} rest="ready" waiting />);
+    expect(state(container)).toBe("thinking");
+    // A real reaction (what an ask found) still shows over his resting look.
+    rerender(<StubbyBuddy ref={ref} rest="ready" />);
+    act(() => ref.current!.react("stamped"));
+    expect(state(container)).toBe("stamped");
+  });
+
   it("is hidden from screen readers: he never talks", () => {
     const { container } = render(<StubbyBuddy />);
     expect(container.querySelector("[data-stubby-state]")!.getAttribute("aria-hidden")).toBe("true");

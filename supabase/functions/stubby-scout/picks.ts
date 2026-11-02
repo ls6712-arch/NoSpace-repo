@@ -29,6 +29,10 @@ export interface RawPick {
   url?: unknown;
   corner?: unknown;
   unsure?: unknown;
+  /** Asks only: "event" or "idea", the why line, and whether it's better with a friend. */
+  kind?: unknown;
+  why?: unknown;
+  better_with_friend?: unknown;
 }
 
 /** A checked pick, ready to save as a draft. */
@@ -62,7 +66,7 @@ export function cleanText(v: unknown): string {
 }
 
 /** Text or null, null when blank or longer than `max`. */
-function optional(v: unknown, max: number): { value: string | null; tooLong: boolean } {
+export function optional(v: unknown, max: number): { value: string | null; tooLong: boolean } {
   const t = cleanText(v);
   if (!t || /^(null|unknown|n\/a|none|tbd|tba)$/i.test(t)) return { value: null, tooLong: false };
   if (t.length > max) return { value: null, tooLong: true };

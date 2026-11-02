@@ -4,7 +4,12 @@ Stubby's scout, with three modes:
 
 - **Find picks** (admins): on the City picks admin page. Every find is a draft.
 - **Each morning** (`{"mode":"restock"}`): pg_cron calls it every 10 minutes from 4 to 6 a.m. New York time (migration `20261101180000_stubby_daily_and_ask.sql`). Each call searches the next place in **Each morning** (`scout_sources`) not yet searched today, only on that place's site, for the next 7 days. Finds from the place's trusted site publish on their own; the rest are drafts. Each place is searched at most once a day however often the function is called, so this mode needs no sign-in.
-- **Ask Stubby** (`{"mode":"ask","ask":"..."}`, signed in): one person asks for something different. 3 a day each, 200 a day in total. Finds are saved as their own picks (`personal_picks`), and also shared as City picks (published from a trusted site, a draft otherwise) with nothing about who asked or what they typed. The ask text itself is never stored.
+- **Ask Stubby** (`{"mode":"ask","ask":"..."}`, signed in): one person asks. 3 a day each, 200 a day in total. The ask is read in code first (`intent.ts`: when, who, budget, what kind), with their own profile read as them (`profile_private`, `user_passes`, their going Pursuits). The prompt (`askPrompt.ts`) says who is coming and puts what Soosh knows about them in an "About this person" block, as information, not instructions. Every pick is then checked in code (`ask.ts`): inside the time asked for ("tonight" also means ending by midnight, and when nothing fits, at most 3 of the soonest after, marked), the event's own page only (no landing, listing, roundup or calendar pages), no 21+ unless asked, the budget, and ideas only in their Corners or when asked for. The best 3 (at most 5) are saved as their own picks (`personal_picks`) with a why line, their rank and the ask that found them. Events are also shared as City picks (published from a trusted site, a draft otherwise) with nothing about who asked or what they typed; ideas never are. The ask text itself is never stored.
+  - `"answers": {"who": "solo"}` is the person's answer to Stubby's one question; `"questions": true` asks for that question first (`{"question": "who"}`), which uses no ask. The app sends `questions` from Stubby plan PR 3.
+  - `"stream": true` answers as server-sent events (Stubby plan §7): `understood` at once, then `search` (each web search, as the model runs it, read from the model's own stream), `pages`, `picking`, and `done` with the report (including `askId`) or `error`. A comment line every 10 seconds keeps the connection open. If the person stops, the work carries on and is saved; the ask still counts. Anything that stops before searching (no asks left, a bad ask) is a plain JSON answer, as before.
+  - `"followUp": {"of": askId, "kind": "cheaper" | "closer" | "later" | "different" | "more", "titles": [...]}` follows a deck (Stubby plan §6.5). The first follow-up after an ask is free (`stubby_asks.free_follow_up_used`, set in one update that only succeeds once; migration `20261108000000_stubby_deck.sql`): it adds no ask row and its picks join that ask (ranked from 10). Later ones use an ask. Cheaper halves the ceiling, Later starts two hours on, and the titles already shown are never shown again. A follow-up never asks the one question.
+  - `"answers"` also takes `{"when": "YYYY-MM-DD"}` (Pick a day) and `{"skip": true}` (Surprise me, or an answer typed into the ask).
+  - `golden.test.ts` pins the plan's golden cases with fake search results and a fixed clock. `node scripts/stubby-golden-models.ts` runs them live on two models (needs `ANTHROPIC_API_KEY`).
 
 ## What it does, step by step
 
@@ -23,7 +28,7 @@ Web pages are treated as data. The model can't touch the database, can't publish
 
 ## Deploy (not done by any PR)
 
-Needs `20261101155717_stubby_scout.sql` and `20261101180000_stubby_daily_and_ask.sql` applied first.
+Needs `20261101155717_stubby_scout.sql`, `20261101180000_stubby_daily_and_ask.sql` `20261107000000_stubby_smarter_picks.sql` and `20261108000000_stubby_deck.sql` applied first.
 
 ```bash
 supabase functions deploy stubby-scout --no-verify-jwt
@@ -35,6 +40,7 @@ Optional:
 
 | Secret | Default | What it does |
 | --- | --- | --- |
+| `ANTHROPIC_WORKSPACE_ID` | none | Only if the API key isn't scoped to a workspace (`wrkspc_...`). Not a secret, but kept here with the key. |
 | `STUBBY_SCOUT_MODEL` | `claude-haiku-5-5` | Which Claude model searches. |
 | `STUBBY_SCOUT_RUNS_PER_DAY` | `3` (max 20) | Runs allowed in any 24 hours, across all admins. |
 | `STUBBY_SCOUT_MAX_SEARCHES` | `5` (max 20) | Web searches per Find picks run or ask. |

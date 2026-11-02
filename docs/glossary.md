@@ -441,7 +441,7 @@ A Space is listed on Discover, Corner pages, Search and Home only once members (
 
 | Term | Meaning |
 |---|---|
-| Stubby | The character: a ticket with a face. It never talks; it reacts |
+| Stubby | The character: a ticket with a face. Stubby talks only in Ask Stubby, on the Calendar stage, in short, warm lines (12 words at most, one question at a time). Everywhere else he still only reacts. The landing page, onboarding and Stubs are unchanged (founder, Nov 2, 2026; was "It never talks; it reacts") |
 | Admit one | Printed on Stubby's tab (also the stamp on an event ticket, above) |
 | Stop saying you’ll do it. | Welcome headline |
 | Get started | Welcome button |
@@ -810,9 +810,9 @@ One pick at most in each free stretch of the next 7 days, made in the browser. N
 | Term | Use |
 |---|---|
 | Stubby’s pick | The label on a pick: white, a dashed border in the accent text colour. Row in Show: Stubby’s picks, "Ideas for your free time" |
-| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo |
-| Ask to join | The button instead of Keep when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
-| Not this | Swaps in the next match. After 3 on one stretch the stretch goes back to Find something. Kept in this browser only |
+| Make it a plan | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo. Was Keep until Stubby plan PR 3 (approved Nov 2, 2026): Keep now means only shortlist, in the deck |
+| Ask to join | The button instead of Make it a plan when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
+| Not now | Swaps in the next match (was Not this until Stubby plan PR 3, Nov 2, 2026). After 3 on one stretch the stretch goes back to Find something. Kept in this browser only. Not this time: once its stretch has passed, a declined pick can come back |
 | Find something | What a free stretch says when nothing fits: never filler |
 | You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
 
@@ -884,18 +884,114 @@ Never use these in UI copy.
 | We sent a 6-digit code to {email}. | Oct 30, 2026 | Check your inbox at {email}. |
 | Send a new code in {n} seconds | Oct 30, 2026 | Send a new code in {m:ss} |
 | That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |
+| Not this | Nov 2, 2026 (the label changes in Stubby plan PR 3) | Not now |
+| What are you after? | Nov 2, 2026 (the Ask Stubby field label) | What are you in the mood for? |
+| Free tonight? Ask Stubby. | Nov 2, 2026 (the dock was removed) | Stubby's greeting on the Calendar stage |
+| Keep, for making a plan at once | Nov 2, 2026 (the in-slot label changes in Stubby plan PR 3) | Make it a plan. Keep means only shortlist, in the deck |
 
 ### Calendar: asking Stubby (Nov 1, 2026)
 
-New, for approval. Stubby still never talks: while he looks, the calendar's Stubby thinks; when he is done he stamps (found something), shrugs (nothing fit) or tilts (it failed).
+Superseded on Nov 2, 2026 by the Stubby rule (he talks in Ask Stubby, on the Calendar stage) and by "Ask Stubby: the Stubby plan" below. New, for approval. Stubby still never talks: while he looks, the calendar's Stubby thinks; when he is done he stamps (found something), shrugs (nothing fit) or tilts (it failed).
 
 | Wording | Where |
 |---|---|
-| Something different? | Heading of the box under the calendar |
-| What are you after? | Label of its text field. Placeholder: "Pottery on Saturday, a free run, something outdoors" |
-| Ask Stubby | Its button. While looking: Looking |
-| {n} asks left today | Under the field, with plural(). At 0: "That’s your 3 for today. Stubby can look again tomorrow." |
+| Something different? | Retired (Nov 2, 2026, Stubby plan PR 4): no longer shown. Stubby's line in the bubble does that job |
+| What are you after? | Retired (Nov 2, 2026). Use What are you in the mood for? |
+| What are you in the mood for? | Label of its text field, everywhere the field appears (approved Nov 2, 2026). When Stubby's own line is already "What are you in the mood for?", the label is for screen readers only, so it isn't shown twice. Placeholder: "Pottery on Saturday, a free run, something outdoors" |
+| Ask Stubby | Its button, and the stage's accessible name. While looking: Looking |
+| {n} asks left today | Beside the field's label, with plural() (Stubby plan PR 1, so the calendar shows in a phone's first screen). At 0 it goes away and Stubby's line says "That’s 3 for today. I’ll look again tomorrow." (the old "That’s your 3 for today. Stubby can look again tomorrow." is retired, Nov 2, 2026) |
 | Found {n} things. | After an ask that found something |
-| Nothing fit this time. Try asking another way. | After an ask that found nothing |
+| Nothing fit this time. Try asking another way. | After an ask that found nothing: Stubby's line in the bubble (he shrugs) |
 | Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
 | Say what you’re after, like pottery on Saturday. | Error with an empty or one-letter ask |
+
+### The Stubby dock (Nov 1, 2026)
+
+Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-calendar-hero.md`). No Stubby floats over any page; he lives on the Calendar stage. The dock's caption "Free tonight? Ask Stubby." and its Dismiss are gone, and the once-a-day nudge with them: his greeting on Calendar does that job. The quick ideas moved to the stage:
+
+| Wording | Where |
+|---|---|
+| Quick ideas | Accessible name of the row of quick ideas under the stage's field; not shown as text. New, for approval |
+| Free tonight · This weekend · Something outdoors | The quick ideas: each fills in the field and asks (one ask, like typing). On a phone, one row that scrolls sideways; from 744px they wrap. Hidden at 0 asks left. New, for approval |
+
+## Ask Stubby: the Stubby plan (Nov 2, 2026)
+
+**Approved by the founder, Nov 2, 2026.** From `docs/briefs/stubby-plan.md`. Stubby talks only in Ask Stubby, on the Calendar stage (see Stubby, above). Anything new that is not on this list is asked about first.
+
+### The deck and Your selection
+
+| Term | Use |
+|---|---|
+| Keep | On a card in the deck: the card goes to Your selection and the next card comes forward. It only shortlists; it does not make a plan. This is Keep's only meaning (approved Nov 2, 2026) |
+| Not now | On a card in the deck: the card goes to the back of the deck and comes around again. Replaces Not this everywhere, Calendar's picks included, from Stubby plan PR 3. Same meaning everywhere: not this time, it can come around again |
+| Bring it back | Brings back the card you last said Not now to. Works for the last 3, newest first |
+| Your selection | The tray under the deck: up to 5 kept cards, shown as small tickets |
+| Make it a plan | In Your selection: puts each chosen card on the calendar as a one-off plan (the existing Make a plan path, Toast: Plan made · Undo; founder, Nov 2, 2026). Also the button on Calendar's in-slot picks that makes a plan straight away (was Keep) |
+| An idea | The label on a do-it-yourself pick, instead of a date and time ticket |
+| That’s all I found. Want more? | Stubby's line when the deck runs out. Then: See the ones you skipped · Ask again · Go to your selection |
+| {n} of {total} | The deck's card count, on the card in front ("2 of 5"). Screen readers hear the card's name with it (approved Nov 2, 2026) |
+| Cheaper · Closer · Later · Something different · More like this | Follow-ups under the deck: each adds cards to the back, never replacing it. The first after an ask is free; later ones use an ask (approved Nov 2, 2026) |
+| Bring someone | On the card that's better with a friend, with Stubby's line "This one's better with a friend. Bring someone?" (solo only, at most once per set, never two sets in a row): makes it a one-off plan and opens the half ticket. The same words as Calendar's Bring someone (founder, Nov 2, 2026) |
+| See the ones you skipped | Refills the deck with the Not now cards |
+| Ask again | A new search (uses an ask) |
+| Go to your selection | Goes to Your selection |
+
+### The Calendar stage
+
+| Term | Use |
+|---|---|
+| Ask Stubby… | Placeholder on the slim sticky bar that appears when the stage scrolls out of view. Tapping it scrolls back to the stage and focuses the field (approved Nov 2, 2026) |
+| What are you in the mood for? | The ask field's label on the stage (see Calendar: asking Stubby, above) |
+
+### While he looks (stubby-plan §7, approved Nov 2, 2026)
+
+| Term | Use |
+|---|---|
+| Looking for: {what he searched} | A step: each web search, as it runs |
+| Checking {n} pages | A step: the pages read so far, with plural(); it counts up in place |
+| Picking the best for you | A step: the last one, while the picks are written and checked |
+| Still looking. Good finds take a moment. | Stubby's line after 12 seconds with no new step |
+| Stop | Button while he looks. Stops listening; the ask still counts |
+| Try again | After an error (the shared retry button): asks the same thing again |
+| Earlier today | Folded heading over today's picks from earlier asks. Only this ask's picks show above it |
+
+What he understood shows as chips while he looks, in the words of his question chips (Tonight, Tomorrow, This weekend; Just me, With my partner, With friends, With family). Anything else he understood has no chip yet.
+
+### Stubby's question chips
+
+Asked only when something worth asking is missing (who, then when, then what kind), at most once per ask. Answering uses no ask; Surprise me skips it; typing an answer works too. Pick a day opens a date field labelled Pick a day. Who you're going with is remembered for the session as a chip (its X reads "Remove: Just me"), sent with every ask until removed.
+
+| Question | Chips |
+|---|---|
+| Who | Just me · With my partner · With friends · With family |
+| When | Tonight · Tomorrow · This weekend · Pick a day |
+| What kind | Active · Make something · Food & drink · Chill · Learn something · Surprise me |
+
+### Stubby's lines
+
+Kept in `src/app/lib/stubbyLines.ts`.
+
+His greeting line on the Calendar stage (from `docs/briefs/claude-code-brief-stubby-calendar-hero.md` §2), picked from what the calendar already shows. The exclamation mark in "Busy week!" is approved with the string (style guide rule 4).
+
+| Situation | Line |
+|---|---|
+| Free window later today | You’re free tonight from 7. Want ideas? (the start time from the window) |
+| A plan today | Pottery at 7 tonight. Want something after? (the first plan’s title, cut to fit) |
+| Free this weekend, nothing planned | Your weekend’s open. Want ideas? |
+| Nothing free this week | Busy week! Want something for next week? |
+| Fallback | What are you in the mood for? |
+| Out of asks | That’s 3 for today. I’ll look again tomorrow. |
+
+His other lines:
+
+| When | Line |
+|---|---|
+| Missing who | Going solo or with someone? |
+| Missing when | When are you free? |
+| Missing what kind | What kind of fun? |
+| Looking | On it. Checking a few places. |
+| Found | Here’s what I’d pick for you. |
+| Nothing fits | Nothing tonight that fits. Here’s the soonest after. |
+| Error | Something went wrong on my end. Try again? |
+| Out of asks | That’s 3 for today. I’ll look again tomorrow. |
+| Bring-a-friend | This one’s better with a friend. Bring someone? |

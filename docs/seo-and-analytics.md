@@ -30,10 +30,12 @@ What is in the code, and what only the owner can do (Google accounts, DNS, Verce
    choose Request indexing.
 5. In GA4 > Admin > Product links, link Search Console.
 
-## Before turning analytics on
+## Analytics is on
 
-The Privacy Policy does not mention Google Analytics yet, and says nothing there
-is aspirational. It needs a line (and a lawyer's read) before step 1.
+The GA4 id (`G-8YTJ1TY113`) is built in, so no Vercel variable is needed
+(`VITE_GA_MEASUREMENT_ID` overrides it; set it empty to turn analytics off). The
+Privacy Policy has a Google Analytics paragraph; it still needs a lawyer's read.
+Step 1 above is done.
 
 ## Limit: only the home page can be indexed
 

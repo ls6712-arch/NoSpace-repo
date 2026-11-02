@@ -45,9 +45,11 @@ export const SHEET = {
   removeFree: "Remove free time",
   yourBlock: "Your block",
   stubbysPick: "Stubby’s pick",
-  keep: "Keep",
+  /** The in-slot pick's button that makes a plan straight away (was Keep; Keep now only shortlists, in the deck). Approved Nov 2, 2026. */
+  keep: "Make it a plan",
   askToJoin: "Ask to join",
-  notThis: "Not this",
+  /** Was Not this: not this time, it can come around again (approved Nov 2, 2026). */
+  notThis: "Not now",
   findSomething: "Find something",
   stub: "Stub",
   hostedLine: "The host sets this time.",
@@ -83,17 +85,75 @@ export const SUBSCRIBE = {
   elsewhere: "This device doesn’t have your link. Reset it to get a new one here.",
 } as const;
 
-/** "Something different?": asking Stubby to search right then (glossary, Calendar: asking Stubby). */
+/** Asking Stubby, in the Calendar stage (glossary, Calendar: asking Stubby; and Ask Stubby: the Stubby plan). */
 export const ASK_COPY = {
-  title: "Something different?",
-  label: "What are you after?",
-  placeholder: "Pottery on Saturday, a free run, something outdoors",
+  /** The stage's accessible name, and the button. */
   button: "Ask Stubby",
+  label: "What are you in the mood for?",
+  placeholder: "Pottery on Saturday, a free run, something outdoors",
   busy: "Looking",
   nothing: "Nothing fit this time. Try asking another way.",
-  none: "That’s your 3 for today. Stubby can look again tomorrow.",
   listLabel: "Found for you",
   cardLabel: "Found for you",
+  /** The label on a do-it-yourself pick, instead of a dated ticket (approved Nov 2, 2026). */
+  ideaLabel: "An idea",
   open: "Open",
   remove: "Remove",
+  /** Quick ideas under the field: each fills it in and asks (one ask, like typing). New, for approval. */
+  chipsLabel: "Quick ideas",
+  chips: ["Free tonight", "This weekend", "Something outdoors"],
+  /** The slim bar at the top of Calendar once the stage scrolls out of view (approved Nov 2, 2026). */
+  sticky: "Ask Stubby…",
+  /** His steps while he looks, and what stops or repeats an ask (stubby-plan §7, approved Nov 2, 2026). */
+  lookingFor: (what: string) => `Looking for: ${what}`,
+  picking: "Picking the best for you",
+  stop: "Stop",
+  earlier: "Earlier today",
+  /** The deck and Your selection (stubby-plan §6.5, approved Nov 2, 2026). */
+  keep: "Keep",
+  notNow: "Not now",
+  bringBack: "Bring it back",
+  selection: "Your selection",
+  makePlan: "Make it a plan",
+  seeSkipped: "See the ones you skipped",
+  askAgain: "Ask again",
+  goToSelection: "Go to your selection",
+  count: (n: number, total: number) => `${n} of ${total}`,
+  /** Follow-ups under the deck: each adds cards to the back (approved Nov 2, 2026). */
+  followUps: [
+    { kind: "cheaper", label: "Cheaper" },
+    { kind: "closer", label: "Closer" },
+    { kind: "later", label: "Later" },
+    { kind: "different", label: "Something different" },
+    { kind: "more", label: "More like this" },
+  ] as const,
 } as const;
+
+/**
+ * What Stubby understood from an ask, shown as chips at once (stubby-plan §4). The same words
+ * as his question chips (approved Nov 2, 2026); a "when" or "who" with no chip of its own
+ * isn't shown.
+ */
+export const UNDERSTOOD_COPY = {
+  when: { tonight: "Tonight", tomorrow: "Tomorrow", weekend: "This weekend" } as Record<string, string>,
+  who: { solo: "Just me", partner: "With my partner", friends: "With friends", family: "With family" } as Record<string, string>,
+};
+
+/** Stubby's one question, answered with a tap (stubby-plan §5, approved Nov 2, 2026). */
+export const QUESTION_COPY = {
+  who: [
+    { label: "Just me", who: "solo" },
+    { label: "With my partner", who: "partner" },
+    { label: "With friends", who: "friends" },
+    { label: "With family", who: "family" },
+  ] as const,
+  when: [
+    { label: "Tonight", when: "tonight" },
+    { label: "Tomorrow", when: "tomorrow" },
+    { label: "This weekend", when: "weekend" },
+  ] as const,
+  pickADay: "Pick a day",
+  what: ["Active", "Make something", "Food & drink", "Chill", "Learn something"] as const,
+  surprise: "Surprise me",
+};
+

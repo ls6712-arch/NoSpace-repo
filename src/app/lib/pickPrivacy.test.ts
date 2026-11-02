@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 const lib = (f: string) => readFileSync(path.resolve(__dirname, f), "utf8");
 
 describe("Stubby's picks stay in the browser", () => {
-  it.each(["stubbyPicks.ts", "pickDeclines.ts"])("%s imports no database, fetch or analytics", (file) => {
+  it.each(["stubbyPicks.ts", "pickDeclines.ts", "stubbyDeck.ts"])("%s imports no database, fetch or analytics", (file) => {
     const src = lib(file);
     expect(src).not.toMatch(/supabase|analytics|\bfetch\(|sendBeacon|XMLHttpRequest|track\(/);
   });
@@ -27,7 +27,12 @@ describe("Stubby's picks stay in the browser", () => {
     expect(src).toMatch(/goToPlan/);
   });
 
-  it("keeps the Not this list in this browser's own store and clears it on sign out", () => {
+  it("keeps the Not now list in this browser's own store and clears it on sign out", () => {
     expect(lib("localData.ts")).toContain("soosh.calendar.notthis.v1");
+  });
+
+  it("keeps Stubby's deck, Not now cards and Your selection in this browser, cleared on sign out", () => {
+    expect(lib("stubbyDeck.ts")).toContain('DECK_KEY = "soosh.stubby.deck.v1"');
+    expect(lib("localData.ts")).toContain('"soosh.stubby.deck.v1:"');
   });
 });

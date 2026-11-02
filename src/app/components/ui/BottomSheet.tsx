@@ -24,6 +24,7 @@ export function BottomSheet({
   footer,
   children,
   className,
+  focusContent = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,9 +34,12 @@ export function BottomSheet({
   footer?: ReactNode;
   children: ReactNode;
   className?: string;
+  /** Focus the sheet itself on open, not its first field, so a phone keyboard doesn't jump up over it. */
+  focusContent?: boolean;
 }) {
   const controls = useDragControls();
   const opener = useRef<HTMLElement | null>(null);
+  const content = useRef<HTMLDivElement | null>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <AnimatePresence>
@@ -53,14 +57,20 @@ export function BottomSheet({
             <Dialog.Content
               asChild
               forceMount
-              onOpenAutoFocus={() => {
+              onOpenAutoFocus={(e) => {
                 opener.current = captureOpener();
+                if (focusContent) {
+                  e.preventDefault();
+                  content.current?.focus({ preventScroll: true });
+                }
               }}
               onCloseAutoFocus={(e) => {
                 if (restoreFocus(opener.current)) e.preventDefault();
               }}
             >
               <motion.div
+                ref={content}
+                tabIndex={-1}
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}

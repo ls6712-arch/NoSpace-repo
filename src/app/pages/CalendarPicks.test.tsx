@@ -48,6 +48,8 @@ const picks = vi.hoisted(() => ({
 vi.mock("../lib/pickActions", () => picks);
 
 import { Calendar } from "./Calendar";
+import { SETTLE_MS } from "../components/stubby/StubbyBuddy";
+import { HELLO_KEY } from "../lib/stubbyStage";
 import type { LiveEventInput } from "../lib/firstPlan";
 
 const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
@@ -63,7 +65,12 @@ const data = (over: Partial<WeekData> = {}): WeekData => {
 const setWide = (wide: boolean) => {
   window.matchMedia = ((query: string) => ({ matches: wide && (query.includes("744") || query.includes("1128")), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
 };
-const show = (url: string) => render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);
+const show = (url: string) =>
+  render(
+    <MemoryRouter initialEntries={[url]}>
+      <Calendar />
+    </MemoryRouter>,
+  );
 const flush = () => act(async () => void (await Promise.resolve()));
 const lastToast = () => toasts.calls[toasts.calls.length - 1];
 
@@ -82,6 +89,8 @@ class TestPointerEvent extends MouseEvent {
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
   window.localStorage.clear();
+  // He has already said hello this session, so each test starts with him resting.
+  window.sessionStorage.setItem(HELLO_KEY, "1");
   setWide(false);
   auth.value = { user: { id: "u1" }, profile: { display_name: "Alex" }, isConfigured: true };
   hook.value = data();
@@ -110,44 +119,57 @@ describe("Stubby's picks", () => {
 
   const stubbyState = () => document.querySelector("[data-stubby-state]")?.getAttribute("data-stubby-state");
 
-  it("has Stubby on the page, hidden from screen readers, resting once loaded", () => {
+  it("has one Stubby, the stage's, hidden from screen readers, resting (smiling) once loaded", () => {
     withEvents([event(1)]);
     show("/calendar?view=week");
+    expect(document.querySelectorAll("[data-stubby-state]").length).toBe(1);
     const el = document.querySelector("[data-stubby-state]")!;
     expect(el.getAttribute("aria-hidden")).toBe("true");
-    expect(stubbyState()).toBe("idle");
+    expect(el.closest("[data-stubby-stage]")).not.toBeNull();
+    expect(stubbyState()).toBe("ready");
   });
 
-  it("Stubby stamps on Keep, sighs on Undo, and shrugs on Not this", async () => {
+  it("has Ask Stubby in the page, not behind a button that opens a dialog", () => {
+    withEvents([event(1)]);
+    show("/calendar?view=week");
+    expect(screen.queryByText("Something different?")).toBeNull();
+    expect(screen.getByLabelText("What are you in the mood for?")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ask Stubby" }).getAttribute("aria-haspopup")).toBeNull();
+  });
+
+  it("Stubby stamps on Make it a plan, sighs on Undo, and shrugs on Not now", async () => {
     withEvents([event(1), event(2, { startsAt: ny(10, 31, 21), endsAt: ny(10, 31, 23), title: "Late climbing" })]);
     show("/calendar?view=week");
-    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(stubbyState()).toBe("stamped");
     lastToast().undo();
     await flush();
     expect(stubbyState()).toBe("unstamped");
     fireEvent.click(screen.getByRole("button", { name: pickLabel("Climbing 1") }));
-    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not this" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not now" }));
     await flush();
     expect(stubbyState()).toBe("shrug");
+    // And he settles back to smiling.
+    act(() => void vi.advanceTimersByTime(SETTLE_MS + 10));
+    expect(stubbyState()).toBe("ready");
   });
 
   it("Stubby tilts his head when a Keep can't be made", async () => {
     withEvents([event(1)]);
     picks.keepPick.mockResolvedValueOnce({ error: "Something went wrong. Try again." });
     show("/calendar?view=week");
-    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(stubbyState()).toBe("tilt");
   });
 
-  it("puts one pick in a free stretch, with the label, the thing and Keep", () => {
+  it("puts one pick in a free stretch, with the label, the thing and Make it a plan", () => {
     withEvents([event(1)]);
     show("/calendar?view=week");
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
     expect(screen.getByText("Stubby’s pick")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Keep" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Make it a plan" })).toBeTruthy();
   });
 
   it("shows plain free time when nothing fits, never filler", () => {
@@ -167,7 +189,7 @@ describe("Stubby's picks", () => {
   it("keeps a pick as a plan with Undo, sending only the plan and nothing about the pick", async () => {
     withEvents([event(1)]);
     show("/calendar?view=week");
-    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(picks.keepPick).toHaveBeenCalledTimes(1);
     expect(picks.keepPick.mock.calls[0][0]).toMatchObject({ id: "event:1", eventId: 1, title: "Climbing 1" });
@@ -184,20 +206,20 @@ describe("Stubby's picks", () => {
     withEvents([event(1)]);
     picks.keepPick.mockResolvedValueOnce({ error: "Something went wrong. Try again." });
     show("/calendar?view=week");
-    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(toasts.calls).toHaveLength(0);
     expect(screen.getByText("Stubby’s pick")).toBeTruthy();
   });
 
-  it("opens the pick with its reason, and Not this swaps in the next match", async () => {
+  it("opens the pick with its reason, and Not now swaps in the next match", async () => {
     withEvents([event(1), event(2, { startsAt: ny(10, 31, 21), endsAt: ny(10, 31, 23), title: "Late climbing" })]);
     show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: pickLabel("Climbing 1") }));
     const sheet = screen.getByRole("dialog", { name: "Climbing 1" });
     expect(within(sheet).getByText("You said Saturday evenings work, and you picked Climbing.")).toBeTruthy();
     expect(within(sheet).getByText("Free")).toBeTruthy();
-    fireEvent.click(within(sheet).getByRole("button", { name: "Not this" }));
+    fireEvent.click(within(sheet).getByRole("button", { name: "Not now" }));
     await flush();
     expect(screen.getByRole("button", { name: pickLabel("Late climbing") })).toBeTruthy();
     expect(screen.queryByRole("button", { name: pickLabel("Climbing 1") })).toBeNull();
@@ -207,19 +229,19 @@ describe("Stubby's picks", () => {
     expect(picks.undoKeep).not.toHaveBeenCalled();
   });
 
-  it("goes back to plain free time after three Not this on one stretch", async () => {
+  it("goes back to plain free time after three Not now on one stretch", async () => {
     withEvents([1, 2, 3, 4].map((n) => event(n, { startsAt: ny(10, 31, 18 + n * 0), endsAt: ny(10, 31, 20) })));
     show("/calendar?view=week");
     for (let i = 0; i < 3; i++) {
       fireEvent.click(screen.getByRole("button", { name: /^Stubby’s pick, / }));
-      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not this" }));
+      fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not now" }));
       await flush();
     }
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
     expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
-  it("remembers Not this on a reload, in this browser", () => {
+  it("remembers Not now on a reload, in this browser", () => {
     window.localStorage.setItem("soosh.calendar.notthis.v1", JSON.stringify({ "2026-10-31:sat-day": ["event:1"] }));
     withEvents([event(1)]);
     show("/calendar?view=week");
@@ -272,17 +294,17 @@ describe("a pick that needs the host's approval", () => {
     });
   };
 
-  it("says Ask to join, never Keep", () => {
+  it("says Ask to join, never Make it a plan", () => {
     group(true);
     show("/calendar?view=week");
     expect(screen.getByRole("button", { name: "Ask to join" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Keep" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Make it a plan" })).toBeNull();
   });
 
-  it("says Keep for a group you join at once", () => {
+  it("says Make it a plan for a group you join at once", () => {
     group(false);
     show("/calendar?view=week");
-    expect(screen.getByRole("button", { name: "Keep" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Make it a plan" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Ask to join" })).toBeNull();
   });
 
@@ -310,12 +332,12 @@ describe("a pick that needs the host's approval", () => {
 });
 
 describe("Stubby's picks on a phone", () => {
-  it("shows the pick under the day in Month, with Keep", async () => {
+  it("shows the pick under the day in Month, with Make it a plan", async () => {
     withEvents([event(1)]);
     show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(picks.keepPick).toHaveBeenCalledTimes(1);
   });

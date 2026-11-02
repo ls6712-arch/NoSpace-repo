@@ -87,3 +87,4 @@ export const sooshOnboardingEnabled = true;
 // in Supabase (Authentication > Sign In / Providers > Apple). Until that exists
 // the button stays hidden; flip this and ship, nothing else changes.
 export const appleSignInEnabled = false;
+

@@ -56,8 +56,9 @@ import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
 import { keepPick, undoKeep } from "../lib/pickActions";
-import { StubbyBuddy, type StubbyBuddyHandle } from "../components/stubby/StubbyBuddy";
-import { AskStubby } from "../components/calendar/AskStubby";
+import { StubbyStage, type StubbyStageHandle } from "../components/calendar/StubbyStage";
+import { createPlan } from "../lib/planEdits";
+import type { MyPick } from "../lib/stubbyAsk";
 import { usePickDeclines } from "../lib/pickDeclines";
 import { stubbyPicks } from "../lib/stubbyPicks";
 import { announceChange } from "../lib/undo";
@@ -88,6 +89,9 @@ export function Calendar() {
   const [picked, setPicked] = useState<number | null>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [kept, setKept] = useState<ReadonlySet<string>>(new Set());
+  // Stubby, on the stage at the top, reacts to everything you do here.
+  const stage = useRef<StubbyStageHandle>(null);
+  const stubby = useMemo(() => ({ react: (r: Parameters<StubbyStageHandle["react"]>[0]) => stage.current?.react(r) }), []);
 
   const now = data.now;
   const view = parseView(params.get("view"));
@@ -181,18 +185,36 @@ export function Calendar() {
     track({ name: "week_budget_changed" });
     if (!(await data.saveBudget(b))) notifyError(ERROR_LINE);
   };
-  // Stubby, top right, reacts to what you do here. He never talks; the words are elsewhere.
-  const buddy = useRef<StubbyBuddyHandle>(null);
-  const [asking, setAsking] = useState(false);
   const onBring = async (plan: WeekPlanDetail) => {
     if (!owner) return;
     const r = await bringSomeone(plan, owner);
     if (!r.ok) {
-      buddy.current?.react("tilt");
+      stubby.react("tilt");
       notifyError(r.error ?? ERROR_LINE);
       return;
     }
-    buddy.current?.react("torn");
+    stubby.react("torn");
+  };
+  // Your selection: Make it a plan puts each chosen pick on the calendar as a one-off plan, each with Undo.
+  const makePlansFromPicks = async (picks: MyPick[]): Promise<number[]> => {
+    const made: number[] = [];
+    for (const p of picks) {
+      if (await actions.makePlan({ title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt })) made.push(p.id);
+    }
+    if (made.length) stubby.react("stamped");
+    return made;
+  };
+  // The bring-a-friend nudge: the pick becomes a one-off plan, then the half ticket opens.
+  const bringFromPick = async (p: MyPick) => {
+    if (!owner) return;
+    const r = await createPlan({ title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt }, owner);
+    if (r.sessionId === undefined || !r.pursuitId) {
+      stubby.react("tilt");
+      notifyError(r.error ?? ERROR_LINE);
+      return;
+    }
+    reloadPlans();
+    await onBring({ id: `session-${r.sessionId}`, kind: "session", title: p.title, startsAt: p.startsAt, color: "orange", mine: true, pursuitId: r.pursuitId, going: { friends: [], total: 1 }, cornerKey: p.cornerKey ?? undefined });
   };
   const retry = () => {
     data.reload();
@@ -210,11 +232,11 @@ export function Calendar() {
         next.delete(pick.id);
         return next;
       });
-      buddy.current?.react("tilt");
+      stubby.react("tilt");
       notifyError(r.error);
       return;
     }
-    buddy.current?.react("stamped");
+    stubby.react("stamped");
     reloadPlans();
     announceChange(r.requested ? CHANGED.requested : CHANGED.kept, {
       undo: () => {
@@ -223,7 +245,7 @@ export function Calendar() {
           next.delete(pick.id);
           return next;
         });
-        buddy.current?.react("unstamped");
+        stubby.react("unstamped");
         void undoKeep(pick, owner.id).then((e) => {
           if (e) notifyError(e);
           reloadPlans();
@@ -233,7 +255,7 @@ export function Calendar() {
   };
   const declinePick = (slot: CalendarFreeSlot) => {
     if (!slot.pick) return;
-    buddy.current?.react("shrug");
+    stubby.react("shrug");
     return notThis(slot.slotKey, slot.pick.id);
   };
 
@@ -342,8 +364,17 @@ export function Calendar() {
     <PageShell
       title={viewTitle(view, anchor, now)}
       subtitle={subline}
-      action={<StubbyBuddy ref={buddy} waiting={data.status === "loading" || asking} upset={data.status === "error" || (data.status === "ready" && extra.failed)} />}
     >
+      <StubbyStage
+        ref={stage}
+        greeting={{ now, windows: actions.windows, plans }}
+        loading={data.status === "loading"}
+        failed={data.status === "error" || (data.status === "ready" && extra.failed)}
+        sheetOpen={!!sheet || showOpen}
+        userId={userId}
+        onMakePlans={makePlansFromPicks}
+        onBring={(p) => void bringFromPick(p)}
+      />
       <CalendarToolbar
         view={view}
         showButton={!panel}
@@ -368,7 +399,6 @@ export function Calendar() {
           )}
           <div className="min-w-0 flex-1">
             {body()}
-            <AskStubby onBusy={setAsking} onReact={(r) => buddy.current?.react(r)} />
             {showWeekExtras && (
               <WeekExtras goodHours={data.goodHours} windows={data.windows} budget={data.budget} spend={spend} picks={data.picks} noWindows={noWindows} onBudget={(b) => void onBudget(b)} />
             )}

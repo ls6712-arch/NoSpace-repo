@@ -108,3 +108,16 @@ describe("the left rail", () => {
     expect(screen.queryByTestId("header")).toBeNull();
   });
 });
+
+describe("Stubby", () => {
+  it("never floats over a page: no dock and no Stubby on any route that used to have one", () => {
+    signedIn({ onboarding_completed: true, access: "active" });
+    for (const path of ["/", "/discover", "/corners"]) {
+      at(path);
+      expect(document.querySelector("[data-stubby-dock]")).toBeNull();
+      expect(document.querySelector("[data-stubby-state]")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Ask Stubby" })).toBeNull();
+      cleanup();
+    }
+  });
+});

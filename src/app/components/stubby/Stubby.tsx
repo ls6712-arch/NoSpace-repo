@@ -3,7 +3,8 @@ import { useReducedMotion } from "motion/react";
 import { haptic } from "../../lib/motionTokens";
 
 /**
- * Stubby, Soosh's character: a ticket with a face. It never talks. It acts.
+ * Stubby, Soosh's character: a ticket with a face. He acts; he talks only in Ask Stubby, on
+ * the Calendar stage, and his words are text beside him (a speech bubble), never inside the art.
  *
  * - The yellow body is you (two eyes, two brows, one mouth, no arms or legs).
  * - The white tab is the plan. What you pick gets stamped there.
@@ -31,6 +32,11 @@ import { haptic } from "../../lib/motionTokens";
 
 export type StubbyState =
   | "idle" // waiting on any screen: breathes, blinks, glances around
+  | "ready" // the Calendar stage: waiting to help, smiling. Same idle life as idle, with the happy face
+  | "hello" // the Calendar stage, the first time in a session: one hop, happy
+  | "eager" // the stage Stubby is hovered, or the ask field focused: a small hop and a giggle
+  | "excited" // star eyes and a hop
+  | "peek" // something appeared beside him: a glance that way and a small bob
   | "stamped" // you picked something: crouch, jump, a star slams onto the tab
   | "unstamped" // you un-picked it: the stamp fades, a small sigh
   | "yours" // you added a pass you already have: winks, the tab is punched
@@ -53,6 +59,11 @@ type Stamp = "none" | "star" | "punch" | "check" | "hand";
 /** The look each state leaves behind once its reaction has played. */
 const REST: Record<StubbyState, { face: Face; stamp?: Stamp; torn?: boolean }> = {
   idle: { face: "idle" },
+  ready: { face: "happy" },
+  hello: { face: "happy" },
+  eager: { face: "happy" },
+  excited: { face: "happy" },
+  peek: { face: "happy" },
   stamped: { face: "idle", stamp: "star" },
   unstamped: { face: "idle", stamp: "none" },
   yours: { face: "idle", stamp: "punch" },
@@ -151,7 +162,8 @@ function MouthArt({ kind }: { kind: Mouth }) {
     case "tiny":
       return <ellipse cx={94} cy={92} rx={3.6} ry={3.2} fill={INK} />;
     case "hmm":
-      return line("M88 92 Q94 90 100 92");
+      // Concentrating, not cross: a small line that lifts at one corner (a downward arch read as a frown).
+      return line("M88 92 Q94 94 101 90");
     case "smirk":
       return line("M86 91 Q96 95 104 87");
     case "winky":
@@ -171,7 +183,8 @@ const FACES: Record<Face, { brows: [string, string]; eyes: [Eye, Eye]; mouth: Mo
   shrug: { brows: ["M66 46 L84 46", "M102 40 L120 36"], eyes: ["open", "open"], mouth: "flat" },
   tilt: { brows: ["M66 46 L82 40", "M104 40 L120 46"], eyes: ["open", "open"], mouth: "o" },
   surprised: { brows: ["M66 35 L84 32", "M102 32 L120 35"], eyes: ["tall", "tall"], mouth: "big" },
-  thinking: { brows: ["M66 40 L84 40", "M102 36 L120 40"], eyes: ["open", "open"], mouth: "hmm" },
+  // One brow raised, the other relaxed, eyes glancing up (lookTo in "thinking"): working it out, happily.
+  thinking: { brows: ["M66 41 L84 39", "M102 34 Q111 29 120 33"], eyes: ["open", "open"], mouth: "hmm" },
   sleep: { brows: ["M66 50 L84 50", "M102 50 L120 50"], eyes: ["closed", "closed"], mouth: "tiny" },
   cool: { brows: ["M66 50 L84 50", "M102 50 L120 50"], eyes: ["half", "half"], mouth: "smirk" },
   brace: { brows: ["M66 46 L84 50", "M102 50 L120 46"], eyes: ["squintL", "squintR"], mouth: "wavy" },
@@ -385,7 +398,7 @@ export function Stubby({
 
   const blink = useCallback(
     async (twice = false) => {
-      if (!["idle", "thinking", "tilt", "shrug", "surprised"].includes(faceNow.current)) return;
+      if (!["idle", "happy", "thinking", "tilt", "shrug", "surprised"].includes(faceNow.current)) return;
       const f = [{ transform: S(1, 1) }, { transform: S(1, 0.08) }, { transform: S(1, 1) }];
       await anim(refs.current.blink, f, { duration: 150, easing: EASE.sway });
       if (twice) {
@@ -606,6 +619,32 @@ export function Stubby({
           await blink();
           break;
         }
+        case "hello": {
+          showFace("happy");
+          void browPop(-6);
+          await hop(16);
+          break;
+        }
+        case "eager": {
+          showFace("giggle");
+          await hop(10);
+          break;
+        }
+        case "excited": {
+          showFace("starry");
+          void browPop(-6);
+          await hop(14);
+          await wait(250);
+          break;
+        }
+        case "peek": {
+          lookTo(-6, -2, 260);
+          void browPop(-5);
+          await anim(hopEl, [{ transform: T(0, 0) }, { transform: T(0, -5) }, { transform: T(0, 0) }], { duration: 420, easing: EASE.sway });
+          await wait(700);
+          lookTo(0, 0, 320);
+          break;
+        }
         case "sleep": {
           showFace("sleep");
           lookTo(0, 0, 300);
@@ -614,7 +653,7 @@ export function Stubby({
         }
         case "thinking": {
           showFace("thinking");
-          lookTo(5, -4, 260);
+          lookTo(4, -6, 260);
           return; // the loop below bobs and spins until the state changes
         }
         case "cool": {
@@ -640,7 +679,7 @@ export function Stubby({
     prev.current = state;
     if (firstRun.current) {
       firstRun.current = false;
-      if (state === "idle" || state === "cool" || state === "sleep" || state === "thinking") return;
+      if (state === "idle" || state === "ready" || state === "cool" || state === "sleep" || state === "thinking") return;
     }
     queue.current = queue.current.then(async () => {
       if (!alive.current) return;
@@ -725,7 +764,7 @@ export function Stubby({
     };
     const glanceLoop = () => {
       g = setTimeout(async () => {
-        if (awake.current && !busy.current && faceNow.current === "idle" && Date.now() - lastPointer.current > 2500) {
+        if (awake.current && !busy.current && (faceNow.current === "idle" || (state === "ready" && faceNow.current === "happy")) && Date.now() - lastPointer.current > 2500) {
           lookTo(Math.random() < 0.5 ? -6 : 6, Math.random() < 0.3 ? -3 : 0, 260);
           await wait(900 + Math.random() * 700);
           if (Date.now() - lastPointer.current > 2500) lookTo(0, 0, 320);
@@ -783,7 +822,7 @@ export function Stubby({
     const onMove = (e: PointerEvent) => {
       lastPointer.current = Date.now();
       const svg = svgRef.current;
-      if (!svg || state === "sleep" || (busy.current && faceNow.current !== "idle")) return;
+      if (!svg || state === "sleep" || (busy.current && faceNow.current !== REST[state].face)) return;
       const b = svg.getBoundingClientRect();
       const dx = e.clientX - (b.left + b.width * 0.42), dy = e.clientY - (b.top + b.height * 0.5);
       const len = Math.hypot(dx, dy) || 1, k = Math.min(1, len / 260);
