@@ -17,6 +17,7 @@ import { friendlyError } from "../lib/friendlyError";
 import { isNoAccountError, isRateLimited, retryAfterSeconds } from "../lib/authErrors";
 import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
+import { trackSignIn } from "../lib/signInEvent";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
 export interface Profile {
@@ -273,8 +274,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      if (event === "SIGNED_IN" && newSession) trackSignIn(newSession.user);
       if (newSession) {
         void bootstrapProfile(newSession.user.id);
         void restoreOwnPursuits(newSession.user.id);
