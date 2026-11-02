@@ -1,26 +1,64 @@
-import { ExternalLink, X } from "lucide-react";
+import { useId, useState } from "react";
+import { Check, ChevronDown, ExternalLink, LoaderCircle, X } from "lucide-react";
 import { Link } from "react-router";
+import { Button } from "../ui/button";
+import { cn } from "../ui/utils";
 import { pickPill } from "../../lib/cityPicks";
-import { ASK_COPY } from "../../lib/calendarCopy";
+import { plural } from "../../lib/plural";
+import { ASK_COPY, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
-import type { AskState } from "./AskStubby";
+import type { AskState, StepRow } from "./AskStubby";
 
 /** A Soosh page (an idea's Corner start page or Pursuit) opens in the app; anything else opens the outside page. */
 const isSooshLink = (url: string) => url.startsWith("/");
 
+const stepText = (s: StepRow) =>
+  s.kind === "search" ? ASK_COPY.lookingFor(s.query ?? "") : s.kind === "pages" ? `Checking ${plural(s.count ?? 0, "page")}` : ASK_COPY.picking;
+
 /**
- * What Stubby found, right under the Calendar stage: why an ask failed, how it went, and
- * your own picks (link out and Remove), best fit first. Each pick carries its why line. An
- * idea is labelled "An idea" and never shown as a dated ticket. One self-contained block, so
- * the deck of cards (Stubby plan PR 3) can take its place without touching the stage.
+ * What Stubby found, right under the Calendar stage (stubby-plan §7). While he looks: what he
+ * understood, as chips, then each step as it happens, ticked once the next one starts, and
+ * Stop. After: why an ask failed (with Try again), how it went, and this ask's picks, one by
+ * one, best fit first. Today's earlier picks fold away under "Earlier today". One self-contained
+ * block, so the deck of cards (Stubby plan PR 3) can take its place without touching the stage.
  */
 export function StubbyResults({ state }: { state: AskState }) {
-  const { error, outcome, picks, remove } = state;
+  const { busy, error, outcome, current, earlier, understood, steps, stop, retry, remove } = state;
   // When nothing fit, Stubby's own line says so; the status isn't repeated here.
   const status = outcome === "nothing" || outcome === "after" ? null : state.status;
-  if (!error && !status && picks.length === 0) return null;
+  const chips = understood ? [UNDERSTOOD_COPY.when[understood.when ?? ""], UNDERSTOOD_COPY.who[understood.who ?? ""]].filter(Boolean) : [];
+  if (!busy && !error && !status && current.length === 0 && earlier.length === 0) return null;
   return (
     <div data-stubby-results="" className="mb-6 flex flex-col gap-3">
+      {busy && chips.length > 0 && (
+        <ul data-stubby-understood="" className="flex flex-wrap gap-2">
+          {chips.map((c) => (
+            <li key={c} className="rounded-full border border-border bg-card px-3 py-1 text-small font-semibold">
+              {c}
+            </li>
+          ))}
+        </ul>
+      )}
+      {busy && (
+        <ol data-stubby-steps="" aria-live="polite" className="flex flex-col gap-1.5">
+          {steps.map((s) => (
+            <li key={s.key} className="flex items-center gap-2 text-small" data-step-done={s.done ? "" : undefined}>
+              {s.done ? (
+                <Check className="size-4 shrink-0 text-accent-text" aria-hidden="true" />
+              ) : (
+                <LoaderCircle className="size-4 shrink-0 animate-spin text-muted-foreground motion-reduce:animate-none" aria-hidden="true" />
+              )}
+              <span className={cn("min-w-0 truncate", s.done && "text-muted-foreground")}>{stepText(s)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+      {busy && (
+        <Button type="button" variant="outline" onClick={stop} className="self-start">
+          {ASK_COPY.stop}
+        </Button>
+      )}
       <div aria-live="polite" className="flex flex-col gap-1 empty:hidden">
         {error && (
           <p role="alert" className="text-small text-destructive">
@@ -29,10 +67,43 @@ export function StubbyResults({ state }: { state: AskState }) {
         )}
         {status && <p className="text-small font-semibold">{status}</p>}
       </div>
-      {picks.length > 0 && (
+      {error && outcome === "error" && (
+        <Button type="button" variant="outline" onClick={retry} className="self-start">
+          {TRY_AGAIN}
+        </Button>
+      )}
+      {current.length > 0 && (
         <ul className="grid gap-2 tab:grid-cols-2" aria-label={ASK_COPY.listLabel}>
-          {picks.map((p) => (
+          {current.map((p) => (
             <PickRow key={p.id} pick={p} onRemove={() => void remove(p)} />
+          ))}
+        </ul>
+      )}
+      {earlier.length > 0 && <Earlier picks={earlier} onRemove={(p) => void remove(p)} />}
+    </div>
+  );
+}
+
+/** Today's picks from earlier asks, folded away until opened. */
+function Earlier({ picks, onRemove }: { picks: MyPick[]; onRemove: (p: MyPick) => void }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex min-h-11 items-center gap-1 self-start text-small font-semibold text-muted-foreground"
+      >
+        {ASK_COPY.earlier}
+        <ChevronDown className={cn("size-4 transition-transform motion-reduce:transition-none", open && "rotate-180")} aria-hidden="true" />
+      </button>
+      {open && (
+        <ul id={id} className="grid gap-2 tab:grid-cols-2">
+          {picks.map((p) => (
+            <PickRow key={p.id} pick={p} onRemove={() => onRemove(p)} />
           ))}
         </ul>
       )}

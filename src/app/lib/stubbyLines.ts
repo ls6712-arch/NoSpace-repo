@@ -17,6 +17,8 @@ export const STUBBY_LINES = {
   outOfAsks: "That’s 3 for today. I’ll look again tomorrow.",
   /** While and after he looks (stubby-plan.md §3). */
   looking: "On it. Checking a few places.",
+  /** After 12 seconds with no new step (stubby-plan §7, approved Nov 2, 2026). */
+  stillLooking: "Still looking. Good finds take a moment.",
   found: "Here’s what I’d pick for you.",
   error: "Something went wrong on my end. Try again?",
   /** For the later plan PRs (the one question, the honest "nothing fits", the nudge). */

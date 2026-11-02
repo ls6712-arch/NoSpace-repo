@@ -3,10 +3,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const api = vi.hoisted(() => ({
-  askStubby: vi.fn(),
+  askStubbyStream: vi.fn(),
   asksLeft: vi.fn(async () => 3),
   fetchMyPicks: vi.fn(async () => [] as unknown[]),
-  removeMyPick: vi.fn(async () => ({ error: null })),
+  removeMyPick: vi.fn(async () => ({ error: null, askId: 7 })),
 }));
 vi.mock("../../lib/stubbyAsk", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyAsk")>()), ...api }));
 
@@ -27,26 +27,33 @@ function Harness({ onReact }: { onReact?: (r: BuddyReaction) => void }) {
   );
 }
 
-const pick = { id: 9, title: "Wheel night", place: "Greenpoint, Brooklyn", startsAt: Date.UTC(2026, 10, 7, 23), endsAt: null, price: "$35", url: "https://example.com/wheel", note: "Price not listed" };
+// A fixed clock (Date only) so "today" never straddles midnight: Sunday Nov 1, 2026, 5:00 pm New York.
+const CLOCK = Date.UTC(2026, 10, 1, 22);
+const pick = { id: 9, title: "Wheel night", place: "Greenpoint, Brooklyn", startsAt: Date.UTC(2026, 10, 7, 23), endsAt: null, price: "$35", url: "https://example.com/wheel", note: "Price not listed", kind: "event" as const, why: null, after: false, askId: 7, createdAt: CLOCK };
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(CLOCK);
   for (const f of Object.values(api)) f.mockClear();
   api.asksLeft.mockResolvedValue(3);
   api.fetchMyPicks.mockResolvedValue([]);
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 describe("AskStubby", () => {
   it("asks, makes Stubby think then stamp, and shows what he found", async () => {
     const onReact = vi.fn();
-    api.askStubby.mockResolvedValue({ found: 1, asksLeft: 2, error: null });
+    api.askStubbyStream.mockResolvedValue({ found: 1, asksLeft: 2, error: null, askId: 7 });
     render(<Harness onReact={onReact} />);
     expect(await screen.findByText("3 asks left today")).toBeTruthy();
     api.fetchMyPicks.mockResolvedValue([pick]);
     fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery on Saturday" } });
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
     expect(await screen.findByText("Found 1 thing.")).toBeTruthy();
-    expect(api.askStubby).toHaveBeenCalledWith("pottery on Saturday");
+    expect(api.askStubbyStream).toHaveBeenCalledWith("pottery on Saturday", expect.anything());
     expect(screen.getByTestId("busy").textContent).toBe("false");
     expect(screen.getByTestId("outcome").textContent).toBe("found");
     expect(onReact).toHaveBeenCalledWith("stamped");
@@ -58,7 +65,7 @@ describe("AskStubby", () => {
 
   it("shrugs when nothing fits", async () => {
     const onReact = vi.fn();
-    api.askStubby.mockResolvedValue({ found: 0, asksLeft: 1, error: null });
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: 1, error: null, askId: 7 });
     render(<Harness onReact={onReact} />);
     fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "underwater chess" } });
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
@@ -70,7 +77,7 @@ describe("AskStubby", () => {
 
   it("tilts and says why when the ask fails", async () => {
     const onReact = vi.fn();
-    api.askStubby.mockResolvedValue({ found: 0, asksLeft: null, error: "The scout is switched off." });
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: "The scout is switched off." });
     render(<Harness onReact={onReact} />);
     fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "running" } });
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
@@ -88,14 +95,14 @@ describe("AskStubby", () => {
 
   it("a quick idea fills in the field and asks (one ask, like typing)", async () => {
     const onReact = vi.fn();
-    api.askStubby.mockResolvedValue({ found: 2, asksLeft: 2, error: null });
+    api.askStubbyStream.mockResolvedValue({ found: 2, asksLeft: 2, error: null, askId: 7 });
     render(<Harness onReact={onReact} />);
     const chips = await screen.findByRole("group", { name: "Quick ideas" });
     expect(Array.from(chips.querySelectorAll("button")).map((b) => b.textContent)).toEqual(["Free tonight", "This weekend", "Something outdoors"]);
     fireEvent.click(screen.getByRole("button", { name: "This weekend" }));
     expect(await screen.findByText("Found 2 things.")).toBeTruthy();
-    expect(api.askStubby).toHaveBeenCalledTimes(1);
-    expect(api.askStubby).toHaveBeenCalledWith("This weekend");
+    expect(api.askStubbyStream).toHaveBeenCalledTimes(1);
+    expect(api.askStubbyStream).toHaveBeenCalledWith("This weekend", expect.anything());
     expect(onReact).toHaveBeenCalledWith("stamped");
   });
 

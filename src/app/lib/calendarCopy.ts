@@ -102,4 +102,20 @@ export const ASK_COPY = {
   chips: ["Free tonight", "This weekend", "Something outdoors"],
   /** The slim bar at the top of Calendar once the stage scrolls out of view (approved Nov 2, 2026). */
   sticky: "Ask Stubby…",
+  /** His steps while he looks, and what stops or repeats an ask (stubby-plan §7, approved Nov 2, 2026). */
+  lookingFor: (what: string) => `Looking for: ${what}`,
+  picking: "Picking the best for you",
+  stop: "Stop",
+  earlier: "Earlier today",
 } as const;
+
+/**
+ * What Stubby understood from an ask, shown as chips at once (stubby-plan §4). The same words
+ * as his question chips (approved Nov 2, 2026); a "when" or "who" with no chip of its own
+ * isn't shown.
+ */
+export const UNDERSTOOD_COPY = {
+  when: { tonight: "Tonight", tomorrow: "Tomorrow", weekend: "This weekend" } as Record<string, string>,
+  who: { solo: "Just me", partner: "With my partner", friends: "With friends", family: "With family" } as Record<string, string>,
+};
+

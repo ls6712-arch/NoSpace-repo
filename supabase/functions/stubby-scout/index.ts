@@ -4,7 +4,8 @@
 //     { "focus": "pottery" }                 an admin's Find picks (signed in, admins only)
 //     { "mode": "ask", "ask": "outdoors...",  a person asks (signed in). "answers": {"who": "solo"} is their
 //       "answers"?, "questions"? }           answer to Stubby's one question; "questions": true asks to be
-//                                            asked that question first, which uses no ask.
+//                                            asked that question first, which uses no ask; "stream": true
+//                                            answers as server-sent events (see handler.ts).
 //     { "mode": "restock" }                  the morning schedule (no sign-in; see handler.ts)
 //
 // Deploy WITHOUT gateway JWT verification, because the morning schedule has no sign-in:
@@ -168,6 +169,7 @@ Deno.serve((req) => {
         maxPicks: r.maxPicks,
         ask: r.ask,
         prompt: r.prompt,
+        onProgress: r.onProgress,
         workspaceId: env("ANTHROPIC_WORKSPACE_ID") || null,
         now: Date.now(),
       }),

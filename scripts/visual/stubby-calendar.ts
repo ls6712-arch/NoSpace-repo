@@ -6,7 +6,7 @@
 //
 // Per width and theme it saves, and FAILS (exit 1) when what the name claims is not on screen:
 //   calendar-stage     Calendar's top: one Stubby, above the toolbar, with his greeting in a bubble
-//   asking             mid-ask: "On it. Checking a few places." and the field busy
+//   asking             mid-ask: "On it. Checking a few places.", the field busy and Stop
 //   picks-inline       the picks right under the stage, not in a dialog or sheet
 //   out-of-asks        0 asks left: his out-of-asks line, the field off, no quick ideas
 //   sticky             scrolled down: the slim sticky bar, clear of the header and the tab bar
@@ -40,8 +40,8 @@ function build(dist: string) {
 
 const day = 86_400_000;
 const PICKS = [
-  { id: 1, title: "Wheel night at a Greenpoint studio", place: "Greenpoint, Brooklyn", starts_at: new Date(Date.now() + day).toISOString(), ends_at: null, price: "$35", url: "https://example.com/wheel", note: null },
-  { id: 2, title: "Free sunset run along the Hudson", place: "Hudson River Park", starts_at: new Date(Date.now() + 2 * day).toISOString(), ends_at: null, price: "Free", url: "https://example.com/run", note: "Price not listed" },
+  { id: 1, title: "Wheel night at a Greenpoint studio", place: "Greenpoint, Brooklyn", starts_at: new Date(Date.now() + day).toISOString(), ends_at: null, price: "$35", url: "https://example.com/wheel", note: null, kind: "event", why: "A drop-in class where coming alone is normal.", soonest_after: false, rank: 0, ask_id: 1, created_at: new Date().toISOString() },
+  { id: 2, title: "Free sunset run along the Hudson", place: "Hudson River Park", starts_at: new Date(Date.now() + 2 * day).toISOString(), ends_at: null, price: "Free", url: "https://example.com/run", note: "Price not listed", kind: "event", why: "A free group run, close to you.", soonest_after: false, rank: 1, ask_id: 1, created_at: new Date().toISOString() },
 ];
 
 /** The asks used in the last 24 hours (3 a day), the picks (none until an ask finds them), and the scout, which waits until released. */
@@ -58,7 +58,7 @@ async function stubbyRoutes(ctx: BrowserContext, state: { used: number; found: b
     await new Promise<void>((r) => (state.release = r));
     state.used += 1;
     state.found = true;
-    return route.fulfill({ status: 200, headers: { ...cors, "content-type": "application/json" }, body: JSON.stringify({ picks: PICKS, asksLeft: 3 - state.used }) });
+    return route.fulfill({ status: 200, headers: { ...cors, "content-type": "application/json" }, body: JSON.stringify({ picks: PICKS, asksLeft: 3 - state.used, outcome: "found", askId: 1 }) });
   });
 }
 
@@ -123,6 +123,7 @@ async function main() {
       await field.fill("pottery this weekend");
       await stage.getByRole("button", { name: "Ask Stubby" }).click();
       await page.getByText("On it. Checking a few places.").first().waitFor({ timeout: 5000 });
+      await page.getByRole("button", { name: "Stop" }).waitFor({ timeout: 5000 });
       await shot("asking");
 
       // 3. The picks, inline under the stage.

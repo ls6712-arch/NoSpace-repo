@@ -49,6 +49,9 @@ describe("Stubby", () => {
     await settleAll();
     const hidden = vi.spyOn(document, "hidden", "get").mockReturnValue(true);
     act(() => void document.dispatchEvent(new Event("visibilitychange")));
+    // A blink or glance that began just before the tab was hidden may still be finishing (each
+    // is under 2 seconds). Let it end, then count: nothing new may start while hidden.
+    await act(() => vi.advanceTimersByTimeAsync(3_000));
     const before = started;
     await act(() => vi.advanceTimersByTimeAsync(30_000));
     expect(started).toBe(before);

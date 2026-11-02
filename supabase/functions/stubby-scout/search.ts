@@ -39,7 +39,15 @@ export interface SearchOptions {
   workspaceId?: string | null;
   /** A person's ask, fully written (askPrompt): used in place of the scout's own prompts. */
   prompt?: { system: string; user: string } | null;
+  /**
+   * Live steps while the model searches (Stubby plan §7). When given, the call streams, and each
+   * search, each page count and the start of the answer are reported as they happen.
+   */
+  onProgress?: (e: SearchProgress) => void;
 }
+
+/** One live step: a search the model just ran, how many pages it has read so far, or that it is writing its picks. */
+export type SearchProgress = { type: "search"; query: string } | { type: "pages"; count: number } | { type: "picking" };
 
 /** The request headers: the key as a bearer token (the documented way), plus the workspace when given. */
 export function authHeaders(apiKey: string, workspaceId?: string | null): Record<string, string> {
@@ -130,6 +138,108 @@ export class SearchError extends Error {
   }
 }
 
+type TurnResult = { content: Block[]; stopReason: string | undefined; input: number; output: number };
+
+/** One turn, all at once. */
+async function plainTurn(res: Response): Promise<TurnResult> {
+  const data = (await res.json()) as { content?: Block[]; stop_reason?: string; usage?: { input_tokens?: number; output_tokens?: number } };
+  return { content: Array.isArray(data.content) ? data.content : [], stopReason: data.stop_reason, input: data.usage?.input_tokens ?? 0, output: data.usage?.output_tokens ?? 0 };
+}
+
+/**
+ * One turn, streamed (server-sent events). The content blocks are rebuilt exactly as the plain
+ * call would return them, so a pause can carry on the same way; the steps go to onProgress.
+ */
+async function streamedTurn(res: Response, links: Set<string>, onProgress: (e: SearchProgress) => void, picking: { said: boolean }): Promise<TurnResult> {
+  const blocks: Block[] = [];
+  const json: string[] = [];
+  let stopReason: string | undefined;
+  let input = 0;
+  let output = 0;
+  const reader = res.body!.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  const handle = (data: Block) => {
+    switch (data.type) {
+      case "message_start":
+        input += data.message?.usage?.input_tokens ?? 0;
+        output += data.message?.usage?.output_tokens ?? 0;
+        break;
+      case "content_block_start": {
+        const b = { ...data.content_block };
+        if (b.type === "text") b.text = b.text ?? "";
+        if (b.type === "server_tool_use") json[data.index] = "";
+        blocks[data.index] = b;
+        if (b.type === "web_search_tool_result" && Array.isArray(b.content)) {
+          for (const r of b.content) {
+            const k = linkKey(r?.url);
+            if (k) links.add(k);
+          }
+          onProgress({ type: "pages", count: links.size });
+        }
+        break;
+      }
+      case "content_block_delta": {
+        const b = blocks[data.index];
+        const d = data.delta ?? {};
+        if (!b) break;
+        if (d.type === "text_delta" && typeof d.text === "string") {
+          b.text += d.text;
+          if (!picking.said && b.text.includes("<picks>")) {
+            picking.said = true;
+            onProgress({ type: "picking" });
+          }
+        } else if (d.type === "input_json_delta" && typeof d.partial_json === "string") json[data.index] = (json[data.index] ?? "") + d.partial_json;
+        else if (d.type === "citations_delta" && d.citation) (b.citations ??= []).push(d.citation);
+        break;
+      }
+      case "content_block_stop": {
+        const b = blocks[data.index];
+        if (b?.type === "server_tool_use") {
+          try {
+            b.input = json[data.index] ? JSON.parse(json[data.index]) : (b.input ?? {});
+          } catch {
+            b.input = b.input ?? {};
+          }
+          const q = typeof b.input?.query === "string" ? b.input.query.trim() : "";
+          if (b.name === "web_search" && q) onProgress({ type: "search", query: q.slice(0, 120) });
+        }
+        break;
+      }
+      case "message_delta":
+        stopReason = data.delta?.stop_reason ?? stopReason;
+        output += data.usage?.output_tokens ?? 0;
+        break;
+      case "error":
+        throw new SearchError(data.error?.type === "overloaded_error" ? "The search service is busy. Try again in a few minutes." : "The search service stopped partway. Try again.", 502);
+    }
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (value) buffer += decoder.decode(value, { stream: true });
+    let cut: number;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const event = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      const data = event
+        .split("\n")
+        .filter((l) => l.startsWith("data:"))
+        .map((l) => l.slice(5).trim())
+        .join("");
+      if (!data) continue;
+      let parsed: Block;
+      try {
+        parsed = JSON.parse(data);
+      } catch {
+        continue;
+      }
+      handle(parsed);
+    }
+    if (done) break;
+  }
+  return { content: blocks.filter(Boolean), stopReason, input, output };
+}
+
 export async function runSearch(o: SearchOptions): Promise<SearchResult> {
   const doFetch = o.fetchImpl ?? fetch;
   const deadline = Date.now() + (o.timeoutMs ?? 110_000);
@@ -139,6 +249,8 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
   let searches = 0;
   let text = "";
   const usage = { input: 0, output: 0 };
+  const streaming = !!o.onProgress;
+  const picking = { said: false };
 
   for (let turn = 0; turn <= MAX_CONTINUES; turn++) {
     const left = deadline - Date.now();
@@ -151,6 +263,7 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
         max_tokens: 4000,
         system: o.prompt?.system ?? systemPrompt(),
         messages,
+        ...(streaming ? { stream: true } : {}),
         tools: [
           {
             type: "web_search_20250305",
@@ -176,14 +289,14 @@ export async function runSearch(o: SearchOptions): Promise<SearchResult> {
         502,
       );
     }
-    const data = (await res.json()) as { content?: Block[]; stop_reason?: string; usage?: { input_tokens?: number; output_tokens?: number } };
-    usage.input += data.usage?.input_tokens ?? 0;
-    usage.output += data.usage?.output_tokens ?? 0;
-    const content = Array.isArray(data.content) ? data.content : [];
+    const reply = streaming && res.body ? await streamedTurn(res, sourceLinks, o.onProgress!, picking) : await plainTurn(res);
+    usage.input += reply.input;
+    usage.output += reply.output;
+    const content = reply.content;
     searches += collectLinks(content, sourceLinks);
     text += content.filter((b) => b?.type === "text" && typeof b.text === "string").map((b) => b.text).join("");
 
-    if (data.stop_reason !== "pause_turn" || searches >= o.maxSearches) break;
+    if (reply.stopReason !== "pause_turn" || searches >= o.maxSearches) break;
     messages.push({ role: "assistant", content });
   }
 

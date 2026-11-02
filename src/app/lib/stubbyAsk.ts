@@ -1,4 +1,4 @@
-import { supabase } from "../../lib/supabase";
+import { supabase, supabaseAnonKey, supabaseUrl } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
 
 /**
@@ -26,6 +26,10 @@ export interface MyPick {
   why: string | null;
   /** One of the soonest after tonight, shown because nothing fit tonight. */
   after: boolean;
+  /** Which ask found it (null before the smarter-picks migration). */
+  askId: number | null;
+  /** When it was saved, for "Earlier today". */
+  createdAt: number | null;
 }
 
 /** How an ask went: picks in the time asked for, only the soonest after tonight, or nothing. */
@@ -43,10 +47,12 @@ const toPick = (r: Record<string, any>): MyPick => ({
   kind: r.kind === "idea" ? "idea" : "event",
   why: typeof r.why === "string" ? r.why : null,
   after: r.soonest_after === true,
+  askId: typeof r.ask_id === "number" ? r.ask_id : null,
+  createdAt: r.created_at ? Date.parse(r.created_at) : null,
 });
 
-const NEW_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, kind, why, soonest_after, rank, ask_id";
-const OLD_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note";
+const NEW_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, kind, why, soonest_after, rank, ask_id, created_at";
+const OLD_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, created_at";
 
 /**
  * Your picks from Stubby that haven't ended yet: the latest ask's first, best fit first within
@@ -113,3 +119,107 @@ export async function askStubby(text: string): Promise<{ found: number; asksLeft
   const outcome: AskOutcome = r?.outcome === "after" || r?.outcome === "nothing" || r?.outcome === "found" ? r.outcome : found > 0 ? "found" : "nothing";
   return { found, asksLeft: typeof r?.asksLeft === "number" ? r.asksLeft : null, error: null, outcome };
 }
+
+// ── streaming: Stubby's steps while he looks (Stubby plan §7) ─────────────
+
+/** What Stubby understood from the ask, at once, before any search. */
+export interface Understood {
+  when: string | null;
+  who: "solo" | "partner" | "friends" | "family" | null;
+  budget: number | null;
+  free: boolean;
+}
+
+/** One step from the stream, as it happens. */
+export type AskStep = { type: "understood"; understood: Understood } | { type: "search"; query: string } | { type: "pages"; count: number } | { type: "picking" };
+
+export interface AskResult {
+  found: number;
+  asksLeft: number | null;
+  error: string | null;
+  outcome?: AskOutcome;
+  askId?: number;
+}
+
+const readError = (body: unknown): string | null => (body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : null);
+
+function resultOf(r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown } | null): AskResult {
+  const found = Array.isArray(r?.picks) ? r!.picks!.length : 0;
+  const outcome: AskOutcome = r?.outcome === "after" || r?.outcome === "nothing" || r?.outcome === "found" ? r.outcome : found > 0 ? "found" : "nothing";
+  return { found, asksLeft: typeof r?.asksLeft === "number" ? r.asksLeft : null, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined };
+}
+
+/**
+ * Asks Stubby and streams his steps to `onStep` as they happen: what he understood, each
+ * search, the pages read, then that he's picking. Resolves with the same result as askStubby.
+ * Aborting (`signal`, the Stop button) stops listening; the ask was paid for and still counts.
+ */
+export async function askStubbyStream(text: string, { signal, onStep }: { signal?: AbortSignal; onStep: (s: AskStep) => void }): Promise<AskResult> {
+  const ask = text.trim().slice(0, ASK_MAX_LENGTH);
+  if (ask.length < 2) return { found: 0, asksLeft: null, error: "Say what you’re after, like pottery on Saturday." };
+  if (!supabase || !supabaseUrl || !supabaseAnonKey) return { found: 0, asksLeft: null, error: "Stubby needs the live app." };
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return { found: 0, asksLeft: null, error: "Sign in first." };
+
+  let res: Response;
+  try {
+    res = await fetch(`${supabaseUrl}/functions/v1/stubby-scout`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
+      body: JSON.stringify({ mode: "ask", ask, stream: true }),
+      signal,
+    });
+  } catch (e) {
+    if ((e as Error)?.name === "AbortError") throw e;
+    return { found: 0, asksLeft: null, error: "Stubby couldn’t look just now. Try again in a bit." };
+  }
+  // Stopped before searching (no asks left, a bad ask), or an older function: a plain answer.
+  if (!(res.headers.get("content-type") ?? "").includes("text/event-stream") || !res.body) {
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      body = null;
+    }
+    if (!res.ok) return { found: 0, asksLeft: null, error: readError(body) ?? "Stubby couldn’t look just now. Try again in a bit." };
+    return resultOf(body as Parameters<typeof resultOf>[0]);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let final: AskResult | null = null;
+  const handle = (event: string, payload: any) => {
+    if (event === "understood") onStep({ type: "understood", understood: payload as Understood });
+    else if (event === "search" && typeof payload?.query === "string") onStep({ type: "search", query: payload.query });
+    else if (event === "pages" && typeof payload?.count === "number") onStep({ type: "pages", count: payload.count });
+    else if (event === "picking") onStep({ type: "picking" });
+    else if (event === "done") final = resultOf(payload);
+    else if (event === "error") final = { found: 0, asksLeft: null, error: readError(payload) ?? "Something went wrong. Try again in a bit." };
+  };
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (value) buffer += decoder.decode(value, { stream: true });
+    let cut: number;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const block = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      let event = "message";
+      let data = "";
+      for (const line of block.split("\n")) {
+        if (line.startsWith("event:")) event = line.slice(6).trim();
+        else if (line.startsWith("data:")) data += line.slice(5).trim();
+      }
+      if (!data) continue;
+      try {
+        handle(event, JSON.parse(data));
+      } catch {
+        // A line that isn't JSON: skip it.
+      }
+    }
+    if (done) break;
+  }
+  return final ?? { found: 0, asksLeft: null, error: "Stubby couldn’t finish looking. Try again in a bit." };
+}
+
