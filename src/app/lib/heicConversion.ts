@@ -1,4 +1,4 @@
-import heic2any from "heic2any";
+import { heicToJpegOnServer } from "./heicServer";
 import { UPLOAD_COPY } from "./stateCopy";
 
 /** Exported so a caller can re-check a post-conversion result: if it's
@@ -39,26 +39,17 @@ export function isHeicFile(file: File): boolean {
  * HEIC-shaped and tell the person their photo didn't make it, instead of
  * quietly shipping a broken image.
  *
- * heic2any is a static import, not a dynamic one: this build sets
- * rollupOptions.output.inlineDynamicImports (vite.config.ts) so the app
- * stays a single IIFE that works opened straight from file://, which means
- * a dynamic import() here would just get inlined right back into that same
- * bundle anyway — no actual deferral, just misdirection about where the
- * weight comes from. heic2any's WASM HEIC/HEIF decoder (~340KB gzipped) is
- * therefore part of every visitor's load from here on, confirmed and
- * accepted rather than worked around.
+ * The conversion runs on the server (heicServer.ts, api/heic.ts) since Nov 2, 2026. The
+ * browser converter it replaced (heic2any) evaluated strings, which the Content Security
+ * Policy in vercel.json refuses; it was also ~340KB gzipped on every visitor's load.
  */
 export async function convertHeicIfNeeded(file: File): Promise<File> {
   if (!isHeicFile(file)) return file;
 
   try {
-    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-    // heic2any returns an array only for a multi-image HEIC container
-    // (a burst or a Live Photo saved as HEIC); a Moment's own picker keeps
-    // one file per pick either way, so only the first frame is kept — the
-    // same "whichever one was actually picked" rule pickFiles() already
-    // applies in Log.tsx.
-    const blob = Array.isArray(converted) ? converted[0] : converted;
+    // On the server (api/heic.ts): the browser converter needed 'unsafe-eval', which the Content
+    // Security Policy refuses. A multi-image HEIC (a burst) comes back as its first frame.
+    const blob = await heicToJpegOnServer(file);
     const newName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
     return new File([blob], newName, { type: "image/jpeg" });
   } catch (err) {

@@ -1,7 +1,7 @@
 -- Stubby for guests (20261111000100_stubby_guests.sql): limits, taste profiles, feedback, cleanup.
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run AFTER both
--- 20261111000000_member_gate.sql and 20261111000100_stubby_guests.sql; run before them, the script
+-- 20261111000050_member_gate.sql and 20261111000100_stubby_guests.sql; run before them, the script
 -- stops and says "NOT APPLIED" and creates nothing.
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in
@@ -263,6 +263,13 @@ begin
   v_n := (select count(*) from auth.users u where u.id = v_g3);
   v_i := v_i + 1;
   results := results || (v_i || case when v_n = 1 then ' PASS an active guest stays' else ' FAIL an active guest was removed' end);
+
+  -- 19. The edge function's startup check says ready, and only the server can ask it.
+  v_i := v_i + 1;
+  results := results || (v_i || case when public.stubby_guest_ready()
+                                      and not has_function_privilege('authenticated', 'public.stubby_guest_ready()', 'execute')
+                                      and not has_function_privilege('anon', 'public.stubby_guest_ready()', 'execute')
+                                 then ' PASS ready for guests, and only the server can ask' else ' FAIL stubby_guest_ready is false or callable by clients' end);
 
   raise exception 'RESULTS: %', array_to_string(results, ', ');
 end

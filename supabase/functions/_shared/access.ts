@@ -7,6 +7,8 @@ export interface Access {
   id: string;
   guest: boolean;
   member: boolean;
+  /** A birthdate on file at least 21 years ago: the only way to 21+ picks. */
+  adult21: boolean;
 }
 
 /**
@@ -17,16 +19,19 @@ export interface Access {
 export async function accessOf(
   token: string,
   getUser: (token: string) => Promise<{ id: string; is_anonymous?: boolean } | null>,
-  myAccess: () => Promise<{ member?: unknown; guest?: unknown } | null>,
+  myAccess: () => Promise<{ member?: unknown; guest?: unknown; adult21?: unknown } | null>,
 ): Promise<Access | null> {
   if (!token) return null;
   const user = await getUser(token).catch(() => null);
   if (!user?.id) return null;
   const a = await myAccess().catch(() => null);
-  // Fails closed: unknown means a guest who is not a member.
-  const guest = user.is_anonymous === true || a?.guest !== false;
+  // Fails closed: with no answer from the database (my_access missing, say, because the function
+  // was deployed before the migrations), Auth's own flag decides guest or not, and nobody is a
+  // member or 21+.
+  const guest = user.is_anonymous === true || (a !== null && a.guest !== false);
   const member = !guest && a?.member === true;
-  return { id: user.id, guest, member };
+  const adult21 = !guest && a?.adult21 === true;
+  return { id: user.id, guest, member, adult21 };
 }
 
 /** The allowed origins from ALLOWED_ORIGINS (comma separated), or the live site's. */

@@ -14,10 +14,11 @@ const GOOD = `<picks>${JSON.stringify([
 ])}</picks>`;
 const GUEST: CallerInfo = { guest: true, member: false };
 const ACCOUNT: CallerInfo = { guest: false, member: false };
-const MEMBER: CallerInfo = { guest: false, member: true };
+const MEMBER: CallerInfo = { guest: false, member: true, adult21: true };
+const MEMBER_UNDER_21: CallerInfo = { guest: false, member: true, adult21: false };
 const TASTE: Taste = { city: "Brooklyn", interests: ["make"], timing: "tonight", budget: null };
 
-function deps(who: CallerInfo, o: { taste?: Taste; claim?: unknown; ipHash?: string | null } = {}) {
+function deps(who: CallerInfo, o: { taste?: Taste; claim?: unknown; ipHash?: string | null; ready?: boolean } = {}) {
   const searches: Parameters<ScoutDeps["search"]>[0][] = [];
   const claimAsk = vi.fn(async () => (o.claim === undefined ? { askId: 7 } : o.claim) as never);
   const startRun = vi.fn(async () => 41);
@@ -27,6 +28,7 @@ function deps(who: CallerInfo, o: { taste?: Taste; claim?: unknown; ipHash?: str
     userId: async () => "user-1",
     whoIs: async () => who,
     ipHash: async () => (o.ipHash === undefined ? "a".repeat(64) : o.ipHash),
+    guestReady: async () => o.ready ?? true,
     db: {
       runsSince: async () => 0,
       startRun,
@@ -161,8 +163,8 @@ describe("what each kind of caller may do", () => {
     }
   });
 
-  it("21+ is left out for guests and Stubby accounts even when they ask, and kept for members", async () => {
-    for (const [who, leftOut] of [[GUEST, true], [ACCOUNT, true], [MEMBER, false]] as const) {
+  it("21+ is left out for guests, Stubby accounts and anyone without a 21+ birthdate, even when they ask", async () => {
+    for (const [who, leftOut] of [[GUEST, true], [ACCOUNT, true], [MEMBER_UNDER_21, true], [MEMBER, false], [{ ...MEMBER, guest: true }, true]] as const) {
       const { d, searches } = deps(who, { taste: TASTE });
       await handleScout(post({ mode: "ask", ask: "a wine tasting tonight" }), d);
       expect(searches[0].prompt!.user.includes("Leave out bars, breweries, tastings and 21+.")).toBe(leftOut);
@@ -229,9 +231,11 @@ describe("edge access helpers", () => {
   it("fails closed: no token, a bad token or an unknown status is a guest, never a member", async () => {
     expect(await accessOf("", async () => ({ id: "u" }), async () => ({ member: true, guest: false }))).toBeNull();
     expect(await accessOf("t", async () => null, async () => ({ member: true, guest: false }))).toBeNull();
-    expect(await accessOf("t", async () => ({ id: "u" }), async () => null)).toEqual({ id: "u", guest: true, member: false });
-    expect(await accessOf("t", async () => ({ id: "u", is_anonymous: true }), async () => ({ member: true, guest: false }))).toEqual({ id: "u", guest: true, member: false });
-    expect(await accessOf("t", async () => ({ id: "u" }), async () => ({ member: true, guest: false }))).toEqual({ id: "u", guest: false, member: true });
+    // No answer from the database: Auth's flag decides guest or not; nobody is a member or 21+.
+    expect(await accessOf("t", async () => ({ id: "u" }), async () => null)).toEqual({ id: "u", guest: false, member: false, adult21: false });
+    expect(await accessOf("t", async () => ({ id: "u", is_anonymous: true }), async () => null)).toEqual({ id: "u", guest: true, member: false, adult21: false });
+    expect(await accessOf("t", async () => ({ id: "u", is_anonymous: true }), async () => ({ member: true, guest: false, adult21: true }))).toEqual({ id: "u", guest: true, member: false, adult21: false });
+    expect(await accessOf("t", async () => ({ id: "u" }), async () => ({ member: true, guest: false, adult21: true }))).toEqual({ id: "u", guest: false, member: true, adult21: true });
   });
 
   it("allows only our own origins, and no-origin server calls", () => {
@@ -265,6 +269,26 @@ describe("a guest changes nothing outside their own picks", () => {
       await handleScout(post({ mode: "ask", ask: "pottery tonight" }), d);
       expect(insertPick).toHaveBeenCalledTimes(shared);
     }
+  });
+});
+
+describe("the startup check", () => {
+  it("refuses every guest ask (and the status) until the database and the salt are ready, and members carry on", async () => {
+    for (const body of [{ mode: "ask", ask: "pottery tonight" }, { mode: "ask", status: true }]) {
+      const g = deps(GUEST, { taste: TASTE, ready: false });
+      const res = await handleScout(post(body), g.d);
+      expect(res.status).toBe(503);
+      expect((await res.json()).code).toBe("GUESTS_NOT_READY");
+      expect(g.claimAsk).not.toHaveBeenCalled();
+    }
+    const m = deps(MEMBER, { taste: TASTE, ready: false });
+    expect((await handleScout(post({ mode: "ask", ask: "pottery tonight" }), m.d)).status).toBe(200);
+  });
+
+  it("with no check wired in at all, guests are refused (fails closed)", async () => {
+    const g = deps(GUEST, { taste: TASTE });
+    delete (g.d as { guestReady?: unknown }).guestReady;
+    expect((await handleScout(post({ mode: "ask", ask: "pottery tonight" }), g.d)).status).toBe(503);
   });
 });
 

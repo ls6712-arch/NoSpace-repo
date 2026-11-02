@@ -1,6 +1,6 @@
 {
   "$comment": "Everything a non-member can reach. Deny by default: supabase/security/accessAllowlist.test.ts fails any PR that adds a table, view, RPC, bucket, signed-out policy or edge function reachable by a guest, a Stubby account or a signed-out visitor without an entry here, and fails when this file and private.access_allowlist (set by migrations) disagree. supabase/verification/member_gate_check.sql checks the live database the same way.",
-  "gateMigration": "20261111000000_member_gate.sql",
+  "gateMigration": "20261111000050_member_gate.sql",
   "rpc_anon": [
     "corner_activity_30d",
     "get_profile",

@@ -88,6 +88,22 @@ async function insertOnce(client: typeof server, table: string, row: Record<stri
 }
 
 const ORIGINS = allowedOrigins(env("ALLOWED_ORIGINS"));
+
+// The startup check, cached for 5 minutes per instance: the database is ready for guests and the
+// IP salt is set. Until both are true every guest ask is refused.
+let ready: { ok: boolean; at: number } | null = null;
+async function guestReady(): Promise<boolean> {
+  if (ready && Date.now() - ready.at < 5 * 60_000) return ready.ok;
+  const salt = env("STUBBY_IP_SALT");
+  let ok = !!salt && salt.length >= 16;
+  if (ok) {
+    const { data, error } = await server.rpc("stubby_guest_ready");
+    ok = !error && data === true;
+  }
+  if (!ok) console.error("stubby-scout: guests not ready (migrations, gate or STUBBY_IP_SALT missing)");
+  ready = { ok, at: Date.now() };
+  return ok;
+}
 const LIMIT_CODES: readonly LimitCode[] = ["GUEST_LIMIT_REACHED", "USER_LIMIT_REACHED", "GUEST_GLOBAL_CAP", "GLOBAL_CAP"];
 
 /** The response with CORS for this origin only (the handler's own "*" is replaced). */
@@ -127,7 +143,7 @@ function serve(req: Request): Promise<Response> {
       },
       async () => {
         const { data, error } = await caller.rpc("my_access");
-        return error ? null : (data as { member?: unknown; guest?: unknown });
+        return error ? null : (data as { member?: unknown; guest?: unknown; adult21?: unknown });
       },
     );
     return me;
@@ -140,9 +156,10 @@ function serve(req: Request): Promise<Response> {
     userId,
     async whoIs() {
       const a = await access();
-      return { guest: a?.guest ?? true, member: a?.member ?? false };
+      return { guest: a?.guest ?? true, member: a?.member ?? false, adult21: a?.adult21 ?? false };
     },
     ipHash: () => ipHash(clientIp(req.headers), env("STUBBY_IP_SALT")),
+    guestReady,
     db: {
       async runsSince(ms) {
         const { count, error } = await caller.from("scout_runs").select("id", { count: "exact", head: true }).eq("kind", "admin").gte("started_at", iso(ms));

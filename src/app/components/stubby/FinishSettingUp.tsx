@@ -9,7 +9,7 @@ export const FINISH_SETUP_PATH = `/onboarding?redirect=${encodeURIComponent("/ca
 /**
  * A Stubby account (signed up from Stubby, onboarding not finished) on anything other than Stubby:
  * what finishing gets them, and the way there. Never an invite prompt. The database refuses these
- * features to them anyway (20261111000000_member_gate.sql); this only says why.
+ * features to them anyway (20261111000050_member_gate.sql); this only says why.
  */
 export function FinishSettingUp() {
   return (

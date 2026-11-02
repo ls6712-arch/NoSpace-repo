@@ -2,7 +2,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("heic2any", () => ({ default: vi.fn() }));
 vi.mock("motion/react", async () => {
   const actual = await vi.importActual<typeof import("motion/react")>("motion/react");
   return { ...actual, useReducedMotion: () => true };

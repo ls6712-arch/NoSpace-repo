@@ -188,11 +188,9 @@ await context.route(`${SUPA}/**`, supabase);
 await context.route(`${ORIGIN}/api/geo`, (r) => json(r, 200, { city: "Brooklyn" }));
 const page = await context.newPage();
 const problems: string[] = [];
-const known: string[] = [];
-// Known, reported separately: heic2any's Emscripten code calls new Function at load, which the
-// strict policy (no 'unsafe-eval') refuses. Only HEIC photo conversion depends on it.
-const HEIC_EVAL = /Evaluating a string as JavaScript violates the following Content Security Policy directive because 'unsafe-eval'/;
-page.on("pageerror", (e) => (HEIC_EVAL.test(e.message) ? known.push(e.message) : problems.push(`page error: ${e.message}`)));
+// Any page error fails the run, a Content Security Policy refusal included (HEIC conversion moved
+// to the server so the policy needs no 'unsafe-eval').
+page.on("pageerror", (e) => problems.push(`page error: ${e.message}`));
 page.on("console", (m) => {
   if (process.env.E2E_DEBUG && m.type() !== "debug") console.log("  console", m.type(), m.text().slice(0, 200));
   if (m.type() === "error" && /Content Security Policy|Refused to/i.test(m.text())) problems.push(`CSP: ${m.text()}`);
@@ -262,7 +260,6 @@ try {
 
   if (problems.length) fail(problems.join("\n"));
   console.log("PASS guest → 3 asks → card → limit → Google sign-up → same chat, draft sent");
-  if (known.length) console.log(`KNOWN ${known.length} CSP refusal(s) of 'unsafe-eval' from the HEIC converter (see the PR)`);
 } catch (e) {
   console.error(`FAIL ${(e as Error).message}`);
   if (problems.length) console.error(problems.join("\n"));

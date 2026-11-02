@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // CornersContext reaches the photo converter, which needs a browser Worker that jsdom lacks.
-vi.mock("heic2any", () => ({ default: vi.fn() }));
 
 const flow = vi.hoisted(() => ({ next: vi.fn(), react: vi.fn(), setStubby: vi.fn(), inviteCode: null as string | null, redirectTo: "/" }));
 vi.mock("../OnboardingContext", () => ({ useOnboarding: () => flow }));

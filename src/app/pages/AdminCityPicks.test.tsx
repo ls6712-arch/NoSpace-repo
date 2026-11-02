@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("heic2any", () => ({ default: vi.fn() }));
 const auth = vi.hoisted(() => ({ user: { id: "u1" } as { id: string } | null, isAdmin: true }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
 vi.mock("../context/CategoriesContext", () => ({ useCategories: () => ({ isAdmin: auth.isAdmin }) }));

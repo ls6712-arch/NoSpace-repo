@@ -1,6 +1,7 @@
--- Rollback for 20261111000100_stubby_guests.sql. Run before rollback_20261111000000_member_gate.sql.
+-- Rollback for 20261111000100_stubby_guests.sql. Run before rollback_20261111000050_member_gate.sql.
 -- Guests already made stay until removed by hand; their taste profiles and feedback go.
 
+drop function if exists public.stubby_guest_ready();
 select cron.unschedule('purge-inactive-guests');
 drop function if exists private.purge_inactive_guests();
 

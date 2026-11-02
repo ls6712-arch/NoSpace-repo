@@ -272,7 +272,7 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 |---|---|
 | Welcome to the rest of you. | Hero headline |
 | Log in | Text link in the landing nav, to /login |
-| Sign up | Every landing button, all going to /onboarding. ("Request an invite" is retired.) |
+| Sign up | Every landing button, all going to /onboarding, except Get your first pick, which opens Stubby as a guest (Nov 2, 2026). ("Request an invite" is retired.) |
 | Save it. Try it. Share it. | Section heading and the three step labels (website only) |
 | Example Shelf | Small caption under the hero and step screens (website only). Those people are examples, never real members |
 | Example | Small caption under the reward, friends and privacy screens (website only) |
@@ -897,7 +897,7 @@ The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms whe
 | Term | Meaning |
 |---|---|
 | Free tonight? Stubby has a pick. | The landing hero line. "Stubby" is the character's name, so it is not a product noun |
-| Get your first pick | The landing buttons that go to sign-up (the hero and the last card). The nav button stays "Sign up" |
+| Get your first pick | The hero button and the last card's button. They open Stubby (`/calendar`) as a guest, with no sign-up first: the one exception to "every landing button goes to /onboarding" (founder, Nov 2, 2026, guest Stubby). The nav button stays "Sign up" and still goes to sign-up |
 | Good solo | Small badge on an example pick that works well on your own. Also used in the Questions answers ("marked Good solo") |
 | Nah | The button on an example pick that moves to another pick. Landing examples only |
 | Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |

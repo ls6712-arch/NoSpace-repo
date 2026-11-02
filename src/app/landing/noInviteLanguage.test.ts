@@ -17,10 +17,13 @@ describe("open sign-up copy", () => {
     expect(landing).not.toMatch(GATE);
   });
 
-  it("sends the landing buttons to sign-up", () => {
+  it("sends the landing buttons to sign-up, except Get your first pick, which opens Stubby", () => {
     expect(LANDING_COPY.signUp).toBe("Sign up");
-    expect(landing).toContain('to="/onboarding"');
+    // Sign up buttons default to sign-up (SignUpButton's to = "/onboarding").
+    expect(landing).toMatch(/to( = |=)"\/onboarding"/);
     expect(landing).not.toContain("WaitlistForm");
+    // The one exception (glossary, Nov 2, 2026): both Get your first pick buttons open Stubby as a guest.
+    expect(landing.match(/to="\/calendar"/g)?.length).toBe(2);
   });
 
   it("has no invite-only or waitlist language on the other invite-era screens", () => {

@@ -20,7 +20,7 @@
 --   purge_inactive_guests()  deletes guests (and with them, by cascade, their profile, feedback,
 --                       picks and asks) after 30 days without activity. The days are a setting.
 --
--- Run AFTER 20261111000000_member_gate.sql.
+-- Run AFTER 20261111000050_member_gate.sql.
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Verification: supabase/verification/stubby_guests_check.sql.
 -- Rollback: rollback_20261111000100_stubby_guests.sql.
@@ -318,3 +318,28 @@ $$;
 revoke all on function private.purge_inactive_guests() from public, anon, authenticated;
 
 select cron.schedule('purge-inactive-guests', '20 4 * * *', 'select private.purge_inactive_guests();');
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 7. The edge function's startup check
+-- ─────────────────────────────────────────────────────────────────────────
+
+-- True only when everything guests rely on is in place: the RPC gate is switched on, the member
+-- gate (restrictive policies, my_access) and this migration are applied. stubby-scout refuses every
+-- guest ask while this is false or missing, so turning on anonymous sign-ins too early opens nothing
+-- in Stubby. The server role only.
+create function public.stubby_guest_ready()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from pg_roles r, unnest(r.rolconfig) c where r.rolname = 'authenticator' and c = 'pgrst.db_pre_request=private.request_gate')
+     and to_regprocedure('public.my_access()') is not null
+     and to_regprocedure('public.claim_stubby_turn(uuid, boolean, text, integer, integer, integer, integer, integer)') is not null
+     and to_regclass('public.stubby_profiles') is not null
+     and exists (select 1 from pg_policies p where p.schemaname = 'storage' and p.tablename = 'objects' and p.policyname = 'members only')
+$$;
+
+revoke all on function public.stubby_guest_ready() from public, anon, authenticated;
+grant execute on function public.stubby_guest_ready() to service_role;

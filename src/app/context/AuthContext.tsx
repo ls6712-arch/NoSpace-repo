@@ -60,7 +60,7 @@ export interface Profile {
   access?: "active" | "pending";
   /**
    * "stubby" for an account made by a guest signing up from Stubby (migration
-   * 20261111000000_member_gate.sql). Read only while onboarding isn't finished: such an account
+   * 20261111000050_member_gate.sql). Read only while onboarding isn't finished: such an account
    * isn't sent into onboarding, it uses Stubby and is asked to finish setting up when it tries
    * anything else.
    */

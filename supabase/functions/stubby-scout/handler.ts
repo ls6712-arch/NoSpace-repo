@@ -68,8 +68,10 @@ export interface ScoutSettings {
 export interface CallerInfo {
   /** An anonymous Supabase user. */
   guest: boolean;
-  /** private.is_active: finished onboarding or gave an 18+ birthdate. Only members get 21+ picks. */
+  /** private.is_active: finished onboarding or gave an 18+ birthdate. */
   member: boolean;
+  /** A birthdate on file at least 21 years ago. Only then are 21+ picks allowed, even when asked for. */
+  adult21?: boolean;
 }
 
 export interface AskLimits {
@@ -141,6 +143,11 @@ export interface ScoutDeps {
   whoIs(userId: string): Promise<CallerInfo>;
   /** An HMAC of the caller's IP with a secret salt (64 hex), or null if there is none. */
   ipHash(): Promise<string | null>;
+  /**
+   * The startup check: true only when the database is ready for guests (public.stubby_guest_ready())
+   * and the IP salt is set. Until then every guest ask is refused, whatever Supabase Auth allows.
+   */
+  guestReady?(): Promise<boolean>;
   /** As the signed-in caller: the database's own rules apply (admins only). */
   db: {
     runsSince(ms: number): Promise<number>;
@@ -309,6 +316,10 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
   const userId = await deps.userId();
   if (!userId) return fail(401, "Sign in first.");
   const who = await deps.whoIs(userId);
+  // Anonymous sign-ins switched on before the guest migrations (or the salt): guests get nothing.
+  if (who.guest && !(deps.guestReady ? await deps.guestReady().catch(() => false) : false)) {
+    return json(503, { error: "Stubby isn't open to guests yet.", code: "GUESTS_NOT_READY" });
+  }
   // How many asks are left today, and the day's allowance: read only, no search, no ask used.
   if (mode === "ask" && body.status === true) {
     const perDay = limitsFor(deps.settings, who, null).perPerson;
@@ -542,8 +553,8 @@ async function ask(
   const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
   const picked = profile.picks.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []));
   const read = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
-  // 21+ only for members (an 18+ birthdate on file). Guests and Stubby accounts never get them.
-  const intent: Intent = who.member && !who.guest ? read : { ...read, adults: false };
+  // 21+ only with a birthdate on file at least 21 years ago. Guests never; nobody without one.
+  const intent: Intent = who.adult21 === true && !who.guest ? read : { ...read, adults: false };
 
   // Nothing known about them yet: a vague ask gets one question first, even if the app didn't ask for it.
   const knowsNothing = tasteIsEmpty(taste) && signals.length === 0 && profile.picks.length === 0 && !profile.city && !profile.area;

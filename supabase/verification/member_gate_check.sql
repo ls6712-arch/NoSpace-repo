@@ -1,4 +1,4 @@
--- Member gate (20261111000000_member_gate.sql): deny by default for guests and Stubby accounts.
+-- Member gate (20261111000050_member_gate.sql): deny by default for guests and Stubby accounts.
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run AFTER the migration;
 -- run before it, the script stops and says "NOT APPLIED" and creates nothing.
@@ -27,7 +27,7 @@ declare
 begin
   v_owner_role := current_user;
   if to_regclass('private.access_allowlist') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261111000000_member_gate.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261111000050_member_gate.sql first, nothing was created)';
   end if;
 
   insert into auth.users
@@ -191,6 +191,24 @@ begin
     when others then results := results || (v_i || ' FAIL ' || sqlstate || ': ' || sqlerrm);
   end;
 
+  perform set_config('role', v_owner_role, true);
+  perform set_config('request.jwt.claims', '{}', true);
+
+  -- 4b. 21+ picks need a birthdate at least 21 years ago (my_access().adult21); a guest never.
+  insert into public.profile_private (user_id, birthdate) values (v_m, (current_date - interval '30 years')::date);
+  update public.profile_private set birthdate = (current_date - interval '19 years')::date where profile_private.user_id = v_s;
+  insert into public.profile_private (user_id, birthdate)
+    select v_s, (current_date - interval '19 years')::date
+    where not exists (select 1 from public.profile_private pp where pp.user_id = v_s);
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_m), true);
+  v_ok := (public.my_access() ->> 'adult21')::boolean;
+  perform set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_s), true);
+  v_ok := v_ok and not (public.my_access() ->> 'adult21')::boolean;
+  perform set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_g), true);
+  v_ok := v_ok and not (public.my_access() ->> 'adult21')::boolean and (public.my_access() ->> 'guest')::boolean;
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_ok then ' PASS 21+ only with a birthdate 21 years ago, never for a guest' else ' FAIL adult21 is wrong for one of M, S, G' end);
   perform set_config('role', v_owner_role, true);
   perform set_config('request.jwt.claims', '{}', true);
 

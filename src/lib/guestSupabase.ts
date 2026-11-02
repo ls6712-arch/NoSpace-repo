@@ -9,7 +9,7 @@ import { isSupabaseConfigured, supabase, supabaseAnonKey, supabaseUrl } from "./
  * session is kept apart from the main client's under its own storage key, so the rest of the app
  * never sees a guest as signed in: every other page keeps reading as a signed-out visitor, and
  * nothing a guest does can reach a member-only table (the database refuses anyway; see
- * 20261111000000_member_gate.sql).
+ * 20261111000050_member_gate.sql).
  *
  * When the guest signs up, the same user id becomes a real account (linkIdentity for Google or
  * Apple, a verified email for email), the session moves to the main client, and this one is

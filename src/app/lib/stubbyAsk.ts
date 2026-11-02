@@ -368,6 +368,10 @@ export async function askStubbyStream(
     if (!res.ok) {
       const limit = readLimit(body);
       if (limit) return { found: 0, asksLeft: limit.code === "SIGNUP_REQUIRED" ? null : 0, error: null, limit };
+      // Guests aren't open yet (the function's startup check): the usual line, nothing new.
+      if (body && typeof body === "object" && (body as { code?: unknown }).code === "GUESTS_NOT_READY") {
+        return { found: 0, asksLeft: null, error: "Stubby couldn’t look just now. Try again in a bit." };
+      }
       return { found: 0, asksLeft: null, error: readError(body) ?? "Stubby couldn’t look just now. Try again in a bit." };
     }
     return resultOf(body as Parameters<typeof resultOf>[0]);

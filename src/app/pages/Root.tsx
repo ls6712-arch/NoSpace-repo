@@ -162,7 +162,7 @@ export function Root() {
 
   // A Stubby account (a guest who signed up from Stubby, onboarding not finished) isn't sent into
   // onboarding: it uses Stubby, and anything else says "Finish setting up". The database is what
-  // actually keeps it out of member features (20261111000000_member_gate.sql).
+  // actually keeps it out of member features (20261111000050_member_gate.sql).
   const stubbyAccount = !!user && !!profile && !profile.onboarding_completed && profile.signed_up_from === "stubby";
   if (stubbyAccount && location.pathname === "/") return <Navigate to="/calendar" replace />;
 

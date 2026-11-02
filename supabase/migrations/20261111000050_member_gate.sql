@@ -10,7 +10,11 @@
 --                   or write only its own Stubby rows (20261111000100_stubby_guests.sql).
 --   signed out      the anon role. Unchanged by this migration except that RPCs are now gated too.
 --
--- What this migration does:
+-- Runs AFTER the hotfix 20261111000000_member_rpc_gate.sql, which already added
+-- private.is_anonymous(), private.is_member(), private.access_allowlist with its RPC rows, the RPC
+-- gate (private.request_gate) and finish_onboarding(). This migration adds the rest.
+--
+-- What this migration does (numbers as in the full design; 2, 3, 7 and 8 are in the hotfix):
 --   1. private.is_anonymous(), private.is_member(), private.is_stubby_account(): the three checks,
 --      read from the database (auth.users, profiles), never from anything the client sends.
 --   2. private.access_allowlist: the explicit list of what non-members may reach. Mirrored in
@@ -40,33 +44,11 @@
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Verification: supabase/verification/member_gate_check.sql.
--- Rollback: rollback_20261111000000_member_gate.sql.
+-- Rollback: rollback_20261111000050_member_gate.sql.
 
 -- ─────────────────────────────────────────────────────────────────────────
--- 1. Who is calling
+-- 1. Who is calling (private.is_anonymous() and private.is_member() come from the hotfix)
 -- ─────────────────────────────────────────────────────────────────────────
-
-create or replace function private.is_anonymous()
-returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select coalesce((select u.is_anonymous from auth.users u where u.id = auth.uid()), false)
-$$;
-
-create or replace function private.is_member()
-returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select auth.uid() is not null
-     and not private.is_anonymous()
-     and private.is_active(auth.uid())
-$$;
 
 -- Signed in with a real login, has a profile, not a member yet.
 create or replace function private.is_stubby_account()
@@ -82,6 +64,9 @@ as $$
      and not private.is_active(auth.uid())
 $$;
 
+revoke all on function private.is_stubby_account() from public;
+grant execute on function private.is_stubby_account() to anon, authenticated, service_role;
+
 -- The same answer for the app and the edge functions, so neither keeps its own copy of the rule.
 create or replace function public.my_access()
 returns jsonb
@@ -92,98 +77,27 @@ set search_path = ''
 as $$
   select jsonb_build_object(
     'guest', auth.uid() is null or private.is_anonymous(),
-    'member', private.is_member()
+    'member', private.is_member(),
+    -- 21+ picks (bars, tastings) only with a birthdate on file at least 21 years ago (founder,
+    -- Nov 2, 2026). A guest never has one.
+    'adult21', auth.uid() is not null and not private.is_anonymous() and exists (
+      select 1 from public.profile_private pp
+      where pp.user_id = auth.uid()
+        and pp.birthdate is not null
+        and pp.birthdate <= (current_date - interval '21 years')::date
+    )
   )
 $$;
 
 revoke all on function public.my_access() from public, anon;
 grant execute on function public.my_access() to authenticated;
 
-revoke all on function private.is_anonymous() from public;
-revoke all on function private.is_member() from public;
-revoke all on function private.is_stubby_account() from public;
-grant execute on function private.is_anonymous() to anon, authenticated, service_role;
-grant execute on function private.is_member() to anon, authenticated, service_role;
-grant execute on function private.is_stubby_account() to anon, authenticated, service_role;
-
 -- ─────────────────────────────────────────────────────────────────────────
--- 2. The allowlist
+-- 2. The allowlist (the table and the RPC rows come from the hotfix)
 -- ─────────────────────────────────────────────────────────────────────────
---
--- kind:
---   rpc_anon         an RPC the signed-out anon role may call
---   rpc_guest        an RPC a guest or Stubby account may call (read-only, public data)
---   rpc_account      an RPC a Stubby account may also call (its own onboarding and calendar)
---   table_nonmember  a table with its own narrower restrictive policy instead of "members only"
---   table_anon       a table with a policy that applies to the anon or public role
---
--- The rpc_anon list is exactly what anon could execute before this migration, minus trigger
--- functions. Kept as it was so no signed-out page breaks; reviewed in the PR.
-
-create table private.access_allowlist (
-  kind text not null check (kind in ('rpc_anon', 'rpc_guest', 'rpc_account', 'table_nonmember', 'table_anon')),
-  name text not null check (name ~ '^[a-z_][a-z0-9_]*$'),
-  reason text not null check (char_length(reason) between 3 and 200),
-  primary key (kind, name)
-);
-
-alter table private.access_allowlist enable row level security;
-revoke all on private.access_allowlist from public, anon, authenticated;
 
 insert into private.access_allowlist (kind, name, reason) values
-  -- Signed-out visitors: public profiles, invite previews, Space and Corner counts.
-  ('rpc_anon', 'corner_activity_30d', 'public Corner activity counts'),
-  ('rpc_anon', 'get_profile', 'public Shelf'),
-  ('rpc_anon', 'get_profile_moments', 'public Shelf'),
-  ('rpc_anon', 'get_profile_pursuits', 'public Shelf'),
-  ('rpc_anon', 'get_profile_stubs', 'public Shelf'),
-  ('rpc_anon', 'invite_preview', 'invite arrival page before sign-up'),
-  ('rpc_anon', 'is_blocklisted_name', 'sign-up name check'),
-  ('rpc_anon', 'is_pursuit_participant', 'policy helper, returns a boolean'),
-  ('rpc_anon', 'is_reserved_space_slug', 'policy helper, returns a boolean'),
-  ('rpc_anon', 'is_space_host', 'policy helper, returns a boolean'),
-  ('rpc_anon', 'is_space_member', 'policy helper, returns a boolean'),
-  ('rpc_anon', 'is_visible_profile', 'policy helper, returns a boolean'),
-  ('rpc_anon', 'join_pursuit_via_link', 'Pursuit invite link; refuses without a signed-in member'),
-  ('rpc_anon', 'join_waitlist', 'retired waitlist, still callable before this migration'),
-  ('rpc_anon', 'list_event_teasers', 'event titles and times on a Space page'),
-  ('rpc_anon', 'pursuit_invite_preview', 'Pursuit invite page before sign-up'),
-  ('rpc_anon', 'pursuit_person_name', 'Pursuit invite page before sign-up'),
-  ('rpc_anon', 'resolve_profile_handle', 'public Shelf link'),
-  ('rpc_anon', 'save_notification_body', 'pure text helper, no table access'),
-  ('rpc_anon', 'space_host_count', 'public Space page'),
-  ('rpc_anon', 'space_moment_count_30d', 'public Space page'),
-  ('rpc_anon', 'you_inspired_this_month', 'returns nothing without a signed-in member'),
-
-  -- Guests and Stubby accounts: the same public reads a signed-out visitor has, no writes.
-  ('rpc_guest', 'corner_activity_30d', 'public Corner activity counts'),
-  ('rpc_guest', 'get_profile', 'public Shelf'),
-  ('rpc_guest', 'get_profile_moments', 'public Shelf'),
-  ('rpc_guest', 'get_profile_pursuits', 'public Shelf'),
-  ('rpc_guest', 'get_profile_stubs', 'public Shelf'),
-  ('rpc_guest', 'invite_preview', 'invite arrival page'),
-  ('rpc_guest', 'is_blocklisted_name', 'name check'),
-  ('rpc_guest', 'is_visible_profile', 'policy helper, returns a boolean'),
-  ('rpc_guest', 'list_event_teasers', 'event titles and times on a Space page'),
   ('rpc_guest', 'my_access', 'own guest and member status'),
-  ('rpc_guest', 'pursuit_invite_preview', 'Pursuit invite page'),
-  ('rpc_guest', 'pursuit_person_name', 'Pursuit invite page'),
-  ('rpc_guest', 'resolve_profile_handle', 'public Shelf link'),
-  ('rpc_guest', 'space_host_count', 'public Space page'),
-  ('rpc_guest', 'space_moment_count_30d', 'public Space page'),
-
-  -- Stubby accounts only (never a guest): finishing onboarding, and their own calendar.
-  ('rpc_account', 'accept_terms', 'onboarding: Terms and Privacy Policy'),
-  ('rpc_account', 'claim_invite', 'an invite link attaches to the account'),
-  ('rpc_account', 'finish_onboarding', 'onboarding: the last step'),
-  ('rpc_account', 'get_my_planning', 'calendar: own free time'),
-  ('rpc_account', 'my_member_no', 'onboarding: own member card'),
-  ('rpc_account', 'my_profile_private', 'onboarding: own private profile'),
-  ('rpc_account', 'remove_underage_account', 'onboarding: the under-18 stop'),
-  ('rpc_account', 'set_calendar_feed_token', 'calendar: subscribe link'),
-  ('rpc_account', 'set_username_during_onboarding', 'onboarding: username'),
-  ('rpc_account', 'username_suggestion', 'onboarding: username'),
-
   -- Tables a non-member may reach, each through its own restrictive policy below.
   ('table_nonmember', 'app_config', 'public settings: read only'),
   ('table_nonmember', 'calendar_entries', 'Stubby account: own calendar entries'),
@@ -201,7 +115,6 @@ insert into private.access_allowlist (kind, name, reason) values
   ('table_nonmember', 'pursuits', 'Stubby account: own one-off plans'),
   ('table_nonmember', 'stubby_asks', 'guest and Stubby account: own asks'),
   ('table_nonmember', 'terms_acceptances', 'Stubby account: own row'),
-
   -- Tables with a policy for the public or anon role, as of Nov 2, 2026. Most are own-row
   -- policies written without "to authenticated", which anon can never match (no auth.uid()).
   ('table_anon', 'app_config', 'public settings'),
@@ -237,56 +150,6 @@ insert into private.access_allowlist (kind, name, reason) values
   ('table_anon', 'space_moments', 'public Space Moments'),
   ('table_anon', 'spaces', 'public Spaces'),
   ('table_anon', 'thoughts', 'follows the Moment');
-
--- ─────────────────────────────────────────────────────────────────────────
--- 3. The RPC gate (PostgREST db_pre_request)
--- ─────────────────────────────────────────────────────────────────────────
-
-create or replace function private.request_gate()
-returns void
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_path text := coalesce(current_setting('request.path', true), '');
-  v_claims jsonb := coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb;
-  v_role text := coalesce(v_claims ->> 'role', 'anon');
-  v_fn text;
-begin
-  -- Tables are covered by RLS (section 4). Only RPCs are checked here.
-  if v_path not like '/rpc/%' then
-    return;
-  end if;
-  if v_role = 'service_role' then
-    return;
-  end if;
-  v_fn := lower(split_part(substr(v_path, 6), '/', 1));
-
-  if v_role = 'authenticated' then
-    if private.is_member() then
-      return;
-    end if;
-    if exists (select 1 from private.access_allowlist a where a.kind = 'rpc_guest' and a.name = v_fn) then
-      return;
-    end if;
-    if not private.is_anonymous()
-       and exists (select 1 from private.access_allowlist a where a.kind = 'rpc_account' and a.name = v_fn) then
-      return;
-    end if;
-  elsif exists (select 1 from private.access_allowlist a where a.kind = 'rpc_anon' and a.name = v_fn) then
-    return;
-  end if;
-
-  raise exception 'not allowed' using errcode = '42501';
-end;
-$$;
-
-revoke all on function private.request_gate() from public;
-grant execute on function private.request_gate() to anon, authenticated, service_role;
-
-alter role authenticator set pgrst.db_pre_request = 'private.request_gate';
-notify pgrst, 'reload config';
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 4. Tables: members only, unless on the allowlist
@@ -526,57 +389,3 @@ revoke all on function private.handle_guest_signed_up() from public, anon, authe
 create trigger on_auth_guest_signed_up
   after update of is_anonymous on auth.users
   for each row execute function private.handle_guest_signed_up();
-
--- ─────────────────────────────────────────────────────────────────────────
--- 7. Finishing onboarding needs an 18+ birthdate
--- ─────────────────────────────────────────────────────────────────────────
-
-revoke update (onboarding_completed, onboarding_completed_at) on public.profiles from anon, authenticated;
-
-create or replace function public.finish_onboarding()
-returns boolean
-language plpgsql
-security definer
-set search_path = ''
-as $$
-begin
-  if auth.uid() is null or private.is_anonymous() then
-    raise exception 'not allowed' using errcode = '42501';
-  end if;
-  if not exists (
-    select 1 from public.profile_private pp
-    where pp.user_id = auth.uid()
-      and pp.birthdate is not null
-      and pp.birthdate <= (current_date - interval '18 years')::date
-  ) then
-    return false;
-  end if;
-  update public.profiles
-  set onboarding_completed = true,
-      onboarding_completed_at = coalesce(profiles.onboarding_completed_at, now())
-  where profiles.id = auth.uid();
-  return true;
-end;
-$$;
-
-revoke all on function public.finish_onboarding() from public, anon;
-grant execute on function public.finish_onboarding() to authenticated;
-
--- ─────────────────────────────────────────────────────────────────────────
--- 8. Trigger functions are not RPCs
--- ─────────────────────────────────────────────────────────────────────────
-
-do $$
-declare
-  f record;
-begin
-  for f in
-    select p.oid::regprocedure as sig
-    from pg_proc p
-    join pg_namespace n on n.oid = p.pronamespace
-    where n.nspname = 'public' and p.prorettype = 'trigger'::regtype
-  loop
-    execute format('revoke execute on function %s from public, anon, authenticated', f.sig);
-  end loop;
-end
-$$;

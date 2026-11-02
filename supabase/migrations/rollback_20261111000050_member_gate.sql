@@ -1,9 +1,7 @@
--- Rollback for 20261111000000_member_gate.sql. Run 20261111000100's rollback first.
+-- Rollback for 20261111000050_member_gate.sql. Run 20261111000100's rollback first. The hotfix
+-- (20261111000000_member_rpc_gate.sql: the RPC gate and finish_onboarding) stays; it has its own rollback.
 -- Restores the access rules as they were on Nov 2, 2026. Profiles made for guests who signed up
 -- stay (they are real accounts now); only the signed_up_from marker goes.
-
-alter role authenticator reset pgrst.db_pre_request;
-notify pgrst, 'reload config';
 
 do $$
 declare
@@ -67,14 +65,6 @@ $$;
 drop function if exists private.make_profile(uuid, text, text);
 alter table public.profiles drop column if exists signed_up_from;
 
-drop function if exists public.finish_onboarding();
-grant update (onboarding_completed, onboarding_completed_at) on public.profiles to authenticated;
-
-drop function if exists private.request_gate();
+delete from private.access_allowlist where kind in ('table_nonmember', 'table_anon') or (kind = 'rpc_guest' and name = 'my_access');
 drop function if exists public.my_access();
-drop table if exists private.access_allowlist;
 drop function if exists private.is_stubby_account();
-drop function if exists private.is_member();
-drop function if exists private.is_anonymous();
-
--- Trigger functions keep EXECUTE revoked: they never needed it.
