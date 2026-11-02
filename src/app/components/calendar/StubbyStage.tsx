@@ -5,9 +5,10 @@ import { page } from "../../lib/motionTokens";
 import { STUBBY_LINES, greetingLine, type GreetingInput } from "../../lib/stubbyLines";
 import { takeHello } from "../../lib/stubbyStage";
 import { useMediaQuery } from "../../lib/useMediaQuery";
-import { AskStubby, useAskStubby, type AskState } from "../stubby/AskStubby";
+import { AskStubby, QUESTION_LINE, useAskStubby, type AskState } from "../stubby/AskStubby";
+import { frontCard } from "../../lib/stubbyDeck";
 import { StubbyBuddy, type BuddyReaction, type StubbyBuddyHandle } from "../stubby/StubbyBuddy";
-import { StubbyResults } from "../stubby/StubbyResults";
+import { StubbyResults, type DeckActions } from "../stubby/StubbyResults";
 
 /** A hover or focus hop at most this often, so a wandering pointer doesn't keep him bouncing. */
 const EAGER_GAP_MS = 1500;
@@ -20,9 +21,18 @@ export interface StubbyStageHandle {
   react: (r: BuddyReaction) => void;
 }
 
-/** What Stubby says right now: the ask first, then 0 asks left, then how the last ask went, then his greeting. */
-export function stageLine(state: Pick<AskState, "busy" | "left" | "outcome" | "stalled">, greeting: string): string {
+type LineState = Pick<AskState, "busy" | "left" | "outcome" | "stalled"> & Partial<Pick<AskState, "question" | "deck" | "nudgeId">>;
+
+/**
+ * What Stubby says right now, the first that fits: he's looking; his one question; the card in
+ * front is better with a friend; the deck has run out; 0 asks left; how the last ask went; his greeting.
+ */
+export function stageLine(state: LineState, greeting: string): string {
   if (state.busy) return state.stalled ? STUBBY_LINES.stillLooking : STUBBY_LINES.looking;
+  if (state.question) return QUESTION_LINE[state.question];
+  const deck = state.deck;
+  if (deck && state.nudgeId != null && frontCard(deck) === state.nudgeId) return STUBBY_LINES.bringAFriend;
+  if (deck && deck.all.length > 0 && frontCard(deck) === null) return STUBBY_LINES.deckRunOut;
   if (state.left === 0) return STUBBY_LINES.outOfAsks;
   if (state.outcome === "found") return STUBBY_LINES.found;
   if (state.outcome === "after") return STUBBY_LINES.nothingFits;
@@ -50,8 +60,10 @@ export const StubbyStage = forwardRef<
     failed?: boolean;
     /** A sheet is open: the sticky bar steps aside. */
     sheetOpen?: boolean;
-  }
->(function StubbyStage({ greeting, loading = false, failed = false, sheetOpen = false }, ref) {
+    /** Whose deck: it's kept in this browser, per person. */
+    userId?: string;
+  } & DeckActions
+>(function StubbyStage({ greeting, loading = false, failed = false, sheetOpen = false, userId, onMakePlans, onBring }, ref) {
   const inputId = useId();
   const stage = useRef<HTMLElement | null>(null);
   const buddy = useRef<StubbyBuddyHandle>(null);
@@ -66,7 +78,7 @@ export const StubbyStage = forwardRef<
   }, []);
   useImperativeHandle(ref, () => ({ react }), [react]);
 
-  const ask = useAskStubby({ onReact: react });
+  const ask = useAskStubby({ onReact: react, userId });
   const line = stageLine(ask, greetingLine({ ...greeting, asksLeft: ask.left }));
 
   // Hello, once a session: a hop and one soft ring.
@@ -157,7 +169,7 @@ export const StubbyStage = forwardRef<
         </div>
       </section>
 
-      <StubbyResults state={ask} />
+      <StubbyResults state={ask} onMakePlans={onMakePlans} onBring={onBring} />
     </>
   );
 });

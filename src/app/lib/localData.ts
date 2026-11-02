@@ -28,9 +28,22 @@ export const LOCAL_KEYS = [
   "sushii.cornerNotes.v1", // your own private note per Corner, shown on its Moments tile
   "sushii.momentDefaults.v1", // last-used Pursuit/Corner/audience per account, for two-tap logging
   "soosh.calendar.show.v1", // which kinds of things the calendar shows, per view
-  "soosh.calendar.notthis.v1", // Stubby's picks you said Not this to (never sent anywhere)
+  "soosh.calendar.notthis.v1", // Stubby's picks you said Not now to (was Not this) (never sent anywhere)
   "soosh.calendar.feed.v1", // the private subscribe link's token (a secret: the database only has its hash)
   "soosh.calendar.pending.v1", // calendar changes waiting out their 6 seconds (cancelled plans and so on)
+] as const;
+
+/**
+ * Stores kept per person, under "<prefix><user id>". Signing out clears every one of them.
+ */
+export const LOCAL_PREFIXES = [
+  "soosh.stubby.deck.v1:", // Stubby's deck, Not now cards and Your selection (never sent anywhere until the learning policy, plan PR 5)
+] as const;
+
+/** This tab's own memory, cleared on sign out too. */
+export const SESSION_KEYS = [
+  "soosh.stubby.answers.v1", // Stubby remembers who you're going with, for this session (shown as a chip you can remove)
+  "soosh.stubby.nudge.v1", // whether the last set of picks showed the bring-a-friend nudge (never twice in a row)
 ] as const;
 
 /**
@@ -70,6 +83,15 @@ export function clearLocalData() {
     } catch {
       // A private window may refuse; there's nothing stored to leak in that case.
     }
+  }
+  try {
+    for (let i = window.localStorage.length - 1; i >= 0; i--) {
+      const key = window.localStorage.key(i);
+      if (key && LOCAL_PREFIXES.some((p) => key.startsWith(p))) window.localStorage.removeItem(key);
+    }
+    for (const key of SESSION_KEYS) window.sessionStorage.removeItem(key);
+  } catch {
+    // As above.
   }
   // The draft's attached photo/video lives in IndexedDB, not localStorage
   // (see lib/draftMedia.ts) — it would otherwise survive a sign-out on a

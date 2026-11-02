@@ -810,9 +810,9 @@ One pick at most in each free stretch of the next 7 days, made in the browser. N
 | Term | Use |
 |---|---|
 | Stubby’s pick | The label on a pick: white, a dashed border in the accent text colour. Row in Show: Stubby’s picks, "Ideas for your free time" |
-| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo. Becomes Make it a plan in Stubby plan PR 3, together with Not now (approved Nov 2, 2026): Keep then means only shortlist, in the deck |
-| Ask to join | The button instead of Keep (Make it a plan from PR 3) when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
-| Not this | Retired (Nov 2, 2026): becomes Not now, renamed in Stubby plan PR 3 (the deck), not before, so the app never shows both words. Behaviour stays: swaps in the next match. After 3 on one stretch the stretch goes back to Find something. Kept in this browser only. A declined pick may come back later instead of being hidden for good |
+| Make it a plan | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo. Was Keep until Stubby plan PR 3 (approved Nov 2, 2026): Keep now means only shortlist, in the deck |
+| Ask to join | The button instead of Make it a plan when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
+| Not now | Swaps in the next match (was Not this until Stubby plan PR 3, Nov 2, 2026). After 3 on one stretch the stretch goes back to Find something. Kept in this browser only. Not this time: once its stretch has passed, a declined pick can come back |
 | Find something | What a free stretch says when nothing fits: never filler |
 | You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
 
@@ -926,9 +926,12 @@ Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-
 | Not now | On a card in the deck: the card goes to the back of the deck and comes around again. Replaces Not this everywhere, Calendar's picks included, from Stubby plan PR 3. Same meaning everywhere: not this time, it can come around again |
 | Bring it back | Brings back the card you last said Not now to. Works for the last 3, newest first |
 | Your selection | The tray under the deck: up to 5 kept cards, shown as small tickets |
-| Make it a plan | In Your selection: makes the chosen cards plans (the existing Keep flow: RSVP or join). From PR 3 it is also the button on Calendar's in-slot picks that makes a plan straight away (was Keep) |
+| Make it a plan | In Your selection: puts each chosen card on the calendar as a one-off plan (the existing Make a plan path, Toast: Plan made · Undo; founder, Nov 2, 2026). Also the button on Calendar's in-slot picks that makes a plan straight away (was Keep) |
 | An idea | The label on a do-it-yourself pick, instead of a date and time ticket |
-| That’s all I found. Want more? | When the deck runs out |
+| That’s all I found. Want more? | Stubby's line when the deck runs out. Then: See the ones you skipped · Ask again · Go to your selection |
+| {n} of {total} | The deck's card count, on the card in front ("2 of 5"). Screen readers hear the card's name with it (approved Nov 2, 2026) |
+| Cheaper · Closer · Later · Something different · More like this | Follow-ups under the deck: each adds cards to the back, never replacing it. The first after an ask is free; later ones use an ask (approved Nov 2, 2026) |
+| Bring someone | On the card that's better with a friend, with Stubby's line "This one's better with a friend. Bring someone?" (solo only, at most once per set, never two sets in a row): makes it a one-off plan and opens the half ticket. The same words as Calendar's Bring someone (founder, Nov 2, 2026) |
 | See the ones you skipped | Refills the deck with the Not now cards |
 | Ask again | A new search (uses an ask) |
 | Go to your selection | Goes to Your selection |
@@ -955,6 +958,8 @@ Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-
 What he understood shows as chips while he looks, in the words of his question chips (Tonight, Tomorrow, This weekend; Just me, With my partner, With friends, With family). Anything else he understood has no chip yet.
 
 ### Stubby's question chips
+
+Asked only when something worth asking is missing (who, then when, then what kind), at most once per ask. Answering uses no ask; Surprise me skips it; typing an answer works too. Pick a day opens a date field labelled Pick a day. Who you're going with is remembered for the session as a chip (its X reads "Remove: Just me"), sent with every ask until removed.
 
 | Question | Chips |
 |---|---|

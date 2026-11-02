@@ -1,11 +1,14 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useReducedMotion } from "motion/react";
 import { Check, ChevronDown, ExternalLink, LoaderCircle, X } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "../ui/button";
+import { Chip } from "../ui/Chip";
 import { cn } from "../ui/utils";
 import { pickPill } from "../../lib/cityPicks";
 import { plural } from "../../lib/plural";
-import { ASK_COPY, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { ASK_COPY, SHEET, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { cardCount, frontCard, selectionFull } from "../../lib/stubbyDeck";
 import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
 import type { AskState, StepRow } from "./AskStubby";
@@ -16,19 +19,31 @@ const isSooshLink = (url: string) => url.startsWith("/");
 const stepText = (s: StepRow) =>
   s.kind === "search" ? ASK_COPY.lookingFor(s.query ?? "") : s.kind === "pages" ? `Checking ${plural(s.count ?? 0, "page")}` : ASK_COPY.picking;
 
+/** How far a card is dragged before a swipe counts: right keeps, left is Not now. */
+const SWIPE_PX = 96;
+
+export interface DeckActions {
+  /** Makes these picks plans on the calendar; resolves with the ids that were made. */
+  onMakePlans?: (picks: MyPick[]) => Promise<number[]>;
+  /** The bring-a-friend nudge: makes the pick a plan and opens the half ticket. */
+  onBring?: (pick: MyPick) => void;
+}
+
 /**
- * What Stubby found, right under the Calendar stage (stubby-plan §7). While he looks: what he
- * understood, as chips, then each step as it happens, ticked once the next one starts, and
- * Stop. After: why an ask failed (with Try again), how it went, and this ask's picks, one by
- * one, best fit first. Today's earlier picks fold away under "Earlier today". One self-contained
- * block, so the deck of cards (Stubby plan PR 3) can take its place without touching the stage.
+ * What Stubby found, right under the Calendar stage. While he looks: what he understood, as
+ * chips, then each step, and Stop (stubby-plan §7). After: why an ask failed (with Try again),
+ * how it went, and his picks as a deck of cards (§6.5): one in front, the next ones peeking
+ * behind. Keep sends it to Your selection, Not now to the back of the deck; Bring it back undoes
+ * the last Not now. Swipe right or left, or use the arrow keys (Backspace brings one back).
+ * Follow-ups add cards to the back. Today's earlier picks fold away under "Earlier today".
  */
-export function StubbyResults({ state }: { state: AskState }) {
-  const { busy, error, outcome, current, earlier, understood, steps, stop, retry, remove } = state;
+export function StubbyResults({ state, onMakePlans, onBring }: { state: AskState } & DeckActions) {
+  const { busy, error, outcome, earlier, understood, steps, stop, retry, remove, deck } = state;
   // When nothing fit, Stubby's own line says so; the status isn't repeated here.
   const status = outcome === "nothing" || outcome === "after" ? null : state.status;
   const chips = understood ? [UNDERSTOOD_COPY.when[understood.when ?? ""], UNDERSTOOD_COPY.who[understood.who ?? ""]].filter(Boolean) : [];
-  if (!busy && !error && !status && current.length === 0 && earlier.length === 0) return null;
+  const hasDeck = deck.all.length > 0 || deck.selection.length > 0;
+  if (!busy && !error && !status && !hasDeck && earlier.length === 0) return null;
   return (
     <div data-stubby-results="" className="mb-6 flex flex-col gap-3">
       {busy && chips.length > 0 && (
@@ -72,15 +87,224 @@ export function StubbyResults({ state }: { state: AskState }) {
           {TRY_AGAIN}
         </Button>
       )}
-      {current.length > 0 && (
-        <ul className="grid gap-2 tab:grid-cols-2" aria-label={ASK_COPY.listLabel}>
-          {current.map((p) => (
-            <PickRow key={p.id} pick={p} onRemove={() => void remove(p)} />
-          ))}
-        </ul>
-      )}
+      {deck.all.length > 0 && <Deck state={state} onBring={onBring} />}
+      {deck.selection.length > 0 && <Selection state={state} onMakePlans={onMakePlans} />}
       {earlier.length > 0 && <Earlier picks={earlier} onRemove={(p) => void remove(p)} />}
     </div>
+  );
+}
+
+/** The deck: the front card, the ones behind it peeking out, and what to do when it runs out. */
+function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) => void }) {
+  const reduce = useReducedMotion() ?? false;
+  const { deck, pick, keep, notNow, bringBack, seeSkipped, retry, followUp, busy, nudgeId, remove } = state;
+  const id = frontCard(deck);
+  const front = id === null ? undefined : pick(id);
+  const count = cardCount(deck);
+  const behind = Math.min(2, Math.max(0, deck.order.length - 1));
+  const full = selectionFull(deck);
+  const [dx, setDx] = useState(0);
+  const start = useRef<number | null>(null);
+
+  const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "ArrowRight" && !full) {
+      e.preventDefault();
+      keep();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      notNow();
+    } else if (e.key === "Backspace" && deck.recent.length > 0) {
+      e.preventDefault();
+      bringBack();
+    }
+  };
+  const down = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest("button, a")) return;
+    start.current = e.clientX;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const move = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (start.current !== null) setDx(e.clientX - start.current);
+  };
+  const up = () => {
+    if (start.current === null) return;
+    start.current = null;
+    if (dx > SWIPE_PX && !full) keep();
+    else if (dx < -SWIPE_PX) notNow();
+    setDx(0);
+  };
+
+  const runOut = id === null;
+  return (
+    <section data-stubby-deck="" aria-label={ASK_COPY.listLabel} className="flex flex-col gap-3">
+      {/* Each new card is read out: its name and where it is in the deck. */}
+      <p className="sr-only" aria-live="polite">
+        {front && count ? `${front.title}, ${ASK_COPY.count(count.n, count.total)}` : ""}
+      </p>
+      {!runOut && front && (
+        <div
+          tabIndex={0}
+          onKeyDown={onKey}
+          className="relative isolate mb-3 rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          data-stubby-deck-front=""
+        >
+          {/* The next cards, peeking out behind. */}
+          {Array.from({ length: behind }, (_, i) => (
+            <div
+              key={i}
+              aria-hidden="true"
+              className="absolute inset-x-0 rounded-card border border-border bg-card"
+              style={{ top: `${(i + 1) * 6}px`, bottom: `${-(i + 1) * 6}px`, marginInline: `${(i + 1) * 10}px`, zIndex: -1 - i, opacity: 1 - (i + 1) * 0.25 }}
+            />
+          ))}
+          <div
+            onPointerDown={down}
+            onPointerMove={move}
+            onPointerUp={up}
+            onPointerCancel={up}
+            className={cn("relative touch-pan-y select-none rounded-card border-[1.5px] border-dashed border-accent-text bg-card p-4", !reduce && dx === 0 && "transition-transform")}
+            style={dx && !reduce ? { transform: `translateX(${dx}px) rotate(${dx / 24}deg)` } : undefined}
+          >
+            <Card pick={front} count={count} onRemove={() => void remove(front)} />
+            {nudgeId === front.id && onBring && (
+              <Button type="button" variant="outline" className="mt-3" onClick={() => onBring(front)}>
+                {SHEET.bringSomeone}
+              </Button>
+            )}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" onClick={keep} disabled={full}>
+                {ASK_COPY.keep}
+              </Button>
+              <Button type="button" variant="outline" onClick={notNow}>
+                {ASK_COPY.notNow}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {runOut && (
+        <div data-stubby-runout="" className="flex flex-wrap gap-2">
+          {deck.order.length > 0 && (
+            <Button type="button" variant="outline" onClick={seeSkipped}>
+              {ASK_COPY.seeSkipped}
+            </Button>
+          )}
+          <Button type="button" variant="outline" onClick={retry} disabled={busy}>
+            {ASK_COPY.askAgain}
+          </Button>
+          {deck.selection.length > 0 && (
+            <Button type="button" variant="outline" onClick={() => document.getElementById("stubby-selection")?.focus()}>
+              {ASK_COPY.goToSelection}
+            </Button>
+          )}
+        </div>
+      )}
+      {deck.recent.length > 0 && (
+        <Button type="button" variant="ghost" onClick={bringBack} className="self-start">
+          {ASK_COPY.bringBack}
+        </Button>
+      )}
+      <div role="group" aria-label={ASK_COPY.chipsLabel} className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] tab:mx-0 tab:flex-wrap tab:overflow-visible tab:px-0 [&::-webkit-scrollbar]:hidden">
+        {ASK_COPY.followUps.map((f) => (
+          <Chip key={f.kind} aria-pressed={undefined} disabled={busy} onClick={() => followUp(f.kind)} className="shrink-0 border border-border">
+            {f.label}
+          </Chip>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** One card: what, when, where, price, why, and Open. An idea is never shown as a dated ticket. */
+function Card({ pick: p, count, onRemove }: { pick: MyPick; count: { n: number; total: number } | null; onRemove: () => void }) {
+  const idea = p.kind === "idea";
+  const meta = idea ? [p.place, p.price?.trim() || null] : [pickPill(p), p.place];
+  const linkClass = "mt-1 inline-flex min-h-8 items-center gap-1 text-small font-semibold underline underline-offset-2";
+  return (
+    <div data-pick-kind={p.kind} className="flex items-start gap-3">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-baseline justify-between gap-2">
+          <p className="text-caption font-semibold text-accent-text">{idea ? ASK_COPY.ideaLabel : ASK_COPY.cardLabel}</p>
+          {count && <p className="text-caption text-muted-foreground">{ASK_COPY.count(count.n, count.total)}</p>}
+        </div>
+        <p className="text-lead font-semibold leading-tight">{p.title}</p>
+        {meta.some(Boolean) && <p className="text-small text-muted-foreground">{meta.filter(Boolean).join(" · ")}</p>}
+        {p.why && <p className="mt-1 text-small">{p.why}</p>}
+        {p.note && <p className="text-caption text-muted-foreground">{p.note}</p>}
+        {isSooshLink(p.url) ? (
+          <Link to={p.url} className={linkClass}>
+            {ASK_COPY.open}
+          </Link>
+        ) : (
+          <a href={p.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {ASK_COPY.open}
+            <ExternalLink className="size-3.5" aria-hidden="true" />
+          </a>
+        )}
+      </div>
+      <button type="button" onClick={onRemove} aria-label={`${ASK_COPY.remove}: ${p.title}`} className="-mr-2 -mt-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground">
+        <X className="size-5" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+/** Your selection: up to 5 kept cards as small tickets. Choose one or more, then Make it a plan. */
+function Selection({ state, onMakePlans }: { state: AskState; onMakePlans?: (picks: MyPick[]) => Promise<number[]> }) {
+  const { deck, pick, unselect, madePlans } = state;
+  const [chosen, setChosen] = useState<ReadonlySet<number>>(new Set());
+  const [making, setMaking] = useState(false);
+  const picks = deck.selection.map((id) => pick(id)).filter((p): p is MyPick => !!p);
+  const toggle = (id: number) =>
+    setChosen((c) => {
+      const next = new Set(c);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const make = async () => {
+    if (!onMakePlans) return;
+    const list = picks.filter((p) => chosen.has(p.id));
+    if (!list.length) return;
+    setMaking(true);
+    const made = await onMakePlans(list);
+    setMaking(false);
+    madePlans(made);
+    setChosen((c) => new Set([...c].filter((x) => !made.includes(x))));
+  };
+  return (
+    <section aria-labelledby="stubby-selection" className="flex flex-col gap-2">
+      <h3 id="stubby-selection" tabIndex={-1} className="text-small font-semibold outline-none">
+        {ASK_COPY.selection}
+      </h3>
+      <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] tab:mx-0 tab:flex-wrap tab:px-0 [&::-webkit-scrollbar]:hidden">
+        {picks.map((p) => (
+          <li key={p.id} className="flex shrink-0 items-stretch rounded-control border border-border bg-card">
+            <button
+              type="button"
+              aria-pressed={chosen.has(p.id)}
+              onClick={() => toggle(p.id)}
+              className={cn("flex max-w-56 flex-col items-start px-3 py-2 text-left", chosen.has(p.id) && "bg-accent/15")}
+            >
+              <span className="flex items-center gap-1 text-small font-semibold">
+                {chosen.has(p.id) && <Check className="size-3.5 shrink-0 text-accent-text" aria-hidden="true" />}
+                <span className="truncate">{p.title}</span>
+              </span>
+              <span className="text-caption text-muted-foreground">{p.kind === "idea" ? ASK_COPY.ideaLabel : pickPill(p)}</span>
+            </button>
+            <button type="button" onClick={() => unselect(p.id)} aria-label={`${ASK_COPY.remove}: ${p.title}`} className="inline-flex w-11 items-center justify-center text-muted-foreground">
+              <X className="size-4" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      {onMakePlans && (
+        <Button type="button" onClick={() => void make()} disabled={chosen.size === 0 || making} aria-busy={making} className="self-start">
+          {ASK_COPY.makePlan}
+        </Button>
+      )}
+    </section>
   );
 }
 
@@ -103,40 +327,12 @@ function Earlier({ picks, onRemove }: { picks: MyPick[]; onRemove: (p: MyPick) =
       {open && (
         <ul id={id} className="grid gap-2 tab:grid-cols-2">
           {picks.map((p) => (
-            <PickRow key={p.id} pick={p} onRemove={() => onRemove(p)} />
+            <li key={p.id} className="rounded-control border-[1.5px] border-dashed border-accent-text p-3">
+              <Card pick={p} count={null} onRemove={() => onRemove(p)} />
+            </li>
           ))}
         </ul>
       )}
     </div>
-  );
-}
-
-function PickRow({ pick: p, onRemove }: { pick: MyPick; onRemove: () => void }) {
-  const idea = p.kind === "idea";
-  const meta = idea ? [p.place, p.price?.trim() || null] : [pickPill(p), p.place];
-  const linkClass = "mt-1 inline-flex min-h-8 items-center gap-1 text-small font-semibold underline underline-offset-2";
-  return (
-    <li data-pick-kind={p.kind} className="flex items-start gap-3 rounded-control border-[1.5px] border-dashed border-accent-text p-3">
-      <div className="min-w-0 flex-1">
-        <p className="text-caption font-semibold text-accent-text">{idea ? ASK_COPY.ideaLabel : ASK_COPY.cardLabel}</p>
-        <p className="text-body font-semibold leading-tight">{p.title}</p>
-        {meta.some(Boolean) && <p className="text-small text-muted-foreground">{meta.filter(Boolean).join(" · ")}</p>}
-        {p.why && <p className="mt-1 text-small">{p.why}</p>}
-        {p.note && <p className="text-caption text-muted-foreground">{p.note}</p>}
-        {isSooshLink(p.url) ? (
-          <Link to={p.url} className={linkClass}>
-            {ASK_COPY.open}
-          </Link>
-        ) : (
-          <a href={p.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
-            {ASK_COPY.open}
-            <ExternalLink className="size-3.5" aria-hidden="true" />
-          </a>
-        )}
-      </div>
-      <button type="button" onClick={onRemove} aria-label={`${ASK_COPY.remove}: ${p.title}`} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground">
-        <X className="size-5" aria-hidden="true" />
-      </button>
-    </li>
   );
 }

@@ -30,6 +30,10 @@ export interface MyPick {
   askId: number | null;
   /** When it was saved, for "Earlier today". */
   createdAt: number | null;
+  /** Stubby thinks it's better with a friend (solo asks only), for the nudge. */
+  betterWithFriend: boolean;
+  /** Its Corner as "space-slug/corner-slug", when it has one: Make it a plan files the plan there. */
+  cornerKey: string | null;
 }
 
 /** How an ask went: picks in the time asked for, only the soonest after tonight, or nothing. */
@@ -49,10 +53,17 @@ const toPick = (r: Record<string, any>): MyPick => ({
   after: r.soonest_after === true,
   askId: typeof r.ask_id === "number" ? r.ask_id : null,
   createdAt: r.created_at ? Date.parse(r.created_at) : null,
+  betterWithFriend: r.better_with_friend === true,
+  cornerKey: r.corners?.space_slug && r.corners?.slug ? `${r.corners.space_slug}/${r.corners.slug}` : null,
 });
 
-const NEW_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, kind, why, soonest_after, rank, ask_id, created_at";
-const OLD_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, created_at";
+const BASE_COLUMNS = "id, title, place, starts_at, ends_at, price, url, note, created_at, corners(space_slug, slug)";
+/** Newest first: each migration's columns, then the ones before it, so the app works while one isn't live yet. */
+const COLUMN_TIERS: { columns: string; ranked: boolean }[] = [
+  { columns: `${BASE_COLUMNS}, kind, why, soonest_after, rank, ask_id, better_with_friend`, ranked: true },
+  { columns: `${BASE_COLUMNS}, kind, why, soonest_after, rank, ask_id`, ranked: true },
+  { columns: BASE_COLUMNS, ranked: false },
+];
 
 /**
  * Your picks from Stubby that haven't ended yet: the latest ask's first, best fit first within
@@ -68,8 +79,12 @@ export async function fetchMyPicks(now = Date.now()): Promise<MyPick[]> {
     return q.order("starts_at", { ascending: true }).limit(50);
   };
   try {
-    let { data, error } = await read(NEW_COLUMNS, true);
-    if (error) ({ data, error } = await read(OLD_COLUMNS, false));
+    let data: unknown = null;
+    let error: unknown = true;
+    for (const t of COLUMN_TIERS) {
+      ({ data, error } = await read(t.columns, t.ranked));
+      if (!error) break;
+    }
     if (error || !Array.isArray(data)) return [];
     return (data as unknown as Record<string, any>[]).map(toPick).filter((p) => (p.endsAt ?? p.startsAt + 3 * 3_600_000) >= now);
   } catch {
@@ -139,14 +154,36 @@ export interface AskResult {
   error: string | null;
   outcome?: AskOutcome;
   askId?: number;
+  /** A follow-up that cost nothing (the first after an ask). */
+  free?: boolean;
+  /** Stubby needs one answer first; nothing was searched and no ask was used. */
+  question?: "who" | "when" | "what";
+}
+
+/** The person's answer to Stubby's one question. */
+export interface AskAnswers {
+  who?: "solo" | "partner" | "friends" | "family";
+  /** tonight, tomorrow, weekend, or a picked day "YYYY-MM-DD". */
+  when?: string;
+  /** Surprise me, or an answer typed into the ask. */
+  skip?: boolean;
+}
+
+/** A follow-up on the deck. The first after an ask is free. */
+export interface AskFollowUp {
+  of: number;
+  kind: "cheaper" | "closer" | "later" | "different" | "more";
+  titles: string[];
 }
 
 const readError = (body: unknown): string | null => (body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : null);
 
-function resultOf(r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown } | null): AskResult {
+function resultOf(r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown } | null): AskResult {
+  const asksLeft = typeof r?.asksLeft === "number" ? r.asksLeft : null;
+  if (r?.question === "who" || r?.question === "when" || r?.question === "what") return { found: 0, asksLeft, error: null, question: r.question };
   const found = Array.isArray(r?.picks) ? r!.picks!.length : 0;
   const outcome: AskOutcome = r?.outcome === "after" || r?.outcome === "nothing" || r?.outcome === "found" ? r.outcome : found > 0 ? "found" : "nothing";
-  return { found, asksLeft: typeof r?.asksLeft === "number" ? r.asksLeft : null, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined };
+  return { found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true };
 }
 
 /**
@@ -154,7 +191,10 @@ function resultOf(r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; 
  * search, the pages read, then that he's picking. Resolves with the same result as askStubby.
  * Aborting (`signal`, the Stop button) stops listening; the ask was paid for and still counts.
  */
-export async function askStubbyStream(text: string, { signal, onStep }: { signal?: AbortSignal; onStep: (s: AskStep) => void }): Promise<AskResult> {
+export async function askStubbyStream(
+  text: string,
+  { signal, onStep, answers, questions, followUp }: { signal?: AbortSignal; onStep: (s: AskStep) => void; answers?: AskAnswers | null; questions?: boolean; followUp?: AskFollowUp | null },
+): Promise<AskResult> {
   const ask = text.trim().slice(0, ASK_MAX_LENGTH);
   if (ask.length < 2) return { found: 0, asksLeft: null, error: "Say what you’re after, like pottery on Saturday." };
   if (!supabase || !supabaseUrl || !supabaseAnonKey) return { found: 0, asksLeft: null, error: "Stubby needs the live app." };
@@ -167,7 +207,7 @@ export async function askStubbyStream(text: string, { signal, onStep }: { signal
     res = await fetch(`${supabaseUrl}/functions/v1/stubby-scout`, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
-      body: JSON.stringify({ mode: "ask", ask, stream: true }),
+      body: JSON.stringify({ mode: "ask", ask, stream: true, ...(answers ? { answers } : {}), ...(questions ? { questions: true } : {}), ...(followUp ? { followUp } : {}) }),
       signal,
     });
   } catch (e) {

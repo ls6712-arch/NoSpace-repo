@@ -57,6 +57,8 @@ import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
 import { keepPick, undoKeep } from "../lib/pickActions";
 import { StubbyStage, type StubbyStageHandle } from "../components/calendar/StubbyStage";
+import { createPlan } from "../lib/planEdits";
+import type { MyPick } from "../lib/stubbyAsk";
 import { usePickDeclines } from "../lib/pickDeclines";
 import { stubbyPicks } from "../lib/stubbyPicks";
 import { announceChange } from "../lib/undo";
@@ -192,6 +194,27 @@ export function Calendar() {
       return;
     }
     stubby.react("torn");
+  };
+  // Your selection: Make it a plan puts each chosen pick on the calendar as a one-off plan, each with Undo.
+  const makePlansFromPicks = async (picks: MyPick[]): Promise<number[]> => {
+    const made: number[] = [];
+    for (const p of picks) {
+      if (await actions.makePlan({ title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt })) made.push(p.id);
+    }
+    if (made.length) stubby.react("stamped");
+    return made;
+  };
+  // The bring-a-friend nudge: the pick becomes a one-off plan, then the half ticket opens.
+  const bringFromPick = async (p: MyPick) => {
+    if (!owner) return;
+    const r = await createPlan({ title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt }, owner);
+    if (r.sessionId === undefined || !r.pursuitId) {
+      stubby.react("tilt");
+      notifyError(r.error ?? ERROR_LINE);
+      return;
+    }
+    reloadPlans();
+    await onBring({ id: `session-${r.sessionId}`, kind: "session", title: p.title, startsAt: p.startsAt, color: "orange", mine: true, pursuitId: r.pursuitId, going: { friends: [], total: 1 }, cornerKey: p.cornerKey ?? undefined });
   };
   const retry = () => {
     data.reload();
@@ -348,6 +371,9 @@ export function Calendar() {
         loading={data.status === "loading"}
         failed={data.status === "error" || (data.status === "ready" && extra.failed)}
         sheetOpen={!!sheet || showOpen}
+        userId={userId}
+        onMakePlans={makePlansFromPicks}
+        onBring={(p) => void bringFromPick(p)}
       />
       <CalendarToolbar
         view={view}

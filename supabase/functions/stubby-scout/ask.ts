@@ -57,6 +57,8 @@ export interface AskCheckContext {
   askText: string;
   /** How far ahead the soonest-after may go. */
   latestMs: number;
+  /** Titles already shown in this deck (a follow-up): never shown twice. */
+  exclude?: readonly string[];
 }
 
 // ── pages that aren't the event's own ─────────────────────────────────────
@@ -120,6 +122,7 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
   const seen = new Set<string>();
   const { intent, window } = ctx;
   const askLower = ctx.askText.toLowerCase();
+  const shown = new Set((ctx.exclude ?? []).map((t) => cleanText(t).toLowerCase()));
 
   for (const r of raw) {
     const title = cleanText(r.title);
@@ -133,6 +136,10 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
       continue;
     }
     const kind: AskPick["kind"] = r.kind === "idea" ? "idea" : "event";
+    if (shown.has(title.toLowerCase())) {
+      drop("Already in the deck.");
+      continue;
+    }
 
     const startsAt = nyLocalToMs(r.starts);
     if (!Number.isFinite(startsAt)) {
@@ -290,5 +297,6 @@ export function askRowFor(p: AskPick, userId: string, askId: number, rank: numbe
     rank,
     ask_id: askId,
     soonest_after: p.after,
+    better_with_friend: p.betterWithFriend,
   };
 }

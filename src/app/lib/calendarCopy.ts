@@ -45,9 +45,11 @@ export const SHEET = {
   removeFree: "Remove free time",
   yourBlock: "Your block",
   stubbysPick: "Stubby’s pick",
-  keep: "Keep",
+  /** The in-slot pick's button that makes a plan straight away (was Keep; Keep now only shortlists, in the deck). Approved Nov 2, 2026. */
+  keep: "Make it a plan",
   askToJoin: "Ask to join",
-  notThis: "Not this",
+  /** Was Not this: not this time, it can come around again (approved Nov 2, 2026). */
+  notThis: "Not now",
   findSomething: "Find something",
   stub: "Stub",
   hostedLine: "The host sets this time.",
@@ -107,6 +109,24 @@ export const ASK_COPY = {
   picking: "Picking the best for you",
   stop: "Stop",
   earlier: "Earlier today",
+  /** The deck and Your selection (stubby-plan §6.5, approved Nov 2, 2026). */
+  keep: "Keep",
+  notNow: "Not now",
+  bringBack: "Bring it back",
+  selection: "Your selection",
+  makePlan: "Make it a plan",
+  seeSkipped: "See the ones you skipped",
+  askAgain: "Ask again",
+  goToSelection: "Go to your selection",
+  count: (n: number, total: number) => `${n} of ${total}`,
+  /** Follow-ups under the deck: each adds cards to the back (approved Nov 2, 2026). */
+  followUps: [
+    { kind: "cheaper", label: "Cheaper" },
+    { kind: "closer", label: "Closer" },
+    { kind: "later", label: "Later" },
+    { kind: "different", label: "Something different" },
+    { kind: "more", label: "More like this" },
+  ] as const,
 } as const;
 
 /**
@@ -117,5 +137,23 @@ export const ASK_COPY = {
 export const UNDERSTOOD_COPY = {
   when: { tonight: "Tonight", tomorrow: "Tomorrow", weekend: "This weekend" } as Record<string, string>,
   who: { solo: "Just me", partner: "With my partner", friends: "With friends", family: "With family" } as Record<string, string>,
+};
+
+/** Stubby's one question, answered with a tap (stubby-plan §5, approved Nov 2, 2026). */
+export const QUESTION_COPY = {
+  who: [
+    { label: "Just me", who: "solo" },
+    { label: "With my partner", who: "partner" },
+    { label: "With friends", who: "friends" },
+    { label: "With family", who: "family" },
+  ] as const,
+  when: [
+    { label: "Tonight", when: "tonight" },
+    { label: "Tomorrow", when: "tomorrow" },
+    { label: "This weekend", when: "weekend" },
+  ] as const,
+  pickADay: "Pick a day",
+  what: ["Active", "Make something", "Food & drink", "Chill", "Learn something"] as const,
+  surprise: "Surprise me",
 };
 

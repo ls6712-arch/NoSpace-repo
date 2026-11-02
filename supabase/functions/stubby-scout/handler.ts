@@ -31,8 +31,8 @@ import {
 } from "./picks.ts";
 import { SearchError, type SearchProgress, type SearchResult } from "./search.ts";
 import { askRowFor, checkAskPicks, type AskPick } from "./ask.ts";
-import { askSystemPrompt, askUserPrompt, type AboutPerson } from "./askPrompt.ts";
-import { readIntent, searchWindow, type Answers, type Intent, type Who } from "./intent.ts";
+import { askSystemPrompt, askUserPrompt, type AboutPerson, type FollowUp, type FollowUpKind } from "./askPrompt.ts";
+import { readIntent, searchWindow, type Answers, type Intent, type Who, type Window } from "./intent.ts";
 
 export const CITY = "new-york";
 /** The morning restock fills this many days ahead. */
@@ -121,6 +121,11 @@ export interface ScoutDeps {
   server: {
     claimSource(): Promise<Source | null>;
     claimAsk(userId: string, perPerson: number, perDay: number): Promise<number | null>;
+    /**
+     * Marks this person's ask's free follow-up used, in one update that only succeeds once (and
+     * only for an ask of theirs from the last day). True when it was free; false means it costs an ask.
+     */
+    claimFreeFollowUp(userId: string, askId: number, sinceMs: number): Promise<boolean>;
     finishRun(id: number, r: { searches: number; found: number; added: number; error: string | null }): Promise<void>;
     finishAsk(id: number, r: { found: number; added: number; failed: boolean }): Promise<void>;
     /** How many asks this person has made since `ms`. */
@@ -162,8 +167,10 @@ export interface AskReport {
   understood: { when: string | null; who: Who | null; budget: number | null; free: boolean };
   dropped: Dropped[];
   asksLeft: number;
-  /** Which ask this was, so the app shows this ask's picks apart from earlier ones. */
+  /** Which ask this was, so the app shows this ask's picks apart from earlier ones. A free follow-up shares its ask's id. */
   askId: number;
+  /** A follow-up that cost nothing (the first after an ask). */
+  free: boolean;
 }
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
@@ -237,7 +244,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return fail(405, "Use POST.");
 
-  let body: { mode?: unknown; focus?: unknown; ask?: unknown; answers?: unknown; questions?: unknown; stream?: unknown } = {};
+  let body: { mode?: unknown; focus?: unknown; ask?: unknown; answers?: unknown; questions?: unknown; stream?: unknown; followUp?: unknown } = {};
   try {
     body = ((await req.json()) ?? {}) as typeof body;
   } catch {
@@ -252,7 +259,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
 
   const userId = await deps.userId();
   if (!userId) return fail(401, "Sign in first.");
-  if (mode === "ask") return ask(deps, userId, body.ask, readAnswers(body.answers), body.questions === true, body.stream === true);
+  if (mode === "ask") return ask(deps, userId, body.ask, readAnswers(body.answers), body.questions === true, body.stream === true, readFollowUp(body.followUp));
   return admin(deps, cleanText(body.focus).slice(0, 200) || null);
 }
 
@@ -347,8 +354,34 @@ function readAnswers(v: unknown): Answers | null {
   const a = v as Record<string, unknown>;
   const out: Answers = {};
   if (typeof a.who === "string" && (WHO_VALUES as readonly string[]).includes(a.who)) out.who = a.who as Who;
-  if (typeof a.when === "string" && (WHEN_VALUES as readonly string[]).includes(a.when)) out.when = a.when as Answers["when"];
-  return out.who || out.when ? out : null;
+  if (typeof a.when === "string" && ((WHEN_VALUES as readonly string[]).includes(a.when) || /^\d{4}-\d{2}-\d{2}$/.test(a.when))) out.when = a.when;
+  if (a.skip === true) out.skip = true;
+  return out.who || out.when || out.skip ? out : null;
+}
+
+const FOLLOW_UP_KINDS: readonly FollowUpKind[] = ["cheaper", "closer", "later", "different", "more"];
+
+/** A follow-up on the deck: which ask it follows, what to change, and the titles already shown. */
+function readFollowUp(v: unknown): (FollowUp & { of: number }) | null {
+  if (!v || typeof v !== "object") return null;
+  const f = v as Record<string, unknown>;
+  if (typeof f.of !== "number" || !Number.isInteger(f.of) || f.of <= 0) return null;
+  if (typeof f.kind !== "string" || !(FOLLOW_UP_KINDS as readonly string[]).includes(f.kind)) return null;
+  const titles = Array.isArray(f.titles) ? f.titles.filter((t): t is string => typeof t === "string").map((t) => cleanText(t).slice(0, 80)).filter(Boolean).slice(0, 10) : [];
+  return { of: f.of, kind: f.kind as FollowUpKind, titles };
+}
+
+/** What a follow-up changes before the search: Cheaper halves the ceiling, Later starts two hours on. */
+export function applyFollowUp(intent: Intent, window: Window, kind: FollowUpKind, now: number): { intent: Intent; window: Window } {
+  if (kind === "cheaper") {
+    const budget = intent.budget ? { ...intent.budget, max: Math.floor(intent.budget.max / 2), from: "ask" as const } : { max: 20, free: false, from: "ask" as const };
+    return { intent: { ...intent, budget }, window };
+  }
+  if (kind === "later") {
+    const start = Math.max(window.startMs, now) + 2 * 3_600_000;
+    return { intent, window: start < window.endMs ? { ...window, startMs: start } : window };
+  }
+  return { intent, window };
 }
 
 const DAY_WORDS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
@@ -389,7 +422,15 @@ const understoodOf = (intent: Intent): AskReport["understood"] => ({
   free: intent.budget?.free ?? false,
 });
 
-async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answers | null, questions: boolean, stream = false): Promise<Response> {
+async function ask(
+  deps: ScoutDeps,
+  userId: string,
+  raw: unknown,
+  answers: Answers | null,
+  questions: boolean,
+  stream = false,
+  followUp: (FollowUp & { of: number }) | null = null,
+): Promise<Response> {
   // Their own words, one plain line. Double quotes become single so the prompt stays one quote.
   const text = cleanText(raw).replace(/"/g, "'").slice(0, 200);
   if (text.length < 2) return fail(400, "Say what you're after, like pottery on Saturday.");
@@ -404,19 +445,25 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
   const intent = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
 
   // One question first, when the app can ask it and something worth asking is missing. No ask is used.
-  if (questions && intent.missing) {
+  if (questions && intent.missing && !followUp) {
     const left = Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS)));
     const q: AskQuestion = { question: intent.missing, asksLeft: left };
     return json(200, q);
   }
 
-  const askId = await deps.server.claimAsk(userId, asksPerPerson, asksPerDay);
+  // A follow-up: the first after an ask is free and joins that ask's picks; later ones use an ask.
+  const free = followUp ? await deps.server.claimFreeFollowUp(userId, followUp.of, now - DAY_MS) : false;
+  const askId = free ? followUp!.of : await deps.server.claimAsk(userId, asksPerPerson, asksPerDay);
   if (askId === null) return fail(429, `That's ${asksPerPerson} for today. I'll look again tomorrow.`);
+  // A free follow-up's picks rank after its ask's own.
+  const rankFrom = free ? 10 : 0;
 
   let found = 0;
   // Everything from the search to the saved picks. Streams its steps through `emit` when asked.
   const work = async (emit: Emit): Promise<AskReport> => {
-    const window = searchWindow(intent, now);
+    const changed = followUp ? applyFollowUp(intent, searchWindow(intent, now), followUp.kind, now) : { intent, window: searchWindow(intent, now) };
+    const window = changed.window;
+    const asked = changed.intent;
     const person = aboutPerson(profile, picked);
     let picking = false;
     const result = await deps.search({
@@ -424,7 +471,7 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
       ask: text,
       cornerNames: corners.map((c) => c.name),
       maxSearches: deps.settings.maxSearches,
-      prompt: { system: askSystemPrompt(), user: askUserPrompt(text, intent, window, person, now) },
+      prompt: { system: askSystemPrompt(), user: askUserPrompt(text, asked, window, person, now, followUp) },
       onProgress: stream
         ? (e) => {
             if (e.type === "picking") picking = true;
@@ -438,7 +485,7 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
     found = rawPicks.length;
     const { kept, dropped, outcome } = checkAskPicks(rawPicks, {
       now,
-      intent,
+      intent: asked,
       window,
       sourceLinks: result.sourceLinks,
       sooshLinks: new Set(person.sooshPages.map((p) => p.url)),
@@ -446,10 +493,11 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
       pickedCornerIds: new Set(picked.map((c) => c.id)),
       askText: text,
       latestMs: window.endMs + AFTER_DAYS * DAY_MS,
+      exclude: followUp?.titles,
     });
 
     const mine: AskPick[] = [];
-    for (const [rank, p] of kept.entries()) if (await deps.server.insertPersonal(askRowFor(p, userId, askId, rank))) mine.push(p);
+    for (const [rank, p] of kept.entries()) if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
 
     // Shared with everyone, without who asked: events only, never ideas. Published from a trusted page, a draft otherwise.
     const events = kept.filter((p) => p.kind === "event");
@@ -462,7 +510,8 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
       }
     }
 
-    await deps.server.finishAsk(askId, { found, added: mine.length, failed: false });
+    // A free follow-up isn't an ask of its own: its ask's counts stay as they were.
+    if (!free) await deps.server.finishAsk(askId, { found, added: mine.length, failed: false });
     return {
       picks: kept.map((p) => ({
         kind: p.kind,
@@ -478,14 +527,15 @@ async function ask(deps: ScoutDeps, userId: string, raw: unknown, answers: Answe
         after: p.after,
       })),
       outcome,
-      understood: understoodOf(intent),
+      understood: understoodOf(asked),
       dropped,
       asksLeft: Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS))),
       askId,
+      free,
     };
   };
   const failed = (e: unknown) => {
-    void deps.server.finishAsk(askId, { found, added: 0, failed: true }).catch(() => undefined);
+    if (!free) void deps.server.finishAsk(askId, { found, added: 0, failed: true }).catch(() => undefined);
     return { error: message(e, "Something went wrong. Try again in a bit."), status: statusOf(e) };
   };
 

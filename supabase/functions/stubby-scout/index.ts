@@ -5,7 +5,9 @@
 //     { "mode": "ask", "ask": "outdoors...",  a person asks (signed in). "answers": {"who": "solo"} is their
 //       "answers"?, "questions"? }           answer to Stubby's one question; "questions": true asks to be
 //                                            asked that question first, which uses no ask; "stream": true
-//                                            answers as server-sent events (see handler.ts).
+//                                            answers as server-sent events (see handler.ts);
+//                                            "followUp": {"of": askId, "kind": "cheaper", "titles": [...]}
+//                                            follows a deck (the first after an ask is free).
 //     { "mode": "restock" }                  the morning schedule (no sign-in; see handler.ts)
 //
 // Deploy WITHOUT gateway JWT verification, because the morning schedule has no sign-in:
@@ -135,6 +137,18 @@ Deno.serve((req) => {
         const { data, error } = await server.rpc("claim_stubby_ask", { p_user: user, p_per_user: perPerson, p_global: perDay });
         if (error) throw error;
         return (data as number | null) ?? null;
+      },
+      async claimFreeFollowUp(user, askId, sinceMs) {
+        const { data, error } = await server
+          .from("stubby_asks")
+          .update({ free_follow_up_used: true })
+          .eq("id", askId)
+          .eq("user_id", user)
+          .eq("free_follow_up_used", false)
+          .gte("asked_at", iso(sinceMs))
+          .select("id");
+        if (error) throw error;
+        return Array.isArray(data) && data.length === 1;
       },
       async finishRun(id, r) {
         await server.from("scout_runs").update({ finished_at: new Date().toISOString(), ...r }).eq("id", id);
