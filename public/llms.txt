@@ -1,0 +1,36 @@
+# Soosh
+
+> Soosh tells you one thing to do with your free time in New York. Tell Soosh when you’re free and what you want to spend, and Stubby, the Soosh ticket, brings one pick that fits, with the time, the place, the cost and whether it works solo. Go on your own or bring a friend.
+
+Soosh is free to use and runs in the browser at https://www.onsoosh.com/. It is in New York first, with more cities after that.
+
+## How it works
+
+1. Tell us your week: which evenings are free, what you want to spend in a month, and anything you already pay for, like a gym or a museum membership.
+2. Get a pick: Stubby suggests one thing with the time, the place, the cost and whether it works solo.
+3. Say I’m going: go alone or tap Bring someone. The pick shows up on your Home with everything you need.
+4. Go, then tear your Stub: do the thing, post a Moment if you want, and a new Stub goes on your Shelf.
+
+## Good for
+
+- People in New York who are free tonight or this weekend and want one specific thing to do, not a list.
+- Going solo: picks are marked Good solo, like drop-in classes, beginner classes, counter dinners, run clubs and silent book clubs.
+- Plans on a budget: free picks and picks under $25.
+- Getting out with friends you already have. Soosh is not for meeting strangers.
+
+## What Soosh does not do
+
+- It never books, pays or messages anyone until you tap.
+
+## Words used in Soosh
+
+- Moment: anything you post, like a photo, video, text or link.
+- Stub: a keepsake for something you did.
+- Shelf: your profile, with your Stubs.
+- Corner: an interest, like Pottery, Running or Climbing.
+- Space: a community run by a host.
+- Pursuit: something you are working toward.
+
+## Links
+
+- [Soosh home](https://www.onsoosh.com/)
