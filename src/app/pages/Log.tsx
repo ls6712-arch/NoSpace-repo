@@ -293,7 +293,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
 
   const hobbyParam = searchParams.get("hobby");
   // No default Space: with nothing picked, a Moment is saved with no Space at all
-  // (20261107000000_log_punch_cards.sql). It used to be filed under the first
+  // (20261109000000_log_punch_cards.sql). It used to be filed under the first
   // visible Space, which nobody chose.
   const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? "";
   const [hobbySlug, setHobbySlug] = useState(initialHobby);

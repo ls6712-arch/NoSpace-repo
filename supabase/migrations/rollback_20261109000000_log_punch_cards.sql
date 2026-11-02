@@ -1,4 +1,4 @@
--- Rollback for 20261107000000_log_punch_cards.sql.
+-- Rollback for 20261109000000_log_punch_cards.sql.
 -- Drops log_progress() and the Corner-needs-a-Space check, then makes posts.hobby_slug required
 -- again. That last step fails while any Moment has no Space: those Moments were logged with
 -- nothing picked, and no Space is honestly theirs. Decide what to do with them first (the app

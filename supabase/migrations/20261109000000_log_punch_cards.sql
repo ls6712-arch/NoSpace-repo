@@ -1,6 +1,6 @@
 -- Log a Moment: nothing is required, and every log can punch a card.
 --
--- Run AFTER 20261106000000_space_events_listing_fields.sql. Applied only with the founder's
+-- Run AFTER 20261108000000_stubby_deck.sql. Applied only with the founder's
 -- written approval naming this file (CLAUDE.md).
 --
 -- 1. posts.hobby_slug may be null. Picking a Corner (or a Pursuit) is optional in Log now, and
@@ -33,7 +33,7 @@
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Verification: supabase/verification/log_punch_cards_check.sql.
--- Rollback: rollback_20261107000000_log_punch_cards.sql.
+-- Rollback: rollback_20261109000000_log_punch_cards.sql.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. A Moment may have no Space, but never a Corner without one

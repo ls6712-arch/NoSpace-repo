@@ -182,7 +182,7 @@ export function rowToPost(row: any, creatorName: string): Post {
     id: row.id,
     // An older post stored one of the eight original Space slugs. Nothing was
     // migrated in the database; it is translated on the way in instead.
-    // A Moment logged with nothing picked has no Space (20261107000000_log_punch_cards.sql): "".
+    // A Moment logged with nothing picked has no Space (20261109000000_log_punch_cards.sql): "".
     hobbySlug: currentSpaceSlug(row.hobby_slug ?? ""),
     subHobby: row.sub_hobby ?? undefined,
     // Falls back to sub_hobby only for a row the add_post_corner migration's

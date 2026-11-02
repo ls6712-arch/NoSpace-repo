@@ -3,7 +3,7 @@ import { supabase } from "../../lib/supabase";
 /**
  * Punch cards: the progress a Moment moves forward, shown on Log, Posted and the
  * Home card. Every number comes from public.log_progress() (migration
- * 20261107000000_log_punch_cards.sql), which reads with exactly the rules the Stub
+ * 20261109000000_log_punch_cards.sql), which reads with exactly the rules the Stub
  * triggers use, so the card never says 10 when the database counts 9:
  *
  *   Regular   logging in one Corner on 10 different New York days in a month.

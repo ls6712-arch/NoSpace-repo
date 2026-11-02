@@ -637,7 +637,7 @@ New, for approval. A new Moment is visible only to its owner for 2 hours (everyw
 
 ### Log a Moment: punch cards (Nov 2, 2026)
 
-New, for approval. Logging has no required step: tap Log, then Post. What a Moment counts toward is one optional row of chips, and every Moment that moves a card punches a hole in it. The numbers come from `log_progress()` (migration `20261107000000_log_punch_cards.sql`), which counts exactly as the Stub triggers do: a Regular is 10 different New York days with a photo or video Moment in one Corner in a month; a Finisher is a Pursuit's goal of Moments, or, with no goal, 3 different days and then Finish. "Punch" is used only for a hole on a card, never as a noun of its own.
+New, for approval. Logging has no required step: tap Log, then Post. What a Moment counts toward is one optional row of chips, and every Moment that moves a card punches a hole in it. The numbers come from `log_progress()` (migration `20261109000000_log_punch_cards.sql`), which counts exactly as the Stub triggers do: a Regular is 10 different New York days with a photo or video Moment in one Corner in a month; a Finisher is a Pursuit's goal of Moments, or, with no goal, 3 different days and then Finish. "Punch" is used only for a hole on a card, never as a noun of its own.
 
 | Term | Meaning |
 |---|---|
