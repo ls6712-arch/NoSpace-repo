@@ -19,6 +19,17 @@ What is in the code, and what only the owner can do (Google accounts, DNS, Verce
   the Organization (with the logo) and the WebApplication, so Google can show
   "Soosh" as the site name. Add Instagram and TikTok to the Organization as
   `sameAs` once `INSTAGRAM_URL` and `TIKTOK_URL` in `src/app/config.ts` are set.
+- Crawler copy: inside `<div id="root">` in `index.html` is a plain-HTML copy of
+  the landing page (hero, how it works, solo picks, Stubby, FAQ). AI crawlers
+  (GPTBot, ClaudeBot, PerplexityBot) and most link previewers don't run
+  JavaScript, so without it they saw an empty page. React replaces it on first
+  render, so people never see it. `src/indexHtml.test.ts` fails if the FAQ or the
+  steps drift from `src/app/landing/copy.ts`; update both together.
+- FAQ structured data: the JSON-LD block also has a `FAQPage` with the landing FAQ.
+- `public/llms.txt` is a short plain-text summary of Soosh for AI assistants.
+- `vercel.json` sends `X-Robots-Tag: noindex, nofollow` on every host except
+  `www.onsoosh.com` (staging on trynospace.com, previews, *.vercel.app). This
+  works for crawlers that never run the inline noindex script.
 - Custom events: every `track()` call in `src/app/lib/analytics.ts` is also sent
   to GA4 as an event of the same name. Fields ending in `Id` are dropped, so GA
   never sees which Moment or Pursuit. `sign_up` and `login` (GA4's own event

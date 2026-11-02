@@ -47,6 +47,19 @@
             "logo": "https://www.onsoosh.com/icon-512.png"
           },
           {
+            "@type": "FAQPage",
+            "@id": "https://www.onsoosh.com/#faq",
+            "mainEntity": [
+              { "@type": "Question", "name": "Can I use Soosh on my own?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Many picks are marked Good solo, like drop-in classes, counter dinners and run clubs. You can always add a friend later." } },
+              { "@type": "Question", "name": "Where is Soosh available?", "acceptedAnswer": { "@type": "Answer", "text": "New York first. More cities after that." } },
+              { "@type": "Question", "name": "What does Stubby do?", "acceptedAnswer": { "@type": "Answer", "text": "Stubby brings your picks and cheers when you go. You choose everything with a tap." } },
+              { "@type": "Question", "name": "Will Soosh book, buy or message anyone for me?", "acceptedAnswer": { "@type": "Answer", "text": "Not without your tap. Stubby can get an invite ready, and you decide whether to send it." } },
+              { "@type": "Question", "name": "Is this for meeting strangers?", "acceptedAnswer": { "@type": "Answer", "text": "No. Soosh helps you get out more, alone or with friends you already have." } },
+              { "@type": "Question", "name": "Who sees my Moments?", "acceptedAnswer": { "@type": "Answer", "text": "You choose for each Moment: only you, followers or public. Nothing about your account has to be public." } },
+              { "@type": "Question", "name": "What are Stubs?", "acceptedAnswer": { "@type": "Answer", "text": "You get a Stub each time you do something. Your Shelf of Stubs is a record of what you’ve done." } }
+            ]
+          },
+          {
             "@type": "WebApplication",
             "name": "Soosh",
             "url": "https://www.onsoosh.com/",
@@ -54,6 +67,12 @@
             "operatingSystem": "Any",
             "description": "Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits. Go on your own or bring a friend.",
             "areaServed": { "@type": "City", "name": "New York" },
+            "featureList": [
+              "One pick for your free time, with the time, place and cost",
+              "Fits your budget and anything you already pay for, like a gym or museum membership",
+              "Marks picks that work well solo",
+              "Bring someone with a ready-to-send invite"
+            ],
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
           }
         ]
@@ -95,7 +114,49 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Crawler copy. AI crawlers (GPTBot, ClaudeBot, PerplexityBot) and link
+        previews read this HTML without running JavaScript, so without it they
+        see an empty page. React replaces everything inside #root on first
+        render, so people never see this. Keep it word for word in step with
+        src/app/landing/copy.ts (index.html.test.ts checks the FAQ).
+      -->
+      <main class="crawler-copy" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">
+        <h1>Soosh: free tonight? Stubby has a pick.</h1>
+        <p>Now in New York. Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits. Go on your own or bring a friend.</p>
+        <h2>How Soosh works</h2>
+        <ol>
+          <li><strong>Tell us your week.</strong> Which evenings are free, what you want to spend in a month, and anything you already pay for, like a gym or a museum membership.</li>
+          <li><strong>Get a pick.</strong> Stubby suggests one thing with the time, the place, the cost and whether it works solo.</li>
+          <li><strong>Say I’m going.</strong> Go alone or tap Bring someone. The pick shows up on your Home with everything you need.</li>
+          <li><strong>Go, then tear your Stub.</strong> Do the thing. Post a Moment if you want. A new Stub goes on your Shelf.</li>
+        </ol>
+        <h2>Lots of good nights are solo</h2>
+        <p>Soosh marks picks that work well on your own: drop-ins, beginner classes where nobody knows anyone, counter seats, things you can leave whenever you want.</p>
+        <p>Example picks in New York: a drop-in wheel class in Greenpoint ($35, clay included), a silent book club in Fort Greene (free, buy a coffee), a late jazz set in the West Village ($15 cover), a Saturday run club, a bouldering session in Gowanus, a museum free hour, and biking the Hudson River Greenway.</p>
+        <h2>This is Stubby</h2>
+        <p>Stubby is the friend who always knows what’s on. Tell Soosh when you’re free. Stubby brings one pick, and cheers when you go. Stubby never books, pays or messages anyone until you tap.</p>
+        <h2>Questions</h2>
+        <dl>
+          <dt>Can I use Soosh on my own?</dt>
+          <dd>Yes. Many picks are marked Good solo, like drop-in classes, counter dinners and run clubs. You can always add a friend later.</dd>
+          <dt>Where is Soosh available?</dt>
+          <dd>New York first. More cities after that.</dd>
+          <dt>What does Stubby do?</dt>
+          <dd>Stubby brings your picks and cheers when you go. You choose everything with a tap.</dd>
+          <dt>Will Soosh book, buy or message anyone for me?</dt>
+          <dd>Not without your tap. Stubby can get an invite ready, and you decide whether to send it.</dd>
+          <dt>Is this for meeting strangers?</dt>
+          <dd>No. Soosh helps you get out more, alone or with friends you already have.</dd>
+          <dt>Who sees my Moments?</dt>
+          <dd>You choose for each Moment: only you, followers or public. Nothing about your account has to be public.</dd>
+          <dt>What are Stubs?</dt>
+          <dd>You get a Stub each time you do something. Your Shelf of Stubs is a record of what you’ve done.</dd>
+        </dl>
+        <p><a href="https://www.onsoosh.com/">Get your first pick on Soosh</a></p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
