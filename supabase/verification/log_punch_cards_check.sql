@@ -69,10 +69,10 @@ begin
   values (v_a, 'crafts-making', 'vlog-pots', 'photo', 'https://example.invalid/p1.jpg', 'p1', v_first),
          (v_a, 'crafts-making', 'vlog-pots', 'photo', 'https://example.invalid/p2.jpg', 'p2', now()),
          (v_a, 'crafts-making', 'vlog-pots', 'photo', 'https://example.invalid/p3.jpg', 'p3', now()),
-         (v_a, 'crafts-making', 'vlog-pots', 'written', null, 'just words', now());
+         (v_a, 'crafts-making', 'vlog-pots', 'written', '', 'just words', now());
   -- Words: only a text Moment, so no card at all.
   insert into public.posts (user_id, hobby_slug, corner, type, media_url, caption)
-  values (v_a, 'books-writing', 'vlog-words', 'written', null, 'words only');
+  values (v_a, 'books-writing', 'vlog-words', 'written', '', 'words only');
   -- Bread: one photo toward A's own Pursuit.
   insert into public.posts (user_id, hobby_slug, corner, type, media_url, caption, pursuit_id)
   values (v_a, 'food-cooking', 'vlog-bread', 'photo', 'https://example.invalid/b1.jpg', 'b1', 'vlog-free');
