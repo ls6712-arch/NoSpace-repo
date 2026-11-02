@@ -76,6 +76,7 @@ export interface ForSaleInput {
 export interface NewPostInput {
   /** Release this Moment to others now instead of after the 2 hour hold. */
   shareNow?: boolean;
+  /** The Space, or "" when nothing was picked (saved with no Space). */
   hobbySlug: string;
   /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
   subHobby?: string;
@@ -181,7 +182,8 @@ export function rowToPost(row: any, creatorName: string): Post {
     id: row.id,
     // An older post stored one of the eight original Space slugs. Nothing was
     // migrated in the database; it is translated on the way in instead.
-    hobbySlug: currentSpaceSlug(row.hobby_slug),
+    // A Moment logged with nothing picked has no Space (20261107000000_log_punch_cards.sql): "".
+    hobbySlug: currentSpaceSlug(row.hobby_slug ?? ""),
     subHobby: row.sub_hobby ?? undefined,
     // Falls back to sub_hobby only for a row the add_post_corner migration's
     // backfill hasn't reached — every row it did reach already has corner
@@ -265,6 +267,8 @@ interface ContentContextType {
       // Step 3's "Add details" sheet — see the matching patch type on
       // updatePost's own implementation for why these moved here too.
       corner?: string;
+      /** Counts this Moment toward a Pursuit after posting (Posted's Counts toward). */
+      pursuitId?: string;
       locationName?: string;
       locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
     },
@@ -667,7 +671,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     let productId: number | undefined;
     // What this session counts toward for the craft badges: the specific
     // hobby when tagged, otherwise just the space it went into.
-    const hobbyKey = input.subHobby ?? `space:${input.hobbySlug}`;
+    // Nothing at all when the Moment has no Space: it counts, but toward no craft.
+    const hobbyKey = input.subHobby ?? (input.hobbySlug ? `space:${input.hobbySlug}` : undefined);
 
     if (input.forSale) {
       const newListing: Product = {
@@ -732,7 +737,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
       const row = {
           user_id: user.id,
-          hobby_slug: input.hobbySlug,
+          // "" means nothing was picked: saved with no Space, never a default one.
+          hobby_slug: input.hobbySlug || null,
           sub_hobby: input.subHobby ?? null,
           corner: input.corner ?? null,
           interest: input.interest?.trim() ? input.interest.trim() : null,
@@ -865,6 +871,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // Step 3's "Add details" sheet — Corner and location move to after
       // Save now, so both need to be editable here, not just at creation.
       corner?: string;
+      pursuitId?: string;
       locationName?: string;
       locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
     },
@@ -887,6 +894,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               hobbySlug: patch.hobbySlug ?? p.hobbySlug,
               subHobby: patch.subHobby === undefined ? p.subHobby : patch.subHobby || undefined,
               corner: patch.corner === undefined ? p.corner : patch.corner || undefined,
+              pursuitId: patch.pursuitId === undefined ? p.pursuitId : patch.pursuitId || undefined,
               locationName: patch.locationName === undefined ? p.locationName : patch.locationName || undefined,
               locationPrivacy: patch.locationPrivacy ?? p.locationPrivacy,
               media: newMediaUrl ?? p.media,
@@ -903,6 +911,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (patch.hobbySlug !== undefined) postsPatch.hobby_slug = patch.hobbySlug;
       if (patch.subHobby !== undefined) postsPatch.sub_hobby = patch.subHobby || null;
       if (patch.corner !== undefined) postsPatch.corner = patch.corner || null;
+      if (patch.pursuitId !== undefined) postsPatch.pursuit_id = patch.pursuitId || null;
       if (patch.locationName !== undefined) postsPatch.location_name = patch.locationName || null;
       if (patch.locationPrivacy !== undefined) postsPatch.location_privacy = patch.locationPrivacy;
       if (patch.mediaPath !== undefined) {

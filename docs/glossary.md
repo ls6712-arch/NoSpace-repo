@@ -363,14 +363,14 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Cancel / Log a Moment | Top of the Log sheet: Cancel on the left, the title in the middle |
 | Add photo / + {N} more | On the photo: add another (up to 8); how many more photos follow the first |
 | Add a thought | Placeholder of the caption box under the photo |
-| Activity / Pick one | Row that sets the Moment's Corner. The sheet that opens is titled Activity |
-| Counts toward / Nothing | Row that sets the Pursuit the Moment adds to. "Nothing" when there is none. The sheet is titled Counts toward |
+| Activity / Pick one | Retired (Nov 2, 2026). The Corner is now a chip in Counts toward (see Log a Moment: punch cards) |
+| Counts toward / Nothing | Retired as a row (Nov 2, 2026). Counts toward is now the optional chip row; the sheet behind its More keeps the title Counts toward |
 | With | Row listing the other people in the chosen Pursuit. Read only. Hidden when it is a Pursuit for one |
 | Details / Add | Row for tags, "This is something happening" and Where |
 | Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Followers, Everyone, Only you. The same four words are used on every screen |
 | People in your Pursuit can see this. / People who follow you can see this. / Anyone can find this in {Corner}. / Only you can see this. | The line under the picker |
 | Post / Keep it private | The one fixed button. Every row above it is optional with a default, so a photo posts in one tap. It reads Keep it private when Only you is picked |
-| Pick a Corner for this Moment. | Shown, with the Activity sheet open, when Post is tapped without a Corner |
+| Pick a Corner for this Moment. | Retired (Nov 2, 2026). A Corner is never required |
 | Posted to your group / Posted to your followers / Posted to everyone | First line of the Posted screen |
 | {Name} loved your Moment | Card that appears on the Posted screen when someone reacts while you are there |
 | People who do {Corner} also try {Corner} | A What's next row |
@@ -629,9 +629,38 @@ New, for approval. A new Moment is visible only to its owner for 2 hours (everyw
 | Term | Meaning |
 |---|---|
 | Share now | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment. Also the confirm button below |
-| Shows this Moment to others right away. | Helper text under Share now |
+| Shows this Moment to others right away. | Helper text under Share now while it is on |
+| Others see it at {time}. | Helper text under Share now while it is off: when the hold ends (`formatTime`). New, for approval |
+| They see it at {time}. | Under the first line of Posted while the Moment is held. New, for approval |
 | Share now? | Title of the confirm that appears when you send a still-held Moment into a chat, or add it to a Space (Add from my Moments) |
 | Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel, or a failed release, leaves the Moment held and shares nothing; Share now shows it to others, then sends it. A Space's hosts are told about an approval share only after the release |
+
+### Log a Moment: punch cards (Nov 2, 2026)
+
+New, for approval. Logging has no required step: tap Log, then Post. What a Moment counts toward is one optional row of chips, and every Moment that moves a card punches a hole in it. The numbers come from `log_progress()` (migration `20261107000000_log_punch_cards.sql`), which counts exactly as the Stub triggers do: a Regular is 10 different New York days with a photo or video Moment in one Corner in a month; a Finisher is a Pursuit's goal of Moments, or, with no goal, 3 different days and then Finish. "Punch" is used only for a hole on a card, never as a noun of its own.
+
+| Term | Meaning |
+|---|---|
+| Counts toward · Optional | Label over the chip row on Log: up to 2 Pursuits (with a flag) then up to 3 Corners. Tapping the chip that is on clears it |
+| More | Last chip-row link: opens the Counts toward sheet (Pursuit, then Corner) |
+| New: {title} | Replaces More while a new Pursuit is being named in that sheet |
+| Optional. A Pursuit, a Corner, or both. / Pursuit / Corner | The sheet's description and its two headings |
+| This makes {n} of {N} days in {Corner} | Line under the chips, with the holes, when the Moment would punch a Corner's card |
+| This makes {n} of {N} days on {Pursuit} / This makes {n} of {N} Moments on {Pursuit} | The same for a Pursuit with no goal / with a goal |
+| Add a photo to punch a day. | That line for a Corner while no photo or video is attached |
+| Today already counts in {Corner}. / Today already counts for {Pursuit}. / {Pursuit} is ready to finish. | That line when this Moment adds no hole |
+| {n} of {N} days in {Corner} | Posted headline after a Corner's card moved |
+| {k} more days in {Month} and you keep a Regular Stub. | The line under it (`plural()`) |
+| You kept a Regular Stub. / Only photo and video Moments punch a day. / Today already counts. See you tomorrow. | That line on the 10th day / after a text Moment / after a second Moment the same day |
+| {n} of {N} days / {n} of {N} Moments | Posted headline after a Pursuit's card moved |
+| {Pursuit}. {k} more days and you can finish it for a Finisher Stub. / {Pursuit}. {k} more Moments and you keep a Finisher Stub. | The line under it |
+| {Pursuit}. All 3 days are in. / {Pursuit}. Pursuit finished. | That line once the card is full |
+| Also a day in {Corner}: {n} of 10 days | Under a Pursuit's card when the Moment also punched its Corner's |
+| Finish it now and keep a Finisher Stub. / Finish | Card on Posted for your own Pursuit with no goal and its 3 days. Finish opens the usual finishing dialog |
+| Regular / Finisher | The name on the stub end of the card |
+| Counts toward / One tap punches a day. | Card on Posted when nothing was picked: the same Pursuits and Corners, once. The second line only when a photo or video is attached. Skip hides it; nothing is asked again |
+| Pursuit · {n} of {N} days / {n} of 10 days this month | The line on each of those choices |
+| Log another | Button at the bottom of Posted, beside Go to Home |
 
 ## Home v2 (Oct 30, 2026)
 
@@ -650,7 +679,7 @@ Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates
 | At-home detail | Your first step: {the guide's first step} |
 | At-home row in More ways | At home · about {duration} (for example "At home · about 30 min"; just "At home" when the Corner has no typical time) |
 | More ways heading / link | More ways this week / See all |
-| Log card | Log a Moment / Did something today? Log it and get a Stub. |
+| Log card | Log a Moment / Did something today? Log it. With a Corner card under way this month: {Corner}: {n} of 10 days in {Month}, and its holes. The old "Log it and get a Stub." is retired (Nov 2, 2026): most Moments earn no Stub. New, for approval |
 | Feed heading | From your people |
 | Bottom bar | Home, Discover, Log, Week, You |
 | Why: `fits_window` | Fits your {Weekday} {evening, daytime} |

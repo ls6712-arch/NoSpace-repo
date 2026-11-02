@@ -56,7 +56,10 @@ export function CameraCapture({
   onCaptured,
   onPickedLibrary,
   onTextOnly,
+  onClose,
 }: {
+  /** Close goes back to the Log form; without it, back one page. */
+  onClose?: () => void;
   onCaptured: (file: File, type: "photo" | "video") => void;
   /** A library pick carrying more than one file — routed here instead of
    * onCaptured, which stays single-file for the shutter, a recorded video,
@@ -67,7 +70,8 @@ export function CameraCapture({
   const navigate = useNavigate();
   // Photos only: video and GIF files carry GPS and creation time this app can't strip.
   const [captureMode] = useState<CaptureMode>("photo");
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  // The back camera first: a Moment is usually something you did, not a selfie.
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -273,7 +277,7 @@ export function CameraCapture({
             size="icon"
             variant="ghost"
             aria-label="Close"
-            onClick={() => navigate(-1)}
+            onClick={() => (onClose ? onClose() : navigate(-1))}
             className="bg-scrim-solid/40 text-on-media hover:bg-scrim-solid/60"
           >
             <X className="size-4" />
