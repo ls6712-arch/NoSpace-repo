@@ -162,6 +162,21 @@ describe("the deck", () => {
     expect(screen.getByRole("button", { name: /Pick 1/, pressed: false })).toBeTruthy();
   });
 
+  it("shows the next cards as a stack: two behind the front one, each lower and smaller, hidden from screen readers", async () => {
+    await show();
+    await dealt([pick(1, 8), pick(2, 8), pick(3, 8), pick(4, 8)]);
+    const behind = () => [...document.querySelectorAll<HTMLElement>("[data-stubby-deck-behind]")];
+    expect(behind()).toHaveLength(2);
+    expect(behind().map((b) => b.style.transform)).toEqual(["translateY(10px) scale(0.95)", "translateY(20px) scale(0.9)"]);
+    expect(behind().every((b) => b.getAttribute("aria-hidden") === "true")).toBe(true);
+    // Fewer cards left, a smaller stack.
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    expect(behind()).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "Keep" }));
+    expect(behind()).toHaveLength(0);
+  });
+
   it("swipe right to keep and left for not now, the card tilting as you drag", async () => {
     await show();
     await dealt([pick(1, 8), pick(2, 8), pick(3, 8)]);

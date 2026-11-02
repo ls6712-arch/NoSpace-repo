@@ -21,6 +21,9 @@ const stepText = (s: StepRow) =>
 
 /** How far a card is dragged before a swipe counts: right keeps, left is Not now. */
 const SWIPE_PX = 96;
+/** The stack behind the front card: each card this much lower, and this much smaller. */
+export const STACK_OFFSET_PX = 10;
+export const STACK_SHRINK = 0.05;
 
 export interface DeckActions {
   /** Makes these picks plans on the calendar; resolves with the ids that were made. */
@@ -146,16 +149,17 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
         <div
           tabIndex={0}
           onKeyDown={onKey}
-          className="relative isolate mb-3 rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="relative isolate mb-6 rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
           data-stubby-deck-front=""
         >
-          {/* The next cards, peeking out behind. */}
+          {/* The next cards, as a stack behind the front one: each a little lower and a little smaller. */}
           {Array.from({ length: behind }, (_, i) => (
             <div
               key={i}
               aria-hidden="true"
-              className="absolute inset-x-0 rounded-card border border-border bg-card"
-              style={{ top: `${(i + 1) * 6}px`, bottom: `${-(i + 1) * 6}px`, marginInline: `${(i + 1) * 10}px`, zIndex: -1 - i, opacity: 1 - (i + 1) * 0.25 }}
+              data-stubby-deck-behind=""
+              className="absolute inset-0 origin-bottom rounded-card border border-border bg-card shadow-overlay"
+              style={{ transform: `translateY(${(i + 1) * STACK_OFFSET_PX}px) scale(${1 - (i + 1) * STACK_SHRINK})`, zIndex: -1 - i }}
             />
           ))}
           <div
