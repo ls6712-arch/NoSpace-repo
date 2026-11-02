@@ -13,7 +13,6 @@ vi.mock("../components/CartDrawer", () => ({ CartDrawer: () => null }));
 vi.mock("../components/BadgeUnlockToast", () => ({ BadgeUnlockToast: () => null }));
 vi.mock("../components/AccountPrompts", () => ({ AccountPrompts: () => null }));
 vi.mock("../components/BottomTabBar", () => ({ BottomTabBar: ({ railEligible }: { railEligible?: boolean }) => <nav data-testid="tabbar" data-rail-eligible={String(!!railEligible)} /> }));
-vi.mock("../components/stubby/StubbyDock", () => ({ StubbyDock: () => <div data-testid="stubby-dock" /> }));
 vi.mock("../components/PreviewBanner", () => ({ PreviewBanner: () => null }));
 vi.mock("../components/NetworkBanner", () => ({ NetworkBanner: () => null }));
 vi.mock("../components/AccountStatusBanner", () => ({ AccountStatusBanner: () => null }));
@@ -107,5 +106,18 @@ describe("the left rail", () => {
     at("/onboarding");
     expect(screen.queryByTestId("rail")).toBeNull();
     expect(screen.queryByTestId("header")).toBeNull();
+  });
+});
+
+describe("Stubby", () => {
+  it("never floats over a page: no dock and no Stubby on any route that used to have one", () => {
+    signedIn({ onboarding_completed: true, access: "active" });
+    for (const path of ["/", "/discover", "/corners"]) {
+      at(path);
+      expect(document.querySelector("[data-stubby-dock]")).toBeNull();
+      expect(document.querySelector("[data-stubby-state]")).toBeNull();
+      expect(screen.queryByRole("button", { name: "Ask Stubby" })).toBeNull();
+      cleanup();
+    }
   });
 });

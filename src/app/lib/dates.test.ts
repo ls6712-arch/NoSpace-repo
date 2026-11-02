@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, formatStarts, formatWait } from "./dates";
+import { formatClock, formatDuration, formatStarts, formatWait } from "./dates";
 
 const NOW = Date.UTC(2026, 9, 26, 12, 0, 0);
 
@@ -54,5 +54,14 @@ describe("formatMonthYear", () => {
     const { formatMonthYear } = await import("./dates");
     expect(formatMonthYear(new Date(2026, 9, 5))).toBe("October 2026");
     expect(formatMonthYear("not a date")).toBe("");
+  });
+});
+
+describe("formatClock", () => {
+  it("gives the hour alone on the hour, and the minutes otherwise, in the zone asked for", () => {
+    expect(formatClock(Date.UTC(2026, 10, 2, 0, 0), "America/New_York")).toBe("7");
+    expect(formatClock(Date.UTC(2026, 10, 2, 0, 30), "America/New_York")).toBe("7:30");
+    expect(formatClock(Date.UTC(2026, 10, 1, 17, 0), "America/New_York")).toBe("12");
+    expect(formatClock("not a date")).toBe("");
   });
 });

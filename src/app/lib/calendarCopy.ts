@@ -83,27 +83,21 @@ export const SUBSCRIBE = {
   elsewhere: "This device doesn’t have your link. Reset it to get a new one here.",
 } as const;
 
-/** "Something different?": asking Stubby to search right then (glossary, Calendar: asking Stubby). */
+/** Asking Stubby, in the Calendar stage (glossary, Calendar: asking Stubby; and Ask Stubby: the Stubby plan). */
 export const ASK_COPY = {
-  title: "Something different?",
-  label: "What are you after?",
-  placeholder: "Pottery on Saturday, a free run, something outdoors",
+  /** The stage's accessible name, and the button. */
   button: "Ask Stubby",
+  label: "What are you in the mood for?",
+  placeholder: "Pottery on Saturday, a free run, something outdoors",
   busy: "Looking",
   nothing: "Nothing fit this time. Try asking another way.",
-  none: "That’s your 3 for today. Stubby can look again tomorrow.",
   listLabel: "Found for you",
   cardLabel: "Found for you",
   open: "Open",
   remove: "Remove",
-  /** Quick ideas above the field: each fills it in and asks (one ask, like typing). New, for approval. */
+  /** Quick ideas under the field: each fills it in and asks (one ask, like typing). New, for approval. */
   chipsLabel: "Quick ideas",
   chips: ["Free tonight", "This weekend", "Something outdoors"],
-} as const;
-
-/** The Stubby dock (every main signed-in page). New, for approval. Captions beside Stubby, never his speech. */
-export const DOCK_COPY = {
-  button: "Ask Stubby",
-  nudge: "Free tonight? Ask Stubby.",
-  dismiss: "Dismiss",
+  /** The slim bar at the top of Calendar once the stage scrolls out of view (approved Nov 2, 2026). */
+  sticky: "Ask Stubby…",
 } as const;

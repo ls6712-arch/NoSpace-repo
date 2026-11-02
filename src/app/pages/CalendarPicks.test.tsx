@@ -48,9 +48,8 @@ const picks = vi.hoisted(() => ({
 vi.mock("../lib/pickActions", () => picks);
 
 import { Calendar } from "./Calendar";
-import { StubbyDock } from "../components/stubby/StubbyDock";
-import { StubbyDockProvider } from "../components/stubby/StubbyDockContext";
-import { HELLO_KEY } from "../lib/stubbyDock";
+import { SETTLE_MS } from "../components/stubby/StubbyBuddy";
+import { HELLO_KEY } from "../lib/stubbyStage";
 import type { LiveEventInput } from "../lib/firstPlan";
 
 const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
@@ -66,14 +65,10 @@ const data = (over: Partial<WeekData> = {}): WeekData => {
 const setWide = (wide: boolean) => {
   window.matchMedia = ((query: string) => ({ matches: wide && (query.includes("744") || query.includes("1128")), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
 };
-// The calendar's Stubby is the dock's (Root mounts both), so the tests mount both too.
 const show = (url: string) =>
   render(
     <MemoryRouter initialEntries={[url]}>
-      <StubbyDockProvider>
-        <Calendar />
-        <StubbyDock />
-      </StubbyDockProvider>
+      <Calendar />
     </MemoryRouter>,
   );
 const flush = () => act(async () => void (await Promise.resolve()));
@@ -124,22 +119,22 @@ describe("Stubby's picks", () => {
 
   const stubbyState = () => document.querySelector("[data-stubby-state]")?.getAttribute("data-stubby-state");
 
-  it("has one Stubby, the dock's, hidden from screen readers, resting (smiling) once loaded", () => {
+  it("has one Stubby, the stage's, hidden from screen readers, resting (smiling) once loaded", () => {
     withEvents([event(1)]);
     show("/calendar?view=week");
     expect(document.querySelectorAll("[data-stubby-state]").length).toBe(1);
     const el = document.querySelector("[data-stubby-state]")!;
     expect(el.getAttribute("aria-hidden")).toBe("true");
-    expect(el.closest("[data-stubby-dock]")).not.toBeNull();
+    expect(el.closest("[data-stubby-stage]")).not.toBeNull();
     expect(stubbyState()).toBe("ready");
   });
 
-  it("has no Ask Stubby box of its own: the dock replaces it", () => {
+  it("has Ask Stubby in the page, not behind a button that opens a dialog", () => {
     withEvents([event(1)]);
     show("/calendar?view=week");
     expect(screen.queryByText("Something different?")).toBeNull();
-    expect(screen.queryByLabelText("What are you after?")).toBeNull();
-    expect(screen.getByRole("button", { name: "Ask Stubby" }).getAttribute("aria-haspopup")).toBe("dialog");
+    expect(screen.getByLabelText("What are you in the mood for?")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Ask Stubby" }).getAttribute("aria-haspopup")).toBeNull();
   });
 
   it("Stubby stamps on Keep, sighs on Undo, and shrugs on Not this", async () => {
@@ -155,6 +150,9 @@ describe("Stubby's picks", () => {
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not this" }));
     await flush();
     expect(stubbyState()).toBe("shrug");
+    // And he settles back to smiling.
+    act(() => void vi.advanceTimersByTime(SETTLE_MS + 10));
+    expect(stubbyState()).toBe("ready");
   });
 
   it("Stubby tilts his head when a Keep can't be made", async () => {

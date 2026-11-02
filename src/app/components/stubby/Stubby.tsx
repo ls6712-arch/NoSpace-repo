@@ -3,7 +3,8 @@ import { useReducedMotion } from "motion/react";
 import { haptic } from "../../lib/motionTokens";
 
 /**
- * Stubby, Soosh's character: a ticket with a face. It never talks. It acts.
+ * Stubby, Soosh's character: a ticket with a face. He acts; he talks only in Ask Stubby, on
+ * the Calendar stage, and his words are text beside him (a speech bubble), never inside the art.
  *
  * - The yellow body is you (two eyes, two brows, one mouth, no arms or legs).
  * - The white tab is the plan. What you pick gets stamped there.
@@ -31,10 +32,10 @@ import { haptic } from "../../lib/motionTokens";
 
 export type StubbyState =
   | "idle" // waiting on any screen: breathes, blinks, glances around
-  | "ready" // the dock: waiting to help, smiling. Same idle life as idle, with the happy face
-  | "hello" // the dock appears for the first time in a session: one hop, happy
-  | "eager" // the dock is hovered or focused: a small hop and a giggle
-  | "excited" // the dock's panel opens: star eyes and a hop
+  | "ready" // the Calendar stage: waiting to help, smiling. Same idle life as idle, with the happy face
+  | "hello" // the Calendar stage, the first time in a session: one hop, happy
+  | "eager" // the stage Stubby is hovered, or the ask field focused: a small hop and a giggle
+  | "excited" // star eyes and a hop
   | "peek" // something appeared beside him: a glance that way and a small bob
   | "stamped" // you picked something: crouch, jump, a star slams onto the tab
   | "unstamped" // you un-picked it: the stamp fades, a small sigh

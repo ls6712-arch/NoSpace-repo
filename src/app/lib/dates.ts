@@ -140,6 +140,19 @@ export function formatTime(input: DateInput, timeZone?: string): string {
   return fmt({ hour: "numeric", minute: "2-digit", ...(timeZone ? { timeZone } : {}) }).format(d);
 }
 
+/**
+ * The hour on its own, for a sentence that already says the part of day
+ * ("You're free tonight from 7"): "7", or "7:30" when it isn't on the hour.
+ */
+export function formatClock(input: DateInput, timeZone?: string): string {
+  const d = toDate(input);
+  if (Number.isNaN(d.getTime())) return "";
+  const parts = fmt({ hour: "numeric", minute: "2-digit", hour12: true, ...(timeZone ? { timeZone } : {}) }).formatToParts(d);
+  const hour = parts.find((p) => p.type === "hour")?.value ?? "";
+  const minute = parts.find((p) => p.type === "minute")?.value ?? "00";
+  return minute === "00" ? hour : `${hour}:${minute}`;
+}
+
 /** "Sat, Oct 4, 7:00 PM" — events and scheduled sessions. */
 export function formatDateTime(
   input: DateInput,

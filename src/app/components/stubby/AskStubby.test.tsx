@@ -10,7 +10,22 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock("../../lib/stubbyAsk", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyAsk")>()), ...api }));
 
-import { AskStubby } from "./AskStubby";
+import { AskStubby, useAskStubby } from "./AskStubby";
+import { StubbyResults } from "./StubbyResults";
+import type { BuddyReaction } from "./StubbyBuddy";
+
+/** The form and the results, sharing one ask, as the Calendar stage puts them. */
+function Harness({ onReact }: { onReact?: (r: BuddyReaction) => void }) {
+  const state = useAskStubby({ onReact });
+  return (
+    <>
+      <AskStubby state={state} />
+      <StubbyResults state={state} />
+      <p data-testid="busy">{String(state.busy)}</p>
+      <p data-testid="outcome">{String(state.outcome)}</p>
+    </>
+  );
+}
 
 const pick = { id: 9, title: "Wheel night", place: "Greenpoint, Brooklyn", startsAt: Date.UTC(2026, 10, 7, 23), endsAt: null, price: "$35", url: "https://example.com/wheel", note: "Price not listed" };
 
@@ -23,17 +38,17 @@ afterEach(cleanup);
 
 describe("AskStubby", () => {
   it("asks, makes Stubby think then stamp, and shows what he found", async () => {
-    const onBusy = vi.fn();
     const onReact = vi.fn();
     api.askStubby.mockResolvedValue({ found: 1, asksLeft: 2, error: null });
-    render(<AskStubby onBusy={onBusy} onReact={onReact} />);
+    render(<Harness onReact={onReact} />);
     expect(await screen.findByText("3 asks left today")).toBeTruthy();
     api.fetchMyPicks.mockResolvedValue([pick]);
-    fireEvent.change(screen.getByLabelText("What are you after?"), { target: { value: "pottery on Saturday" } });
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery on Saturday" } });
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
     expect(await screen.findByText("Found 1 thing.")).toBeTruthy();
     expect(api.askStubby).toHaveBeenCalledWith("pottery on Saturday");
-    expect(onBusy.mock.calls).toEqual([[true], [false]]);
+    expect(screen.getByTestId("busy").textContent).toBe("false");
+    expect(screen.getByTestId("outcome").textContent).toBe("found");
     expect(onReact).toHaveBeenCalledWith("stamped");
     expect(screen.getByText("2 asks left today")).toBeTruthy();
     expect(screen.getByText("Wheel night")).toBeTruthy();
@@ -44,34 +59,37 @@ describe("AskStubby", () => {
   it("shrugs when nothing fits", async () => {
     const onReact = vi.fn();
     api.askStubby.mockResolvedValue({ found: 0, asksLeft: 1, error: null });
-    render(<AskStubby onReact={onReact} />);
-    fireEvent.change(screen.getByLabelText("What are you after?"), { target: { value: "underwater chess" } });
+    render(<Harness onReact={onReact} />);
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "underwater chess" } });
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
-    expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
+    await waitFor(() => expect(screen.getByTestId("outcome").textContent).toBe("nothing"));
     expect(onReact).toHaveBeenCalledWith("shrug");
+    // Stubby's own line says nothing fit (the stage), so the results don't repeat it.
+    expect(screen.queryByText("Nothing fit this time. Try asking another way.")).toBeNull();
   });
 
   it("tilts and says why when the ask fails", async () => {
     const onReact = vi.fn();
     api.askStubby.mockResolvedValue({ found: 0, asksLeft: null, error: "The scout is switched off." });
-    render(<AskStubby onReact={onReact} />);
-    fireEvent.change(screen.getByLabelText("What are you after?"), { target: { value: "running" } });
+    render(<Harness onReact={onReact} />);
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "running" } });
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
     expect((await screen.findByRole("alert")).textContent).toBe("The scout is switched off.");
     expect(onReact).toHaveBeenCalledWith("tilt");
   });
 
-  it("stops at 3 a day", async () => {
+  it("stops at 3 a day: the field and button are off, and the count is left to Stubby's line", async () => {
     api.asksLeft.mockResolvedValue(0);
-    render(<AskStubby />);
-    expect(await screen.findByText("That’s your 3 for today. Stubby can look again tomorrow.")).toBeTruthy();
+    render(<Harness />);
+    await waitFor(() => expect((screen.getByLabelText("What are you in the mood for?") as HTMLInputElement).disabled).toBe(true));
     expect((screen.getByRole("button", { name: "Ask Stubby" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByText(/asks? left today/)).toBeNull();
   });
 
   it("a quick idea fills in the field and asks (one ask, like typing)", async () => {
     const onReact = vi.fn();
     api.askStubby.mockResolvedValue({ found: 2, asksLeft: 2, error: null });
-    render(<AskStubby variant="panel" onReact={onReact} />);
+    render(<Harness onReact={onReact} />);
     const chips = await screen.findByRole("group", { name: "Quick ideas" });
     expect(Array.from(chips.querySelectorAll("button")).map((b) => b.textContent)).toEqual(["Free tonight", "This weekend", "Something outdoors"]);
     fireEvent.click(screen.getByRole("button", { name: "This weekend" }));
@@ -83,23 +101,15 @@ describe("AskStubby", () => {
 
   it("hides the quick ideas at 0 asks left", async () => {
     api.asksLeft.mockResolvedValue(0);
-    render(<AskStubby variant="panel" />);
-    await screen.findByText("That’s your 3 for today. Stubby can look again tomorrow.");
+    render(<Harness />);
+    await waitFor(() => expect((screen.getByLabelText("What are you in the mood for?") as HTMLInputElement).disabled).toBe(true));
     expect(screen.queryByRole("group", { name: "Quick ideas" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Free tonight" })).toBeNull();
   });
 
-  it("as a panel it drops its own heading (the sheet has the title) and reports asks left", async () => {
-    const onAsksLeft = vi.fn();
-    render(<AskStubby variant="panel" onAsksLeft={onAsksLeft} />);
-    await screen.findByText("3 asks left today");
-    expect(screen.queryByRole("heading")).toBeNull();
-    expect(onAsksLeft).toHaveBeenCalledWith(3);
-  });
-
   it("removes a pick", async () => {
     api.fetchMyPicks.mockResolvedValue([pick]);
-    render(<AskStubby />);
+    render(<Harness />);
     fireEvent.click(await screen.findByRole("button", { name: "Remove: Wheel night" }));
     await waitFor(() => expect(api.removeMyPick).toHaveBeenCalledWith(9));
     expect(screen.queryByText("Wheel night")).toBeNull();

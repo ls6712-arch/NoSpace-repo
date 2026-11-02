@@ -1,92 +1,121 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
-import { ExternalLink, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Chip } from "../ui/Chip";
 import { Input } from "../ui/input";
-import { cn } from "../ui/utils";
 import { plural } from "../../lib/plural";
-import { pickPill } from "../../lib/cityPicks";
 import { ASK_COPY } from "../../lib/calendarCopy";
 import { ASK_MAX_LENGTH, askStubby, asksLeft as readAsksLeft, fetchMyPicks, removeMyPick, type MyPick } from "../../lib/stubbyAsk";
 import type { BuddyReaction } from "./StubbyBuddy";
 
+/** How the last ask ended, for Stubby's line: found something, found nothing, or failed. */
+export type AskOutcome = "found" | "nothing" | "error" | null;
+
+export interface AskState {
+  text: string;
+  setText: (text: string) => void;
+  busy: boolean;
+  error: string | null;
+  status: string | null;
+  outcome: AskOutcome;
+  /** Asks left today, once known. */
+  left: number | null;
+  picks: MyPick[];
+  ask: (what: string) => Promise<void>;
+  remove: (p: MyPick) => Promise<void>;
+}
+
 /**
- * "Something different?": type what you're after (or tap a quick idea) and Stubby searches
- * right then. He never talks: while he looks, the dock's Stubby thinks (onBusy), and when
- * he's done he reacts (onReact). What he found shows here as your own picks, with a link
- * out and Remove.
- *
- * `card` is the box on its own (with its heading); `panel` sits inside the dock's sheet or
- * side panel, which already carries the title, so it drops the border, padding and heading.
+ * Asking Stubby, as state: what is typed, whether he is looking, how many asks are left
+ * today, and what he found (your own picks). The form (AskStubby) and the results
+ * (StubbyResults) both read it, so the results can sit anywhere on the page.
  */
-export function AskStubby({
-  variant = "card",
-  onBusy,
-  onReact,
-  onAsksLeft,
-  autoFocus = false,
-}: {
-  variant?: "card" | "panel";
-  onBusy?: (busy: boolean) => void;
-  onReact?: (r: BuddyReaction) => void;
-  /** Called whenever the count of asks left today is known or changes. */
-  onAsksLeft?: (left: number) => void;
-  /** Focus the field once it can be typed in. */
-  autoFocus?: boolean;
-}) {
-  const inputId = useId();
+export function useAskStubby({ onReact }: { onReact?: (r: BuddyReaction) => void } = {}): AskState {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [left, setLeftState] = useState<number | null>(null);
+  const [outcome, setOutcome] = useState<AskOutcome>(null);
+  const [left, setLeft] = useState<number | null>(null);
   const [picks, setPicks] = useState<MyPick[]>([]);
-  const report = useRef(onAsksLeft);
-  report.current = onAsksLeft;
-  const setLeft = useCallback((n: number) => {
-    setLeftState(n);
-    report.current?.(n);
+  const react = useRef(onReact);
+  react.current = onReact;
+  const running = useRef(false);
+
+  useEffect(() => {
+    let live = true;
+    void Promise.all([fetchMyPicks(), readAsksLeft()]).then(([p, n]) => {
+      if (!live) return;
+      setPicks(p);
+      setLeft(n);
+    });
+    return () => {
+      live = false;
+    };
   }, []);
 
-  const load = useCallback(async () => {
-    const [p, n] = await Promise.all([fetchMyPicks(), readAsksLeft()]);
-    setPicks(p);
-    setLeft(n);
-  }, [setLeft]);
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  const out = left === 0;
-  useEffect(() => {
-    if (autoFocus && left !== null && !out) document.getElementById(inputId)?.focus({ preventScroll: true });
-  }, [autoFocus, left, out, inputId]);
-
-  const ask = async (what: string) => {
-    if (busy) return;
+  const ask = useCallback(async (what: string) => {
+    if (running.current) return;
+    running.current = true;
     setBusy(true);
-    onBusy?.(true);
     setError(null);
     setStatus(null);
+    setOutcome(null);
     const r = await askStubby(what);
+    running.current = false;
     setBusy(false);
-    onBusy?.(false);
     if (r.error) {
       setError(r.error);
-      onReact?.("tilt");
+      setOutcome("error");
+      react.current?.("tilt");
       return;
     }
     if (r.asksLeft !== null) setLeft(r.asksLeft);
     if (r.found > 0) {
       setStatus(`Found ${plural(r.found, "thing")}.`);
       setText("");
-      onReact?.("stamped");
+      setOutcome("found");
+      react.current?.("stamped");
     } else {
       setStatus(ASK_COPY.nothing);
-      onReact?.("shrug");
+      setOutcome("nothing");
+      react.current?.("shrug");
     }
     setPicks(await fetchMyPicks());
-  };
+  }, []);
+
+  const remove = useCallback(async (p: MyPick) => {
+    setPicks((all) => all.filter((x) => x.id !== p.id));
+    const r = await removeMyPick(p.id);
+    if (r.error) {
+      setError(r.error);
+      setPicks(await fetchMyPicks());
+    }
+  }, []);
+
+  return { text, setText, busy, error, status, outcome, left, picks, ask, remove };
+}
+
+/**
+ * The ask, in the page: the field ("What are you in the mood for?"), Ask Stubby, the
+ * quick ideas, and how many asks are left today. At 0 the field is off and the quick
+ * ideas are gone; Stubby's own line says so (STUBBY_LINES.outOfAsks), so it isn't
+ * repeated here.
+ */
+export function AskStubby({
+  state,
+  inputId: givenId,
+  onFieldFocus,
+}: {
+  state: AskState;
+  /** The field's id, so the page can focus it (the sticky bar). */
+  inputId?: string;
+  onFieldFocus?: () => void;
+}) {
+  const ownId = useId();
+  const inputId = givenId ?? ownId;
+  const { text, setText, busy, left, ask } = state;
+  const out = left === 0;
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void ask(text);
@@ -96,27 +125,28 @@ export function AskStubby({
     void ask(idea);
   };
 
-  const remove = async (p: MyPick) => {
-    setPicks((all) => all.filter((x) => x.id !== p.id));
-    const r = await removeMyPick(p.id);
-    if (r.error) {
-      setError(r.error);
-      setPicks(await fetchMyPicks());
-    }
-  };
-
-  const panel = variant === "panel";
   return (
-    <section
-      aria-labelledby={panel ? undefined : `${inputId}-title`}
-      aria-label={panel ? ASK_COPY.title : undefined}
-      className={cn("flex flex-col gap-3", panel ? "" : "mt-6 rounded-card border border-border bg-card p-4")}
-    >
-      {!panel && (
-        <h2 id={`${inputId}-title`} className="text-lead font-bold" style={{ fontFamily: "var(--font-display)" }}>
-          {ASK_COPY.title}
-        </h2>
-      )}
+    <div className="flex flex-col gap-3">
+      <form onSubmit={submit} className="flex flex-col gap-1.5">
+        <label htmlFor={inputId} className="text-small font-semibold">
+          {ASK_COPY.label}
+        </label>
+        <div className="flex gap-2">
+          <Input
+            id={inputId}
+            value={text}
+            maxLength={ASK_MAX_LENGTH}
+            placeholder={ASK_COPY.placeholder}
+            onChange={(e) => setText(e.target.value)}
+            onFocus={onFieldFocus}
+            disabled={busy || out}
+            className="min-w-0 flex-1"
+          />
+          <Button type="submit" disabled={busy || out || text.trim().length < 2} aria-busy={busy} className="shrink-0">
+            {busy ? ASK_COPY.busy : ASK_COPY.button}
+          </Button>
+        </div>
+      </form>
       {left !== null && !out && (
         <div role="group" aria-label={ASK_COPY.chipsLabel} className="flex flex-wrap gap-2">
           {ASK_COPY.chips.map((idea) => (
@@ -126,54 +156,7 @@ export function AskStubby({
           ))}
         </div>
       )}
-      <form onSubmit={submit} className={cn("flex flex-col gap-2", panel ? "" : "tab:flex-row tab:items-end")}>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <label htmlFor={inputId} className="text-small font-semibold">
-            {ASK_COPY.label}
-          </label>
-          <Input
-            id={inputId}
-            value={text}
-            maxLength={ASK_MAX_LENGTH}
-            placeholder={ASK_COPY.placeholder}
-            onChange={(e) => setText(e.target.value)}
-            disabled={busy || out}
-          />
-        </div>
-        <Button type="submit" disabled={busy || out || text.trim().length < 2} aria-busy={busy} className={panel ? "" : "tab:self-end"}>
-          {busy ? ASK_COPY.busy : ASK_COPY.button}
-        </Button>
-      </form>
-      <div aria-live="polite" className="flex flex-col gap-1">
-        {left !== null && <p className="text-caption text-muted-foreground">{out ? ASK_COPY.none : `${plural(left, "ask")} left today`}</p>}
-        {error && (
-          <p role="alert" className="text-small text-destructive">
-            {error}
-          </p>
-        )}
-        {status && <p className="text-small font-semibold">{status}</p>}
-      </div>
-      {picks.length > 0 && (
-        <ul className="flex flex-col gap-2" aria-label={ASK_COPY.listLabel}>
-          {picks.map((p) => (
-            <li key={p.id} className="flex items-start gap-3 rounded-control border-[1.5px] border-dashed border-accent-text p-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-caption font-semibold text-accent-text">{ASK_COPY.cardLabel}</p>
-                <p className="text-body font-semibold leading-tight">{p.title}</p>
-                <p className="text-small text-muted-foreground">{[pickPill(p), p.place].filter(Boolean).join(" · ")}</p>
-                {p.note && <p className="text-caption text-muted-foreground">{p.note}</p>}
-                <a href={p.url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-flex min-h-8 items-center gap-1 text-small font-semibold underline underline-offset-2">
-                  {ASK_COPY.open}
-                  <ExternalLink className="size-3.5" aria-hidden="true" />
-                </a>
-              </div>
-              <button type="button" onClick={() => void remove(p)} aria-label={`${ASK_COPY.remove}: ${p.title}`} className="inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground">
-                <X className="size-5" aria-hidden="true" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+      {left !== null && !out && <p className="text-caption text-muted-foreground">{`${plural(left, "ask")} left today`}</p>}
+    </div>
   );
 }
