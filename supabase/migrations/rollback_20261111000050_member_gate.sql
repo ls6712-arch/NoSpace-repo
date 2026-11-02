@@ -66,5 +66,6 @@ drop function if exists private.make_profile(uuid, text, text);
 alter table public.profiles drop column if exists signed_up_from;
 
 delete from private.access_allowlist where kind in ('table_nonmember', 'table_anon') or (kind = 'rpc_guest' and name = 'my_access');
+drop function if exists public.claim_heic_conversion();
 drop function if exists public.my_access();
 drop function if exists private.is_stubby_account();

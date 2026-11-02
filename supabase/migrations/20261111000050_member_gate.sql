@@ -34,6 +34,7 @@
 --   7. onboarding_completed is no longer writable by the client: finish_onboarding() sets it, and
 --      only when an 18+ birthdate is on file. Before this, anyone could skip the age step with one
 --      direct update and become a member.
+--   9. claim_heic_conversion(): api/heic.ts's member check and rate limit (30 an hour).
 --   8. Trigger functions lose EXECUTE for anon and authenticated (they never needed it: a trigger
 --      fires whatever the caller's privileges). Clears 7 security advisor warnings.
 --
@@ -389,3 +390,38 @@ revoke all on function private.handle_guest_signed_up() from public, anon, authe
 create trigger on_auth_guest_signed_up
   after update of is_anonymous on auth.users
   for each row execute function private.handle_guest_signed_up();
+
+
+-- ─────────────────────────────────────────────────────────────────────────
+-- 9. HEIC conversion (api/heic.ts): members only, 30 an hour each
+-- ─────────────────────────────────────────────────────────────────────────
+
+-- The Vercel function calls this as the person, before it reads the photo. 'ok' records one
+-- conversion; anything else is a refusal. A non-member never gets here (the RPC gate refuses them
+-- first), but the function checks anyway.
+create or replace function public.claim_heic_conversion()
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null or private.is_anonymous() then
+    return 'not_signed_in';
+  end if;
+  if not private.is_member() then
+    return 'not_member';
+  end if;
+  if (
+    select count(*) from public.rate_limit_hits h
+    where h.action = 'heic_convert' and h.user_id = auth.uid() and h.created_at > now() - interval '1 hour'
+  ) >= 30 then
+    return 'rate_limited';
+  end if;
+  insert into public.rate_limit_hits (action, user_id) values ('heic_convert', auth.uid());
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.claim_heic_conversion() from public, anon;
+grant execute on function public.claim_heic_conversion() to authenticated;

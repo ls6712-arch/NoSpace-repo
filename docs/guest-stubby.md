@@ -102,6 +102,13 @@ applying, and again on production after the founder applies them.
 
 ## Decisions after review (founder, Nov 2, 2026)
 
+- **HEIC conversion rules** (`api/heicCheck.ts`, tested in `src/app/lib/heicApi.test.ts`): the JWT is
+  verified by Supabase Auth; anonymous guests and non-members are refused; at most 30 an hour each
+  (`claim_heic_conversion()`, in the member gate migration); 4.4 MB, checked on the header and again
+  while reading; HEIF bytes only; at most 40 megapixels, read from the file's own size boxes before
+  anything is decoded; 10 seconds; nothing stored or logged; generic errors only. Until the member
+  gate migration is applied, every conversion is refused (the "photo didn't make it" message). The
+  size-box reader is tested on spec-built files; check one real iPhone photo on a preview deploy.
 - **HEIC and the CSP.** `heic2any` is asm.js and calls `new Function` (3 places), so it needs
   `'unsafe-eval'`; `'wasm-unsafe-eval'` would not do. The policy keeps it out: HEIC to JPEG now
   runs on the server (`api/heic.ts`, with `heic-convert`), for signed-in people with a real login,

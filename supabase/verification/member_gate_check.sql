@@ -212,6 +212,27 @@ begin
   perform set_config('role', v_owner_role, true);
   perform set_config('request.jwt.claims', '{}', true);
 
+  -- 4c. HEIC conversion: members only, 30 an hour.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_g), true);
+  v_ok := public.claim_heic_conversion() = 'not_signed_in';
+  perform set_config('role', v_owner_role, true);
+  -- S (19, has a birthdate now, so a member) is checked as a non-member by clearing it for this case.
+  update public.profile_private set birthdate = null where profile_private.user_id = v_s;
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_s), true);
+  v_ok := v_ok and public.claim_heic_conversion() = 'not_member';
+  perform set_config('request.jwt.claims', format('{"sub":"%s","role":"authenticated"}', v_m), true);
+  v_ok := v_ok and public.claim_heic_conversion() = 'ok';
+  perform set_config('role', v_owner_role, true);
+  insert into public.rate_limit_hits (action, user_id) select 'heic_convert', v_m from generate_series(1, 29);
+  perform set_config('role', 'authenticated', true);
+  v_ok := v_ok and public.claim_heic_conversion() = 'rate_limited';
+  perform set_config('role', v_owner_role, true);
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  results := results || (v_i || case when v_ok then ' PASS HEIC conversion: members only, 30 an hour' else ' FAIL claim_heic_conversion answered wrong for one of G, S, M' end);
+
   -- 5. The catalog: nothing reachable without being on the list.
   v_n := (
     select count(*) from pg_tables pt
