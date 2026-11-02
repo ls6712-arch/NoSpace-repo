@@ -88,7 +88,3 @@ export const sooshOnboardingEnabled = true;
 // the button stays hidden; flip this and ship, nothing else changes.
 export const appleSignInEnabled = false;
 
-// Once a New York day, on Home or Calendar, a caption beside the Stubby dock says
-// "Free tonight? Ask Stubby." after the page has been open 4 seconds (StubbyDock.tsx).
-// It never shows at 0 asks left or over an open panel. Off means the dock only.
-export const stubbyNudgeEnabled = true;

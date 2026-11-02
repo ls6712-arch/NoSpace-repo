@@ -886,6 +886,7 @@ Never use these in UI copy.
 | That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |
 | Not this | Nov 2, 2026 (the label changes in Stubby plan PR 3) | Not now |
 | What are you after? | Nov 2, 2026 (the Ask Stubby field label) | What are you in the mood for? |
+| Free tonight? Ask Stubby. | Nov 2, 2026 (the dock was removed) | Stubby's greeting on the Calendar stage |
 | Keep, for making a plan at once | Nov 2, 2026 (the in-slot label changes in Stubby plan PR 3) | Make it a plan. Keep means only shortlist, in the deck |
 
 ### Calendar: asking Stubby (Nov 1, 2026)
@@ -894,27 +895,24 @@ Superseded on Nov 2, 2026 by the Stubby rule (he talks in Ask Stubby, on the Cal
 
 | Wording | Where |
 |---|---|
-| Something different? | Title of the Ask Stubby panel the Stubby dock opens (it was the heading of a box under the calendar until the dock replaced it) |
+| Something different? | Retired (Nov 2, 2026, Stubby plan PR 4): no longer shown. Stubby's line in the bubble does that job |
 | What are you after? | Retired (Nov 2, 2026). Use What are you in the mood for? |
 | What are you in the mood for? | Label of its text field, everywhere the field appears (approved Nov 2, 2026). Placeholder: "Pottery on Saturday, a free run, something outdoors" |
-| Ask Stubby | Its button. While looking: Looking |
-| {n} asks left today | Under the field, with plural(). At 0: "That’s your 3 for today. Stubby can look again tomorrow." |
+| Ask Stubby | Its button, and the stage's accessible name. While looking: Looking |
+| {n} asks left today | Under the quick ideas, with plural(). At 0 it goes away and Stubby's line says "That’s 3 for today. I’ll look again tomorrow." (the old "That’s your 3 for today. Stubby can look again tomorrow." is retired, Nov 2, 2026) |
 | Found {n} things. | After an ask that found something |
-| Nothing fit this time. Try asking another way. | After an ask that found nothing |
+| Nothing fit this time. Try asking another way. | After an ask that found nothing: Stubby's line in the bubble (he shrugs) |
 | Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
 | Say what you’re after, like pottery on Saturday. | Error with an empty or one-letter ask |
 
 ### The Stubby dock (Nov 1, 2026)
 
-Being removed in Stubby plan PR 4 (`docs/briefs/claude-code-brief-stubby-calendar-hero.md`). New, for approval. Stubby waits in the bottom right corner of Home, Discover, Calendar, You, a Space, a Corner page and People, signed in only. Tapping him opens Ask Stubby (the strings above). He still never talks: the lines below are a button name and a caption beside him, never his speech.
+Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-calendar-hero.md`). No Stubby floats over any page; he lives on the Calendar stage. The dock's caption "Free tonight? Ask Stubby." and its Dismiss are gone, and the once-a-day nudge with them: his greeting on Calendar does that job. The quick ideas moved to the stage:
 
 | Wording | Where |
 |---|---|
-| Ask Stubby | Accessible name of the dock (Stubby himself is the button). Same words as the panel's button |
-| Quick ideas | Accessible name of the row of quick ideas above the field; not shown as text. New, for approval |
+| Quick ideas | Accessible name of the row of quick ideas under the stage's field; not shown as text. New, for approval |
 | Free tonight · This weekend · Something outdoors | The quick ideas: each fills in the field and asks (one ask, like typing). Hidden at 0 asks left. New, for approval |
-| Free tonight? Ask Stubby. | The once-a-day caption beside the dock, on Home and Calendar from 744px wide, after 4 seconds. Tapping it opens the panel; it fades after 8 seconds. Never at 0 asks left. New, for approval |
-| Dismiss | Accessible name of the caption's X. New, for approval |
 
 ## Ask Stubby: the Stubby plan (Nov 2, 2026)
 

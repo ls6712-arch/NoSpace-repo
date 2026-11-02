@@ -56,7 +56,7 @@ import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
 import { keepPick, undoKeep } from "../lib/pickActions";
-import { useStubbyDock } from "../components/stubby/StubbyDockContext";
+import { StubbyStage, type StubbyStageHandle } from "../components/calendar/StubbyStage";
 import { usePickDeclines } from "../lib/pickDeclines";
 import { stubbyPicks } from "../lib/stubbyPicks";
 import { announceChange } from "../lib/undo";
@@ -87,6 +87,9 @@ export function Calendar() {
   const [picked, setPicked] = useState<number | null>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [kept, setKept] = useState<ReadonlySet<string>>(new Set());
+  // Stubby, on the stage at the top, reacts to everything you do here.
+  const stage = useRef<StubbyStageHandle>(null);
+  const stubby = useMemo(() => ({ react: (r: Parameters<StubbyStageHandle["react"]>[0]) => stage.current?.react(r) }), []);
 
   const now = data.now;
   const view = parseView(params.get("view"));
@@ -180,8 +183,6 @@ export function Calendar() {
     track({ name: "week_budget_changed" });
     if (!(await data.saveBudget(b))) notifyError(ERROR_LINE);
   };
-  // Stubby, in the dock (bottom right), reacts to what you do here. He never talks; the words are elsewhere.
-  const stubby = useStubbyDock();
   const onBring = async (plan: WeekPlanDetail) => {
     if (!owner) return;
     const r = await bringSomeone(plan, owner);
@@ -341,6 +342,13 @@ export function Calendar() {
       title={viewTitle(view, anchor, now)}
       subtitle={subline}
     >
+      <StubbyStage
+        ref={stage}
+        greeting={{ now, windows: actions.windows, plans }}
+        loading={data.status === "loading"}
+        failed={data.status === "error" || (data.status === "ready" && extra.failed)}
+        sheetOpen={!!sheet || showOpen}
+      />
       <CalendarToolbar
         view={view}
         showButton={!panel}

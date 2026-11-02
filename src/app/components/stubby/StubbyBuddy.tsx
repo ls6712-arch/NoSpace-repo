@@ -7,10 +7,10 @@ export type BuddyReaction = Extract<
   "stamped" | "unstamped" | "shrug" | "torn" | "tilt" | "done" | "hello" | "eager" | "excited" | "peek"
 >;
 
-/** The happy little moves the dock asks for. They give way the moment Stubby has real work (thinking). */
+/** The happy little moves the Calendar stage asks for. They give way the moment Stubby has real work (thinking). */
 const CHEERS: ReadonlySet<BuddyReaction> = new Set(["hello", "eager", "excited", "peek"]);
 
-/** How Stubby rests between reactions: `idle` on a screen, `ready` (smiling) in the dock. */
+/** How Stubby rests between reactions: `idle` on a screen, `ready` (smiling) on the Calendar stage. */
 export type BuddyRest = Extract<StubbyState, "idle" | "ready">;
 
 export interface StubbyBuddyHandle {
@@ -21,9 +21,9 @@ export interface StubbyBuddyHandle {
 export const SETTLE_MS = 2600;
 
 /**
- * A small Stubby who sits on a screen and reacts to what you do there. He never
- * talks (glossary: "It never talks; it reacts"), so he is decoration for screen
- * readers: whatever he reacts to already says so in words elsewhere.
+ * A Stubby who sits on a screen and reacts to what you do there. He is decoration
+ * for screen readers: whatever he reacts to already says so in words elsewhere, and
+ * on the Calendar stage his line is text in the bubble beside him.
  *
  * `waiting` shows him thinking while the screen loads; `upset` tilts his head when
  * it couldn't. After any reaction he settles back to `rest`, fresh (no stamp, no

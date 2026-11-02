@@ -66,10 +66,17 @@ afterEach(cleanup);
 const show = (url = "/calendar?view=week") => render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);
 
 describe("Calendar and Stubby", () => {
-  it("has no Stubby and no Ask Stubby box of its own: both live in the dock", () => {
+  it("has one Stubby, on the stage above the toolbar, with Ask Stubby in the page and no old heading", () => {
     show();
-    expect(document.querySelector("[data-stubby-state]")).toBeNull();
+    const stubbies = document.querySelectorAll("[data-stubby-state]");
+    expect(stubbies).toHaveLength(1);
+    const stage = document.querySelector("[data-stubby-stage]")!;
+    expect(stage.contains(stubbies[0])).toBe(true);
+    const today = screen.getByRole("button", { name: "Today" });
+    expect(stage.compareDocumentPosition(today) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByLabelText("What are you in the mood for?")).toBeTruthy();
     expect(screen.queryByText("Something different?")).toBeNull();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 });
 
@@ -427,7 +434,7 @@ describe("Calendar, the four views", () => {
       const stubDay = screen.getByRole("button", { name: /^Saturday Oct 3, 1 Stub/ });
       expect(stubDay.className).toContain("bg-[var(--cat)]");
       fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31, 1 plan/ }));
-      const list = document.querySelector("[aria-live='polite']") as HTMLElement;
+      const list = document.querySelector("[aria-live='polite']:not([data-stubby-line])") as HTMLElement;
       expect(within(list).getByText("Bouldering night")).toBeTruthy();
       expect(within(list).getByRole("button", { name: "Make a plan for tomorrow" })).toBeTruthy();
     });
@@ -435,7 +442,7 @@ describe("Calendar, the four views", () => {
     it("lists a day's Stubs when it is tapped", () => {
       at("/calendar");
       fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 3,/ }));
-      const list = document.querySelector("[aria-live='polite']") as HTMLElement;
+      const list = document.querySelector("[aria-live='polite']:not([data-stubby-line])") as HTMLElement;
       expect(within(list).getByText("Pottery #2")).toBeTruthy();
     });
 
@@ -449,7 +456,7 @@ describe("Calendar, the four views", () => {
     it("lists the next 30 days, leaving out days with nothing", () => {
       hook.value = data({ plans: [plan()], windows: [] });
       at("/calendar?view=list");
-      // Day headings only. Ask Stubby lives in the dock now, not under the calendar.
+      // Day headings only. Ask Stubby is on the stage above, with no heading of its own.
       const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
       expect(headings).toEqual(["TomorrowOct 31"]);
     });
