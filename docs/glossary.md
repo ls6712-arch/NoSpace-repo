@@ -986,6 +986,18 @@ Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-
 
 What he understood shows as chips while he looks, in the words of his question chips (Tonight, Tomorrow, This weekend; Just me, With my partner, With friends, With family). Anything else he understood has no chip yet.
 
+### When nothing fits (founder, Nov 2, 2026)
+
+Never a blank area. Stubby shrugs and says "Nothing fit this time. Try asking another way.", and the results area says it too, with why in one short line of the 3 most common reasons, then three ways on. When something after the time asked fits, it shows instead, marked: tonight, Stubby says "Nothing tonight that fits. Here’s the soonest after."; any other time, "Nothing then that fits. Here’s the soonest after."
+
+| Term | Use |
+|---|---|
+| {n} was a listing page / {n} were listing pages | A reason, with plural(). The others: was/were after midnight · was/were outside the time you asked for · was/were over your budget · was a bar or 21+ / were bars or 21+ · had no page of its own / their own · had no clear time · was/were too late for kids. Joined with commas: "2 were listing pages, 1 was after midnight" |
+| This weekend | The same ask, for this weekend (uses an ask). While the empty state shows, the quick ideas step aside, so there's one This weekend on screen |
+| Surprise me | A surprise (uses an ask). The same words as the question chip |
+| Try different words | Back to the field, the ask selected |
+| Nothing then that fits. Here’s the soonest after. | Stubby's line when nothing fits a time other than tonight and the soonest after are shown |
+
 ### Stubby's question chips
 
 Asked only when something worth asking is missing (who, then when, then what kind), at most once per ask. Answering uses no ask; Surprise me skips it; typing an answer works too. Pick a day opens a date field labelled Pick a day. Who you're going with is remembered for the session as a chip (its X reads "Remove: Just me"), sent with every ask until removed.

@@ -7,7 +7,7 @@ import { Chip } from "../ui/Chip";
 import { cn } from "../ui/utils";
 import { pickPill } from "../../lib/cityPicks";
 import { plural } from "../../lib/plural";
-import { ASK_COPY, SHEET, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { ASK_COPY, EMPTY_COPY, SHEET, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
 import { cardCount, frontCard, selectionFull } from "../../lib/stubbyDeck";
 import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
@@ -21,12 +21,25 @@ const stepText = (s: StepRow) =>
 
 /** How far a card is dragged before a swipe counts: right keeps, left is Not now. */
 const SWIPE_PX = 96;
+/** The stack behind the front card: each card this much lower, and this much smaller. */
+export const STACK_OFFSET_PX = 10;
+export const STACK_SHRINK = 0.05;
 
 export interface DeckActions {
   /** Makes these picks plans on the calendar; resolves with the ids that were made. */
   onMakePlans?: (picks: MyPick[]) => Promise<number[]>;
   /** The bring-a-friend nudge: makes the pick a plan and opens the half ticket. */
   onBring?: (pick: MyPick) => void;
+  /** When nothing fits, Try different words: back to the field, the ask selected. */
+  onTryDifferent?: () => void;
+}
+
+/** "2 were listing pages, 1 was after midnight": the reasons, as one short line. */
+export function reasonLine(reasons: readonly { key: string; count: number }[]): string {
+  return reasons
+    .filter((r) => EMPTY_COPY.reasons[r.key])
+    .map((r) => plural(r.count, EMPTY_COPY.reasons[r.key][0], EMPTY_COPY.reasons[r.key][1]))
+    .join(", ");
 }
 
 /**
@@ -37,13 +50,14 @@ export interface DeckActions {
  * the last Not now. Swipe right or left, or use the arrow keys (Backspace brings one back).
  * Follow-ups add cards to the back. Today's earlier picks fold away under "Earlier today".
  */
-export function StubbyResults({ state, onMakePlans, onBring }: { state: AskState } & DeckActions) {
+export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: { state: AskState } & DeckActions) {
   const { busy, error, outcome, earlier, understood, steps, stop, retry, remove, deck } = state;
-  // When nothing fit, Stubby's own line says so; the status isn't repeated here.
+  // When nothing fit, the empty state below says so (with why); the status isn't repeated.
   const status = outcome === "nothing" || outcome === "after" ? null : state.status;
+  const empty = !busy && outcome === "nothing";
   const chips = understood ? [UNDERSTOOD_COPY.when[understood.when ?? ""], UNDERSTOOD_COPY.who[understood.who ?? ""]].filter(Boolean) : [];
   const hasDeck = deck.all.length > 0 || deck.selection.length > 0;
-  if (!busy && !error && !status && !hasDeck && earlier.length === 0) return null;
+  if (!busy && !error && !status && !empty && !hasDeck && earlier.length === 0) return null;
   return (
     <div data-stubby-results="" className="mb-6 flex flex-col gap-3">
       {busy && chips.length > 0 && (
@@ -87,10 +101,38 @@ export function StubbyResults({ state, onMakePlans, onBring }: { state: AskState
           {TRY_AGAIN}
         </Button>
       )}
+      {empty && <Empty state={state} onTryDifferent={onTryDifferent} />}
       {deck.all.length > 0 && <Deck state={state} onBring={onBring} />}
       {deck.selection.length > 0 && <Selection state={state} onMakePlans={onMakePlans} />}
       {earlier.length > 0 && <Earlier picks={earlier} onRemove={(p) => void remove(p)} />}
     </div>
+  );
+}
+
+/**
+ * Nothing fits: never a blank area. The honest line (Stubby says it too, and shrugs), why in one
+ * short line, and three ways on: the same ask this weekend, a surprise, or different words.
+ */
+function Empty({ state, onTryDifferent }: { state: AskState; onTryDifferent?: () => void }) {
+  const { reasons, tryWeekend, surprise, left } = state;
+  const why = reasonLine(reasons);
+  const out = left === 0;
+  return (
+    <section data-stubby-empty="" aria-live="polite" className="flex flex-col gap-3 rounded-card border border-dashed border-border p-4">
+      <p className="text-body font-semibold">{ASK_COPY.nothing}</p>
+      {why && <p className="text-small text-muted-foreground">{why}</p>}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={tryWeekend} disabled={out}>
+          {EMPTY_COPY.weekend}
+        </Button>
+        <Button type="button" variant="outline" onClick={surprise} disabled={out}>
+          {EMPTY_COPY.surprise}
+        </Button>
+        <Button type="button" variant="outline" onClick={onTryDifferent} disabled={out}>
+          {EMPTY_COPY.differentWords}
+        </Button>
+      </div>
+    </section>
   );
 }
 
@@ -146,16 +188,17 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
         <div
           tabIndex={0}
           onKeyDown={onKey}
-          className="relative isolate mb-3 rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="relative isolate mb-6 rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring"
           data-stubby-deck-front=""
         >
-          {/* The next cards, peeking out behind. */}
+          {/* The next cards, as a stack behind the front one: each a little lower and a little smaller. */}
           {Array.from({ length: behind }, (_, i) => (
             <div
               key={i}
               aria-hidden="true"
-              className="absolute inset-x-0 rounded-card border border-border bg-card"
-              style={{ top: `${(i + 1) * 6}px`, bottom: `${-(i + 1) * 6}px`, marginInline: `${(i + 1) * 10}px`, zIndex: -1 - i, opacity: 1 - (i + 1) * 0.25 }}
+              data-stubby-deck-behind=""
+              className="absolute inset-0 origin-bottom rounded-card border border-border bg-card shadow-overlay"
+              style={{ transform: `translateY(${(i + 1) * STACK_OFFSET_PX}px) scale(${1 - (i + 1) * STACK_SHRINK})`, zIndex: -1 - i }}
             />
           ))}
           <div

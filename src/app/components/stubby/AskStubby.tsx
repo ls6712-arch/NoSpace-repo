@@ -94,8 +94,15 @@ export interface AskState {
   /** Made into plans: gone from Your selection. */
   madePlans: (ids: number[]) => void;
   followUp: (kind: FollowUpKind) => void;
-  /** Asks the last thing again (Try again, and Ask again when the deck runs out). */
+  /** Asks the last thing again, with any answer already given, so it never asks its question twice. */
   retry: () => void;
+  /** When nothing fits: the 3 most common reasons, with counts. */
+  reasons: { key: string; count: number }[];
+  /** The last ask was for tonight (which "nothing fits" line he says). */
+  tonight: boolean;
+  /** The ways on when nothing fits: the same ask this weekend, or a surprise. */
+  tryWeekend: () => void;
+  surprise: () => void;
   ask: (what: string) => Promise<void>;
   /** Stops listening. The ask was paid for, so it still counts. */
   stop: () => void;
@@ -143,6 +150,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [steps, setSteps] = useState<StepRow[]>([]);
   const [stalled, setStalled] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
+  const [reasons, setReasons] = useState<{ key: string; count: number }[]>([]);
+  const [tonight, setTonight] = useState(false);
   const [who, setWho] = useState<Who | null>(() => {
     const w = readSession<{ who?: string }>(ANSWERS_KEY)?.who;
     return w && (WHO_VALUES as readonly string[]).includes(w) ? (w as Who) : null;
@@ -154,6 +163,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const running = useRef(false);
   const controller = useRef<AbortController | null>(null);
   const lastAsk = useRef("");
+  /** The answer given for the last ask, so asking it again never asks the question again. */
+  const lastAnswers = useRef<AskAnswers | undefined>(undefined);
   const pending = useRef("");
   const stallTimer = useRef<number | undefined>(undefined);
   const userRef = useRef(userId);
@@ -228,7 +239,10 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     async (what: string, opts: { answers?: AskAnswers; followUp?: AskFollowUp } = {}) => {
       if (running.current) return;
       running.current = true;
-      if (!opts.followUp) lastAsk.current = what;
+      if (!opts.followUp) {
+        lastAsk.current = what;
+        lastAnswers.current = opts.answers;
+      }
       const c = new AbortController();
       controller.current = c;
       setBusy(true);
@@ -236,6 +250,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       setFound(null);
       setOutcome(null);
       setQuestion(null);
+      setReasons([]);
       setUnderstood(null);
       setSteps([]);
       resetStall();
@@ -271,6 +286,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         return;
       }
       if (r.asksLeft !== null) setLeft(r.asksLeft);
+      setReasons(r.reasons ?? []);
+      setTonight(r.when === "tonight");
       const fresh = await fetchMyPicks();
       const id = r.askId ?? latestAskToday(fresh, Date.now());
       setPicks(fresh);
@@ -345,8 +362,13 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   }, [endStall]);
 
   const retry = useCallback(() => {
-    if (lastAsk.current) void run(lastAsk.current);
+    if (lastAsk.current) void run(lastAsk.current, lastAnswers.current ? { answers: lastAnswers.current } : {});
   }, [run]);
+  // When nothing fits: the same ask this weekend (it counts as answered, so no question), or a surprise.
+  const tryWeekend = useCallback(() => {
+    if (lastAsk.current) void run(lastAsk.current, { answers: { ...lastAnswers.current, when: "weekend" } });
+  }, [run]);
+  const surprise = useCallback(() => void run(QUESTION_COPY.surprise, { answers: { skip: true } }), [run]);
 
   const byId = useMemo(() => new Map(picks.map((p) => [p.id, p])), [picks]);
   const pick = useCallback((id: number) => byId.get(id), [byId]);
@@ -423,6 +445,10 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     madePlans,
     followUp,
     retry,
+    reasons,
+    tonight,
+    tryWeekend,
+    surprise,
     ask,
     stop,
     remove,
@@ -536,8 +562,9 @@ export function AskStubby({
           />
         </div>
       )}
-      {!question && left !== null && !out && (
-        // A phone: one row that scrolls sideways, edge to edge. From 744px: wraps.
+      {!question && left !== null && !out && state.outcome !== "nothing" && (
+        // A phone: one row that scrolls sideways, edge to edge. From 744px: wraps. When nothing
+        // fit, they step aside: the empty state below has its own ways on (one "This weekend").
         <div role="group" aria-label={ASK_COPY.chipsLabel} className={row}>
           {ASK_COPY.chips.map((idea) => chip(idea, () => quick(idea)))}
         </div>

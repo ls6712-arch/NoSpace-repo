@@ -28,9 +28,10 @@ import {
   rowFor,
   SCOUT_DAYS,
   type Dropped,
+  type RawPick,
 } from "./picks.ts";
 import { SearchError, type SearchProgress, type SearchResult } from "./search.ts";
-import { askRowFor, checkAskPicks, type AskPick } from "./ask.ts";
+import { ASK_BEST, askRowFor, checkAskPicks, gapLines, topReasons, type AskPick } from "./ask.ts";
 import { askSystemPrompt, askUserPrompt, type AboutPerson, type FollowUp, type FollowUpKind } from "./askPrompt.ts";
 import { readIntent, searchWindow, type Answers, type Intent, type Who, type Window } from "./intent.ts";
 
@@ -127,7 +128,8 @@ export interface ScoutDeps {
      */
     claimFreeFollowUp(userId: string, askId: number, sinceMs: number): Promise<boolean>;
     finishRun(id: number, r: { searches: number; found: number; added: number; error: string | null }): Promise<void>;
-    finishAsk(id: number, r: { found: number; added: number; failed: boolean }): Promise<void>;
+    /** `dropped`: why each candidate was dropped, saved for debugging (titles and reasons only, never the ask). */
+    finishAsk(id: number, r: { found: number; added: number; failed: boolean; dropped?: Dropped[] }): Promise<void>;
     /** How many asks this person has made since `ms`. */
     asksSince(userId: string, ms: number): Promise<number>;
     trustedHosts(): Promise<string[]>;
@@ -171,6 +173,8 @@ export interface AskReport {
   askId: number;
   /** A follow-up that cost nothing (the first after an ask). */
   free: boolean;
+  /** When nothing fits: the 3 most common kinds of reason, for the short reasons the person sees. */
+  reasons: { key: string; count: number }[];
 }
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
@@ -466,35 +470,56 @@ async function ask(
     const asked = changed.intent;
     const person = aboutPerson(profile, picked);
     let picking = false;
-    const result = await deps.search({
-      focus: null,
-      ask: text,
-      cornerNames: corners.map((c) => c.name),
-      maxSearches: deps.settings.maxSearches,
-      prompt: { system: askSystemPrompt(), user: askUserPrompt(text, asked, window, person, now, followUp) },
-      onProgress: stream
-        ? (e) => {
-            if (e.type === "picking") picking = true;
-            emit(e.type, e);
-          }
-        : undefined,
-    });
-    if (stream && !picking) emit("picking", { type: "picking" });
-    const rawPicks = readPicksBlock(result.text);
+    const onProgress = stream
+      ? (e: SearchProgress) => {
+          if (e.type === "picking") picking = true;
+          emit(e.type, e);
+        }
+      : undefined;
+    const search = (gaps: string | null) =>
+      deps.search({
+        focus: null,
+        ask: text,
+        cornerNames: corners.map((c) => c.name),
+        maxSearches: deps.settings.maxSearches,
+        prompt: { system: askSystemPrompt(), user: askUserPrompt(text, asked, window, person, now, followUp, gaps) },
+        onProgress,
+      });
+    const check = (raw: RawPick[], links: ReadonlySet<string>) =>
+      checkAskPicks(raw, {
+        now,
+        intent: asked,
+        window,
+        sourceLinks: links,
+        sooshLinks: new Set(person.sooshPages.map((p) => p.url)),
+        corners: cornerMap(corners),
+        pickedCornerIds: new Set(picked.map((c) => c.id)),
+        askText: text,
+        latestMs: window.endMs + AFTER_DAYS * DAY_MS,
+        exclude: followUp?.titles,
+      });
+
+    const result = await search(null);
+    let rawPicks = readPicksBlock(result.text);
     if (!rawPicks) throw new SearchError("Stubby couldn't read what he found. Try asking another way.", 502);
+    const links = new Set(result.sourceLinks);
+    let checked = check(rawPicks, links);
+    // Fewer than 3 that fit: one more search round within the same ask, aimed at the gaps.
+    if (checked.outcome !== "found" || checked.kept.length < ASK_BEST) {
+      picking = false;
+      try {
+        const again = await search(gapLines(checked.outcome === "found" ? checked.kept : [], checked.dropped));
+        const more = readPicksBlock(again.text) ?? [];
+        for (const l of again.sourceLinks) links.add(l);
+        rawPicks = [...rawPicks, ...more];
+        checked = check(rawPicks, links);
+      } catch {
+        // The second round is a bonus: what the first one found still stands.
+      }
+    }
+    if (stream && !picking) emit("picking", { type: "picking" });
     found = rawPicks.length;
-    const { kept, dropped, outcome } = checkAskPicks(rawPicks, {
-      now,
-      intent: asked,
-      window,
-      sourceLinks: result.sourceLinks,
-      sooshLinks: new Set(person.sooshPages.map((p) => p.url)),
-      corners: cornerMap(corners),
-      pickedCornerIds: new Set(picked.map((c) => c.id)),
-      askText: text,
-      latestMs: window.endMs + AFTER_DAYS * DAY_MS,
-      exclude: followUp?.titles,
-    });
+    const { kept, dropped, outcome } = checked;
 
     const mine: AskPick[] = [];
     for (const [rank, p] of kept.entries()) if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
@@ -511,7 +536,7 @@ async function ask(
     }
 
     // A free follow-up isn't an ask of its own: its ask's counts stay as they were.
-    if (!free) await deps.server.finishAsk(askId, { found, added: mine.length, failed: false });
+    if (!free) await deps.server.finishAsk(askId, { found, added: mine.length, failed: false, dropped: dropped.slice(0, 30) });
     return {
       picks: kept.map((p) => ({
         kind: p.kind,
@@ -532,6 +557,7 @@ async function ask(
       asksLeft: Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS))),
       askId,
       free,
+      reasons: outcome === "nothing" ? topReasons(dropped) : [],
     };
   };
   const failed = (e: unknown) => {

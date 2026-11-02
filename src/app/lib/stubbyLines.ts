@@ -26,6 +26,8 @@ export const STUBBY_LINES = {
   missingWhen: "When are you free?",
   missingVibe: "What kind of fun?",
   nothingFits: "Nothing tonight that fits. Here’s the soonest after.",
+  /** The same, for any time other than tonight (approved Nov 2, 2026). */
+  nothingThen: "Nothing then that fits. Here’s the soonest after.",
   bringAFriend: "This one’s better with a friend. Bring someone?",
   /** When the deck runs out (stubby-plan §6.5, approved Nov 2, 2026). */
   deckRunOut: "That’s all I found. Want more?",

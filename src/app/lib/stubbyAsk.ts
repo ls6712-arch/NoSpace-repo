@@ -158,6 +158,10 @@ export interface AskResult {
   free?: boolean;
   /** Stubby needs one answer first; nothing was searched and no ask was used. */
   question?: "who" | "when" | "what";
+  /** When nothing fits: the 3 most common kinds of reason, with counts. */
+  reasons?: { key: string; count: number }[];
+  /** The time he understood ("tonight", "weekend"...), for which "nothing fits" line to say. */
+  when?: string | null;
 }
 
 /** The person's answer to Stubby's one question. */
@@ -178,12 +182,18 @@ export interface AskFollowUp {
 
 const readError = (body: unknown): string | null => (body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : null);
 
-function resultOf(r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown } | null): AskResult {
+function resultOf(
+  r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown; reasons?: unknown; understood?: { when?: unknown } } | null,
+): AskResult {
   const asksLeft = typeof r?.asksLeft === "number" ? r.asksLeft : null;
   if (r?.question === "who" || r?.question === "when" || r?.question === "what") return { found: 0, asksLeft, error: null, question: r.question };
   const found = Array.isArray(r?.picks) ? r!.picks!.length : 0;
   const outcome: AskOutcome = r?.outcome === "after" || r?.outcome === "nothing" || r?.outcome === "found" ? r.outcome : found > 0 ? "found" : "nothing";
-  return { found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true };
+  const reasons = Array.isArray(r?.reasons)
+    ? (r!.reasons as unknown[]).filter((x): x is { key: string; count: number } => !!x && typeof (x as { key?: unknown }).key === "string" && typeof (x as { count?: unknown }).count === "number").slice(0, 3)
+    : [];
+  const when = typeof r?.understood?.when === "string" ? r.understood.when : null;
+  return { found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true, reasons, when };
 }
 
 /**
