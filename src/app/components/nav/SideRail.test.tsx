@@ -131,3 +131,61 @@ describe("the skip link", () => {
     expect(link.className).toContain("rail:block");
   });
 });
+
+describe("Calendar's icon is Stubby", () => {
+  const calendarLink = () => within(screen.getByRole("navigation", { name: "Main" })).getByRole("link", { name: "Calendar" });
+
+  it("draws the Stubby mark (eyes only), decorative, in place of the calendar icon, keeping the label", () => {
+    at("/my-space");
+    const link = calendarLink();
+    const icon = link.querySelector("[data-stubby-nav-icon]") as HTMLElement;
+    expect(icon).not.toBeNull();
+    expect(icon.getAttribute("aria-hidden")).toBe("true");
+    expect(icon.classList.contains("stubby-nav-icon")).toBe(true);
+    const svg = icon.querySelector("svg")!;
+    expect(svg.getAttribute("viewBox")).toBe("0 0 240 150");
+    expect(svg.getAttribute("width")).toBe("22");
+    // The mark: two eyes, no brows, mouth, stamp slot or "Admit one".
+    expect(svg.querySelectorAll("rect[rx='8']")).toHaveLength(2);
+    expect(svg.querySelector("text")).toBeNull();
+    expect(link.querySelector(".lucide-calendar-days, .lucide-calendar")).toBeNull();
+    expect(link.getAttribute("aria-label")).toBe("Calendar");
+    expect(within(link).getAllByText("Calendar").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("is inactive off Calendar and active on it (and on the free time screen)", () => {
+    at("/my-space");
+    expect(calendarLink().getAttribute("aria-current")).toBeNull();
+    expect(calendarLink().className).toContain("text-foreground");
+    cleanup();
+    at("/calendar");
+    expect(calendarLink().getAttribute("aria-current")).toBe("page");
+    expect(calendarLink().className).toContain("text-accent-text");
+    expect(calendarLink().querySelector("[data-stubby-nav-icon]")).not.toBeNull();
+    cleanup();
+    at("/week/free");
+    expect(calendarLink().getAttribute("aria-current")).toBe("page");
+  });
+
+  it("theme.css: an outline in the rail's colour off its page, the full coral mark on it", async () => {
+    const fs = await import("node:fs");
+    const css = fs.readFileSync(`${process.cwd()}/src/styles/theme.css`, "utf8");
+    const rule = (selector: string) => {
+      const at = css.indexOf(`${selector} {`);
+      expect(at, selector).toBeGreaterThanOrEqual(0);
+      return css.slice(at, css.indexOf("}", at));
+    };
+    const off = rule(".stubby-nav-icon");
+    expect(off).toContain("--stubby-body: transparent");
+    expect(off).toContain("--stubby-tab: transparent");
+    expect(off).toContain("--stubby-ink: currentColor");
+    const on = rule('[aria-current="page"] .stubby-nav-icon');
+    for (const v of ["--stubby-body: inherit", "--stubby-tab: inherit", "--stubby-ink: inherit"]) expect(on).toContain(v);
+  });
+
+  it("is not a phone tab: the bottom bar is unchanged", async () => {
+    const { TAB_DESTINATIONS, CALENDAR } = await import("./navItems");
+    expect(TAB_DESTINATIONS.map((d) => d.label)).toEqual(["Home", "Discover", "Log", "You"]);
+    expect(TAB_DESTINATIONS).not.toContain(CALENDAR);
+  });
+});
