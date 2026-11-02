@@ -153,8 +153,12 @@ Deno.serve((req) => {
       async finishRun(id, r) {
         await server.from("scout_runs").update({ finished_at: new Date().toISOString(), ...r }).eq("id", id);
       },
-      async finishAsk(id, r) {
-        await server.from("stubby_asks").update(r).eq("id", id);
+      async finishAsk(id, { dropped, ...r }) {
+        // Why each candidate was dropped (titles and reasons only, never the ask), for debugging.
+        // Before migration 20261109000000 the column isn't there: the counts are still saved.
+        const reasons = dropped?.map((d) => ({ title: d.title.slice(0, 80), reason: d.reason.slice(0, 120) })) ?? null;
+        const { error } = await server.from("stubby_asks").update({ ...r, drop_reasons: reasons }).eq("id", id);
+        if (error) await server.from("stubby_asks").update(r).eq("id", id);
       },
       async asksSince(user, ms) {
         const { count, error } = await server.from("stubby_asks").select("id", { count: "exact", head: true }).eq("user_id", user).gte("asked_at", iso(ms));

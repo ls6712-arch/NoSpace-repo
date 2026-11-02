@@ -9,6 +9,7 @@ Stubby's scout, with three modes:
   - `"stream": true` answers as server-sent events (Stubby plan §7): `understood` at once, then `search` (each web search, as the model runs it, read from the model's own stream), `pages`, `picking`, and `done` with the report (including `askId`) or `error`. A comment line every 10 seconds keeps the connection open. If the person stops, the work carries on and is saved; the ask still counts. Anything that stops before searching (no asks left, a bad ask) is a plain JSON answer, as before.
   - `"followUp": {"of": askId, "kind": "cheaper" | "closer" | "later" | "different" | "more", "titles": [...]}` follows a deck (Stubby plan §6.5). The first follow-up after an ask is free (`stubby_asks.free_follow_up_used`, set in one update that only succeeds once; migration `20261108000000_stubby_deck.sql`): it adds no ask row and its picks join that ask (ranked from 10). Later ones use an ask. Cheaper halves the ceiling, Later starts two hours on, and the titles already shown are never shown again. A follow-up never asks the one question.
   - `"answers"` also takes `{"when": "YYYY-MM-DD"}` (Pick a day) and `{"skip": true}` (Surprise me, or an answer typed into the ask).
+  - Never a blank result (`empty.test.ts`): the model is asked for up to 10 candidates and the code keeps the best 3. Fewer than 3 that fit means one more search round within the same ask, aimed at the gaps (`gapLines`); a failed second round leaves the first round's picks. When nothing fits the time asked (any time, not just tonight), the soonest after that pass every other rule are shown, marked. When still nothing, the report carries `reasons`: the 3 most common kinds, counted, for the short reasons the person sees. Why each candidate was dropped (titles and reasons only, never the ask) is saved on `stubby_asks.drop_reasons` (migration `20261109000000_stubby_ask_drop_reasons.sql`; before it, only the counts are saved).
   - `golden.test.ts` pins the plan's golden cases with fake search results and a fixed clock. `node scripts/stubby-golden-models.ts` runs them live on two models (needs `ANTHROPIC_API_KEY`).
 
 ## What it does, step by step
@@ -28,7 +29,7 @@ Web pages are treated as data. The model can't touch the database, can't publish
 
 ## Deploy (not done by any PR)
 
-Needs `20261101155717_stubby_scout.sql`, `20261101180000_stubby_daily_and_ask.sql` `20261107000000_stubby_smarter_picks.sql` and `20261108000000_stubby_deck.sql` applied first.
+Needs `20261101155717_stubby_scout.sql`, `20261101180000_stubby_daily_and_ask.sql` `20261107000000_stubby_smarter_picks.sql` `20261108000000_stubby_deck.sql` and `20261109000000_stubby_ask_drop_reasons.sql` applied first.
 
 ```bash
 supabase functions deploy stubby-scout --no-verify-jwt

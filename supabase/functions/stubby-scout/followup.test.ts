@@ -71,7 +71,7 @@ describe("follow-ups", () => {
     expect(prompt).toContain("They want something different from what they were shown");
     expect(prompt).toContain('Already shown (don\'t report these again): "Wheel night".');
     expect(personal.map((p) => p.title)).toEqual(["Glaze class"]);
-    expect(body.dropped).toContainEqual({ title: "Wheel night", reason: "Already in the deck." });
+    expect(body.dropped).toContainEqual({ title: "Wheel night", reason: "Already in the deck.", key: "other" });
   });
 
   it("never asks the one question on a follow-up", async () => {

@@ -157,3 +157,23 @@ export const QUESTION_COPY = {
   surprise: "Surprise me",
 };
 
+/**
+ * When nothing fits: the honest line, then why, as one short line of the 3 most common reasons
+ * ("2 were listing pages, 1 was after midnight"), then three ways on (approved Nov 2, 2026).
+ */
+export const EMPTY_COPY = {
+  reasons: {
+    listing: ["was a listing page", "were listing pages"],
+    midnight: ["was after midnight", "were after midnight"],
+    time: ["was outside the time you asked for", "were outside the time you asked for"],
+    budget: ["was over your budget", "were over your budget"],
+    adult: ["was a bar or 21+", "were bars or 21+"],
+    nopage: ["had no page of its own", "had no page of their own"],
+    notime: ["had no clear time", "had no clear time"],
+    family: ["was too late for kids", "were too late for kids"],
+  } as Record<string, [string, string]>,
+  weekend: "This weekend",
+  surprise: "Surprise me",
+  differentWords: "Try different words",
+};
+

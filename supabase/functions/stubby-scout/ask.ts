@@ -13,10 +13,11 @@
 //   - Best 3, at most 5, in the order the model ranked them. One why line each, 15 words at most.
 
 import type { Intent, Window } from "./intent.ts";
-import { cleanText, linkKey, nyLocalToMs, optional, type Dropped, type RawPick } from "./picks.ts";
+import { cleanText, linkKey, nyLocalToMs, optional, type Dropped, type RawPick, type ReasonKey } from "./picks.ts";
 
 export const ASK_BEST = 3;
-export const ASK_MOST = 5;
+/** How many candidates the model is asked for; the code keeps the best ASK_BEST. */
+export const ASK_CANDIDATES = 10;
 export const AFTER_MOST = 3;
 export const WHY_WORDS = 15;
 const HOUR = 3_600_000;
@@ -126,7 +127,7 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
 
   for (const r of raw) {
     const title = cleanText(r.title);
-    const drop = (reason: string) => dropped.push({ title: (title || "A pick with no title").slice(0, 80), reason });
+    const drop = (reason: string, key: ReasonKey = "other") => dropped.push({ title: (title || "A pick with no title").slice(0, 80), reason, key });
     if (!title) {
       drop("No title.");
       continue;
@@ -143,12 +144,12 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
 
     const startsAt = nyLocalToMs(r.starts);
     if (!Number.isFinite(startsAt)) {
-      drop(kind === "idea" ? "No suggested time." : "No clear start time.");
+      drop(kind === "idea" ? "No suggested time." : "No clear start time.", "notime");
       continue;
     }
     // An event needs an hour to get there; an idea can start any time from now.
     if (startsAt < ctx.now + (kind === "idea" ? 0 : HOUR)) {
-      drop("Already started, or starts within the hour.");
+      drop("Already started, or starts within the hour.", "time");
       continue;
     }
     let endsAt: number | null = null;
@@ -165,15 +166,15 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
     if (!soosh) {
       const key = linkKey(url);
       if (!key || url.length > 500) {
-        drop(kind === "idea" ? "No real page for the place, and not a Soosh page Stubby offered." : "No https link of 500 characters or less.");
+        drop(kind === "idea" ? "No real page for the place, and not a Soosh page Stubby offered." : "No https link of 500 characters or less.", "nopage");
         continue;
       }
       if (!ctx.sourceLinks.has(key)) {
-        drop("Its link wasn't one of the pages the search found.");
+        drop("Its link wasn't one of the pages the search found.", "nopage");
         continue;
       }
       if (isListingPage(url)) {
-        drop("A page that lists many things, not its own page.");
+        drop("A page that lists many things, not its own page.", "listing");
         continue;
       }
     }
@@ -183,11 +184,11 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
     const what = `${title} ${place.value ?? ""}`;
 
     if (!intent.adults && ADULT_WORDS.test(what)) {
-      drop("A bar, brewery, tasting or 21+, and the ask didn't ask for one.");
+      drop("A bar, brewery, tasting or 21+, and the ask didn't ask for one.", "adult");
       continue;
     }
     if (intent.who === "family" && nyHour(startsAt) >= FAMILY_LATEST_HOUR) {
-      drop("Too late for a family outing.");
+      drop("Too late for a family outing.", "family");
       continue;
     }
 
@@ -195,11 +196,11 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
     const low = lowestPrice(price.value);
     if (intent.budget) {
       if (intent.budget.free && low !== 0 && !(kind === "idea" && low === null && soosh)) {
-        drop(low === null ? "Price not listed, and only free things were asked for." : "Not free.");
+        drop(low === null ? "Price not listed, and only free things were asked for." : "Not free.", "budget");
         continue;
       }
       if (!intent.budget.free && low !== null && low > intent.budget.max) {
-        drop(`Over the budget (about $${intent.budget.max} an outing).`);
+        drop(`Over the budget (about $${intent.budget.max} an outing).`, "budget");
         continue;
       }
     }
@@ -250,15 +251,16 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
       continue;
     }
     if (startsIn) {
-      drop("Ends after midnight.");
+      drop("Ends after midnight.", "midnight");
       continue;
     }
-    if (window.hard && window.label === "tonight" && kind === "event" && startsAt >= window.endMs && startsAt <= ctx.latestMs) {
+    // Every rule but the time: kept as one of the soonest after, for any time asked (founder, Nov 2, 2026).
+    if (kind === "event" && startsAt >= window.endMs && startsAt <= ctx.latestMs) {
       later.push(pick);
-      drop("Not tonight (kept as one of the soonest after, if nothing tonight fits).");
+      drop("After the time asked for (kept as one of the soonest after, if nothing in it fits).", "time");
       continue;
     }
-    drop(startsAt < window.startMs || !window.hard ? "Outside the time asked for." : "Not in the time asked for.");
+    drop(startsAt < window.startMs || !window.hard ? "Outside the time asked for." : "Not in the time asked for.", "time");
   }
 
   // At most one "better with a friend" per set.
@@ -270,8 +272,9 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
   };
 
   if (inWindow.length > 0) {
-    for (const extra of inWindow.slice(ASK_MOST)) dropped.push({ title: extra.title, reason: `Over the ${ASK_MOST} picks for one ask.` });
-    return { kept: inWindow.slice(0, ASK_MOST).map(one), dropped, outcome: "found" };
+    // The model ranks up to 10 candidates; the best 3 are kept.
+    for (const extra of inWindow.slice(ASK_BEST)) dropped.push({ title: extra.title, reason: `Over the ${ASK_BEST} picks for one ask.`, key: "other" });
+    return { kept: inWindow.slice(0, ASK_BEST).map(one), dropped, outcome: "found" };
   }
   if (later.length > 0) {
     const soonest = [...later].sort((a, b) => a.startsAt - b.startsAt).slice(0, AFTER_MOST).map((p) => one({ ...p, after: true }));
@@ -300,3 +303,33 @@ export function askRowFor(p: AskPick, userId: string, askId: number, rank: numbe
     better_with_friend: p.betterWithFriend,
   };
 }
+
+/** The reasons a person sees when nothing fits: the 3 most common kinds, never "other". */
+export function topReasons(dropped: readonly Dropped[], most = 3): { key: Exclude<ReasonKey, "other">; count: number }[] {
+  const counts = new Map<Exclude<ReasonKey, "other">, number>();
+  for (const d of dropped) if (d.key && d.key !== "other") counts.set(d.key, (counts.get(d.key) ?? 0) + 1);
+  return [...counts.entries()].map(([key, count]) => ({ key, count })).sort((a, b) => b.count - a.count).slice(0, most);
+}
+
+/** What the second search round aims at: what was kept, what was dropped and why. */
+export function gapLines(kept: readonly AskPick[], dropped: readonly Dropped[]): string {
+  const why: Record<Exclude<ReasonKey, "other">, string> = {
+    listing: "pages that list many things (find each event's own page instead)",
+    midnight: "things that end after midnight",
+    time: "things outside the time asked for",
+    budget: "things over the budget",
+    adult: "bars, tastings or 21+",
+    nopage: "links that weren't pages from your search",
+    notime: "pages with no clear date and start time",
+    family: "things too late for kids",
+  };
+  const reasons = topReasons(dropped, 5).map((r) => `${r.count} ${why[r.key]}`);
+  return [
+    `Your first search found ${kept.length === 0 ? "nothing" : `only ${kept.length}`} that fit. Search again, aimed at what's missing.`,
+    reasons.length ? `Dropped so far: ${reasons.join("; ")}. Avoid those.` : "",
+    kept.length ? `Already found (don't report these again): ${kept.map((k) => `"${k.title.replace(/"/g, "'")}"`).join(", ")}.` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+

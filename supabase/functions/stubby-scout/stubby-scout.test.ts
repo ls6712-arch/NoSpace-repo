@@ -349,7 +349,12 @@ describe("the request", () => {
       // Shared copy: published (trusted host), and nothing in it says who asked.
       expect(saved[0]).toMatchObject({ published: true, found_by: "scout" });
       expect(JSON.stringify(saved[0])).not.toContain("user-1");
-      expect(asks).toEqual([{ id: 5, found: 2, added: 1, failed: false }]);
+      // Fewer than 3 fit, so a second round ran (the fake search answers the same both times).
+      expect(asks).toMatchObject([{ id: 5, found: 4, added: 1, failed: false }]);
+      // Why each candidate was dropped is saved with the ask: titles and reasons only, never the ask text.
+      const reasons = (asks[0] as { dropped: { title: string; reason: string }[] }).dropped;
+      expect(reasons.length).toBeGreaterThan(0);
+      expect(JSON.stringify(reasons)).not.toContain("next weekend");
     });
 
     it("needs a sign-in and something to look for, before using up an ask", async () => {

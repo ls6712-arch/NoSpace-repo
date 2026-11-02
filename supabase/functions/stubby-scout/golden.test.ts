@@ -105,7 +105,7 @@ describe("golden case 2: \"something fun to do with my girlfriend tonight\", no 
     expect(prompt).toContain("only things that start between 2026-11-01T17:00 and 2026-11-02T00:00 and end by midnight");
     expect(prompt).toContain("going with their partner");
     expect(prompt).toContain("Leave out bars, breweries, tastings and 21+.");
-    expect(prompt).toContain("up to 3 of the soonest good options after tonight");
+    expect(prompt).toContain("If nothing fits tonight, also report up to 3 of the soonest good options after it.");
   });
 });
 
@@ -164,7 +164,7 @@ describe("golden case 4: \"pottery tonight\", budget $50 a month", () => {
   it("keeps the free and the $10, and drops the $35 with a reason", () => {
     const { result } = ctxFor("pottery tonight", RAW, { monthlyBudget: 50 });
     expect(result.kept.map((p) => p.title)).toEqual(["Open studio hour", "Hand-building session"]);
-    expect(result.dropped).toEqual([{ title: "Wheel throwing intro", reason: "Over the budget (about $12 an outing)." }]);
+    expect(result.dropped).toEqual([{ title: "Wheel throwing intro", reason: "Over the budget (about $12 an outing).", key: "budget" }]);
   });
 });
 
@@ -266,7 +266,8 @@ describe("the request, end to end", () => {
     const search = vi.fn(async () => ({ text: "<picks>[]</picks>", sourceLinks: new Set<string>(), searches: 1 }));
     const res = await handleScout(post({ mode: "ask", ask: "pottery tonight" }), deps({ search, profileFails: true }));
     expect((await res.json()).outcome).toBe("nothing");
-    expect(search).toHaveBeenCalledTimes(1);
+    // Nothing survived the first round, so one more round ran, aimed at the gaps.
+    expect(search).toHaveBeenCalledTimes(2);
   });
 });
 
