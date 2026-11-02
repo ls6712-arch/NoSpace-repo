@@ -46,7 +46,7 @@ Starter lines (new, for approval):
 
 | When | Line |
 | --- | --- |
-| Calendar opens | A line about your week (see the Calendar brief §2), or "What are you in the mood for?" |
+| Calendar opens | A line about your week (see `claude-code-brief-stubby-calendar-hero.md` §2), or "What are you in the mood for?" |
 | Missing who | "Going solo or with someone?" |
 | Missing when | "When are you free?" |
 | Missing vibe | "What kind of fun?" |

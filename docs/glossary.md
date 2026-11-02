@@ -810,8 +810,8 @@ One pick at most in each free stretch of the next 7 days, made in the browser. N
 | Term | Use |
 |---|---|
 | Stubby’s pick | The label on a pick: white, a dashed border in the accent text colour. Row in Show: Stubby’s picks, "Ideas for your free time" |
-| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo |
-| Ask to join | The button instead of Keep when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
+| Keep | Makes the pick a plan straight away (the event's own "I'm going", or joining an open Pursuit that lets you in at once). Toast: Plan made · Undo. Becomes Make it a plan in Stubby plan PR 3, together with Not now (approved Nov 2, 2026): Keep then means only shortlist, in the deck |
+| Ask to join | The button instead of Keep (Make it a plan from PR 3) when the host answers a request to join (more than half the spots are taken). Toast: Request sent · Undo (approved Nov 1, 2026) |
 | Not this | Retired (Nov 2, 2026): becomes Not now, renamed in Stubby plan PR 3 (the deck), not before, so the app never shows both words. Behaviour stays: swaps in the next match. After 3 on one stretch the stretch goes back to Find something. Kept in this browser only. A declined pick may come back later instead of being hidden for good |
 | Find something | What a free stretch says when nothing fits: never filler |
 | You said Tuesday evenings work, and you picked Climbing. | The reason line. It names the usual week only when the pick falls in it. Otherwise: "You picked Climbing." (approved Nov 1, 2026). A pass adds " You have a climbing pass." |
@@ -885,6 +885,8 @@ Never use these in UI copy.
 | Send a new code in {n} seconds | Oct 30, 2026 | Send a new code in {m:ss} |
 | That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |
 | Not this | Nov 2, 2026 (the label changes in Stubby plan PR 3) | Not now |
+| What are you after? | Nov 2, 2026 (the Ask Stubby field label) | What are you in the mood for? |
+| Keep, for making a plan at once | Nov 2, 2026 (the in-slot label changes in Stubby plan PR 3) | Make it a plan. Keep means only shortlist, in the deck |
 
 ### Calendar: asking Stubby (Nov 1, 2026)
 
@@ -893,7 +895,8 @@ Superseded on Nov 2, 2026 by the Stubby rule (he talks in Ask Stubby, on the Cal
 | Wording | Where |
 |---|---|
 | Something different? | Title of the Ask Stubby panel the Stubby dock opens (it was the heading of a box under the calendar until the dock replaced it) |
-| What are you after? | Label of its text field. Placeholder: "Pottery on Saturday, a free run, something outdoors" |
+| What are you after? | Retired (Nov 2, 2026). Use What are you in the mood for? |
+| What are you in the mood for? | Label of its text field, everywhere the field appears (approved Nov 2, 2026). Placeholder: "Pottery on Saturday, a free run, something outdoors" |
 | Ask Stubby | Its button. While looking: Looking |
 | {n} asks left today | Under the field, with plural(). At 0: "That’s your 3 for today. Stubby can look again tomorrow." |
 | Found {n} things. | After an ask that found something |
@@ -921,16 +924,23 @@ Being removed in Stubby plan PR 4 (`docs/briefs/claude-code-brief-stubby-calenda
 
 | Term | Use |
 |---|---|
-| Keep | On a card in the deck: the card goes to Your selection and the next card comes forward. It only shortlists; it does not make a plan |
+| Keep | On a card in the deck: the card goes to Your selection and the next card comes forward. It only shortlists; it does not make a plan. This is Keep's only meaning (approved Nov 2, 2026) |
 | Not now | On a card in the deck: the card goes to the back of the deck and comes around again. Replaces Not this everywhere, Calendar's picks included, from Stubby plan PR 3. Same meaning everywhere: not this time, it can come around again |
 | Bring it back | Brings back the card you last said Not now to. Works for the last 3, newest first |
 | Your selection | The tray under the deck: up to 5 kept cards, shown as small tickets |
-| Make it a plan | In Your selection: makes the chosen cards plans (the existing Keep flow: RSVP or join) |
+| Make it a plan | In Your selection: makes the chosen cards plans (the existing Keep flow: RSVP or join). From PR 3 it is also the button on Calendar's in-slot picks that makes a plan straight away (was Keep) |
 | An idea | The label on a do-it-yourself pick, instead of a date and time ticket |
 | That’s all I found. Want more? | When the deck runs out |
 | See the ones you skipped | Refills the deck with the Not now cards |
 | Ask again | A new search (uses an ask) |
 | Go to your selection | Goes to Your selection |
+
+### The Calendar stage
+
+| Term | Use |
+|---|---|
+| Ask Stubby… | Placeholder on the slim sticky bar that appears when the stage scrolls out of view. Tapping it scrolls back to the stage and focuses the field (approved Nov 2, 2026) |
+| What are you in the mood for? | The ask field's label on the stage (see Calendar: asking Stubby, above) |
 
 ### Stubby's question chips
 
