@@ -42,7 +42,7 @@ export const LOG: Destination = {
 };
 export const CALENDAR: Destination = {
   to: "/calendar",
-  label: "Calendar",
+  label: "Stubby",
   // Stubby lives on Calendar, so its icon is his mark (founder, Nov 2, 2026).
   icon: StubbyNavIcon,
   // /week/free (when you are usually free) is part of the calendar too.

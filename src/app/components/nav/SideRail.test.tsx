@@ -41,7 +41,7 @@ describe("the left rail", () => {
     const names = within(nav)
       .getAllByRole("link")
       .map((a) => a.getAttribute("aria-label"));
-    expect(names).toEqual(["Soosh", "Home", "Discover", "Log a Moment", "Calendar", "Chats", "You"]);
+    expect(names).toEqual(["Soosh", "Home", "Discover", "Log a Moment", "Stubby", "Chats", "You"]);
     expect(within(nav).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/my-space", "/my-space", "/discover", "/create", "/calendar", "/messages", "/you"]);
     // The things that open something are buttons.
     expect(within(nav).getByRole("button", { name: "Search" })).toBeTruthy();
@@ -52,7 +52,7 @@ describe("the left rail", () => {
   it("puts words on every item for the 1280px layout and a tooltip for the icon-only one", () => {
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
-    for (const word of ["Home", "Discover", "Search", "Log", "Calendar", "Chats", "You", "More"]) {
+    for (const word of ["Home", "Discover", "Search", "Log", "Stubby", "Chats", "You", "More"]) {
       // One copy as the visible label (wide), one as the tooltip (narrower).
       expect(within(nav).getAllByText(word).length).toBeGreaterThanOrEqual(2);
     }
@@ -70,7 +70,7 @@ describe("the left rail", () => {
     expect(current()).toEqual(["Home"]);
     cleanup();
     at("/week/free");
-    expect(current()).toEqual(["Calendar"]);
+    expect(current()).toEqual(["Stubby"]);
     cleanup();
     at("/corners/pottery");
     expect(current()).toEqual(["Discover"]);
@@ -132,10 +132,10 @@ describe("the skip link", () => {
   });
 });
 
-describe("Calendar's icon is Stubby", () => {
-  const calendarLink = () => within(screen.getByRole("navigation", { name: "Main" })).getByRole("link", { name: "Calendar" });
+describe("the rail item for /calendar is Stubby: his mark and his name", () => {
+  const calendarLink = () => within(screen.getByRole("navigation", { name: "Main" })).getByRole("link", { name: "Stubby" });
 
-  it("draws the Stubby mark (eyes only), decorative, in place of the calendar icon, keeping the label", () => {
+  it("draws the Stubby mark (eyes only), decorative, in place of the calendar icon, named Stubby", () => {
     at("/my-space");
     const link = calendarLink();
     const icon = link.querySelector("[data-stubby-nav-icon]") as HTMLElement;
@@ -149,8 +149,8 @@ describe("Calendar's icon is Stubby", () => {
     expect(svg.querySelectorAll("rect[rx='8']")).toHaveLength(2);
     expect(svg.querySelector("text")).toBeNull();
     expect(link.querySelector(".lucide-calendar-days, .lucide-calendar")).toBeNull();
-    expect(link.getAttribute("aria-label")).toBe("Calendar");
-    expect(within(link).getAllByText("Calendar").length).toBeGreaterThanOrEqual(1);
+    expect(link.getAttribute("aria-label")).toBe("Stubby");
+    expect(within(link).getAllByText("Stubby").length).toBeGreaterThanOrEqual(1);
   });
 
   it("is inactive off Calendar and active on it (and on the free time screen)", () => {

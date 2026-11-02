@@ -1,11 +1,11 @@
-// Screenshots of Calendar's rail icon, the Stubby mark, from the fixture person in the fixture Supabase.
+// Screenshots of the rail item for /calendar (named Stubby, with his mark as its icon), from the fixture person in the fixture Supabase.
 //
 //   node scripts/visual/stubby-nav-icon.ts --out docs/qa/stubby-nav-icon [--dist <built dir>] [--themes light,dark]
 //
 // At 1280px, per theme, it saves the page and a close-up of the rail, with Calendar inactive (Home)
-// and active (Calendar). It FAILS (exit 1) when the Calendar link has no Stubby mark, the mark is
+// and active (Calendar). It FAILS (exit 1) when the item has no Stubby mark, the mark is
 // not about 22px wide and level with the other rail icons, it is coral while inactive or not coral
-// while active, it isn't decorative, or the label "Calendar" is gone.
+// while active, it isn't decorative, or the label isn't "Stubby".
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import http from "node:http";
@@ -52,16 +52,16 @@ async function main() {
       const errors: string[] = [];
       page.on("pageerror", (e) => errors.push(String(e)));
       const rail = page.getByRole("navigation", { name: "Main" }).first();
-      const calendar = rail.getByRole("link", { name: "Calendar", exact: true });
+      const calendar = rail.getByRole("link", { name: "Stubby", exact: true });
 
       for (const [state, route] of [["inactive", "/my-space"], ["active", "/calendar?view=week"]] as const) {
         await page.goto(`http://localhost:${port}/#${route}`);
         await page.waitForSelector("main h1", { timeout: 15000 });
         await calendar.waitFor({ timeout: 10000 });
         const icon = calendar.locator("[data-stubby-nav-icon]");
-        if ((await icon.count()) !== 1) throw new Error(`${th} ${state}: Calendar has no Stubby mark`);
+        if ((await icon.count()) !== 1) throw new Error(`${th} ${state}: the item has no Stubby mark`);
         if ((await icon.getAttribute("aria-hidden")) !== "true") throw new Error(`${th} ${state}: the mark is not decorative`);
-        if (!(await calendar.getByText("Calendar", { exact: true }).first().isVisible())) throw new Error(`${th} ${state}: the label is gone`);
+        if (!(await calendar.getByText("Stubby", { exact: true }).first().isVisible())) throw new Error(`${th} ${state}: the label is gone`);
         const current = await calendar.getAttribute("aria-current");
         if ((current === "page") !== (state === "active")) throw new Error(`${th} ${state}: aria-current is ${current}`);
         const svg = (await icon.locator("svg").boundingBox())!;
@@ -72,7 +72,7 @@ async function main() {
         const calRow = (await calendar.boundingBox())!;
         const offset = Math.abs(svg.y + svg.height / 2 - calRow.y - (home.y + home.height / 2 - homeRow.y));
         if (offset > 1) throw new Error(`${th} ${state}: the mark sits ${offset}px off the other icons' line`);
-        if (Math.abs(calRow.height - homeRow.height) > 0.5) throw new Error(`${th} ${state}: the Calendar row is ${calRow.height}px, Home's ${homeRow.height}px`);
+        if (Math.abs(calRow.height - homeRow.height) > 0.5) throw new Error(`${th} ${state}: the Stubby row is ${calRow.height}px, Home's ${homeRow.height}px`);
         const body = await icon.evaluate((el) => getComputedStyle(el.querySelector("path")!).fill);
         const coral = body !== "none" && !/rgba\(0, 0, 0, 0\)|transparent/.test(body);
         if (coral !== (state === "active")) throw new Error(`${th} ${state}: the body is ${body}`);
@@ -82,7 +82,7 @@ async function main() {
         const close = `rail-${state}-closeup-${th}.png`;
         const box = (await rail.boundingBox())!;
         await page.screenshot({ path: path.join(OUT, close), clip: { x: box.x, y: box.y, width: box.width, height: Math.min(box.height, 460) } });
-        notes.push(`- ${file} (and ${close}): Calendar ${state}, body ${body}`);
+        notes.push(`- ${file} (and ${close}): Stubby ${state}, body ${body}`);
       }
       if (errors.length) throw new Error(`page errors: ${errors.join("; ")}`);
       await ctx.close();
@@ -91,7 +91,7 @@ async function main() {
     await browser.close();
     server.close();
   }
-  fs.writeFileSync(path.join(OUT, "README.md"), `# Stubby as the Calendar icon, QA screenshots\n\nMade by \`scripts/visual/stubby-nav-icon.ts\` from the fixture person in the visual harness (no database), at 1280px (2x pixels, so the close-ups are sharp). Inactive is Home (Calendar's mark is an outline in the rail's colour); active is Calendar (the full coral mark). Each page has a close-up of the rail.\n\n${notes.join("\n")}\n`);
+  fs.writeFileSync(path.join(OUT, "README.md"), `# Stubby on the rail (the Calendar item), QA screenshots\n\nMade by \`scripts/visual/stubby-nav-icon.ts\` from the fixture person in the visual harness (no database), at 1280px (2x pixels, so the close-ups are sharp). The rail item for /calendar is named Stubby, with his mark as its icon. Inactive is Home (the mark is an outline in the rail's colour); active is Calendar (the full coral mark). Each page has a close-up of the rail.\n\n${notes.join("\n")}\n`);
   console.log(notes.join("\n"));
 }
 main().catch((e) => { console.error(e); process.exit(1); });
