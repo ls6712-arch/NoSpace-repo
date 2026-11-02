@@ -766,7 +766,7 @@ The Moment city, from PR 1 (approved Oct 30, 2026).
 
 ## Week view (brief of Oct 30, 2026)
 
-The wording of the Week view, taken from the founder's Week view brief. It is now the Week view of the calendar (`/calendar?view=week`); `/week` redirects there. Opens from Home's Your week card and the Calendar item.
+The wording of the Week view, taken from the founder's Week view brief. It is now the Week view of the calendar (`/calendar?view=week`); `/week` redirects there. Opens from Home's Your week card and the Stubby item on the rail.
 
 | Term | Use |
 |---|---|
@@ -798,7 +798,8 @@ The wording of `/calendar`, from the founder's calendar brief (`claude-code-brie
 
 | Term | Use |
 |---|---|
-| Calendar | The rail item and the page. It replaced "Week". Not a phone tab: it opens from Home's Your week card |
+| Calendar | The page. It replaced "Week". Not a phone tab: it opens from Home's Your week card |
+| Stubby (rail item) | The rail item for `/calendar`: his mark as the icon, his name as the label (was Calendar; founder, Nov 2, 2026). The page keeps the name Calendar |
 | Today · Previous {day, week, month, 30 days} · Next {day, week, month, 30 days} | The header buttons. The arrows are icons; the names are for screen readers and say which period they move by |
 | Day · Week · Month · List | The view switch. The chosen one is filled in the foreground colour |
 | October 2026 · Oct 31 to Nov 6 · Tue Nov 3 · Oct 31 to Nov 29 | Titles of Month, Week, Day and List. Week is the next 7 days, today first. List is the next 30 days |

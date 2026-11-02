@@ -18,7 +18,7 @@ const at = (path: string) =>
   );
 
 describe("bottom tab bar", () => {
-  it("reads Home, Discover, Log, You, in that order (Calendar is not a tab)", () => {
+  it("reads Home, Discover, Log, You, in that order (Stubby, the calendar, is not a tab)", () => {
     expect(TABS.map((t) => t.label)).toEqual(["Home", "Discover", "Log", "You"]);
     at("/my-space");
     const nav = screen.getByRole("navigation", { name: "Main" });
@@ -38,6 +38,7 @@ describe("bottom tab bar", () => {
     at("/calendar");
     const nav = screen.getByRole("navigation", { name: "Main" });
     expect(within(nav).queryByText("Calendar")).toBeNull();
+    expect(within(nav).queryByText("Stubby")).toBeNull();
     expect(within(nav).getAllByRole("link").filter((a) => a.getAttribute("aria-current") === "page")).toHaveLength(0);
   });
 
