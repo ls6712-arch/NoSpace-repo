@@ -1,5 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
+
+// Hoisted to the top either way; written here so it reads in the order it runs (vitest 5 requires it).
+vi.mock("./draftMedia", () => ({ clearDraftMedia: () => undefined }));
 import {
   EMPTY_DECK,
   addCards,
@@ -122,7 +125,6 @@ describe("kept in this browser, per person", () => {
 
 describe("signing out", () => {
   it("clears every person's deck and this session's remembered answer", async () => {
-    vi.mock("./draftMedia", () => ({ clearDraftMedia: () => undefined }));
     const { clearLocalData } = await import("./localData");
     saveDeck("u1", keepFront(deal(A, B)));
     saveDeck("u2", deal(C));
