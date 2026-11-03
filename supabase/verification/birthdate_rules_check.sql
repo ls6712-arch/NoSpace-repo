@@ -36,7 +36,12 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', u.email, '', now(), now(), now(), '{}', '{}', false, u.anon
   from (values (v_a, 'bd.a@acct-test.invalid', false), (v_y, 'bd.y@acct-test.invalid', false), (v_g, null, true)) as u(id, email, anon);
   -- Both onboarded before birthdays were asked: members without a birthdate, like 8 of 9 live.
+  -- profiles_require_birthdate refuses false to true without one, so add one, finish, then
+  -- clear it as the owner (the birthday lock only stops client roles).
+  insert into public.profile_private (user_id, birthdate) select x.id, (current_date - interval '30 years')::date from unnest(array[v_a, v_y]) as x(id)
+    on conflict (user_id) do update set birthdate = excluded.birthdate;
   update public.profiles set onboarding_completed = true where profiles.id in (v_a, v_y);
+  update public.profile_private set birthdate = null where profile_private.user_id in (v_a, v_y);
 
   perform set_config('role', 'authenticated', true);
 

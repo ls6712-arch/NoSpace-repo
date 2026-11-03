@@ -34,8 +34,13 @@ begin
     (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, is_anonymous)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', u.email, '', now(), now(), now(), '{}', '{}', false, u.anon
   from (values (v_m, 'rg.m@acct-test.invalid', false), (v_s, 'rg.s@acct-test.invalid', false), (v_g, null, true)) as u(id, email, anon);
-  -- As the owner: M finished onboarding before this migration.
+  -- Finished onboarding before birthdays were asked, like the members on live: true, no birthdate.
+  -- profiles_require_birthdate refuses false to true without one, so add one, finish, then
+  -- clear it as the owner (the birthday lock only stops client roles).
+  insert into public.profile_private (user_id, birthdate) select x.id, (current_date - interval '30 years')::date from unnest(array[v_m]) as x(id)
+    on conflict (user_id) do update set birthdate = excluded.birthdate;
   update public.profiles set onboarding_completed = true where profiles.id = v_m;
+  update public.profile_private set birthdate = null where profile_private.user_id = v_m;
 
   -- 1. The RPC gate, case by case: who, role, path, allowed?
   for c in
