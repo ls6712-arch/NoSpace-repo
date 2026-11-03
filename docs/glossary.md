@@ -1093,6 +1093,7 @@ His other lines:
 | Term | Use | From |
 |---|---|---|
 | Stay in · Head out · Surprise me | The answers to "Stay in or head out?". Surprise me skips the question, as everywhere | PR 7 |
+| Stubby is updating, try again in a minute. | When the app and Stubby's function are from different versions (one is mid-update), instead of an error with no explanation. Wording from the founder, Nov 3, 2026 | Stubby version check |
 | Event · Watch · Read · At home · Idea · Connect | The kind label on each card. They replace "An idea" | PR 11 |
 | Keep · Not now (stamps) | The swipe stamps, in sentence case like everything else: bold, letter-spaced, in a bordered, rotated box. Never capitals | PR 11 |
 | Enjoyed it · It was okay · Didn't go | The answers to "How was {plan}?" | PR 14 |

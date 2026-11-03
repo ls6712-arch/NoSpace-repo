@@ -73,7 +73,8 @@ export function originAllowed(origin: string | null, allowed: readonly string[])
 
 /** CORS headers for an allowed origin; none for anything else. */
 export function corsFor(origin: string | null, allowed: readonly string[]): Record<string, string> {
-  const base = { "access-control-allow-headers": "authorization, x-client-info, apikey, content-type", "access-control-allow-methods": "POST, OPTIONS", vary: "Origin" };
+  // stubby-version: the app's Stubby version (_shared/stubbyVersion.ts), allowed and read back.
+  const base = { "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, stubby-version", "access-control-expose-headers": "stubby-version", "access-control-allow-methods": "POST, OPTIONS", vary: "Origin" };
   return origin && allowed.includes(origin.replace(/\/$/, "")) ? { ...base, "access-control-allow-origin": origin } : base;
 }
 

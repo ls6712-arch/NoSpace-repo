@@ -38,6 +38,7 @@ import { STUBBY_CONFIG } from "./config.ts";
 import { buildContract, decisionTrace, explicitPreferences, type DecisionTrace } from "./contract.ts";
 import { BodyError, parseBody } from "./schema.ts";
 import { EMPTY_TASTE, tasteIsEmpty, tasteLines, type Signal, type Taste } from "./taste.ts";
+import { STUBBY_UPDATING, STUBBY_VERSION, STUBBY_VERSION_HEADER, versionMatches } from "../_shared/stubbyVersion.ts";
 
 export const CITY = "new-york";
 /** The morning restock fills this many days ahead. */
@@ -246,8 +247,11 @@ export interface AskQuestion {
 
 export const CORS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type",
+  "access-control-allow-headers": "authorization, x-client-info, apikey, content-type, stubby-version",
   "access-control-allow-methods": "POST, OPTIONS",
+  "access-control-expose-headers": STUBBY_VERSION_HEADER,
+  // Every answer says which version of Stubby gave it, so the app can tell when the two drift apart.
+  [STUBBY_VERSION_HEADER]: STUBBY_VERSION,
 };
 
 /**
@@ -308,6 +312,9 @@ const statusOf = (e: unknown) => (e instanceof SearchError ? e.status : 500);
 export async function handleScout(req: Request, deps: ScoutDeps): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return fail(405, "Use POST.");
+  // The app and the function come from different deploys: a different version means one of them is
+  // mid-update. Said plainly, before the body is read (a newer app's body may not pass this check).
+  if (!versionMatches(req.headers.get(STUBBY_VERSION_HEADER))) return json(409, STUBBY_UPDATING);
 
   let body: ReturnType<typeof parseBody>;
   try {
