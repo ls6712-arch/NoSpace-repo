@@ -29,10 +29,7 @@ export const GUEST_COPY = {
   limit: (more: number, time: string) => `Sign up for ${plural(more, "more ask", "more asks")} today, or ask again after ${time}.`,
   /** NEW: Stubby's line when the guest cap is reached. */
   busy: "Lots of asks right now. Sign up to keep going.",
-  /**
-   * NEW: guests aren't open (anonymous sign-ins off, or the server isn't ready). The founder's
-   * words were "Sign in to use Stubby"; the style guide's label for signing in is Log in.
-   */
+  /** Approved (founder, Nov 3, 2026): guests aren't open (anonymous sign-ins off, or the server isn't ready). */
   closed: "Log in to use Stubby.",
   /** Approved: Sign in / out is Log in, Log out. */
   logIn: "Log in",
