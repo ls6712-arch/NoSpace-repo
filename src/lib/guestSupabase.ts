@@ -39,15 +39,37 @@ export async function guestSession() {
 }
 
 /**
+ * Whether Supabase Auth takes anonymous sign-ins right now (its public settings), without making
+ * anyone. False means guests aren't open: the page shows "Log in to use Stubby", not errors. Null
+ * when it couldn't be read (the first ask then finds out).
+ */
+export async function guestSignInsOpen(): Promise<boolean | null> {
+  if (!supabaseUrl || !supabaseAnonKey) return false;
+  try {
+    const res = await fetch(`${supabaseUrl}/auth/v1/settings`, { headers: { apikey: supabaseAnonKey } });
+    if (!res.ok) return null;
+    const s = (await res.json()) as { external?: { anonymous_users?: unknown } };
+    return typeof s.external?.anonymous_users === "boolean" ? s.external.anonymous_users : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The guest session, made now if there isn't one. Called on the first ask only. With Turnstile on,
  * the caller passes the token it got; Supabase checks it (Authentication > Attack Protection).
+ * `closed` means anonymous sign-ins are switched off.
  */
-export async function ensureGuestSession(captchaToken?: string | null): Promise<{ ok: boolean }> {
-  if (!guestSupabase) return { ok: false };
+export async function ensureGuestSession(captchaToken?: string | null): Promise<{ ok: boolean; closed?: boolean }> {
+  if (!guestSupabase) return { ok: false, closed: true };
   if (await guestSession()) return { ok: true };
   try {
     const { data, error } = await guestSupabase.auth.signInAnonymously(captchaToken ? { options: { captchaToken } } : undefined);
-    return { ok: !error && !!data.session };
+    if (error) {
+      const code = (error as { code?: string }).code ?? "";
+      return { ok: false, closed: code === "anonymous_provider_disabled" || /anonymous sign-ins are disabled/i.test(error.message) };
+    }
+    return { ok: !!data.session };
   } catch {
     return { ok: false };
   }

@@ -73,6 +73,9 @@ const userOf = (anonymous: boolean) => ({
 });
 const sessionOf = (anonymous: boolean) => ({ access_token: anonymous ? GUEST_TOKEN : ACCOUNT_TOKEN, token_type: "bearer", expires_in: 3600, expires_at: exp(), refresh_token: anonymous ? "guest-refresh" : "account-refresh", user: userOf(anonymous) });
 
+/** How the fake Supabase treats guests: open, anonymous sign-ins off, or the function not ready. */
+let guestMode: "open" | "off" | "notReady" = "open";
+
 const state = {
   guestAsks: 0,
   accountAsks: [] as string[],
@@ -116,8 +119,10 @@ async function supabase(route: Route) {
   const anonymous = token === GUEST_TOKEN;
 
   // Auth
+  if (p === "/auth/v1/settings") return json(route, 200, { external: { anonymous_users: guestMode !== "off", google: true, email: true } });
   if (p === "/auth/v1/signup") {
     state.anonSignIns += 1;
+    if (guestMode === "off") return json(route, 422, { code: "anonymous_provider_disabled", msg: "Anonymous sign-ins are disabled" });
     return json(route, 200, sessionOf(true));
   }
   if (p === "/auth/v1/token") {
@@ -139,6 +144,7 @@ async function supabase(route: Route) {
   // The edge function
   if (p === "/functions/v1/stubby-scout") {
     const body = (req.postDataJSON() ?? {}) as Record<string, unknown>;
+    if (anonymous && guestMode === "notReady") return json(route, 503, { error: "Stubby isn't open to guests yet.", code: "GUESTS_NOT_READY" });
     if ("user_id" in body || "guest_id" in body) state.forgedFieldsSeen += 1;
     if (body.status === true) return json(route, 200, anonymous ? { asksLeft: 3 - state.guestAsks, perDay: 3, accountPerDay: 6, guest: true } : { asksLeft: 6 - state.guestAsks - state.accountAsks.length, perDay: 6, accountPerDay: 6, guest: false });
     if (anonymous) {
@@ -201,7 +207,54 @@ const fail = (why: string) => {
   throw new Error(why);
 };
 
+/**
+ * Guests not open: a clean "Log in to use Stubby", no field, no error line, nothing made. Runs in
+ * its own browser context (its own storage) so the main run starts from nothing.
+ */
+async function closedScenario(mode: "off" | "notReady") {
+  guestMode = mode;
+  const before = state.anonSignIns;
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await ctx.route(`${SUPA}/**`, supabase);
+  await ctx.route(`${ORIGIN}/api/geo`, (r) => json(r, 200, { city: "Brooklyn" }));
+  const p = await ctx.newPage();
+  const errors: string[] = [];
+  p.on("pageerror", (e) => errors.push(e.message));
+  p.on("console", (m) => {
+    if (m.type() === "error" && /Content Security Policy|Refused to|Uncaught/i.test(m.text())) errors.push(m.text());
+  });
+  try {
+    await p.goto(`${ORIGIN}/#/calendar`);
+    await p.getByRole("heading", { level: 1, name: "Ask Stubby" }).waitFor();
+    if (mode === "notReady") {
+      // Sign-ins are on, so the field is there; the first ask finds out the server isn't ready.
+      await p.locator("[data-context-card]").getByRole("button", { name: "Skip" }).click();
+      await p.getByRole("button", { name: "Free tonight" }).click();
+    }
+    await p.locator("[data-guest-closed]").waitFor({ timeout: 10_000 });
+    const panel = await p.locator("[data-guest-closed]").innerText();
+    if (!panel.includes("Log in to use Stubby.")) fail(`${mode}: closed panel says: ${panel}`);
+    if (!(await p.locator("[data-guest-closed]").getByRole("link", { name: "Log in" }).count())) fail(`${mode}: no Log in link`);
+    if (!(await p.locator("[data-guest-closed]").getByRole("link", { name: "Sign up" }).count())) fail(`${mode}: no Sign up link`);
+    if (await p.getByLabel("What are you in the mood for?").count()) fail(`${mode}: the ask field is still there`);
+    if (await p.locator("[data-context-card]").count()) fail(`${mode}: the context card is still there`);
+    const text = await p.locator("body").innerText();
+    if (/went wrong|couldn.t look|try again|error/i.test(text)) fail(`${mode}: an error line is showing`);
+    if (mode === "off" && state.anonSignIns !== before) fail("off: a guest sign-in was attempted though sign-ins are off");
+    if (errors.length) fail(`${mode}: ${errors.join(" | ")}`);
+  } finally {
+    await ctx.close();
+    guestMode = "open";
+  }
+}
+
 try {
+  step("anonymous sign-ins off: a clean 'Log in to use Stubby', no errors, no guest made");
+  await closedScenario("off");
+  step("server not ready for guests: the first ask turns into the same clean state");
+  await closedScenario("notReady");
+  state.anonSignIns = 0;
+
   step("a guest opens Stubby: no sign-up first");
   await page.goto(`${ORIGIN}/#/calendar`);
   await page.getByRole("heading", { level: 1, name: "Ask Stubby" }).waitFor();

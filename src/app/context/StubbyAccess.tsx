@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
-import { ensureGuestSession, guestSession, guestSupabase, turnstileSiteKey } from "../../lib/guestSupabase";
+import { ensureGuestSession, guestSession, guestSignInsOpen, guestSupabase, turnstileSiteKey } from "../../lib/guestSupabase";
 import { track, type SignUpTrigger } from "../lib/analytics";
 import { turnstileToken } from "../lib/turnstile";
 import type { AskLimit } from "../lib/stubbyAsk";
@@ -15,6 +15,14 @@ export type ActivePrompt = { kind: "inline_card" } | { kind: "limit"; limit: Ask
 export interface StubbyAccess {
   /** Signed out: Stubby runs as a guest, through the guest's own client. */
   guest: boolean;
+  /**
+   * Guests aren't open (anonymous sign-ins off, or the server isn't ready for guests): the field
+   * gives way to "Log in to use Stubby", never an error.
+   */
+  closed: boolean;
+  markClosed: () => void;
+  /** The same, read now (state updates land on the next render). */
+  isClosed: () => boolean;
   /** The client Stubby reads and asks through. */
   client: SupabaseClient | null;
   /** Makes the guest on the first ask (with Turnstile when it is on). True when there is a session. */
@@ -66,6 +74,9 @@ export function inlineCardAllowed(now = Date.now()): boolean {
 
 const MEMBER_ACCESS: StubbyAccess = {
   guest: false,
+  closed: false,
+  markClosed: () => undefined,
+  isClosed: () => false,
   client: supabase,
   ensureSession: async () => true,
   prompt: null,
@@ -88,6 +99,25 @@ export function useStubbyAccess(): StubbyAccess {
 
 export function StubbyAccessProvider({ guest, children }: { guest: boolean; children: ReactNode }) {
   const [prompt, setPrompt] = useState<ActivePrompt | null>(null);
+  const [closed, setClosed] = useState(false);
+  const closedNow = useRef(false);
+  const markClosed = useCallback(() => {
+    closedNow.current = true;
+    setClosed(true);
+  }, []);
+  const isClosed = useCallback(() => closedNow.current, []);
+
+  // Asked once on opening: are guests open at all? Nothing is made by asking.
+  useEffect(() => {
+    if (!guest) return;
+    let live = true;
+    void guestSignInsOpen().then((open) => {
+      if (live && open === false) markClosed();
+    });
+    return () => {
+      live = false;
+    };
+  }, [guest, markClosed]);
   const [guestMessages, setGuestMessages] = useState(() => Number(read("session", GUEST_ASKS_KEY) ?? 0) || 0);
   const draft = useRef("");
   const shown = useRef<SignUpTrigger | null>(null);
@@ -107,8 +137,10 @@ export function StubbyAccessProvider({ guest, children }: { guest: boolean; chil
     if (!guest) return true;
     if (await guestSession()) return true;
     const token = await turnstileToken(turnstileSiteKey);
-    return (await ensureGuestSession(token)).ok;
-  }, [guest]);
+    const r = await ensureGuestSession(token);
+    if (r.closed) markClosed();
+    return r.ok;
+  }, [guest, markClosed]);
 
   const offerInlineCard = useCallback(() => {
     if (!guest || !inlineCardAllowed()) return;
@@ -172,9 +204,9 @@ export function StubbyAccessProvider({ guest, children }: { guest: boolean; chil
   const value = useMemo<StubbyAccess>(
     () =>
       guest
-        ? { guest: true, client: guestSupabase, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk, draft }
+        ? { guest: true, closed, markClosed, isClosed, client: guestSupabase, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk, draft }
         : MEMBER_ACCESS,
-    [guest, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk],
+    [guest, closed, markClosed, isClosed, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

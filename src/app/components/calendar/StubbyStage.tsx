@@ -91,7 +91,8 @@ export const StubbyStage = forwardRef<
   const ask = useAskStubby({ onReact: react, userId });
   const access = useStubbyAccess();
   const capped = access.prompt?.kind === "limit" && (access.prompt.limit.code === "GUEST_GLOBAL_CAP" || access.prompt.limit.code === "GLOBAL_CAP");
-  const line = stageLine({ ...ask, capped }, greetingLine({ ...greeting, asksLeft: ask.left }));
+  // Guests aren't open: his line says how to use him instead of greeting a field that isn't there.
+  const line = access.guest && access.closed ? GUEST_COPY.closed : stageLine({ ...ask, capped }, greetingLine({ ...greeting, asksLeft: ask.left }));
 
   // Hello, once a session: a hop and one soft ring.
   const [ring, setRing] = useState(false);
@@ -181,7 +182,7 @@ export const StubbyStage = forwardRef<
               <GuestSignUpButton />
             </div>
           )}
-          {ask.showContext && <ContextCard onDone={(t) => void ask.saveContext(t)} onSkip={ask.skipContext} />}
+          {ask.showContext && !access.closed && <ContextCard onDone={(t) => void ask.saveContext(t)} onSkip={ask.skipContext} />}
           {/* When his line already asks "What are you in the mood for?", the label isn't shown twice. */}
           <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} hideLabel={line === ASK_COPY.label} />
         </div>

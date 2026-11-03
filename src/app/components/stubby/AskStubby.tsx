@@ -46,7 +46,7 @@ import {
 } from "../../lib/stubbyAsk";
 import type { BuddyReaction } from "./StubbyBuddy";
 import { useStubbyAccess } from "../../context/StubbyAccess";
-import { LimitPanel } from "./GuestPrompts";
+import { GuestClosedPanel, LimitPanel } from "./GuestPrompts";
 import { guestSession } from "../../../lib/guestSupabase";
 import { track } from "../../lib/analytics";
 import { RESUME_KEY } from "../../lib/signUpReturn";
@@ -330,7 +330,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       try {
         // A guest is made on the first ask, not before.
         if (guest && !(await access.ensureSession())) {
-          r = { found: 0, asksLeft: null, error: STUBBY_LINES.error };
+          // Guests switched off: the closed state, not an error. Anything else is the usual error.
+          r = access.isClosed() ? { found: 0, asksLeft: null, error: null, closed: true } : { found: 0, asksLeft: null, error: STUBBY_LINES.error };
         } else {
           r = await askStubbyStream(what, { signal: c.signal, onStep, answers, questions: !opts.answers && !opts.followUp, followUp: opts.followUp ?? null, client });
         }
@@ -347,6 +348,10 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       endStall();
       setBusy(false);
       setSteps([]);
+      if (r.closed) {
+        access.markClosed();
+        return;
+      }
       if (r.limit) {
         // Refused before searching. A guest sees the limit panel (or the sign-up sheet for an
         // account-only follow-up); an account sees Stubby's out-of-asks line, as before.
@@ -651,6 +656,9 @@ export function AskStubby({
       {label}
     </Chip>
   );
+
+  // Guests aren't open: no field, no quick ideas, no error. Logging in or signing up still works.
+  if (access.guest && access.closed) return <GuestClosedPanel />;
 
   // At a guest's limit (or the guest cap) the field gives way to what signing up gets them.
   // Everything already found stays readable below.

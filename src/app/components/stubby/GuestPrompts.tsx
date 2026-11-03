@@ -1,8 +1,29 @@
 import { X } from "lucide-react";
+import { Link } from "react-router";
 import { Button } from "../ui/button";
 import { useStubbyAccess } from "../../context/StubbyAccess";
 import { formatTime } from "../../lib/dates";
 import { GUEST_COPY } from "../../lib/guestCopy";
+
+/**
+ * In place of the field when guests aren't open (anonymous sign-ins off, or the server isn't ready
+ * for guests): what to do instead, never an error. Logging in and signing up work as always.
+ */
+export function GuestClosedPanel() {
+  return (
+    <div data-guest-closed="" className="flex flex-col gap-3 rounded-card border border-border bg-card p-4">
+      <p className="text-small">{GUEST_COPY.closed}</p>
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="lg">
+          <Link to="/login">{GUEST_COPY.logIn}</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link to="/onboarding">{GUEST_COPY.signUp}</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /** The small Sign up button in Stubby's header, for guests only. Not a prompt: it never covers anything. */
 export function GuestSignUpButton() {

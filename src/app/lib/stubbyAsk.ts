@@ -287,6 +287,8 @@ export interface AskResult {
   reasons?: { key: string; count: number }[];
   /** Refused before searching: the daily limit, the guest cap, or a feature that needs an account. */
   limit?: AskLimit;
+  /** Guests aren't open (the function's startup check): shown as "Log in to use Stubby", not an error. */
+  closed?: boolean;
   /** The time he understood ("tonight", "weekend"...), for which "nothing fits" line to say. */
   when?: string | null;
 }
@@ -370,7 +372,7 @@ export async function askStubbyStream(
       if (limit) return { found: 0, asksLeft: limit.code === "SIGNUP_REQUIRED" ? null : 0, error: null, limit };
       // Guests aren't open yet (the function's startup check): the usual line, nothing new.
       if (body && typeof body === "object" && (body as { code?: unknown }).code === "GUESTS_NOT_READY") {
-        return { found: 0, asksLeft: null, error: "Stubby couldn’t look just now. Try again in a bit." };
+        return { found: 0, asksLeft: null, error: null, closed: true };
       }
       return { found: 0, asksLeft: null, error: readError(body) ?? "Stubby couldn’t look just now. Try again in a bit." };
     }
