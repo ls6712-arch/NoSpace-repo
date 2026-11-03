@@ -417,3 +417,6 @@ function Earlier({ picks, onRemove }: { picks: MyPick[]; onRemove: (p: MyPick) =
     </div>
   );
 }
+
+/** The same pick card, for Discover's Stubby's picks row. */
+export { Card as PickCard };

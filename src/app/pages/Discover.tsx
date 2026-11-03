@@ -19,6 +19,10 @@ import { SpacesRow } from "../components/discover/SpacesRow";
 import { CityFeed } from "../components/discover/CityFeed";
 import { SectionBoundary } from "../components/discover/SectionBoundary";
 import { InterestsSheet } from "../components/discover/InterestsSheet";
+import { StubbyPicksRow } from "../components/discover/StubbyPicksRow";
+import { PeopleRow } from "../components/discover/PeopleRow";
+import { ASK_COPY } from "../lib/calendarCopy";
+import type { Owner } from "../lib/firstPlanRemote";
 import { useInterests } from "../lib/interests";
 import { fetchPasses, fetchTaste, type Taste } from "../lib/tasteRemote";
 import type { Pass } from "../lib/tasteModel";
@@ -83,12 +87,14 @@ function SectionSkeleton({ cards }: { cards: number }) {
  * Discover v2: the world, not your world. Home is what is yours (dated plans,
  * people you follow, Spaces you joined); this is what is not yet: undated ideas,
  * Corners new to you, Spaces near you, and Moments from people you do not follow.
- * One scrolling page: a header with the city, jump chips, then the four sections. Every section loads and fails on
+ * One scrolling page: a header with the city, jump chips, then the sections. Signed in, two more:
+ * Stubby's picks (what he found when you asked him) and People near you (the authors of the feed).
+ * Every section loads and fails on
  * its own, and a Moment, Corner or Space is never on both Home and Discover.
  * Signed out, everything is read only and any action opens the sign up prompt.
  */
 export function Discover() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { publicFeed } = useContent();
   const social = useSocial();
   const interests = useInterests();
@@ -300,6 +306,10 @@ export function Discover() {
     setSearchParams(next, { replace: true });
   };
 
+  const owner: Owner | null = user
+    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
+    : null;
+
   const city = interests.city.trim();
   const cornersLoading = corners === null;
   const spacesLoading = spaces === null;
@@ -338,7 +348,13 @@ export function Discover() {
         {/* One search: this box only leads to /search, the same one the side menu and the phone magnifier open. */}
         <GlobalSearchBox launcher />
 
-        <JumpChips withMoments={!!user} />
+        <JumpChips signedIn={!!user} />
+
+        {owner && (
+          <SectionBoundary>
+            <StubbyPicksRow owner={owner} heading={<SectionHeading id="stubby-title" title={ASK_COPY.listLabel} action={{ label: ASK_COPY.button, to: "/calendar" }} />} />
+          </SectionBoundary>
+        )}
 
         <SectionBoundary>
           <section id="discover-ideas" aria-labelledby="ideas-title" className="scroll-mt-24">
@@ -398,6 +414,16 @@ export function Discover() {
             </section>
           ) : null}
         </SectionBoundary>
+
+        {user && (
+          <SectionBoundary>
+            <PeopleRow
+              posts={posts}
+              viewerId={user.id}
+              heading={<SectionHeading id="people-title" title="People near you" sub="From people you don’t follow yet" action={{ label: "See all", to: "/people" }} />}
+            />
+          </SectionBoundary>
+        )}
 
         {user && (
           <SectionBoundary>

@@ -720,7 +720,8 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Empty Search | Nothing typed: Busy this week (the Corners with the most events in the next 7 days, each with its event count) and Corners (a row of up to six). A section with nothing in it is left out, and neither says "Be the first". With both empty: Type something to search. |
 | / | On desktop, pressing / opens search, except while typing in a field |
 | Search (old note) | Discover had no search box of its own before this (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
-| Jump chips | Ideas / Corners / Spaces / Moments |
+| Jump chips | Stubby / Ideas / Corners / Spaces / People / Moments. Stubby, People and Moments are for signed-in people only, and a section left out because it is empty has no chip (approved Nov 3, 2026) |
+| Stubby’s picks row heading / link | Stubby’s picks / Ask Stubby (opens Calendar). The cards are Stubby’s pick cards with Make it a plan under each; Remove deletes the pick. Left out with no picks (approved Nov 3, 2026) |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
 | Time pill | An hour / Tonight / Weekend (each includes the ones before it) |
 | Spend pill | Free / Under $25 / Treat me (each includes the ones before it) |
@@ -732,6 +733,7 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Spaces heading / subline | Spaces near you / Studios, cafés and groups that host things |
 | Space buttons | Join / Ask to join |
 | Space activity | {N} Moments this month |
+| People heading / subline / link | People near you / From people you don’t follow yet / See all (opens /people). The newest authors of the feed, each once, never yourself. No counts, no Follow button: each card opens their Shelf (approved Nov 3, 2026) |
 | Feed heading / subline | What {city} is making / From people you don’t follow yet |
 | Feed actions | Follow / Love this / Try {corner} (the Corner’s name drops to lower case unless it is a name like D&D) |
 
