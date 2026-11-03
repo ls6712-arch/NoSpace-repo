@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase, supabaseAnonKey, supabaseUrl } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
+import { STUBBY_UPDATING, STUBBY_VERSION, STUBBY_VERSION_HEADER } from "../../../supabase/functions/_shared/stubbyVersion.ts";
 
 /**
  * Asking Stubby for something different (supabase/functions/stubby-scout, mode "ask";
@@ -143,6 +144,28 @@ async function tokenOf(client: Client): Promise<string | null> {
   }
 }
 
+/** Sent on every call to stubby-scout: the function answers another version with "Stubby is updating". */
+export const STUBBY_HEADERS: Record<string, string> = { [STUBBY_VERSION_HEADER]: STUBBY_VERSION };
+
+/**
+ * After a call with the version header failed before any answer: true when the function answers the
+ * same harmless status call without the header. Then it is a function older than this app (its CORS
+ * doesn't allow the header yet), not a lost connection. Uses no ask and searches nothing.
+ */
+export async function olderFunction(token: string, doFetch: typeof fetch = fetch): Promise<boolean> {
+  if (!supabaseUrl || !supabaseAnonKey) return false;
+  try {
+    await doFetch(`${supabaseUrl}/functions/v1/stubby-scout`, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
+      body: JSON.stringify({ mode: "ask", status: true }),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Asks left today and the day's allowance, from the server (an ask with status: no search, no ask
  * used), so a limit changed in the function's settings shows without a new build. Null without a session.
@@ -153,7 +176,7 @@ export async function askStatus(client: Client = supabase): Promise<{ left: numb
   try {
     const res = await fetch(`${supabaseUrl}/functions/v1/stubby-scout`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey, ...STUBBY_HEADERS },
       // An ask with no words and status: the function before this one answers 400, never a search.
       body: JSON.stringify({ mode: "ask", status: true }),
     });
@@ -248,7 +271,7 @@ export async function askStubby(text: string): Promise<{ found: number; asksLeft
   const ask = text.trim().slice(0, ASK_MAX_LENGTH);
   if (ask.length < 2) return { found: 0, asksLeft: null, error: "Say what you’re after, like pottery on Saturday." };
   if (!supabase) return { found: 0, asksLeft: null, error: "Stubby needs the live app." };
-  const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { mode: "ask", ask } });
+  const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { mode: "ask", ask }, headers: STUBBY_HEADERS });
   if (error) {
     let message: string | null = null;
     try {
@@ -371,12 +394,14 @@ export async function askStubbyStream(
   try {
     res = await fetch(`${supabaseUrl}/functions/v1/stubby-scout`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey },
+      headers: { "content-type": "application/json", authorization: `Bearer ${token}`, apikey: supabaseAnonKey, ...STUBBY_HEADERS },
       body: JSON.stringify({ mode: "ask", ask, stream: true, ...(answers ? { answers } : {}), ...(questions ? { questions: true } : {}), ...(followUp ? { followUp } : {}) }),
       signal,
     });
   } catch (e) {
     if ((e as Error)?.name === "AbortError") throw e;
+    // A function older than this app turns the stubby-version header away before the ask is sent.
+    if (await olderFunction(token)) return { found: 0, asksLeft: null, error: STUBBY_UPDATING.error };
     return { found: 0, asksLeft: null, error: "Stubby couldn’t look just now. Try again in a bit." };
   }
   // Stopped before searching (no asks left, a bad ask), or an older function: a plain answer.

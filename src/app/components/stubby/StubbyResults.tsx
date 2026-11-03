@@ -3,14 +3,16 @@ import { useReducedMotion } from "motion/react";
 import { Check, ChevronDown, ExternalLink, LoaderCircle, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "../ui/button";
+import { ImageWithFallback } from "../ImageWithFallback";
 import { Chip } from "../ui/Chip";
 import { cn } from "../ui/utils";
 import { pickPill } from "../../lib/cityPicks";
 import { plural } from "../../lib/plural";
-import { ASK_COPY, EMPTY_COPY, SHEET, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { ASK_COPY, EMPTY_COPY, SHEET, STAY_IN_COPY, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
 import { cardCount, frontCard, selectionFull } from "../../lib/stubbyDeck";
 import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
+import type { StayInCard } from "../../lib/stubbyStayIn";
 import { GUEST_COPY } from "../../lib/guestCopy";
 import type { AskState, StepRow } from "./AskStubby";
 
@@ -61,7 +63,8 @@ export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: {
   const empty = !busy && outcome === "nothing";
   const chips = understood ? [UNDERSTOOD_COPY.when[understood.when ?? ""], UNDERSTOOD_COPY.who[understood.who ?? ""]].filter(Boolean) : [];
   const hasDeck = deck.all.length > 0 || deck.selection.length > 0;
-  if (!busy && !error && !status && !empty && !hasDeck && earlier.length === 0) return null;
+  const stayIn = !busy ? state.stayIn : null;
+  if (!busy && !error && !status && !empty && !stayIn && !hasDeck && earlier.length === 0) return null;
   return (
     <div data-stubby-results="" className="mb-6 flex flex-col gap-3">
       {busy && chips.length > 0 && (
@@ -109,6 +112,7 @@ export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: {
         <p>{state.intelligence.outcome === "verified" ? "Source details checked." : state.intelligence.outcome === "partial" ? "Some details need confirmation. Check the source before you go." : state.intelligence.fallback}</p>
         {state.intelligence.warnings.map((w, i) => <p key={i}>{w}</p>)}
       </div>}
+      {stayIn && <StayIn cards={stayIn} onHeadOut={state.headOut} />}
       {empty && <Empty state={state} onTryDifferent={onTryDifferent} />}
       {deck.all.length > 0 && <Deck state={state} onBring={onBring} />}
       {deck.selection.length > 0 && <Selection state={state} onMakePlans={onMakePlans} />}
@@ -141,6 +145,49 @@ function Empty({ state, onTryDifferent }: { state: AskState; onTryDifferent?: ()
         </Button>
       </div>
     </section>
+  );
+}
+
+/**
+ * Stay in (hotfix, Nov 3, 2026): their own Pursuits with the next step, and their Corners that
+ * work at home, each with its Corner's photo. Nothing at all: the honest line and three ways on,
+ * never a 0 with no explanation.
+ */
+function StayIn({ cards, onHeadOut }: { cards: StayInCard[]; onHeadOut: () => void }) {
+  if (cards.length === 0) {
+    return (
+      <section data-stubby-stay-in="empty" aria-live="polite" className="flex flex-col gap-3 rounded-card border border-dashed border-border p-4">
+        <p className="text-body font-semibold">{STAY_IN_COPY.nothing}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={onHeadOut}>
+            {STAY_IN_COPY.headOut}
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/pursuits/new">{STAY_IN_COPY.startPursuit}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/discover">{STAY_IN_COPY.discover}</Link>
+          </Button>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <ul data-stubby-stay-in="" aria-live="polite" className="flex flex-col gap-3">
+      {cards.map((c) => (
+        <li key={c.id}>
+          <Link to={c.to} className="flex min-h-11 gap-3 overflow-hidden rounded-card border border-border bg-card p-3">
+            {c.photo && <ImageWithFallback src={c.photo} alt="" width={80} className="size-20 shrink-0 rounded-card object-cover" />}
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="self-start rounded-full border border-border px-2 py-0.5 text-caption font-semibold">{STAY_IN_COPY.badge}</span>
+              <span className="text-body font-semibold">{c.title}</span>
+              {c.step && <span className="text-small">{c.step}</span>}
+              {c.needs.length > 0 && <span className="text-caption text-muted-foreground">{`${STAY_IN_COPY.needs}: ${c.needs.join(", ")}`}</span>}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 

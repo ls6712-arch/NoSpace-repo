@@ -52,6 +52,7 @@ import { hasBirthdayOnFile } from "../../lib/birthday";
 import { guestSession } from "../../../lib/guestSupabase";
 import { track } from "../../lib/analytics";
 import { RESUME_KEY } from "../../lib/signUpReturn";
+import { fetchStayIn, saysStayIn, withoutStayIn, type StayInCard } from "../../lib/stubbyStayIn";
 
 /**
  * How the last ask ended, for Stubby's line: found something, found only the soonest after
@@ -138,6 +139,13 @@ export interface AskState {
   offerBirthday: boolean;
   /** A birthday was added (or an under-18 one given): the prompt goes. */
   birthdayAdded: () => void;
+  /**
+   * Stay in (hotfix, Nov 3, 2026): the cards from their own Pursuits and Corners, answered without
+   * a search or an ask. Null when the last ask wasn't Stay in; empty when there was nothing.
+   */
+  stayIn: StayInCard[] | null;
+  /** From the Stay in empty state: the same ask, heading out instead. */
+  headOut: () => void;
 }
 
 /** With no new step for this long, he says he's still looking. */
@@ -210,6 +218,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [reasons, setReasons] = useState<{ key: string; count: number }[]>([]);
   const [offerBirthday, setOfferBirthday] = useState(false);
   const [tonight, setTonight] = useState(false);
+  const [stayIn, setStayIn] = useState<StayInCard[] | null>(null);
   const [who, setWho] = useState<Who | null>(() => {
     const w = readSession<{ who?: string }>(ANSWERS_KEY)?.who;
     return w && (WHO_VALUES as readonly string[]).includes(w) ? (w as Who) : null;
@@ -334,6 +343,22 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       setOfferBirthday(false);
       setUnderstood(null);
       setSteps([]);
+      setStayIn(null);
+      // Stay in, answered or typed: their own Pursuits and Corners, never the web search (which
+      // drops every event, so it could come back with nothing). No ask is used.
+      if (opts.answers?.setting === "in" || (!opts.followUp && opts.answers?.setting !== "out" && saysStayIn(what))) {
+        const cards = await fetchStayIn(userRef.current, client);
+        if (controller.current === c) {
+          running.current = false;
+          controller.current = null;
+        }
+        if (c.signal.aborted) return;
+        setBusy(false);
+        setStayIn(cards);
+        if (cards.length > 0) setText("");
+        react.current?.(cards.length > 0 ? "stamped" : "shrug");
+        return;
+      }
       resetStall();
       // Who you're going with, once said, goes with every ask this session: as a remembered chip,
       // below what you type now (stubby-agent B3), so "with my girlfriend" wins over Just me.
@@ -575,6 +600,12 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     if (r.send && draft.trim().length >= 2) void run(draft);
   }, [guest, run]);
 
+  // From the Stay in empty state: the same ask, heading out. With nothing left of it, Surprise me.
+  const headOut = useCallback(() => {
+    const base = withoutStayIn(lastAsk.current);
+    void run(base.length >= 2 ? base : QUESTION_COPY.surprise, { answers: { setting: "out" } });
+  }, [run]);
+
   const earlier = useMemo(() => {
     const inDeck = new Set([...deck.all, ...deck.selection]);
     return groupPicks(picks, askId, Date.now()).earlier.filter((p) => !inDeck.has(p.id));
@@ -628,6 +659,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     remove,
     offerBirthday,
     birthdayAdded: () => setOfferBirthday(false),
+    stayIn,
+    headOut,
   };
 }
 

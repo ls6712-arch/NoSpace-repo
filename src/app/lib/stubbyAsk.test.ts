@@ -20,6 +20,7 @@ vi.mock("../../lib/supabase", () => {
 });
 
 import { askStubbyStream, fetchMyPicks, type AskStep } from "./stubbyAsk";
+import { STUBBY_VERSION } from "../../../supabase/functions/_shared/stubbyVersion.ts";
 
 const NOW = Date.UTC(2026, 10, 1, 22);
 const row = (over: Record<string, unknown> = {}) => ({ id: 1, title: "Wheel night", place: null, starts_at: new Date(NOW + 3_600_000).toISOString(), ends_at: null, price: "$10", url: "https://example.com/w", note: null, ...over });
@@ -73,6 +74,7 @@ describe("askStubbyStream", () => {
     const fetchMock = vi.fn(async (_url: string, init: RequestInit) => {
       expect(JSON.parse(init.body as string)).toEqual({ mode: "ask", ask: "pottery tonight", stream: true });
       expect((init.headers as Record<string, string>).authorization).toBe("Bearer tok");
+      expect((init.headers as Record<string, string>)["stubby-version"]).toBe(STUBBY_VERSION);
       return sse(body);
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -94,6 +96,30 @@ describe("askStubbyStream", () => {
     expect((await askStubbyStream("pottery", { onStep: () => undefined })).error).toBe("The search took too long.");
     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ error: "That's 3 for today. I'll look again tomorrow." }), { status: 429, headers: { "content-type": "application/json" } }));
     expect((await askStubbyStream("pottery", { onStep: () => undefined })).error).toBe("That's 3 for today. I'll look again tomorrow.");
+    vi.unstubAllGlobals();
+  });
+
+  it("says Stubby is updating when the function's version differs, either way round (Nov 3, 2026)", async () => {
+    // A newer or older function that knows the header answers 409 with the line itself.
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ error: "Stubby is updating, try again in a minute.", code: "STUBBY_UPDATING" }), { status: 409, headers: { "content-type": "application/json" } }));
+    expect((await askStubbyStream("pottery", { onStep: () => undefined })).error).toBe("Stubby is updating, try again in a minute.");
+    // A function from before the header: the browser turns the header away (CORS), but the same
+    // harmless status call without it gets through, so it's an update, not a lost connection.
+    const seen: (string | undefined)[] = [];
+    vi.stubGlobal("fetch", async (_u: string, init: RequestInit) => {
+      const v = (init.headers as Record<string, string>)["stubby-version"];
+      seen.push(v);
+      if (v) throw new TypeError("Failed to fetch");
+      expect(JSON.parse(init.body as string)).toEqual({ mode: "ask", status: true });
+      return new Response("{}", { status: 400 });
+    });
+    expect((await askStubbyStream("pottery", { onStep: () => undefined })).error).toBe("Stubby is updating, try again in a minute.");
+    expect(seen).toEqual([STUBBY_VERSION, undefined]);
+    // Offline: both fail, so the usual line.
+    vi.stubGlobal("fetch", async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    expect((await askStubbyStream("pottery", { onStep: () => undefined })).error).toBe("Stubby couldn’t look just now. Try again in a bit.");
     vi.unstubAllGlobals();
   });
 

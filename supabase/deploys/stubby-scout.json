@@ -1,0 +1,21 @@
+{
+  "function": "stubby-scout",
+  "project": "eyzokuhhbyidvmuqfmwm",
+  "version": 23,
+  "confirmedAt": "2026-11-03",
+  "files": {
+    "_shared/access.ts": "f5587ea1fcce1cf82fbde85c38b032045f3536dbe0444b79728840418935a736",
+    "stubby-scout/ask.ts": "a0df3a31c065474c77988b56f6a28c956e59d224eda7244c0386f64be6316cd2",
+    "stubby-scout/askPrompt.ts": "4488b80868f676a911232db39ba2fa9c8f2917e0ecdb1a05513df810ecf9842f",
+    "stubby-scout/claim.ts": "242d646073a63d24c790f0c5ddf8119cd2ca1a19d79471d05e3869a8ffc59f75",
+    "stubby-scout/config.ts": "a1579946454dbc67c02cba83c05375e928b14c2e2fd4a7fefd793ba2c8f198f4",
+    "stubby-scout/contract.ts": "474d1d010dc3cbb3e2eacc207fdcd08304db8aa4d3104cbfe51af7d8ba3d23f2",
+    "stubby-scout/handler.ts": "9813bfd54748f9b92de789597cd6ddd1c772d66abe4e73a170f714a55a981254",
+    "stubby-scout/index.ts": "6d28271f6a3e6582f736245f8471a83e62757e66beda088996f37ee747bc6540",
+    "stubby-scout/intent.ts": "6a05809aab5b602d22c3463b4b329609bf645c8ba960cf6aab2896e028adc051",
+    "stubby-scout/picks.ts": "de426781710eb1db745bbe27b770b70266114ff51a647b6aa87a1134a9ea9871",
+    "stubby-scout/schema.ts": "92e3f4ecdd288457e33deb042518ce717fecf2e86ad08ef9a5c8dc6c191ba9b8",
+    "stubby-scout/search.ts": "9bf80b453dc3a9afcf87b320d6c0a83d3f3104bf9690df40c06444b87e7ee65d",
+    "stubby-scout/taste.ts": "15052a04dcc9c12d980810ef39f660a82ca6babacb73c2e0989366adf2f356f7"
+  }
+}

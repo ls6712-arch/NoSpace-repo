@@ -167,6 +167,20 @@ export const QUESTION_COPY = {
  * When nothing fits: the honest line, then why, as one short line of the 3 most common reasons
  * ("2 were listing pages, 1 was after midnight"), then three ways on (approved Nov 2, 2026).
  */
+/**
+ * Stay in, answered from their own Pursuits and Corners (hotfix, Nov 3, 2026). Every string is
+ * already in docs/glossary.md: the At-home badge, What you’ll need, Head out, Start a Pursuit,
+ * Go to Discover, and the nothing-fit line.
+ */
+export const STAY_IN_COPY = {
+  badge: "At home",
+  needs: "What you’ll need",
+  nothing: "Nothing fit this time. Try asking another way.",
+  headOut: "Head out",
+  startPursuit: "Start a Pursuit",
+  discover: "Go to Discover",
+};
+
 export const EMPTY_COPY = {
   reasons: {
     listing: ["was a listing page", "were listing pages"],

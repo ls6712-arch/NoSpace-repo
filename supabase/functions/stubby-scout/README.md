@@ -54,6 +54,26 @@ Deploy **without** gateway JWT verification (`--no-verify-jwt`), because the mor
 
 **Kill switch:** `supabase secrets set STUBBY_SCOUT_ENABLED=false`. Takes effect on the next request, no deploy needed.
 
+### After every deploy: read it back and record it (Nov 3, 2026)
+
+The app ships from main on every merge; this function only when someone deploys it. When the two
+drift apart, Stubby breaks live (Nov 3: the app from main sent requests the older function turned
+away with a bare 400). Two things keep them together:
+
+- **The version header.** The app sends `stubby-version` (`_shared/stubbyVersion.ts`) on every
+  call. The function answers any other version with 409 and "Stubby is updating, try again in a
+  minute." (code `STUBBY_UPDATING`), and sends its own version back on every answer. No header
+  (the morning schedule, curl) passes. Bump `STUBBY_VERSION` whenever the request or the answer
+  changes shape; `version.test.ts` holds `schema.ts` to the hash beside it, so changing the request
+  check without a bump fails `npm test`.
+- **The deploy record.** `supabase/deploys/stubby-scout.json` lists every file the function is
+  built from (`index.ts` and everything it imports, `_shared` included) with its sha256, as last
+  deployed and read back. CI's `stubby-deploy` job fails on main whenever this folder differs from
+  the record. After deploying, read the function back (the Supabase connector's
+  `get_edge_function`, saved as JSON) and run
+  `node scripts/record-stubby-deploy.ts <read-back.json>`: it compares every file byte for byte
+  and writes the record only when all of them match. Merge the record in a small PR.
+
 ## Cost
 
 Web search is $10 per 1,000 searches plus model tokens (Haiku 5.5: $0.10 in, $0.50 out per million tokens below 100K tokens a request). Roughly:
