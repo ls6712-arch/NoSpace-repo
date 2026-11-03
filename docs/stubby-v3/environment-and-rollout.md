@@ -10,28 +10,34 @@ Keep credentials in its server-side secret settings; never send values in chat.
 
 | Name | Purpose |
 | --- | --- |
-| `ANTHROPIC_API_KEY` | Existing Claude API key; V3 defaults to this provider and its account credits |
+| `ANTHROPIC_API_KEY` | The existing Claude key. V3 is Claude only (Nov 3, 2026): no other provider, no failover |
 | `ANTHROPIC_WORKSPACE_ID` | Reuse the existing optional workspace binding |
-| `STUBBY_V3_PROVIDER` | Defaults to `anthropic`; `openai` is an explicit alternative; unknown names fail closed |
 | `STUBBY_CLAUDE_MODEL` | Optional V3 override; otherwise reuse STUBBY_SCOUT_MODEL, then claude-haiku-5-5 |
-| `OPENAI_API_KEY` | Needed only when STUBBY_V3_PROVIDER=openai |
-| `STUBBY_ASK_ENGINE=v3` | Selects V3 for asks only; omit/use legacy for the original ask engine |
-| `STUBBY_OPENAI_MODEL` | Optional Responses-compatible model; tested requests use gpt-4.1 |
+| `STUBBY_V3_TESTERS` | User ids (comma separated) that get V3, with legacy run alongside on the same ask (shadow compare); everyone else stays on legacy; guests never test |
+| `STUBBY_ASK_ENGINE=v3` | V3 for everyone. Only when the founder says so; then the legacy ask engine is removed in a separate PR |
 | `STUBBY_SCOUT_ENABLED=true` | Existing kill switch |
 | `STUBBY_IP_SALT` | Existing guest HMAC salt and readiness requirement |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase-injected server bindings |
-| `ALLOWED_ORIGINS` | Exact approved test frontend origin |
+| `ALLOWED_ORIGINS` | Leave unset for onsoosh.com; add a preview origin only to test from one |
 
-Retain the existing user/guest/IP/global cap settings. Do not enable production
-restock to test V3. Claude V3 needs HTTPS to api.anthropic.com, reusing the existing destination.
-OpenAI additionally needs api.openai.com only when explicitly selected. Retain
-existing Supabase destinations. No broad social-media access is
-needed or requested. Local mocked checks use no API credentials.
+Retain the existing user/guest/IP/global cap settings. Claude V3 needs HTTPS to api.anthropic.com,
+the existing destination. Local mocked checks use no API credentials.
 
-Frontend: build with `VITE_STUBBY_V3=true`, `VITE_SUPABASE_URL` and the public
-`VITE_SUPABASE_ANON_KEY` for the test project. Enable the frontend and server flags
-together; keep both off for a legacy rollout. Never put ANTHROPIC_API_KEY or OPENAI_API_KEY in a
-frontend variable. The checked-in .env was left unchanged.
+Frontend: nothing is needed for testers. `VITE_STUBBY_V3=true` only shows the What Stubby knows
+editor (Settings and onboarding) to everyone, so keep it off in production until V3 is on for
+everyone; V3 uses the onboarding answers without it.
+
+## Testing on production, per account (founder, Nov 3, 2026)
+
+1. Merge (applies `20261112000000_stubby_capabilities.sql`, approved by name first), deploy
+   `stubby-scout` from main, read it back and record it (`scripts/record-stubby-deploy.ts`).
+2. Run `supabase/verification/stubby_capabilities_check.sql`; confirm no fixture rows remain.
+3. Add the founder's user id to `STUBBY_V3_TESTERS`. Their asks show the V3 deck; the legacy deck
+   for the same ask is saved alongside in `stubby_asks.decision_trace.legacy` (titles, kinds and
+   reason counts only, never the ask), so the two can be compared.
+4. V3 for everyone (`STUBBY_ASK_ENGINE=v3`) only when the founder says so. The care step needs its
+   expert review and the resources their check against each service's page first
+   (`v3/careResources.ts`).
 
 ## Approval gates and sequence
 
@@ -69,11 +75,11 @@ not a guaranteed dollar bill; provider spend limits and measured live latency
 remain required. Mock token counts are not live cost measurements. Claude calls use the selected
 API key/workspace’s Anthropic billing and available credits; no balance check or
 live charge has been performed. A credit/authentication failure never triggers
-automatic OpenAI spending. See claude-provider.md for the tested provider contract.
+automatic spending anywhere else. See claude-provider.md for the tested provider contract.
 
 ## Rollback
 
-Disable V3 frontend flag and set `STUBBY_ASK_ENGINE=legacy`; retain Anthropic key
+Empty `STUBBY_V3_TESTERS` (and unset `STUBBY_ASK_ENGINE`); retain the Anthropic key
 and existing legacy function files. `STUBBY_SCOUT_ENABLED=false` is the immediate
 kill switch. The capability table can remain safely unused. If approved, apply
 `rollback_20261112000000_stubby_capabilities.sql` after V3 is disabled; it removes

@@ -1102,3 +1102,65 @@ His other lines:
 | Partner | The label on a partner Space | When partner Spaces show |
 
 "Reflect" is internal only: it names a step in the spec's loop and never appears in the app.
+
+## Stubby V3 (#316, Nov 3, 2026)
+
+V3 reaches only the accounts in `STUBBY_V3_TESTERS` until the founder switches it on for everyone. **Every row below is new, for approval.** Rows from #316 that never reached this glossary are included here too.
+
+### The care card (stubby-agent C1)
+
+Shown in place of picks when an ask reads as clear distress. No ask is used and nothing about it is kept. The resources are a dated draft, not yet checked against each service's own page, and the care step still needs the brief's separate expert review (`supabase/functions/stubby-scout/v3/careResources.ts`).
+
+| Term | Use |
+|---|---|
+| That sounds really hard. You don’t have to handle it alone. | The card's line (the brief's own wording) |
+| Someone to talk to | Accessible name of the list of resources; not shown as text |
+| Call 988 · Text 988 | US buttons, each with "988 Suicide and Crisis Lifeline, any time" or "…, by text" under it |
+| Call 911 | The US emergency button, with "If you’re in danger right now" |
+| Call 116 123 · Call 13 11 14 · Call or text 1737 · Call 14416 | The UK and Ireland (Samaritans), Australia (Lifeline), New Zealand (Need to talk?) and India (Tele MANAS) lines, each with who answers under it |
+| Call 999 · Call 112 · Call 000 · Call 111 | Those countries' emergency buttons |
+| Find a helpline · Free helplines in your country | Anywhere else: Throughline's directory |
+| Call your local emergency number | Anywhere else: the emergency line |
+| Message a friend | Opens Messages |
+
+### Their own Pursuits and Corners in a deck
+
+| Term | Use |
+|---|---|
+| You’ll need {a}, {b} and {c}. | The note on their own Pursuit or Corner pick: up to three of the Corner's "What you’ll need", in place of "Details need confirmation." |
+| Time on your own Pursuit. | Why line on a Pursuit pick |
+| One of your Corners, at home. | Why line on a Corner pick ({Corner} at home is the existing title) |
+
+### Notes and lines on V3 picks
+
+| Term | Use |
+|---|---|
+| Source verified. · Details need confirmation. | Start of the note on a web pick |
+| Source details need confirmation before you go. · Price is unknown. · End time is unknown. · Availability is unknown. · Age restrictions could not be checked. · Weather could not be checked. · Travel time is unknown. | What couldn't be checked, after the note's start |
+| Check opening hours before you go. | On a place (a park, a walking route, a museum's visiting page), in place of "Availability is unknown." |
+| Up to ${n} | A web pick's price, the most it costs |
+| Fits your interests and the constraints checked for this ask. · Fits the constraints checked for this ask. | Why line on a web pick |
+| Source details checked. · Some details need confirmation. Check the source before you go. | Line under the deck: all verified, or some not |
+| No verified match. Try another day or an activity using what you already have. | When nothing fits |
+| No verified match. Confirm your city before Stubby searches nearby. · …Use a budget in US dollars so Stubby can check the price. · …Choose a clear date and time so Stubby can check what fits. | When the ask names an unknown city, another currency, or an impossible time |
+| No new picks were saved. Try different words. | When nothing could be saved |
+| A source couldn’t be reached. · A source returned invalid details. · Discovery timed out. · Calendar availability could not be checked. | Warnings under the deck (no source names, Nov 3, 2026) |
+| Stubby’s new search is unavailable. | V3 switched on with no engine wired (should never show) |
+
+### What Stubby knows (Settings and onboarding)
+
+| Term | Use |
+|---|---|
+| What Stubby knows | The section |
+| Stubby uses your onboarding answers and anything you save here to fit picks to you. Learning from your feedback is off unless you turn it on. You can change or delete it here. | The section's line (Nov 3, 2026: onboarding answers by default) |
+| Learn from my feedback | The only switch; off until turned on |
+| Your thumbs up and down on his picks, from the last 60 days. Off unless you turn it on. | Under the switch |
+| Timezone · Budget for an activity in dollars · Equipment and resources · Goals · What you prefer | Fields |
+| One entry per line. Leave blank to skip. | Under each list field |
+| Memberships and subscriptions · Name · Expiry date, if known · Add membership · Remove | The memberships list |
+| What you tell us is not proof of a discount or entry. Check with the provider before you go. | Under Memberships and subscriptions |
+| Usual free times: {list} · Monthly budget: {amount} · Passes: {list} · Not set · Edit onboarding answers | The onboarding answers, read only |
+| Save changes · Delete saved information · Delete · Cancel | Buttons |
+| Delete Stubby’s saved information and feedback? This keeps your onboarding answers. | Before deleting |
+| Your changes are saved. · Your changes weren’t saved. Try again. · Stubby’s saved information and feedback are deleted. Your onboarding answers are unchanged. · Your saved information wasn’t deleted. Try again. · Stubby couldn’t load your saved information. Try again later. | After saving or deleting |
+| Your first plan will look for free things. Pass coverage needs confirmation. | Onboarding, after passes |
