@@ -14,7 +14,7 @@ import {
   takeRedirect,
   writeLastFinished,
 } from "../../lib/onboardingProgress";
-import { fetchRemoteStep, saveRemoteStep } from "../../lib/onboardingRemote";
+import { fetchRemoteStep, finishOnboarding, saveRemoteStep } from "../../lib/onboardingRemote";
 import { page } from "../../lib/motionTokens";
 import { slide } from "./transitions";
 import { ERROR_LINE, OFFLINE_LINE } from "../../lib/stateCopy";
@@ -59,7 +59,7 @@ export function OnboardingFlow() {
   const location = useLocation();
   const [params] = useSearchParams();
   const reduce = useReducedMotion() ?? false;
-  const { user, updateProfile, isConfigured } = useAuth();
+  const { user, updateProfile, refreshProfile, isConfigured } = useAuth();
   const userId = user?.id;
   const signedIn = !!user;
   const inviteCode = params.get("invite");
@@ -146,11 +146,13 @@ export function OnboardingFlow() {
     try {
       // Has to succeed before leaving: Root's guard sends anyone with onboarding_completed false back here.
       if (signedIn) {
-        const { error } = await updateProfile({ onboarding_completed: true });
-        if (error) {
+        // The database sets it, and only with an 18+ birthdate on file (finishOnboarding).
+        const r = await finishOnboarding(() => updateProfile({ onboarding_completed: true }));
+        if (r !== "ok") {
           setFinishError(ERROR_LINE);
           return;
         }
+        await refreshProfile();
       }
       clearLastFinished(userId);
       takeRedirect();

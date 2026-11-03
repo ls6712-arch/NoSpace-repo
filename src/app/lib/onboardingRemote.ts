@@ -116,3 +116,25 @@ export async function removeUnderageAccount(): Promise<void> {
     // Signing out still happens.
   }
 }
+
+/**
+ * The last step of onboarding. The database sets onboarding_completed, and only with an 18+
+ * birthdate on file (finish_onboarding(), migration 20261111000000_member_rpc_gate.sql): the
+ * client can no longer write it. Before that migration is live the function isn't there
+ * (PGRST202), so the old direct update runs instead. "ok" means finished; "refused" means the
+ * database said no (no birthdate); "error" is anything else.
+ */
+export async function finishOnboarding(
+  fallback: () => Promise<{ error: string | null }>,
+  client: { rpc: (fn: string) => PromiseLike<{ data: unknown; error: { code?: string } | null }> } | null = supabase,
+): Promise<"ok" | "refused" | "error"> {
+  if (!client) return (await fallback()).error ? "error" : "ok";
+  try {
+    const { data, error } = await client.rpc("finish_onboarding");
+    if (error?.code === "PGRST202") return (await fallback()).error ? "error" : "ok";
+    if (error) return "error";
+    return data === true ? "ok" : "refused";
+  } catch {
+    return "error";
+  }
+}
