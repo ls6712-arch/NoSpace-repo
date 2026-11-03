@@ -1,4 +1,4 @@
--- Hotfix 20261111000000_member_rpc_gate.sql: members-only RPCs, and no skipping the birthday step.
+-- Hotfix 20261111000010_member_rpc_gate.sql: members-only RPCs, and no skipping the birthday step.
 --
 -- Not a migration, nothing here changes the schema or the data for good. Run AFTER the migration;
 -- run before it, the script stops and says "NOT APPLIED" and creates nothing.
@@ -27,7 +27,7 @@ declare
 begin
   v_owner_role := current_user;
   if to_regprocedure('private.request_gate()') is null then
-    raise exception 'RESULTS: NOT APPLIED (run 20261111000000_member_rpc_gate.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261111000010_member_rpc_gate.sql first, nothing was created)';
   end if;
 
   insert into auth.users

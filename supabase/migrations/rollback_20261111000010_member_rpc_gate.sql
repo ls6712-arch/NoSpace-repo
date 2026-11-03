@@ -1,4 +1,4 @@
--- Rollback for 20261111000000_member_rpc_gate.sql. Run rollback_20261111000050 (and 000100) first
+-- Rollback for 20261111000010_member_rpc_gate.sql. Run rollback_20261111000050 (and 000100) first
 -- if the guest Stubby migrations are applied.
 -- Members-only RPCs and the onboarding rule go back to how they were on Nov 2, 2026. Trigger
 -- functions keep EXECUTE revoked: they never needed it.

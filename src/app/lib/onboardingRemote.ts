@@ -119,7 +119,7 @@ export async function removeUnderageAccount(): Promise<void> {
 
 /**
  * The last step of onboarding. The database sets onboarding_completed, and only with an 18+
- * birthdate on file (finish_onboarding(), migration 20261111000000_member_rpc_gate.sql): the
+ * birthdate on file (finish_onboarding(), migration 20261111000010_member_rpc_gate.sql): the
  * client can no longer write it. Before that migration is live the function isn't there
  * (PGRST202), so the old direct update runs instead. "ok" means finished; "refused" means the
  * database said no (no birthdate); "error" is anything else.
