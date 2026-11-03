@@ -50,8 +50,9 @@ leftover fixture rows.
 1. **Hotfix applied.** `20261111000000_member_rpc_gate.sql` (PR #304): members-only RPCs, and
    `finish_onboarding()`. Verify with `supabase/verification/member_rpc_gate_check.sql`.
 2. **Guest Stubby migrations applied.** `20261111000050_member_gate.sql`, then
-   `20261111000100_stubby_guests.sql`. Verify with `member_gate_check.sql` and
-   `stubby_guests_check.sql`. Run the security advisor.
+   `20261111000100_stubby_guests.sql`, then `20261111000150_birthdate_rules.sql`. Verify with
+   `member_gate_check.sql`, `stubby_guests_check.sql` and `birthdate_rules_check.sql`. Run the
+   security advisor.
 3. **Secrets set, function deployed.** Edge function secrets (Supabase dashboard > Edge Functions >
    Secrets, or `supabase secrets set`):
 
@@ -115,6 +116,11 @@ applying, and again on production after the founder applies them.
   4.4 MB at most, HEIF bytes only. `heic2any` is removed.
 - **Landing.** Get your first pick (the hero and the last card) opens Stubby as a guest. Noted in
   `docs/glossary.md` as the one exception to "every landing button goes to sign-up".
+- **Birthdays** (`20261111000150_birthdate_rules.sql`): once set, a birthday is locked; only
+  support (the database owner) can change it. A member who gives an under-18 date is not deleted:
+  `profiles.access` becomes `under_18`, so they are no longer a member (Stubby only, no 21+), and
+  they can't try another date. The under-18 date itself isn't stored. Onboarding's own under-18
+  stop for brand-new sign-ups is unchanged. The app's sheet and message wait for wording approval.
 - **21+ picks.** Only with a birthdate on file at least 21 years ago (`my_access().adult21`). Never
   for a guest; not for a member without one, even when asked.
 - **The two live gaps** shipped first as their own hotfix (PR #304); this change is rebased on it.
