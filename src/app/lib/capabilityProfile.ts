@@ -77,7 +77,7 @@ export function capabilityProfileFromTaste(input: {
     perActivityBudget: null,
     capabilities: input.passes.map((p) => ({
       id: p.id,
-      kind: "membership" as const,
+      kind: p.kind === "gear" || p.kind === "bike" ? "equipment" as const : "membership" as const,
       label: p.label,
       verification: "self_reported" as const,
     })),
