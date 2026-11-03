@@ -105,6 +105,10 @@ export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: {
           {TRY_AGAIN}
         </Button>
       )}
+      {state.intelligence && <div role="status" className="text-small text-muted-foreground" data-stubby-evidence="">
+        <p>{state.intelligence.outcome === "verified" ? "Source details checked." : state.intelligence.outcome === "partial" ? "Some details need confirmation. Check the source before you go." : state.intelligence.fallback}</p>
+        {state.intelligence.warnings.map((w, i) => <p key={i}>{w}</p>)}
+      </div>}
       {empty && <Empty state={state} onTryDifferent={onTryDifferent} />}
       {deck.all.length > 0 && <Deck state={state} onBring={onBring} />}
       {deck.selection.length > 0 && <Selection state={state} onMakePlans={onMakePlans} />}

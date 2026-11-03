@@ -46,6 +46,7 @@
     "accept_terms",
     "claim_invite",
     "finish_onboarding",
+    "forget_stubby_memory",
     "get_my_planning",
     "my_member_no",
     "my_profile_private",
@@ -71,6 +72,7 @@
     "pursuit_sessions",
     "pursuits",
     "stubby_asks",
+    "stubby_capabilities",
     "stubby_feedback",
     "stubby_profiles",
     "terms_acceptances"

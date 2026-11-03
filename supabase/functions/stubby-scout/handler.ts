@@ -39,6 +39,11 @@ import { buildContract, decisionTrace, explicitPreferences, type DecisionTrace }
 import { BodyError, parseBody } from "./schema.ts";
 import { EMPTY_TASTE, tasteIsEmpty, tasteLines, type Signal, type Taste } from "./taste.ts";
 
+import { emptyCapability, type CapabilityProfile } from "../_shared/capabilityProfile.ts";
+import { currentIntent } from "./v3/context.ts";
+import { providerHasKey } from "./v3/provider.ts";
+import type { RequestInput, V3Report, V3DecisionTrace } from "./v3/types.ts";
+
 export const CITY = "new-york";
 /** The morning restock fills this many days ahead. */
 export const RESTOCK_DAYS = 7;
@@ -49,6 +54,8 @@ const DAY_MS = 24 * 3_600_000;
 export interface ScoutSettings {
   enabled: boolean;
   hasKey: boolean;
+  askEngine?: "legacy" | "v3";
+  askHasKey?: boolean;
   runsPerDay: number;
   maxSearches: number;
   restockSearches: number;
@@ -162,6 +169,7 @@ export interface ScoutDeps {
     insertPick(row: CityRow): Promise<boolean>;
     /** The caller's own profile, Corners, passes and Pursuits. Read as them. */
     profile(userId: string): Promise<PersonProfile>;
+    capability?(userId: string): Promise<CapabilityProfile>;
     /** Their taste profile (stubby_profiles), read as them. */
     taste?(userId: string): Promise<Taste>;
     /** Their last ~20 signals on picks (stubby_feedback), newest first, read as them. */
@@ -182,7 +190,7 @@ export interface ScoutDeps {
      * `dropped`: why each candidate was dropped, and `trace`: how the deck was chosen (stubby-agent G4).
      * Saved for debugging and the weekly review: titles, reasons and rules only, never the ask.
      */
-    finishAsk(id: number, r: { found: number; added: number; failed: boolean; dropped?: Dropped[]; trace?: DecisionTrace }): Promise<void>;
+    finishAsk(id: number, r: { found: number; added: number; failed: boolean; dropped?: Dropped[]; trace?: DecisionTrace | V3DecisionTrace }): Promise<void>;
     /** How many asks this person has made since `ms`. */
     asksSince(userId: string, ms: number): Promise<number>;
     /** When this person's oldest ask since `ms` was made, or null. */
@@ -194,6 +202,7 @@ export interface ScoutDeps {
     insertPersonal(row: PersonalRow | ReturnType<typeof askRowFor>): Promise<boolean>;
   };
   search(r: SearchRequest): Promise<SearchResult>;
+  v3?(input: RequestInput): Promise<V3Report>;
 }
 
 export interface ScoutReport {
@@ -236,6 +245,7 @@ export interface AskReport {
    * no birthday is on file at all, so an under-21 member never sees it.
    */
   adultsLeftOut?: boolean;
+  intelligence?: Pick<V3Report, "outcome" | "fallback" | "warnings">;
 }
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
@@ -320,7 +330,7 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
   const mode = body.mode;
 
   if (!deps.settings.enabled) return fail(503, "The scout is switched off.");
-  if (!deps.settings.hasKey) return fail(503, "The scout has no search key yet.");
+  if (!(mode === "ask" ? deps.settings.askHasKey ?? deps.settings.hasKey : deps.settings.hasKey)) return fail(503, "The scout has no search key yet.");
 
   if (mode === "restock") return restock(deps);
 
@@ -460,7 +470,7 @@ function readFollowUp(v: unknown): (FollowUp & { of: number }) | null {
 /** What a follow-up changes before the search: Cheaper halves the ceiling, Later starts two hours on. */
 export function applyFollowUp(intent: Intent, window: Window, kind: FollowUpKind, now: number): { intent: Intent; window: Window } {
   if (kind === "cheaper") {
-    const budget = intent.budget ? { ...intent.budget, max: Math.floor(intent.budget.max / 2), from: "ask" as const } : { max: 20, free: false, from: "ask" as const };
+    const budget = intent.budget ? { ...intent.budget, max: Math.floor(intent.budget.max * 100 / 2) / 100, from: "ask" as const } : { max: 20, free: false, from: "ask" as const };
     return { intent: { ...intent, budget }, window };
   }
   if (kind === "later") {
@@ -550,7 +560,7 @@ async function ask(
   followUp: (FollowUp & { of: number }) | null = null,
 ): Promise<Response> {
   // Their own words, one plain line. Double quotes become single so the prompt stays one quote.
-  const text = cleanText(raw).replace(/"/g, "'").slice(0, 200);
+  const text = cleanText(raw).replace(/"/g, "'").slice(0, deps.settings.askEngine === "v3" ? 500 : 200);
   if (text.length < 2) return fail(400, "Say what you're after, like pottery on Saturday.");
 
   const now = deps.now();
@@ -559,13 +569,17 @@ async function ask(
   // Follow-ups (Cheaper, Closer and the rest) are for accounts: the app asks a guest to sign up.
   if (followUp && who.guest) return json(403, { error: "Sign up to ask Stubby for more.", code: "SIGNUP_REQUIRED" });
   // Read as them, from their own rows only. Best effort: without it, he still searches.
-  const profile = await deps.db.profile(userId).catch(() => EMPTY_PROFILE);
-  const taste = deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
-  const signals = deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
+  const v3 = deps.settings.askEngine === "v3";
+  if (v3 && !deps.v3) return fail(503, "Stubby’s new search is unavailable.");
+  const capability = v3 && !who.guest && deps.db.capability ? await deps.db.capability(userId).catch(() => emptyCapability()) : emptyCapability();
+  const canUseOnboarding = !v3 || (capability.consent.memory && capability.consent.onboarding);
+  const profile = canUseOnboarding ? await deps.db.profile(userId).catch(() => EMPTY_PROFILE) : EMPTY_PROFILE;
+  const taste = (!v3 || who.guest) && deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
+  const signals = (!v3 || (capability.consent.memory && capability.consent.feedback)) && deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
   const corners = await deps.server.corners();
   const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
   const picked = profile.picks.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []));
-  const read = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
+  const read = v3 ? currentIntent(text, now, capability.consent.memory ? capability.timeZone : "America/New_York", answers, corners.map(c => c.name)) : readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
   // 21+ only with a birthdate on file at least 21 years ago. Guests never; nobody without one.
   const intent: Intent = who.adult21 === true && !who.guest ? read : { ...read, adults: false };
   const adultsLeftOut = read.adults && !intent.adults && !who.guest;
@@ -590,6 +604,38 @@ async function ask(
   let found = 0;
   // Everything from the search to the saved picks. Streams its steps through `emit` when asked.
   const work = async (emit: Emit): Promise<AskReport> => {
+    if (v3) {
+      // Quotas and identity have already been verified. No public-pick write exists on this path.
+      const zone = capability.consent.memory ? capability.timeZone : "America/New_York";
+      const change = followUp ? applyFollowUp(intent, searchWindow(intent, now, zone), followUp.kind, now) : null;
+      const report = await deps.v3!({ text, now, profile, capability, knownTopics: corners.map(c => c.name),
+        learned: signals.map(s => ({ source: "feedback" as const, ...s })),
+        adult21: who.adult21 === true && !who.guest, answers, searchLimit: who.guest ? Math.min(deps.settings.guestMaxSearches ?? 3, deps.settings.maxSearches) : deps.settings.maxSearches, sessionCity: who.guest ? taste.city : null,
+        budgetOverride: followUp?.kind === "cheaper" ? change?.intent.budget?.max : undefined,
+        travelOverride: followUp?.kind === "closer" ? 20 : undefined,
+        notBefore: followUp?.kind === "later" ? Math.max(now, intent.when?.startMs ?? now) + 2 * 3600000 : undefined, exclude: followUp?.titles ?? [] });
+      emit("picking", { type: "picking" });
+      const mine: AskPick[] = [];
+      for (const [rank, r] of report.recommendations.entries()) {
+        const c = r.candidate;
+        const p: AskPick = { kind: c.kind, title: c.title, place: c.place, startsAt: c.startsAt, endsAt: c.endsAt,
+          price: c.cost ? c.cost.max === 0 ? "Free" : `Up to $${c.cost.max}` : null,
+          url: c.evidence[0].url, cornerId: null,
+          note: [r.verification === "partial" ? "Details need confirmation." : "Source verified.", ...r.uncertainties].join(" ").slice(0, 200),
+          why: r.explanation, after: false, betterWithFriend: false };
+        if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
+      }
+      const rejected: Record<string, number> = {};
+      for (const d of report.dropped) rejected[d.reason] = (rejected[d.reason] ?? 0) + 1;
+      if (!free) await deps.server.finishAsk(askId, { found: report.recommendations.length, added: mine.length, failed: false,
+        trace: { version: report.version, outcome: report.outcome, found: report.recommendations.length, added: mine.length,
+          usage: report.usage, rejected, sources: report.recommendations.slice(0, 3).map((r, rank) => ({ rank,
+            evidence: r.candidate.evidence.slice(0, 3), verification: r.verification })) } });
+      return { picks: mine.map(p => ({ ...p, startsAt: new Date(p.startsAt).toISOString(), endsAt: p.endsAt === null ? null : new Date(p.endsAt).toISOString() })),
+        outcome: mine.length ? "found" : "nothing", understood: understoodOf(change?.intent ?? intent), dropped: [],
+        asksLeft: Math.max(0, asksPerPerson - await deps.server.asksSince(userId, now - DAY_MS)), askId, free, reasons: [],
+        intelligence: { outcome: mine.length ? report.outcome : "no_verified_match", fallback: report.fallback ?? (mine.length ? null : "No new picks were saved. Try different words."), warnings: report.warnings } };
+    }
     const changed = followUp ? applyFollowUp(intent, searchWindow(intent, now), followUp.kind, now) : { intent, window: searchWindow(intent, now) };
     const window = changed.window;
     const asked = changed.intent;
@@ -732,6 +778,8 @@ export function readSettings(env: (k: string) => string | undefined): ScoutSetti
   return {
     enabled: env("STUBBY_SCOUT_ENABLED") === "true",
     hasKey: !!env("ANTHROPIC_API_KEY"),
+    askEngine: env("STUBBY_ASK_ENGINE") === "v3" ? "v3" : "legacy",
+    askHasKey: env("STUBBY_ASK_ENGINE") === "v3" ? providerHasKey(env) : !!env("ANTHROPIC_API_KEY"),
     runsPerDay: int("STUBBY_SCOUT_RUNS_PER_DAY", 3, 20),
     maxSearches: int("STUBBY_SCOUT_MAX_SEARCHES", 5, 20),
     restockSearches: int("STUBBY_RESTOCK_SEARCHES", 3, 10),

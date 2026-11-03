@@ -18,6 +18,7 @@ const ALLOWED = new Set([
   "components/calendar/WeekExtras.tsx",
   "pages/WhoCanSeeMyTime.tsx",
   "pages/onboarding/screens/YoursScreen.tsx",
+  "components/settings/CapabilityEditor.tsx",
   // The owner-only card on your own profile (its section is not part of the public profile).
   "components/profile/PlanningCard.tsx",
 ]);

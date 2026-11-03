@@ -209,7 +209,7 @@ describe("yours (screen 9)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Skip" }));
     expect(flow.react).toHaveBeenLastCalledWith("shrug");
     expect(screen.getByRole("button", { name: "$100" }).getAttribute("aria-pressed")).toBe("false");
-    expect(screen.getByText("Your first plan will use free things and what your passes cover.")).toBeTruthy();
+    expect(screen.getByText("Your first plan will look for free things. Pass coverage needs confirmation.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalledWith({ stamp: true }));
     expect(remote.savePrivate).toHaveBeenCalledWith("u1", { monthly_budget: null });

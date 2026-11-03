@@ -41,6 +41,7 @@ import {
   type AskAnswers,
   type AskFollowUp,
   type AskStep,
+  type IntelligenceNotice,
   type MyPick,
   type Understood,
 } from "../../lib/stubbyAsk";
@@ -74,6 +75,7 @@ export interface StepRow {
 export type Answer = { setting: "in" | "out" } | { who: Who } | { when: string } | { what: string } | { surprise: true } | { typed: string };
 
 export interface AskState {
+  intelligence?: IntelligenceNotice;
   text: string;
   setText: (text: string) => void;
   busy: boolean;
@@ -196,6 +198,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [found, setFound] = useState<number | null>(null);
+  const [intelligence, setIntelligence] = useState<IntelligenceNotice | undefined>();
   const [outcome, setOutcome] = useState<AskOutcome>(null);
   const [left, setLeft] = useState<number | null>(null);
   const [picks, setPicks] = useState<MyPick[]>([]);
@@ -323,6 +326,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       controller.current = c;
       setBusy(true);
       setError(null);
+      setIntelligence(undefined);
       setFound(null);
       setOutcome(null);
       setQuestion(null);
@@ -392,6 +396,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         track({ name: "stubby_message_sent", who: guest ? "guest" : "user", messageNumber: n });
         if (guest && n >= 3) access.offerInlineCard();
       }
+      setIntelligence(r.intelligence);
       setReasons(r.reasons ?? []);
       setTonight(r.when === "tonight");
       // Only when no birthday is on file at all: an under-21 member who has one never sees it.
@@ -586,6 +591,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     error,
     status,
     outcome,
+    intelligence,
     left,
     earlier,
     understood,

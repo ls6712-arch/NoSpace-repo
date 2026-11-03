@@ -46,6 +46,7 @@ export function stubbyAccountMayOpen(pathname: string): boolean {
     pathname === "/terms" ||
     pathname === "/privacy-policy" ||
     pathname === "/settings" ||
+    pathname === "/account" ||
     pathname === "/settings/account"
   );
 }

@@ -1,3 +1,5 @@
+import { stubbyV3Enabled } from "../lib/capabilityProfile";
+import { CapabilityEditor } from "../components/settings/CapabilityEditor";
 import { SettingsShell } from "../components/settings/SettingsShell";
 import { AppearanceSection } from "../components/settings/AppearanceSection";
 import { ProfileSection } from "../components/settings/ProfileSection";
@@ -42,6 +44,7 @@ export function AccountSettingsPage() {
   return (
     <SettingsShell activeKey="account">
       <AccountSection />
+      {stubbyV3Enabled && <CapabilityEditor />}
     </SettingsShell>
   );
 }

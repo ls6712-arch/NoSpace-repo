@@ -1,0 +1,14 @@
+{
+  "runtime": "PGlite 0.5.15 PostgreSQL WASM",
+  "scope": "new migration with synthetic Supabase auth fixture, not full hosted schema",
+  "passed": true,
+  "checks": [
+    "migration applies twice",
+    "RESULTS: PASS: owner read/write, PASS: cross-user read denied, PASS: cross-user write denied, PASS: anonymous read denied, PASS: anonymous operation denied, PASS: account cascade deletion",
+    "malformed consent rejected by database",
+    "cross-user update and delete denied",
+    "stale-account deletion rejected by the database",
+    "forget physically deletes caller memory and feedback while retaining another user's data",
+    "rollback removes extension"
+  ]
+}

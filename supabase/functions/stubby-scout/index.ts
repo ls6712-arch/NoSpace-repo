@@ -25,6 +25,9 @@ import { readSignals, readTaste } from "./taste.ts";
 import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, originAllowed, type Access } from "../_shared/access.ts";
 import { claimTurn, readAccess } from "./claim.ts";
 import { pickKey } from "./picks.ts";
+import { runV3 } from "./v3/orchestrator.ts";
+import { createV3Provider } from "./v3/provider.ts";
+import { emptyCapability, parseCapability } from "../_shared/capabilityProfile.ts";
 import { runSearch } from "./search.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -180,12 +183,19 @@ function serve(req: Request): Promise<Response> {
       existingKeys: (a, b) => existingKeys(caller as typeof server, a, b),
       insertPick: (row) => insertOnce(caller as typeof server, "city_picks", row),
       profile: (id) => profileOf(caller as typeof server, id),
+      async capability(id) {
+        const { data, error } = await caller.from("stubby_capabilities").select("profile").eq("user_id", id).maybeSingle();
+        if (error || !data) return emptyCapability();
+        try { return parseCapability(data.profile); } catch { return emptyCapability(); }
+      },
       async taste(id) {
         const { data } = await caller.from("stubby_profiles").select("city, interests, timing, budget").eq("user_id", id).maybeSingle();
         return readTaste(data);
       },
       async signals(id) {
-        const { data } = await caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id).order("created_at", { ascending: false }).limit(20);
+        let query = caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id);
+        if (settings.askEngine === "v3") query = query.gte("created_at", iso(Date.now() - 60 * 86400000));
+        const { data } = await query.order("created_at", { ascending: false }).limit(20);
         return readSignals(data);
       },
     },
@@ -244,6 +254,10 @@ function serve(req: Request): Promise<Response> {
       existingKeys: (a, b) => existingKeys(server, a, b),
       insertPick: (row) => insertOnce(server, "city_picks", row),
       insertPersonal: (row) => insertOnce(server, "personal_picks", row),
+    },
+    async v3(input) {
+      const selected = createV3Provider(env, { maxSearches: input.searchLimit });
+      return runV3(input, { discovery: [selected.adapter], usage: selected.usage });
     },
     search: (r) =>
       runSearch({
