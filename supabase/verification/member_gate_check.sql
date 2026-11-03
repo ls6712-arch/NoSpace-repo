@@ -34,7 +34,13 @@ begin
     (id, instance_id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, is_super_admin, is_anonymous)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', u.email, '', now(), now(), now(), '{}', '{}', false, u.anon
   from (values (v_m, 'mg.m@acct-test.invalid', false), (v_s, 'mg.s@acct-test.invalid', false), (v_g, null, true)) as u(id, email, anon);
+  -- Finished onboarding before birthdays were asked, like the members on live: true, no birthdate.
+  -- profiles_require_birthdate refuses false to true without one, so add one, finish, then
+  -- clear it as the owner (the birthday lock only stops client roles).
+  insert into public.profile_private (user_id, birthdate) select x.id, (current_date - interval '30 years')::date from unnest(array[v_m]) as x(id)
+    on conflict (user_id) do update set birthdate = excluded.birthdate;
   update public.profiles set onboarding_completed = true where profiles.id = v_m;
+  update public.profile_private set birthdate = null where profile_private.user_id = v_m;
 
   -- 1. Profiles: one each for M and S, none for the guest.
   v_n := (select count(*) from public.profiles p where p.id in (v_m, v_s));
@@ -195,7 +201,8 @@ begin
   perform set_config('request.jwt.claims', '{}', true);
 
   -- 4b. 21+ picks need a birthdate at least 21 years ago (my_access().adult21); a guest never.
-  insert into public.profile_private (user_id, birthdate) values (v_m, (current_date - interval '30 years')::date);
+  insert into public.profile_private (user_id, birthdate) values (v_m, (current_date - interval '30 years')::date)
+    on conflict (user_id) do update set birthdate = excluded.birthdate;
   update public.profile_private set birthdate = (current_date - interval '19 years')::date where profile_private.user_id = v_s;
   insert into public.profile_private (user_id, birthdate)
     select v_s, (current_date - interval '19 years')::date
