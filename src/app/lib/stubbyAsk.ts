@@ -195,12 +195,17 @@ export interface Taste {
 }
 const INTERESTS: readonly Interest[] = ["make", "move", "people", "alone", "outside", "learn", "play", "haveIt"];
 
-/** Your taste profile (stubby_profiles), or null if there isn't one yet. */
-export async function readTaste(client: Client = supabase): Promise<Taste | null> {
-  if (!client) return null;
+/**
+ * Your taste profile (stubby_profiles), null if there isn't one yet, or undefined when it can't be
+ * read (no table yet before the guest migration, offline). Unknown is not empty: the quick-context
+ * card only shows for a known-empty profile, so members never see it on a database without it.
+ */
+export async function readTaste(client: Client = supabase): Promise<Taste | null | undefined> {
+  if (!client) return undefined;
   try {
     const { data, error } = await client.from("stubby_profiles").select("city, interests, timing").maybeSingle();
-    if (error || !data) return null;
+    if (error) return undefined;
+    if (!data) return null;
     const r = data as { city: string | null; interests: string[] | null; timing: string | null };
     return {
       city: r.city ?? null,
@@ -208,7 +213,7 @@ export async function readTaste(client: Client = supabase): Promise<Taste | null
       timing: r.timing === "tonight" || r.timing === "weekend" || r.timing === "anytime" ? r.timing : null,
     };
   } catch {
-    return null;
+    return undefined;
   }
 }
 

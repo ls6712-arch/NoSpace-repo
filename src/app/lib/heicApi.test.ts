@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import { ERRORS, HEIC_LIMIT, MAX_PIXELS, TIMEOUT_MS, checkHeicRequest, handleHeic, heifPixels, looksLikeHeif, readCapped, type Claim, type HeicDeps } from "../../../api/heicCheck";
+import { ERRORS, HEIC_LIMIT, HEIC_PER_HOUR, HourLimiter, MAX_PIXELS, TIMEOUT_MS, checkHeicRequest, handleHeic, heifPixels, legacyMemberRow, looksLikeHeif, readCapped, type Claim, type HeicDeps } from "../../../api/heicCheck";
 import { HEIC_MAX_BYTES } from "./heicServer";
 
 // A minimal HEIF file, box by box: ftyp, then meta > iprp > ipco > ispe (the declared size).
@@ -33,6 +33,57 @@ const post = (body: BodyInit | null, headers: Record<string, string> = {}) =>
     headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/octet-stream", ...headers },
   });
 const errorOf = async (r: Response) => ((await r.json()) as { error: string }).error;
+
+describe("/api/heic before the member gate migration (no claim_heic_conversion yet)", () => {
+  it("a member keeps converting: the old member rule decides", async () => {
+    const legacyMember = vi.fn(async () => true);
+    const { d, convert } = deps({ claimAs: "missing", legacyMember, legacyLimiter: new HourLimiter() });
+    const res = await handleHeic(post(heif(100, 100)), d);
+    expect(res.status).toBe(200);
+    expect(legacyMember).toHaveBeenCalledWith(TOKEN);
+    expect(convert).toHaveBeenCalledTimes(1);
+  });
+
+  it("a non-member is refused (403), and an unknown answer is a 500, never a conversion", async () => {
+    for (const [answer, status] of [[false, 403], [null, 500]] as const) {
+      const { d, convert } = deps({ claimAs: "missing", legacyMember: async () => answer, legacyLimiter: new HourLimiter() });
+      expect((await handleHeic(post(heif(100, 100)), d)).status).toBe(status);
+      expect(convert).not.toHaveBeenCalled();
+    }
+    const { d, convert } = deps({ claimAs: "missing" });
+    expect((await handleHeic(post(heif(100, 100)), d)).status).toBe(500);
+    expect(convert).not.toHaveBeenCalled();
+  });
+
+  it("an anonymous guest is still refused first (401), whatever the fallback says", async () => {
+    const legacyMember = vi.fn(async () => true);
+    const { d, convert } = deps({ claimAs: "missing", legacyMember, getUser: async () => ({ id: "g", is_anonymous: true }) });
+    expect((await handleHeic(post(heif(100, 100)), d)).status).toBe(401);
+    expect(legacyMember).not.toHaveBeenCalled();
+    expect(convert).not.toHaveBeenCalled();
+  });
+
+  it("still counts: 30 an hour per person, then 429 until the hour has passed", async () => {
+    let now = 0;
+    const limiter = new HourLimiter(HEIC_PER_HOUR, () => now);
+    const { d } = deps({ claimAs: "missing", legacyMember: async () => true, legacyLimiter: limiter });
+    for (let i = 0; i < HEIC_PER_HOUR; i++) expect((await handleHeic(post(heif(100, 100)), d)).status).toBe(200);
+    expect((await handleHeic(post(heif(100, 100)), d)).status).toBe(429);
+    expect(limiter.take("someone-else")).toBe(true);
+    now = 3_600_001;
+    expect((await handleHeic(post(heif(100, 100)), d)).status).toBe(200);
+  });
+
+  it("the old member rule: an active account that finished onboarding, nothing looser", () => {
+    expect(legacyMemberRow([{ access: "active", onboarding_completed: true }])).toBe(true);
+    expect(legacyMemberRow({ access: "active", onboarding_completed: true })).toBe(true);
+    expect(legacyMemberRow([{ access: "active", onboarding_completed: false }])).toBe(false);
+    expect(legacyMemberRow([{ access: "active", onboarding_completed: null }])).toBe(false);
+    expect(legacyMemberRow([{ access: "pending", onboarding_completed: true }])).toBe(false);
+    expect(legacyMemberRow([])).toBe(false);
+    expect(legacyMemberRow(null)).toBe(false);
+  });
+});
 
 describe("/api/heic: who", () => {
   it("refuses no token, a token Supabase Auth rejects, and an anonymous guest (401), before reading anything", async () => {

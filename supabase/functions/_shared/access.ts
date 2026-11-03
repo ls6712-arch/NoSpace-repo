@@ -34,6 +34,26 @@ export async function accessOf(
   return { id: user.id, guest, member, adult21 };
 }
 
+/**
+ * True for "this function or table isn't in the database": PostgREST's PGRST202 (no function) and
+ * PGRST205 (no table), Postgres's 42883 and 42P01. That means the migration hasn't been applied
+ * yet, which is different from a failure.
+ */
+export function isMissingInDb(code: unknown): boolean {
+  return code === "PGRST202" || code === "PGRST205" || code === "42883" || code === "42P01";
+}
+
+/**
+ * The member rule before 20261111000050_member_gate.sql (no my_access() yet), from the caller's own
+ * my_profile_private() row: an active account that finished onboarding. Slightly stricter than
+ * private.is_active() (which also counts a birthdate), never looser. Never 21+: that needs
+ * my_access(). Never a guest: Auth's own flag decides that.
+ */
+export function legacyAccess(row: unknown): { member: boolean; guest: false; adult21: false } {
+  const r = (Array.isArray(row) ? row[0] : row) as { access?: unknown; onboarding_completed?: unknown } | null | undefined;
+  return { member: r?.access === "active" && r?.onboarding_completed === true, guest: false, adult21: false };
+}
+
 /** The allowed origins from ALLOWED_ORIGINS (comma separated), or the live site's. */
 export function allowedOrigins(v: string | undefined): string[] {
   const list = (v ?? "")

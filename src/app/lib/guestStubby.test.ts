@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { inlineCardAllowed } from "../context/StubbyAccess";
 import { linkErrorInUrl, peekReturn, RETURN_KEY, saveReturn, takeReturn } from "./signUpReturn";
-import { cleanCityName, readLimit, tasteIsEmpty } from "./stubbyAsk";
+import { cleanCityName, readLimit, readTaste, tasteIsEmpty } from "./stubbyAsk";
 
 beforeEach(() => {
   window.localStorage.clear();
@@ -64,5 +64,16 @@ describe("reading the server's refusals and the taste profile", () => {
     expect(tasteIsEmpty(null)).toBe(true);
     expect(tasteIsEmpty({ city: null, interests: [], timing: null })).toBe(true);
     expect(tasteIsEmpty({ city: null, interests: ["make"], timing: null })).toBe(false);
+  });
+});
+
+describe("before the guest migration (no stubby_profiles table yet)", () => {
+  const clientWith = (answer: { data: unknown; error: unknown }) =>
+    ({ from: () => ({ select: () => ({ maybeSingle: async () => answer }) }) }) as never;
+
+  it("an unreadable taste profile is unknown, not empty, so a member never sees the quick-context card", async () => {
+    expect(await readTaste(clientWith({ data: null, error: { code: "PGRST205" } }))).toBeUndefined();
+    expect(await readTaste(clientWith({ data: null, error: null }))).toBeNull();
+    expect(await readTaste(clientWith({ data: { city: "Brooklyn", interests: ["make"], timing: "tonight" }, error: null }))).toEqual({ city: "Brooklyn", interests: ["make"], timing: "tonight" });
   });
 });

@@ -3,7 +3,8 @@ import { linkKey } from "./picks.ts";
 import { EMPTY_PROFILE, handleScout, limitsFor, readSettings, type CallerInfo, type ScoutDeps } from "./handler.ts";
 import { parseBody, BodyError, MAX_ASK_CHARS } from "./schema.ts";
 import { cleanCity, readSignals, readTaste, safeTitle, tasteLines, type Taste } from "./taste.ts";
-import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, originAllowed } from "../_shared/access.ts";
+import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, isMissingInDb, legacyAccess, originAllowed } from "../_shared/access.ts";
+import { claimTurn, readAccess, type Rpc } from "./claim.ts";
 
 // Guests, Stubby accounts and members asking Stubby: who gets what, and what nobody can forge.
 
@@ -275,6 +276,69 @@ describe("the taste profile reaches the prompt as data only", () => {
   it("keeps at most 20 signals", () => {
     const rows = Array.from({ length: 30 }, (_, i) => ({ signal: "save", title: `Pick ${i}`, kind: "idea" }));
     expect(readSignals(rows)).toHaveLength(20);
+  });
+});
+
+describe("before the guest migrations are applied", () => {
+  const MISSING = { code: "PGRST202" };
+  const LIMITS = { guest: false, ipHash: null, perPerson: 6, perIp: 9, newGuestsPerIpHour: 5, guestCap: 60, global: 200 } as never;
+  const rpcFrom = (answers: Record<string, { data: unknown; error: { code?: string } | null }>) => {
+    const calls: [string, unknown][] = [];
+    const rpc: Rpc = async (fn, args) => (calls.push([fn, args]), answers[fn] ?? { data: null, error: MISSING });
+    return { rpc, calls };
+  };
+
+  it("knows 'not in the database yet' from a real failure", () => {
+    for (const c of ["PGRST202", "PGRST205", "42883", "42P01"]) expect(isMissingInDb(c)).toBe(true);
+    for (const c of ["42501", "PGRST301", "57014", undefined, null]) expect(isMissingInDb(c)).toBe(false);
+  });
+
+  it("a member keeps being a member: the old rule from my_profile_private, never 21+", async () => {
+    const { rpc, calls } = rpcFrom({ my_profile_private: { data: [{ access: "active", onboarding_completed: true }], error: null } });
+    const a = await readAccess(rpc);
+    expect(a).toEqual({ member: true, guest: false, adult21: false });
+    expect(calls.map((c) => c[0])).toEqual(["my_access", "my_profile_private"]);
+    expect(await accessOf("t", async () => ({ id: "u" }), async () => a)).toEqual({ id: "u", guest: false, member: true, adult21: false });
+  });
+
+  it("the old rule is never looser: pending, unfinished onboarding or no row is not a member", () => {
+    expect(legacyAccess([{ access: "pending", onboarding_completed: true }]).member).toBe(false);
+    expect(legacyAccess([{ access: "active", onboarding_completed: false }]).member).toBe(false);
+    expect(legacyAccess([{ access: "active", onboarding_completed: null }]).member).toBe(false);
+    expect(legacyAccess([]).member).toBe(false);
+  });
+
+  it("an anonymous user is a guest whatever the old rule says", async () => {
+    const a = legacyAccess([{ access: "active", onboarding_completed: true }]);
+    expect(await accessOf("t", async () => ({ id: "g", is_anonymous: true }), async () => a)).toEqual({ id: "g", guest: true, member: false, adult21: false });
+  });
+
+  it("a real failure of my_access is not covered up by the old rule: nobody is a member", async () => {
+    const { rpc, calls } = rpcFrom({ my_access: { data: null, error: { code: "57014" } } });
+    expect(await readAccess(rpc)).toBeNull();
+    expect(calls).toHaveLength(1);
+  });
+
+  it("asks are claimed the old way for accounts, with the old limits", async () => {
+    const { rpc, calls } = rpcFrom({ claim_stubby_ask: { data: 41, error: null } });
+    expect(await claimTurn(rpc, "u1", LIMITS)).toEqual({ askId: 41 });
+    expect(calls[1]).toEqual(["claim_stubby_ask", { p_user: "u1", p_per_user: 6, p_global: 200 }]);
+    const full = rpcFrom({ claim_stubby_ask: { data: null, error: null } });
+    expect(await claimTurn(full.rpc, "u1", LIMITS)).toEqual({ askId: null, code: "USER_LIMIT_REACHED", resetsAt: null });
+  });
+
+  it("a guest never gets the old claim, and a real failure is never retried the old way", async () => {
+    const guest = rpcFrom({ claim_stubby_ask: { data: 41, error: null } });
+    await expect(claimTurn(guest.rpc, "g1", { ...(LIMITS as object), guest: true } as never)).rejects.toEqual(MISSING);
+    expect(guest.calls.map((c) => c[0])).toEqual(["claim_stubby_turn"]);
+    const broken = rpcFrom({ claim_stubby_turn: { data: null, error: { code: "57014" } }, claim_stubby_ask: { data: 41, error: null } });
+    await expect(claimTurn(broken.rpc, "u1", LIMITS)).rejects.toEqual({ code: "57014" });
+    expect(broken.calls.map((c) => c[0])).toEqual(["claim_stubby_turn"]);
+  });
+
+  it("after the migration, the new claim answers as before", async () => {
+    const { rpc } = rpcFrom({ claim_stubby_turn: { data: [{ ask_id: null, code: "GUEST_GLOBAL_CAP", resets_at: "2026-11-04T00:00:00Z" }], error: null } });
+    expect(await claimTurn(rpc, "g1", { ...(LIMITS as object), guest: true } as never)).toEqual({ askId: null, code: "GUEST_GLOBAL_CAP", resetsAt: "2026-11-04T00:00:00Z" });
   });
 });
 

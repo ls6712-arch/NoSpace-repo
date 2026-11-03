@@ -89,6 +89,22 @@ What the check can't do: it protects Stubby, not the rest of the database. An an
 before step 2 would be a signed-in user to every other table until the member gate is applied.
 That is why anonymous sign-ins come last.
 
+## Before the migrations are applied
+
+Every merge to main is a production database deploy, and the app can still be live before its
+migrations (a failed run, or a deploy that lands first). Members see no change until then:
+
+| Piece | Without its migration |
+|---|---|
+| `/api/heic` | `claim_heic_conversion()` missing (PGRST202): the old member rule from the person's own `my_profile_private()` row (active, onboarding finished), 30 an hour counted per function instance. Guests and non-members are still refused. |
+| `stubby-scout`, who is asking | `my_access()` missing: the same old member rule, never 21+. A real failure (not "missing") is never covered this way: nobody is a member. |
+| `stubby-scout`, the ask | `claim_stubby_turn()` missing: the old `claim_stubby_ask()` for accounts, with the old limits. Guests are refused (the startup check, and here). |
+| Taste profile, feedback | `stubby_profiles` missing: the profile is unknown, not empty, so the quick-context card stays hidden. Feedback that can't be saved is dropped quietly. |
+| Stubby accounts | `profiles.signed_up_from` missing: nobody is one, so nobody is sent to "Finish setting up". |
+| Guests | Anonymous sign-ins are off until the last launch step: "Log in to use Stubby." |
+
+Tested in `heicApi.test.ts`, `guests.test.ts` and `guestStubby.test.ts`.
+
 ## Security advisor
 
 Before (live, Nov 2, 2026): 0 errors; WARN `authenticated_security_definer_function_executable` 108,

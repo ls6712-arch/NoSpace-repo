@@ -20,9 +20,10 @@
 // (GUEST_DAILY_MESSAGE_LIMIT, USER_DAILY_MESSAGE_LIMIT, GUEST_GLOBAL_DAILY_CAP and the rest in readSettings).
 // SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { CITY, EMPTY_PROFILE, handleScout, readSettings, type ClaimResult, type LimitCode, type PersonProfile } from "./handler.ts";
+import { CITY, EMPTY_PROFILE, handleScout, readSettings, type PersonProfile } from "./handler.ts";
 import { readSignals, readTaste } from "./taste.ts";
 import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, originAllowed, type Access } from "../_shared/access.ts";
+import { claimTurn, readAccess } from "./claim.ts";
 import { pickKey } from "./picks.ts";
 import { runSearch } from "./search.ts";
 
@@ -104,7 +105,6 @@ async function guestReady(): Promise<boolean> {
   ready = { ok, at: Date.now() };
   return ok;
 }
-const LIMIT_CODES: readonly LimitCode[] = ["GUEST_LIMIT_REACHED", "USER_LIMIT_REACHED", "GUEST_GLOBAL_CAP", "GLOBAL_CAP"];
 
 /** The response with CORS for this origin only (the handler's own "*" is replaced). */
 function withCors(res: Response, origin: string | null): Response {
@@ -141,10 +141,7 @@ function serve(req: Request): Promise<Response> {
         const { data } = await caller.auth.getUser(t);
         return data?.user ? { id: data.user.id, is_anonymous: (data.user as { is_anonymous?: boolean }).is_anonymous } : null;
       },
-      async () => {
-        const { data, error } = await caller.rpc("my_access");
-        return error ? null : (data as { member?: unknown; guest?: unknown; adult21?: unknown });
-      },
+      () => readAccess((fn, args) => caller.rpc(fn, args)),
     );
     return me;
   };
@@ -200,23 +197,7 @@ function serve(req: Request): Promise<Response> {
         if (!r?.run_id) return null;
         return { runId: r.run_id, name: r.name, focus: r.focus, searchDomain: r.search_domain ?? null, trustedHost: r.trusted_host ?? null };
       },
-      async claimAsk(user, l): Promise<ClaimResult> {
-        const { data, error } = await server.rpc("claim_stubby_turn", {
-          p_user: user,
-          p_guest: l.guest,
-          p_ip_hash: l.ipHash,
-          p_per_user: l.perPerson,
-          p_per_ip: l.perIp,
-          p_new_guests_per_ip_hour: l.newGuestsPerIpHour,
-          p_guest_global: l.guestCap,
-          p_global: l.global,
-        });
-        if (error) throw error;
-        const r = (Array.isArray(data) ? data[0] : data) as { ask_id: number | null; code: string; resets_at: string | null } | null;
-        if (r?.ask_id) return { askId: r.ask_id };
-        const code = (LIMIT_CODES as readonly string[]).includes(r?.code ?? "") ? (r!.code as LimitCode) : l.guest ? "GUEST_LIMIT_REACHED" : "USER_LIMIT_REACHED";
-        return { askId: null, code, resetsAt: r?.resets_at ?? null };
-      },
+      claimAsk: (user, l) => claimTurn((fn, args) => server.rpc(fn, args), user, l),
       async claimFreeFollowUp(user, askId, sinceMs) {
         const { data, error } = await server
           .from("stubby_asks")

@@ -4,7 +4,9 @@
 // Order, cheapest refusal first, nothing decoded until every check has passed:
 //   1. a bearer token, the right content type, a declared size under the limit
 //   2. the token is a real Supabase session (Auth verifies the JWT), not an anonymous guest
-//   3. the database says a member, within 30 conversions an hour (claim_heic_conversion)
+//   3. the database says a member, within 30 conversions an hour (claim_heic_conversion). Before
+//      20261111000050_member_gate.sql adds that function: the old member rule from the person's own
+//      my_profile_private() row, and 30 an hour counted per function instance (best effort)
 //   4. the body, read with a hard cap: reading stops at the limit whatever the header said
 //   5. the bytes are a HEIF file (ftyp brand), not whatever the name or type claims
 //   6. the image's own declared size (ispe) is at most 40 megapixels, before any decoding
@@ -15,16 +17,51 @@ export const HEIC_LIMIT = 4_400_000;
 export const MAX_PIXELS = 40_000_000;
 export const TIMEOUT_MS = 10_000;
 
-export type Claim = "ok" | "not_signed_in" | "not_member" | "rate_limited" | "error";
+export const HEIC_PER_HOUR = 30;
+
+/** "missing": claim_heic_conversion() isn't in the database yet (its migration hasn't run). */
+export type Claim = "ok" | "not_signed_in" | "not_member" | "rate_limited" | "missing" | "error";
 
 export interface HeicDeps {
   /** Supabase Auth's answer for this token (it verifies the JWT), or null. */
   getUser(token: string): Promise<{ id: string; is_anonymous?: boolean } | null>;
   /** claim_heic_conversion(), called as the person. */
   claim(token: string): Promise<Claim>;
+  /**
+   * Only when claim() says "missing": the old member rule (an active account that finished
+   * onboarding), read as the person. null when it can't be read.
+   */
+  legacyMember?(token: string): Promise<boolean | null>;
+  /** Counts conversions while claim() is "missing"; defaults to one shared per instance. */
+  legacyLimiter?: HourLimiter;
   /** HEIC to JPEG. */
   convert(bytes: Uint8Array): Promise<Uint8Array>;
   timeoutMs?: number;
+}
+
+/** At most `perHour` a rolling hour per id, in memory. Only for the time before the migration. */
+export class HourLimiter {
+  private seen = new Map<string, number[]>();
+  constructor(private perHour = HEIC_PER_HOUR, private now: () => number = Date.now) {}
+  take(id: string): boolean {
+    const t = this.now();
+    const recent = (this.seen.get(id) ?? []).filter((x) => t - x < 3_600_000);
+    if (recent.length >= this.perHour) {
+      this.seen.set(id, recent);
+      return false;
+    }
+    recent.push(t);
+    this.seen.set(id, recent);
+    if (this.seen.size > 10_000) this.seen.clear();
+    return true;
+  }
+}
+const SHARED_LIMITER = new HourLimiter();
+
+/** The old member rule from a my_profile_private() answer: active, and onboarding finished. */
+export function legacyMemberRow(data: unknown): boolean {
+  const r = (Array.isArray(data) ? data[0] : data) as { access?: unknown; onboarding_completed?: unknown } | null | undefined;
+  return r?.access === "active" && r?.onboarding_completed === true;
 }
 
 /** The only answers a client ever sees. */
@@ -156,7 +193,14 @@ export async function handleHeic(req: Request, deps: HeicDeps): Promise<Response
 
   const user = await deps.getUser(token).catch(() => null);
   if (!user?.id || user.is_anonymous) return fail(401);
-  const claim = await deps.claim(token).catch((): Claim => "error");
+  let claim = await deps.claim(token).catch((): Claim => "error");
+  if (claim === "missing") {
+    // Before the member gate migration: members keep converting HEIC photos, nobody else does.
+    const member = deps.legacyMember ? await deps.legacyMember(token).catch(() => null) : null;
+    if (member === null) claim = "error";
+    else if (!member) claim = "not_member";
+    else claim = (deps.legacyLimiter ?? SHARED_LIMITER).take(user.id) ? "ok" : "rate_limited";
+  }
   if (claim === "not_signed_in") return fail(401);
   if (claim === "not_member") return fail(403);
   if (claim === "rate_limited") return fail(429);
