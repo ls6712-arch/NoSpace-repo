@@ -9,6 +9,7 @@ It is not enabled or deployed. Live/provider and broader interpretation work
 remains; see [the final audit](final-audit.md) for detailed evidence and blockers.
 
 - [Pull request review and merge holds](pr-review.md)
+- [Onboarding review and redesign proposal](onboarding-redesign.md)
 - [Claude provider and existing API credits](claude-provider.md)
 - [Second code review and reasoning checks](code-review.md)
 - [Initial audit](audit.md)
