@@ -150,6 +150,25 @@ describe("evidence, relevance and degraded context", () => {
     const b = candidate({ id: "b", title: "Life drawing", tags: ["drawing"] });
     expect(rankCandidates([a, b], ctx, []).recommendations[0].candidate.id).toBe("b");
   });
+  it.each([
+    ["arts-crafts/oil-painting", "oil painting", ["Oil painting"]],
+    ["arts-crafts/life-drawing", "sketching", []],
+    ["sports-fitness/run-clubs", "jogging", []],
+  ])("ranks existing onboarding Corner %s using normalized activity tags", (key, tag, knownTopics) => {
+    const ctx = buildContext(input({ text: "something fun indoors tonight", knownTopics,
+      profile: { ...input().profile, picks: [key] } }));
+    const other = candidate({ id: "a", title: "Chess", tags: ["chess"] });
+    const match = candidate({ id: "z", title: "An activity", tags: [tag] });
+    const ranked = rankCandidates([other, match], ctx, []).recommendations;
+    expect(ranked[0].candidate.id).toBe("z");
+    expect(ranked[0].score).toBe(ranked[1].score + 5);
+  });
+  it("does not count a word fragment as an onboarding interest match", () => {
+    const ctx = buildContext(input({ text: "something fun indoors tonight",
+      profile: { ...input().profile, picks: ["arts/art"] } }));
+    const [pick] = rankCandidates([candidate({ tags: ["party"] })], ctx, []).recommendations;
+    expect(pick.explanation).toBe("Fits the constraints checked for this ask.");
+  });
   it("missing providers do not certify unknown family or adult eligibility", () => {
     const ctx = buildContext(input({ text: "pottery tonight", adult21: true }));
     expect(rankCandidates([candidate({ minAge: 21 })], ctx, []).recommendations).toEqual([]);

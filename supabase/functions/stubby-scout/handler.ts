@@ -634,6 +634,7 @@ async function ask(
       return { picks: mine.map(p => ({ ...p, startsAt: new Date(p.startsAt).toISOString(), endsAt: p.endsAt === null ? null : new Date(p.endsAt).toISOString() })),
         outcome: mine.length ? "found" : "nothing", understood: understoodOf(change?.intent ?? intent), dropped: [],
         asksLeft: Math.max(0, asksPerPerson - await deps.server.asksSince(userId, now - DAY_MS)), askId, free, reasons: [],
+        ...(adultsLeftOut ? { adultsLeftOut: true } : {}),
         intelligence: { outcome: mine.length ? report.outcome : "no_verified_match", fallback: report.fallback ?? (mine.length ? null : "No new picks were saved. Try different words."), warnings: report.warnings } };
     }
     const changed = followUp ? applyFollowUp(intent, searchWindow(intent, now), followUp.kind, now) : { intent, window: searchWindow(intent, now) };

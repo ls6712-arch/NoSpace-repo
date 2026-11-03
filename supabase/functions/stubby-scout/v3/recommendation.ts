@@ -8,6 +8,12 @@ export function rankCandidates(candidates: Candidate[], ctx: Context, exclude: s
   const shown = new Set(exclude.map(sameThing));
   const seen = new Set<string>();
   const eligible: Recommendation[] = [];
+  // Normalize onboarding's Corner slugs once; sources use ordinary activity words.
+  const interestTopics = ctx.interests.map(i => {
+    const label = (i.split("/").at(-1) ?? i).replace(/[-_]/g, " ");
+    const topics = topicChoices(label, ctx.topicCatalog).positive;
+    return topics.length ? topics : [label];
+  });
   // Resolve duplicates after validity checks, preferring independent structured evidence.
   const ordered = [...candidates].sort((a, b) => Number(b.evidence.every(e => e.level === "provider")) - Number(a.evidence.every(e => e.level === "provider")));
   for (const c of ordered.slice(0, 300)) {
@@ -17,7 +23,7 @@ export function rankCandidates(candidates: Candidate[], ctx: Context, exclude: s
     if (!check.ok) { dropped.push({ id: c.id, reason: check.reason }); continue; }
     seen.add(`${key}|${c.startsAt}`);
     const tags = c.tags.join(" ").toLowerCase();
-    const matches = ctx.interests.filter(i => tags.includes(i.split("/").at(-1) ?? i)).length;
+    const matches = interestTopics.filter(topics => topics.some(t => matchesTopic(tags, t))).length;
     const learned = ctx.learned.filter(s => sameThing(s.title) === key || topicChoices(s.title).positive.some(t => matchesTopic(`${c.title} ${tags}`, t)));
     // What they ask for now outranks past feedback. Feedback remains a soft signal.
     const explicit = ctx.requestedTopics.some(t => matchesTopic(`${c.title} ${tags}`, t));

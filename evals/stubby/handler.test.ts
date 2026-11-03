@@ -42,6 +42,23 @@ it("guest limits and free-follow-up rules still apply with V3", async () => {
   expect((await handleScout(ask({ followUp: { of: 7, kind: "more", titles: [] } }), d)).status).toBe(403);
   expect(d.v3).not.toHaveBeenCalled();
 });
+it.each([false, true])("preserves the birthday notice on V3 responses (stream=%s)", async stream => {
+  const d = deps();
+  const response = await handleScout(ask({ ask: "cocktails tonight", stream }), d);
+  const body = stream
+    ? JSON.parse((await response.text()).split("event: done\ndata: ")[1].split("\n\n")[0])
+    : await response.json();
+  expect(body.adultsLeftOut).toBe(true);
+  expect(d.v3).toHaveBeenCalledWith(expect.objectContaining({ adult21: false }));
+});
+it.each([
+  { guest: true, member: false, adult21: false },
+  { guest: false, member: true, adult21: true },
+])("does not offer an account birthday notice for %j", async who => {
+  const d = deps(); d.whoIs = async () => who;
+  const body = await (await handleScout(ask({ ask: "cocktails tonight" }), d)).json();
+  expect(body.adultsLeftOut).toBeUndefined();
+});
 it("cheaper halves the explicit ceiling without rewriting the user's words", async () => {
   const d = deps(); await handleScout(ask({ followUp: { of: 7, kind: "cheaper", titles: [] } }), d);
   expect(d.v3).toHaveBeenCalledWith(expect.objectContaining({ text: input().text, budgetOverride: 10 }));
