@@ -12,9 +12,9 @@ import "./landing.css";
 /** The six Shelf colors, in order, as app tokens. */
 const STUB_TONES = ["orange", "violet", "lime", "amber", "blue", "rose"] as const;
 
-function SignUpButton({ large = false, children = COPY.signUp, id }: { large?: boolean; children?: string; id?: string }) {
+function SignUpButton({ large = false, children = COPY.signUp, id, to = "/onboarding" }: { large?: boolean; children?: string; id?: string; to?: string }) {
   return (
-    <Link id={id} to="/onboarding" className={`lp-btn ${large ? "lp-btn-lg" : ""}`}>
+    <Link id={id} to={to} className={`lp-btn ${large ? "lp-btn-lg" : ""}`}>
       {children}
     </Link>
   );
@@ -79,7 +79,10 @@ function Hero() {
           </h1>
           <p className="lp-hero-sub">{COPY.heroSub}</p>
           <div className="lp-cta-row">
-            <SignUpButton large>{COPY.heroCta}</SignUpButton>
+            {/* Try first: the first pick comes from Stubby as a guest, no sign-up (glossary: Get your first pick). */}
+            <SignUpButton large to="/calendar">
+              {COPY.heroCta}
+            </SignUpButton>
             {/* The app uses hash routing, so a "#how" link would be read as a route. Scroll to the section instead. */}
             <button type="button" className="lp-btn lp-btn-lg lp-btn-ghost" onClick={scrollToHow}>
               {COPY.heroSecondary}
@@ -332,7 +335,7 @@ function Final() {
           <div>
             <h2 className="lp-h2">{COPY.finalHeading}</h2>
             <p>{COPY.finalLine}</p>
-            <Link to="/onboarding" className="lp-btn lp-btn-lg lp-btn-ink" onPointerEnter={cheer} onFocus={cheer}>
+            <Link to="/calendar" className="lp-btn lp-btn-lg lp-btn-ink" onPointerEnter={cheer} onFocus={cheer}>
               {COPY.heroCta}
             </Link>
           </div>

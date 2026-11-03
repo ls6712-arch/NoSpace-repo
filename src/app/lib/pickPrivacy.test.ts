@@ -18,7 +18,17 @@ describe("Stubby's picks stay in the browser", () => {
 
   it("has no analytics event about a pick, a Keep or a Not this", () => {
     const events = [...lib("analytics.ts").matchAll(/name: "([a-z_]+)"/g)].map((m) => m[1]);
-    expect(events.filter((e) => /pick|stubby|keep|not_this|skip/.test(e) && !/^week_/.test(e))).toEqual([]);
+    // The guest brief's events (Nov 2, 2026) are about using Stubby and signing up, never about a
+    // pick: they carry kinds and counts only (analytics.ts), so they are named here one by one.
+    const GUEST_BRIEF = new Set([
+      "stubby_opened",
+      "stubby_example_prompt_clicked",
+      "stubby_message_sent",
+      "stubby_context_shown",
+      "stubby_context_completed",
+      "stubby_context_skipped",
+    ]);
+    expect(events.filter((e) => /pick|stubby|keep|not_this|skip/.test(e) && !/^week_/.test(e) && !GUEST_BRIEF.has(e))).toEqual([]);
   });
 
   it("sends only the plan on a Keep: the RSVP or the join, and its undo", () => {

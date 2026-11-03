@@ -26,10 +26,18 @@ import {
 import { STUBBY_LINES } from "../../lib/stubbyLines";
 import {
   ASK_MAX_LENGTH,
+  ASKS_PER_DAY,
+  GUEST_ASKS_PER_DAY,
+  askStatus,
   askStubbyStream,
   asksLeft as readAsksLeft,
   fetchMyPicks,
+  readTaste,
   removeMyPick,
+  saveTaste,
+  sendFeedback,
+  tasteIsEmpty,
+  type Taste,
   type AskAnswers,
   type AskFollowUp,
   type AskStep,
@@ -37,6 +45,11 @@ import {
   type Understood,
 } from "../../lib/stubbyAsk";
 import type { BuddyReaction } from "./StubbyBuddy";
+import { useStubbyAccess } from "../../context/StubbyAccess";
+import { GuestClosedPanel, LimitPanel } from "./GuestPrompts";
+import { guestSession } from "../../../lib/guestSupabase";
+import { track } from "../../lib/analytics";
+import { RESUME_KEY } from "../../lib/signUpReturn";
 
 /**
  * How the last ask ended, for Stubby's line: found something, found only the soonest after
@@ -104,6 +117,17 @@ export interface AskState {
   tryWeekend: () => void;
   surprise: () => void;
   ask: (what: string) => Promise<void>;
+  /** The day's allowance, from the server once known (guests and accounts differ). */
+  perDay: number;
+  /** An account's allowance, for what signing up gets a guest. */
+  accountPerDay: number;
+  /** Thumbs on picks, this session. */
+  rated: Record<number, "up" | "down">;
+  rate: (id: number, s: "up" | "down") => void;
+  /** The quick-context card: shown before the first ask while the taste profile is empty. */
+  showContext: boolean;
+  saveContext: (t: Taste) => Promise<void>;
+  skipContext: () => void;
   /** Stops listening. The ask was paid for, so it still counts. */
   stop: () => void;
   remove: (p: MyPick) => Promise<void>;
@@ -113,6 +137,22 @@ export interface AskState {
 export const STALL_MS = 12_000;
 export const ANSWERS_KEY = "soosh.stubby.answers.v1";
 export const NUDGE_KEY = "soosh.stubby.nudge.v1";
+export { RESUME_KEY } from "../../lib/signUpReturn";
+const CONTEXT_SKIPPED_KEY = "soosh.stubby.contextSkipped.v1";
+const readLocal = (key: string) => {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+};
+const writeLocal = (key: string, value: string) => {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Storage blocked: remembered for this page only.
+  }
+};
 
 const readSession = <T,>(key: string): T | null => {
   try {
@@ -138,6 +178,15 @@ const WHO_VALUES: readonly Who[] = ["solo", "partner", "friends", "family"];
  * (AskStubby) and the results (StubbyResults) both read it, so the results can sit anywhere.
  */
 export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction) => void; userId?: string } = {}): AskState {
+  const access = useStubbyAccess();
+  const client = access.client;
+  const guest = access.guest;
+  const [perDay, setPerDay] = useState(guest ? GUEST_ASKS_PER_DAY : ASKS_PER_DAY);
+  const [accountPerDay, setAccountPerDay] = useState(ASKS_PER_DAY);
+  const [rated, setRated] = useState<Record<number, "up" | "down">>({});
+  const [taste, setTaste] = useState<Taste | null | undefined>(undefined);
+  const [contextSkipped, setContextSkipped] = useState(() => readLocal(CONTEXT_SKIPPED_KEY) === "1");
+  const sent = useRef(0);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -189,10 +238,30 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
 
   useEffect(() => {
     let live = true;
-    void Promise.all([fetchMyPicks(), readAsksLeft()]).then(([p, n]) => {
-      if (!live) return;
+    track({ name: "stubby_opened", who: guest ? "guest" : "user" });
+    void (async () => {
+      // A guest with no session yet has nothing saved: no guest is made just for opening the page.
+      if (guest && !(await guestSession())) {
+        if (live) setTaste(null);
+        return null;
+      }
+      // The server's own count and allowance, and the taste profile, arrive on their own: the
+      // picks and the counted asks show at once.
+      void askStatus(client).then((status) => {
+        if (!live || !status) return;
+        setPerDay(status.perDay);
+        setAccountPerDay(status.accountPerDay);
+        setLeft(status.left);
+      });
+      void readTaste(client).then((t) => {
+        if (live) setTaste(t);
+      });
+      return Promise.all([fetchMyPicks(Date.now(), client), readAsksLeft(Date.now(), client, guest ? GUEST_ASKS_PER_DAY : ASKS_PER_DAY)]);
+    })().then((r) => {
+      if (!live || !r) return;
+      const [p, counted] = r;
       setPicks(p);
-      setLeft(n);
+      setLeft((now) => now ?? counted);
       const latest = latestAskToday(p, Date.now());
       setAskId(latest);
       // The saved deck, minus picks that are gone; or this ask's picks, freshly dealt.
@@ -206,7 +275,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       controller.current?.abort();
       window.clearTimeout(stallTimer.current);
     };
-  }, [setDeck, placeNudge]);
+  }, [setDeck, placeNudge, client, guest]);
 
   const resetStall = useCallback(() => {
     window.clearTimeout(stallTimer.current);
@@ -257,9 +326,16 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       // Who you're going with, once said, goes with every ask this session: as a remembered chip,
       // below what you type now (stubby-agent B3), so "with my girlfriend" wins over Just me.
       const answers: AskAnswers | undefined = who || opts.answers ? { ...(who ? { rememberedWho: who } : {}), ...opts.answers } : undefined;
+      access.draft.current = what;
       let r: Awaited<ReturnType<typeof askStubbyStream>>;
       try {
-        r = await askStubbyStream(what, { signal: c.signal, onStep, answers, questions: !opts.answers && !opts.followUp, followUp: opts.followUp ?? null });
+        // A guest is made on the first ask, not before.
+        if (guest && !(await access.ensureSession())) {
+          // Guests switched off: the closed state, not an error. Anything else is the usual error.
+          r = access.isClosed() ? { found: 0, asksLeft: null, error: null, closed: true } : { found: 0, asksLeft: null, error: STUBBY_LINES.error };
+        } else {
+          r = await askStubbyStream(what, { signal: c.signal, onStep, answers, questions: !opts.answers && !opts.followUp, followUp: opts.followUp ?? null, client });
+        }
       } catch {
         // Stopped: stop() has already put things back.
         return;
@@ -273,6 +349,21 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       endStall();
       setBusy(false);
       setSteps([]);
+      if (r.closed) {
+        access.markClosed();
+        return;
+      }
+      if (r.limit) {
+        // Refused before searching. A guest sees the limit panel (or the sign-up sheet for an
+        // account-only follow-up); an account sees Stubby's out-of-asks line, as before.
+        if (r.limit.code === "SIGNUP_REQUIRED") access.gate("more");
+        else {
+          setLeft(0);
+          access.showLimit(r.limit);
+        }
+        react.current?.("shrug");
+        return;
+      }
       if (r.question) {
         // One question, answered with a tap. Nothing was searched; no ask was used.
         pending.current = what;
@@ -287,9 +378,15 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         return;
       }
       if (r.asksLeft !== null) setLeft(r.asksLeft);
+      // One more ask made: counted for the 3rd-ask card and analytics (never the words).
+      if (!r.free) {
+        const n = guest ? access.noteAsk() : (sent.current += 1);
+        track({ name: "stubby_message_sent", who: guest ? "guest" : "user", messageNumber: n });
+        if (guest && n >= 3) access.offerInlineCard();
+      }
       setReasons(r.reasons ?? []);
       setTonight(r.when === "tonight");
-      const fresh = await fetchMyPicks();
+      const fresh = await fetchMyPicks(Date.now(), client);
       const id = r.askId ?? latestAskToday(fresh, Date.now());
       setPicks(fresh);
       const mine = id === null ? [] : fresh.filter((p) => p.askId === id);
@@ -315,7 +412,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         react.current?.("shrug");
       }
     },
-    [who, onStep, resetStall, endStall, setDeck, placeNudge],
+    [who, onStep, resetStall, endStall, setDeck, placeNudge, access, client, guest],
   );
 
   const ask = useCallback(
@@ -376,10 +473,20 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const pick = useCallback((id: number) => byId.get(id), [byId]);
 
   const keep = useCallback(() => {
-    if (frontCard(deck) === null) return;
+    const id = frontCard(deck);
+    if (id === null) return;
     setDeck(keepFront);
     react.current?.("stamped");
-  }, [deck, setDeck]);
+    // A Keep counts as a signal for next time.
+    void sendFeedback(id, "save", client);
+  }, [deck, setDeck, client]);
+  const rate = useCallback(
+    (id: number, signal: "up" | "down") => {
+      setRated((r) => ({ ...r, [id]: signal }));
+      void sendFeedback(id, signal, client);
+    },
+    [client],
+  );
   const notNow = useCallback(() => {
     if (frontCard(deck) === null) return;
     setDeck(notNowFront);
@@ -392,26 +499,62 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
 
   const followUp = useCallback(
     (kind: FollowUpKind) => {
+      // Follow-ups are for accounts: a guest gets the sign-up sheet, naming it.
+      if (guest) return access.gate("more");
       const of = askId;
       if (of === null || !lastAsk.current) return;
       const titles = deck.all.map((id) => byId.get(id)?.title).filter((t): t is string => !!t).slice(0, 10);
       void run(lastAsk.current, { followUp: { of, kind, titles } });
     },
-    [askId, deck.all, byId, run],
+    [askId, deck.all, byId, run, guest, access],
   );
 
   const remove = useCallback(
     async (p: MyPick) => {
       setPicks((all) => all.filter((x) => x.id !== p.id));
       setDeck((d) => dropCards(d, [p.id]));
-      const r = await removeMyPick(p.id);
+      const r = await removeMyPick(p.id, client);
       if (r.error) {
         setError(r.error);
-        setPicks(await fetchMyPicks());
+        setPicks(await fetchMyPicks(Date.now(), client));
       }
     },
-    [setDeck],
+    [setDeck, client],
   );
+
+  const saveContext = useCallback(
+    async (t: Taste) => {
+      setTaste(t);
+      // Saving needs a session: for a guest, this is where it is made.
+      if (await access.ensureSession()) await saveTaste(t, client);
+    },
+    [access, client],
+  );
+  const skipContext = useCallback(() => {
+    setContextSkipped(true);
+    writeLocal(CONTEXT_SKIPPED_KEY, "1");
+  }, []);
+
+  // A guest at 0 asks: the field gives way to the limit panel at once, with when they can ask again.
+  const limitShown = useRef(false);
+  useEffect(() => {
+    if (!guest || left !== 0 || limitShown.current) return;
+    limitShown.current = true;
+    void askStatus(client).then((s) => access.showLimit({ code: "GUEST_LIMIT_REACHED", resetsAt: s?.resetsAt ?? null }));
+  }, [guest, left, client, access]);
+
+  // Back from signing up: the ask that was in the field, sent for them if the limit stopped it.
+  const resumed = useRef(false);
+  useEffect(() => {
+    if (resumed.current || guest) return;
+    const r = readSession<{ draft?: string; send?: boolean }>(RESUME_KEY);
+    if (!r || typeof r.draft !== "string") return;
+    resumed.current = true;
+    writeSession(RESUME_KEY, null);
+    const draft = r.draft.slice(0, ASK_MAX_LENGTH);
+    setText(draft);
+    if (r.send && draft.trim().length >= 2) void run(draft);
+  }, [guest, run]);
 
   const earlier = useMemo(() => {
     const inDeck = new Set([...deck.all, ...deck.selection]);
@@ -419,6 +562,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   }, [picks, askId, deck]);
   const status = outcome === "found" && found ? `Found ${plural(found, "thing")}.` : outcome === "nothing" ? ASK_COPY.nothing : null;
   const nudgeId = nudge.id !== null && deck.order.includes(nudge.id) ? nudge.id : null;
+  // Before the first ask, while nothing is known: not once anything was asked or found.
+  const showContext = taste !== undefined && tasteIsEmpty(taste) && !contextSkipped && picks.length === 0 && !busy && outcome === null;
 
   return {
     text,
@@ -452,6 +597,13 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     tryWeekend,
     surprise,
     ask,
+    perDay,
+    accountPerDay,
+    rated,
+    rate,
+    showContext,
+    saveContext,
+    skipContext,
     stop,
     remove,
   };
@@ -485,14 +637,18 @@ export function AskStubby({
   const dayId = useId();
   const inputId = givenId ?? ownId;
   const { text, setText, busy, left, ask, question, answer, who, forgetWho } = state;
+  const access = useStubbyAccess();
   const out = left === 0;
   const [picking, setPicking] = useState(false);
+  // A guest's quick ideas show before their first ask too (no count is known yet).
+  const known = left !== null || access.guest;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     void ask(text);
   };
   const quick = (idea: string) => {
+    track({ name: "stubby_example_prompt_clicked", who: access.guest ? "guest" : "user" });
     setText(idea);
     void ask(idea);
   };
@@ -502,6 +658,15 @@ export function AskStubby({
       {label}
     </Chip>
   );
+
+  // Guests aren't open: no field, no quick ideas, no error. Logging in or signing up still works.
+  if (access.guest && access.closed) return <GuestClosedPanel />;
+
+  // At a guest's limit (or the guest cap) the field gives way to what signing up gets them.
+  // Everything already found stays readable below.
+  if (access.prompt?.kind === "limit" || (access.guest && access.prompt?.kind === "sheet" && access.prompt.trigger === "limit")) {
+    return <LimitPanel perDay={state.perDay} accountPerDay={state.accountPerDay} onSignUp={() => (access.draft.current = text)} />;
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -565,7 +730,7 @@ export function AskStubby({
           />
         </div>
       )}
-      {!question && left !== null && !out && state.outcome !== "nothing" && (
+      {!question && known && !out && state.outcome !== "nothing" && (
         // A phone: one row that scrolls sideways, edge to edge. From 744px: wraps. When nothing
         // fit, they step aside: the empty state below has its own ways on (one "This weekend").
         <div role="group" aria-label={ASK_COPY.chipsLabel} className={row}>

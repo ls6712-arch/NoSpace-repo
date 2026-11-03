@@ -3,7 +3,6 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("heic2any", () => ({ default: vi.fn() }));
 const city = vi.hoisted(() => ({ value: "New York" }));
 const busy = vi.hoisted(() => ({ rows: [] as { key: string; events: number }[] }));
 vi.mock("../../lib/interests", () => ({ useInterests: () => ({ city: city.value }) }));

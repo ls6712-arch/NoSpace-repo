@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * One search, three ways in: the box on Discover, the side menu's Search and the header magnifier all end at the
  * same /search, with the same scope, and /search gives the same results for "pottery" whichever way it was reached.
  */
-vi.mock("heic2any", () => ({ default: vi.fn() }));
 const searched = vi.hoisted(() => ({ queries: [] as string[] }));
 vi.mock("../../lib/search", async (orig) => ({
   ...(await orig<typeof import("../../lib/search")>()),

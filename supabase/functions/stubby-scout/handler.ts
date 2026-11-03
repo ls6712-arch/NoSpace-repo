@@ -36,6 +36,8 @@ import { askSystemPrompt, askUserPrompt, type AboutPerson, type FollowUp, type F
 import { readIntent, searchWindow, type Answers, type Intent, type Setting, type Who, type Window } from "./intent.ts";
 import { STUBBY_CONFIG } from "./config.ts";
 import { buildContract, decisionTrace, explicitPreferences, type DecisionTrace } from "./contract.ts";
+import { BodyError, parseBody } from "./schema.ts";
+import { EMPTY_TASTE, tasteIsEmpty, tasteLines, type Signal, type Taste } from "./taste.ts";
 
 export const CITY = "new-york";
 /** The morning restock fills this many days ahead. */
@@ -52,7 +54,39 @@ export interface ScoutSettings {
   restockSearches: number;
   asksPerPerson: number;
   asksPerDay: number;
+  /** Guests (anonymous users): asks a rolling 24 hours. GUEST_DAILY_MESSAGE_LIMIT. */
+  guestAsksPerDay?: number;
+  /** Guest asks per IP hash a rolling 24 hours, about 3x the guest limit. GUEST_IP_DAILY_LIMIT. */
+  guestAsksPerIp?: number;
+  /** New guests per IP hash an hour. GUEST_NEW_PER_IP_HOUR. */
+  newGuestsPerIpHour?: number;
+  /** Guest asks across everyone a rolling 24 hours, then guests pause. GUEST_GLOBAL_DAILY_CAP. */
+  guestAsksGlobal?: number;
+  /** Web searches per round for a guest. GUEST_MAX_SEARCHES. */
+  guestMaxSearches?: number;
 }
+
+/** Who is asking, from the verified token and the database (never from the request body). */
+export interface CallerInfo {
+  /** An anonymous Supabase user. */
+  guest: boolean;
+  /** private.is_active: finished onboarding or gave an 18+ birthdate. */
+  member: boolean;
+  /** A birthdate on file at least 21 years ago. Only then are 21+ picks allowed, even when asked for. */
+  adult21?: boolean;
+}
+
+export interface AskLimits {
+  guest: boolean;
+  ipHash: string | null;
+  perPerson: number;
+  perIp: number;
+  newGuestsPerIpHour: number;
+  guestCap: number;
+  global: number;
+}
+export type LimitCode = "GUEST_LIMIT_REACHED" | "USER_LIMIT_REACHED" | "GUEST_GLOBAL_CAP" | "GLOBAL_CAP";
+export type ClaimResult = { askId: number } | { askId: null; code: LimitCode; resetsAt: string | null };
 
 export interface Source {
   runId: number;
@@ -107,6 +141,15 @@ export interface ScoutDeps {
   now: () => number;
   /** The signed-in person's id from their token (checked with Supabase Auth), or null. */
   userId(): Promise<string | null>;
+  /** Guest or account, member or not, for the person behind userId(). */
+  whoIs(userId: string): Promise<CallerInfo>;
+  /** An HMAC of the caller's IP with a secret salt (64 hex), or null if there is none. */
+  ipHash(): Promise<string | null>;
+  /**
+   * The startup check: true only when the database is ready for guests (public.stubby_guest_ready())
+   * and the IP salt is set. Until then every guest ask is refused, whatever Supabase Auth allows.
+   */
+  guestReady?(): Promise<boolean>;
   /** As the signed-in caller: the database's own rules apply (admins only). */
   db: {
     runsSince(ms: number): Promise<number>;
@@ -119,11 +162,16 @@ export interface ScoutDeps {
     insertPick(row: CityRow): Promise<boolean>;
     /** The caller's own profile, Corners, passes and Pursuits. Read as them. */
     profile(userId: string): Promise<PersonProfile>;
+    /** Their taste profile (stubby_profiles), read as them. */
+    taste?(userId: string): Promise<Taste>;
+    /** Their last ~20 signals on picks (stubby_feedback), newest first, read as them. */
+    signals?(userId: string): Promise<Signal[]>;
   };
   /** As the server: only for the restock and asks, after their own checks. */
   server: {
     claimSource(): Promise<Source | null>;
-    claimAsk(userId: string, perPerson: number, perDay: number): Promise<number | null>;
+    /** One ask, if every limit allows it (claim_stubby_turn). A bare number or null is accepted too. */
+    claimAsk(userId: string, limits: AskLimits): Promise<ClaimResult | number | null | undefined>;
     /**
      * Marks this person's ask's free follow-up used, in one update that only succeeds once (and
      * only for an ask of theirs from the last day). True when it was free; false means it costs an ask.
@@ -137,6 +185,8 @@ export interface ScoutDeps {
     finishAsk(id: number, r: { found: number; added: number; failed: boolean; dropped?: Dropped[]; trace?: DecisionTrace }): Promise<void>;
     /** How many asks this person has made since `ms`. */
     asksSince(userId: string, ms: number): Promise<number>;
+    /** When this person's oldest ask since `ms` was made, or null. */
+    oldestAskSince?(userId: string, ms: number): Promise<number | null>;
     trustedHosts(): Promise<string[]>;
     corners(): Promise<CornerRow[]>;
     existingKeys(fromMs: number, toMs: number): Promise<Set<string>>;
@@ -253,13 +303,15 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return fail(405, "Use POST.");
 
-  let body: { mode?: unknown; focus?: unknown; ask?: unknown; answers?: unknown; questions?: unknown; stream?: unknown; followUp?: unknown } = {};
+  let body: ReturnType<typeof parseBody>;
   try {
-    body = ((await req.json()) ?? {}) as typeof body;
-  } catch {
-    body = {};
+    body = parseBody(await req.text());
+  } catch (e) {
+    // The same short answer for every bad body: nothing about what was expected.
+    if (!(e instanceof BodyError)) console.error("stubby-scout: body", (e as Error)?.name);
+    return fail(400, "That request isn't valid.");
   }
-  const mode = body.mode === "restock" || body.mode === "ask" ? body.mode : "admin";
+  const mode = body.mode;
 
   if (!deps.settings.enabled) return fail(503, "The scout is switched off.");
   if (!deps.settings.hasKey) return fail(503, "The scout has no search key yet.");
@@ -268,7 +320,24 @@ export async function handleScout(req: Request, deps: ScoutDeps): Promise<Respon
 
   const userId = await deps.userId();
   if (!userId) return fail(401, "Sign in first.");
-  if (mode === "ask") return ask(deps, userId, body.ask, readAnswers(body.answers), body.questions === true, body.stream === true, readFollowUp(body.followUp));
+  const who = await deps.whoIs(userId);
+  // Anonymous sign-ins switched on before the guest migrations (or the salt): guests get nothing.
+  if (who.guest && !(deps.guestReady ? await deps.guestReady().catch(() => false) : false)) {
+    return json(503, { error: "Stubby isn't open to guests yet.", code: "GUESTS_NOT_READY" });
+  }
+  // How many asks are left today, and the day's allowance: read only, no search, no ask used.
+  if (mode === "ask" && body.status === true) {
+    const perDay = limitsFor(deps.settings, who, null).perPerson;
+    const used = await deps.server.asksSince(userId, deps.now() - DAY_MS);
+    const left = Math.max(0, perDay - used);
+    // At 0: when the oldest ask of the last 24 hours ages out, for "ask again after {time}".
+    const oldest = left === 0 && deps.server.oldestAskSince ? await deps.server.oldestAskSince(userId, deps.now() - DAY_MS) : null;
+    const resetsAt = oldest === null ? null : new Date(oldest + DAY_MS).toISOString();
+    return json(200, { asksLeft: left, perDay, accountPerDay: deps.settings.asksPerPerson, guest: who.guest, resetsAt });
+  }
+  if (mode === "ask") return ask(deps, userId, who, body.ask, readAnswers(body.answers), body.questions === true, body.stream === true, readFollowUp(body.followUp));
+  // Find picks is for admins, who are always members. A guest or Stubby account stops here.
+  if (who.guest || !who.member) return fail(403, "This is for whoever manages City picks.");
   return admin(deps, cleanText(body.focus).slice(0, 200) || null);
 }
 
@@ -408,7 +477,7 @@ export function windowWords(windows: readonly string[]): string[] {
 const SAFE_SLUG = /^[A-Za-z0-9_-]+$/;
 
 /** What the prompt says about the person, and the Soosh pages an idea may link to. */
-export function aboutPerson(profile: PersonProfile, picked: CornerRow[]): AboutPerson {
+export function aboutPerson(profile: PersonProfile, picked: CornerRow[], taste: Taste = EMPTY_TASTE, signals: readonly Signal[] = []): AboutPerson {
   const sooshPages: AboutPerson["sooshPages"] = [];
   for (const c of picked) {
     if (c.spaceSlug && c.slug && SAFE_SLUG.test(c.spaceSlug) && SAFE_SLUG.test(c.slug)) sooshPages.push({ label: `${c.name}, how to start`, url: `/start/${c.spaceSlug}/${c.slug}` });
@@ -423,6 +492,7 @@ export function aboutPerson(profile: PersonProfile, picked: CornerRow[]): AboutP
     city: cleanText(profile.city).slice(0, 60) || null,
     passes: profile.passes.slice(0, 10).map((p) => cleanText(p.place ? `${p.label} (${p.place})` : p.label).replace(/"/g, "'").slice(0, 80)).filter(Boolean),
     sooshPages,
+    taste: tasteLines(taste, signals),
   };
 }
 
@@ -433,9 +503,40 @@ const understoodOf = (intent: Intent): AskReport["understood"] => ({
   free: intent.budget?.free ?? false,
 });
 
+/** The limits for this caller, from the settings (each clamped in readSettings). */
+export function limitsFor(s: ScoutSettings, who: CallerInfo, ipHash: string | null): AskLimits {
+  const guestDay = s.guestAsksPerDay ?? 3;
+  return {
+    guest: who.guest,
+    ipHash,
+    perPerson: who.guest ? guestDay : s.asksPerPerson,
+    perIp: s.guestAsksPerIp ?? guestDay * 3,
+    newGuestsPerIpHour: s.newGuestsPerIpHour ?? 5,
+    guestCap: s.guestAsksGlobal ?? 60,
+    global: s.asksPerDay,
+  };
+}
+
+/** A claim's answer, whatever shape it came back in. */
+function claimed(r: ClaimResult | number | null | undefined, guest: boolean): ClaimResult {
+  if (typeof r === "number") return { askId: r };
+  if (r && typeof r === "object") return r;
+  return { askId: null, code: guest ? "GUEST_LIMIT_REACHED" : "USER_LIMIT_REACHED", resetsAt: null };
+}
+
+/** The 429 for a limit: a code the app renders its own words for, and when the oldest ask ages out. */
+function limitReached(c: Extract<ClaimResult, { askId: null }>, perPerson: number): Response {
+  const error =
+    c.code === "GUEST_GLOBAL_CAP" || c.code === "GLOBAL_CAP"
+      ? "Lots of asks right now. Try again later."
+      : `That's ${perPerson} for today. I'll look again tomorrow.`;
+  return json(429, { error, code: c.code, resetsAt: c.resetsAt });
+}
+
 async function ask(
   deps: ScoutDeps,
   userId: string,
+  who: CallerInfo,
   raw: unknown,
   answers: Answers | null,
   questions: boolean,
@@ -447,16 +548,25 @@ async function ask(
   if (text.length < 2) return fail(400, "Say what you're after, like pottery on Saturday.");
 
   const now = deps.now();
-  const { asksPerPerson, asksPerDay } = deps.settings;
+  const limits = limitsFor(deps.settings, who, who.guest ? await deps.ipHash() : null);
+  const asksPerPerson = limits.perPerson;
+  // Follow-ups (Cheaper, Closer and the rest) are for accounts: the app asks a guest to sign up.
+  if (followUp && who.guest) return json(403, { error: "Sign up to ask Stubby for more.", code: "SIGNUP_REQUIRED" });
   // Read as them, from their own rows only. Best effort: without it, he still searches.
   const profile = await deps.db.profile(userId).catch(() => EMPTY_PROFILE);
+  const taste = deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
+  const signals = deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
   const corners = await deps.server.corners();
   const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
   const picked = profile.picks.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []));
-  const intent = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
+  const read = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
+  // 21+ only with a birthdate on file at least 21 years ago. Guests never; nobody without one.
+  const intent: Intent = who.adult21 === true && !who.guest ? read : { ...read, adults: false };
 
-  // One question first, when the app can ask it and something worth asking is missing. No ask is used.
-  if (questions && intent.missing && !followUp) {
+  // Nothing known about them yet: a vague ask gets one question first, even if the app didn't ask for it.
+  const knowsNothing = tasteIsEmpty(taste) && signals.length === 0 && profile.picks.length === 0 && !profile.city && !profile.area;
+  // One question first, when something worth asking is missing. No ask is used.
+  if ((questions || knowsNothing) && intent.missing && !followUp && !answers?.skip) {
     const left = Math.max(0, asksPerPerson - (await deps.server.asksSince(userId, now - DAY_MS)));
     const q: AskQuestion = { question: intent.missing, asksLeft: left };
     return json(200, q);
@@ -464,8 +574,9 @@ async function ask(
 
   // A follow-up: the first after an ask is free and joins that ask's picks; later ones use an ask.
   const free = followUp ? await deps.server.claimFreeFollowUp(userId, followUp.of, now - DAY_MS) : false;
-  const askId = free ? followUp!.of : await deps.server.claimAsk(userId, asksPerPerson, asksPerDay);
-  if (askId === null) return fail(429, `That's ${asksPerPerson} for today. I'll look again tomorrow.`);
+  const claim = free ? ({ askId: followUp!.of } as ClaimResult) : claimed(await deps.server.claimAsk(userId, limits), who.guest);
+  if (claim.askId === null) return limitReached(claim, asksPerPerson);
+  const askId = claim.askId;
   // A free follow-up's picks rank after its ask's own.
   const rankFrom = free ? 10 : 0;
 
@@ -475,7 +586,7 @@ async function ask(
     const changed = followUp ? applyFollowUp(intent, searchWindow(intent, now), followUp.kind, now) : { intent, window: searchWindow(intent, now) };
     const window = changed.window;
     const asked = changed.intent;
-    const person = aboutPerson(profile, picked);
+    const person = aboutPerson(profile, picked, taste, signals);
     let picking = false;
     const onProgress = stream
       ? (e: SearchProgress) => {
@@ -488,7 +599,7 @@ async function ask(
         focus: null,
         ask: text,
         cornerNames: corners.map((c) => c.name),
-        maxSearches: deps.settings.maxSearches,
+        maxSearches: who.guest ? Math.min(deps.settings.guestMaxSearches ?? 3, deps.settings.maxSearches) : deps.settings.maxSearches,
         prompt: { system: askSystemPrompt(), user: askUserPrompt(text, asked, window, person, now, followUp, gaps) },
         onProgress,
       });
@@ -534,7 +645,8 @@ async function ask(
     for (const [rank, p] of kept.entries()) if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
 
     // Shared with everyone, without who asked: events only, never ideas. Published from a trusted page, a draft otherwise.
-    const events = kept.filter((p) => p.kind === "event");
+    // Never from a guest: a guest's ask changes nothing outside their own picks (guest brief §6e).
+    const events = who.guest ? [] : kept.filter((p) => p.kind === "event");
     if (events.length) {
       const hosts = await deps.server.trustedHosts();
       const existing = await deps.server.existingKeys(now - DAY_MS, now + (SCOUT_DAYS + 1) * DAY_MS);
@@ -615,8 +727,14 @@ export function readSettings(env: (k: string) => string | undefined): ScoutSetti
     runsPerDay: int("STUBBY_SCOUT_RUNS_PER_DAY", 3, 20),
     maxSearches: int("STUBBY_SCOUT_MAX_SEARCHES", 5, 20),
     restockSearches: int("STUBBY_RESTOCK_SEARCHES", 3, 10),
-    asksPerPerson: int("STUBBY_ASKS_PER_PERSON", 3, 20),
+    // Members and Stubby accounts. USER_DAILY_MESSAGE_LIMIT, or the older name.
+    asksPerPerson: env("USER_DAILY_MESSAGE_LIMIT") ? int("USER_DAILY_MESSAGE_LIMIT", 6, 50) : int("STUBBY_ASKS_PER_PERSON", 6, 50),
     asksPerDay: int("STUBBY_ASKS_PER_DAY", 200, 5000),
+    guestAsksPerDay: int("GUEST_DAILY_MESSAGE_LIMIT", 3, 20),
+    guestAsksPerIp: int("GUEST_IP_DAILY_LIMIT", 3 * int("GUEST_DAILY_MESSAGE_LIMIT", 3, 20), 100),
+    newGuestsPerIpHour: int("GUEST_NEW_PER_IP_HOUR", 5, 50),
+    guestAsksGlobal: int("GUEST_GLOBAL_DAILY_CAP", 60, 2000),
+    guestMaxSearches: int("GUEST_MAX_SEARCHES", 3, 20),
   };
 }
 

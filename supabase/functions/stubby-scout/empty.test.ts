@@ -27,6 +27,8 @@ function deps(rounds: RawPick[][]) {
     settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
     now: () => NOW,
     userId: async () => "user-1",
+    whoIs: async () => ({ guest: false, member: true }),
+    ipHash: async () => null,
     db: { runsSince: async () => 0, startRun: async () => 1, finishRun: async () => undefined, corners: async () => [], existingKeys: async () => new Set(), insertPick: async () => true, profile: async () => EMPTY_PROFILE },
     server: {
       claimSource: async () => null,

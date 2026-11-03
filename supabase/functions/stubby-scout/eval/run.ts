@@ -47,6 +47,8 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
     settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
     now: () => now,
     userId: async () => "eval-user",
+    // A member with a 21+ birthdate on file: the scenarios are about the deck, not who may ask.
+    whoIs: async () => ({ guest: false, member: true, adult21: true }),
     db: {
       runsSince: async () => 0,
       startRun: async () => 1,

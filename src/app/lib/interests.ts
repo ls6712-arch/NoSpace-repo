@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { MOODS, type MoodId } from "../data/moods";
+import { readTaste } from "./stubbyAsk";
 
 /**
  * What a person wants more of (the moods in data/moods.ts) and the city
@@ -125,12 +126,22 @@ export function useInterests() {
   useEffect(() => {
     if (!user) return;
     let live = true;
-    void fetchMyInterests(user.id).then((saved) => {
-      if (!live || !saved) return;
+    void fetchMyInterests(user.id).then(async (saved) => {
+      if (!live) return;
       // A saved profile with nothing in it does not wipe what this device already knows.
-      if (saved.city === "" && saved.moods.length === 0) return;
-      writeLocalInterests(saved);
-      setInterests(saved);
+      if (saved && !(saved.city === "" && saved.moods.length === 0)) {
+        writeLocalInterests(saved);
+        setInterests(saved);
+        return;
+      }
+      // Nothing saved yet: what they told Stubby (stubby_profiles), so onboarding doesn't ask again.
+      const local = readLocalInterests();
+      if (local && (local.city !== "" || local.moods.length > 0)) return;
+      const taste = await readTaste();
+      if (!live || !taste || (taste.interests.length === 0 && !taste.city)) return;
+      const fromStubby = { city: cleanCity(taste.city ?? ""), moods: cleanMoods(taste.interests) };
+      writeLocalInterests(fromStubby);
+      setInterests(fromStubby);
     });
     return () => {
       live = false;

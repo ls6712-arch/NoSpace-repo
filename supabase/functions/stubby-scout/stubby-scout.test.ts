@@ -215,6 +215,8 @@ describe("the request", () => {
       settings: SETTINGS,
       now: () => NOW,
       userId: async () => "user-1",
+      whoIs: async () => ({ guest: false, member: true }),
+      ipHash: async () => null,
       db: {
         runsSince: async () => 0,
         startRun: async () => 41,
@@ -390,7 +392,20 @@ describe("the request", () => {
 
   it("clamps its settings", () => {
     const s = readSettings((k) => ({ STUBBY_SCOUT_ENABLED: "true", ANTHROPIC_API_KEY: "k", STUBBY_SCOUT_RUNS_PER_DAY: "999", STUBBY_SCOUT_MAX_SEARCHES: "abc", STUBBY_ASKS_PER_PERSON: "0" })[k]);
-    expect(s).toEqual({ enabled: true, hasKey: true, runsPerDay: 20, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 });
+    expect(s).toEqual({
+      enabled: true,
+      hasKey: true,
+      runsPerDay: 20,
+      maxSearches: 5,
+      restockSearches: 3,
+      asksPerPerson: 6,
+      asksPerDay: 200,
+      guestAsksPerDay: 3,
+      guestAsksPerIp: 9,
+      newGuestsPerIpHour: 5,
+      guestAsksGlobal: 60,
+      guestMaxSearches: 3,
+    });
     expect(readSettings(() => undefined).enabled).toBe(false);
   });
 });

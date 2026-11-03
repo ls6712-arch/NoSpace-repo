@@ -17,7 +17,8 @@
     "visual:search": "node scripts/visual/search.ts dist docs/qa/one-skin/search",
     "visual:pages:selftest": "node scripts/visual/page-shell.ts --selftest",
     "build:app": "vite build",
-    "landing:screens": "node scripts/landing-screens/capture.mjs"
+    "landing:screens": "node scripts/landing-screens/capture.mjs",
+    "e2e:guest": "node scripts/e2e/guest-stubby.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.23",
@@ -39,7 +40,6 @@
     "clsx": "2.1.1",
     "dotenv": "^17.4.2",
     "heic-convert": "^2.1.0",
-    "heic2any": "^0.0.4",
     "lucide-react": "0.487.0",
     "motion": "^13.4.0",
     "react": "18.3.1",

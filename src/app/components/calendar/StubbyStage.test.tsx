@@ -126,7 +126,7 @@ describe("the Stubby stage", () => {
   it("at 0 asks left he says so, and the field is off", async () => {
     api.asksLeft.mockResolvedValue(0);
     stage();
-    await waitFor(() => expect(line()).toBe("That’s 3 for today. I’ll look again tomorrow."));
+    await waitFor(() => expect(line()).toBe("That’s 6 for today. I’ll look again tomorrow."));
     expect((screen.getByLabelText("What are you in the mood for?") as HTMLInputElement).disabled).toBe(true);
   });
 

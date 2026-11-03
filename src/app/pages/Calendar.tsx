@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
-import { SignUpPrompt } from "../components/SignUpPrompt";
+import { GuestStubby } from "../components/stubby/GuestStubby";
+import { FinishSettingUpSheet } from "../components/stubby/FinishSettingUp";
 import { ErrorNotice } from "../components/StateViews";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { Skeleton } from "../components/ui/skeleton";
@@ -51,7 +52,7 @@ import {
   type Filters,
 } from "../lib/calendarView";
 import type { Owner } from "../lib/firstPlanRemote";
-import { CALENDAR_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
+import { WEEK_VIEW } from "../lib/homeCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
@@ -89,6 +90,9 @@ export function Calendar() {
   const [picked, setPicked] = useState<number | null>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [kept, setKept] = useState<ReadonlySet<string>>(new Set());
+  // A Stubby account (signed up from Stubby, onboarding not finished): inviting someone is for members.
+  const stubbyAccount = !!profile && !profile.onboarding_completed && profile.signed_up_from === "stubby";
+  const [finishOpen, setFinishOpen] = useState(false);
   // Stubby, on the stage at the top, reacts to everything you do here.
   const stage = useRef<StubbyStageHandle>(null);
   const stubby = useMemo(() => ({ react: (r: Parameters<StubbyStageHandle["react"]>[0]) => stage.current?.react(r) }), []);
@@ -157,9 +161,8 @@ export function Calendar() {
 
   const filters = filtersByView[view] ?? loadFilters(view);
 
-  if (isConfigured && !user) {
-    return <SignUpPrompt title={CALENDAR_SIGNED_OUT.title} body={CALENDAR_SIGNED_OUT.body} cta={CALENDAR_SIGNED_OUT.cta} />;
-  }
+  // Signed out: Stubby as a guest, no sign-up first (guest brief §2). The calendar itself needs an account.
+  if (isConfigured && !user) return <GuestStubby />;
 
   const go = (next: { view?: CalendarView; anchor?: number }) => {
     const v = next.view ?? view;
@@ -373,8 +376,9 @@ export function Calendar() {
         sheetOpen={!!sheet || showOpen}
         userId={userId}
         onMakePlans={makePlansFromPicks}
-        onBring={(p) => void bringFromPick(p)}
+        onBring={(p) => (stubbyAccount ? setFinishOpen(true) : void bringFromPick(p))}
       />
+      <FinishSettingUpSheet open={finishOpen} onOpenChange={setFinishOpen} />
       <CalendarToolbar
         view={view}
         showButton={!panel}

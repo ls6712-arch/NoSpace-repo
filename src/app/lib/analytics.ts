@@ -10,6 +10,10 @@
  * fields to small fixed values (a kind, a view, a count), never a name, a
  * title, an email or free text.
  */
+/** Where a sign-up prompt came from. */
+export type SignUpTrigger = "inline_card" | "feature_gate" | "limit" | "header";
+export type SignUpMethod = "google" | "apple" | "email";
+
 export type AnalyticsEvent =
   | { name: "pursuits_in_progress_viewed"; count: number }
   | { name: "pursuits_in_progress_item_tapped"; pursuitId: string }
@@ -41,6 +45,17 @@ export type AnalyticsEvent =
   | { name: "week_find_something"; window: string }
   | { name: "week_budget_changed" }
   | { name: "week_view_toggled"; view: "week" | "month" }
+  // Stubby for guests. Never the ask, a title or an email: kinds and counts only.
+  | { name: "stubby_opened"; who: "guest" | "user" }
+  | { name: "stubby_example_prompt_clicked"; who: "guest" | "user" }
+  | { name: "stubby_message_sent"; who: "guest" | "user"; messageNumber: number }
+  | { name: "signup_prompt_shown"; trigger: SignUpTrigger }
+  | { name: "signup_prompt_dismissed"; trigger: SignUpTrigger }
+  | { name: "signup_started"; trigger: SignUpTrigger; method: SignUpMethod }
+  | { name: "signup_completed"; trigger: SignUpTrigger; method: SignUpMethod; guestMessages: number }
+  | { name: "stubby_context_shown" }
+  | { name: "stubby_context_completed"; interests: number; city: boolean; timing: boolean }
+  | { name: "stubby_context_skipped" }
   // GA4 recommended events, sent once per sign-in by AuthContext.
   | { name: "sign_up"; method: string }
   | { name: "login"; method: string };

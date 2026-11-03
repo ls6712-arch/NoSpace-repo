@@ -20,7 +20,7 @@ import { withFirstFrame } from "../lib/mediaUrl";
  * and none of them called convertHeicIfNeeded themselves. Fixed once here
  * so every caller gets it, rather than three times at each call site.
  *
- * A real HEIC file that heic2any's WASM decoder can't handle (a known
+ * A real HEIC file the converter (api/heic.ts) can't handle (a known
  * limitation of that library, not the same thing as this sandbox's own
  * synthetic-bytes test file) comes back from convertHeicIfNeeded() still
  * HEIC-shaped — isHeicFile() catches that and rejects the pick with a
