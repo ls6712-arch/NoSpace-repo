@@ -1,0 +1,31 @@
+{
+  "version": "stubby-v3.3",
+  "reviewedCodeCommit": "fefd4c3",
+  "baseMain": "7e552af78169a41276282ce15312293e6faaf1db",
+  "preservedRemoteFeatureHead": "f53c47ba1776c89e91ac6089601deaa3a3debe06",
+  "fullSuite": {
+    "files": 218,
+    "passed": 2042,
+    "failed": 0,
+    "skipped": 0,
+    "success": true
+  },
+  "v3": {
+    "files": 9,
+    "passed": 178,
+    "goldenPassed": 46,
+    "goldenTotal": 46
+  },
+  "checks": {
+    "frontendTypes": "passed",
+    "backendTypes": "passed",
+    "denoEntrypoint": "passed with Deno 2.9.6 and local npm SDK alias",
+    "migrationComparedWithMain": "passed",
+    "build": "passed",
+    "browser": "guest and authenticated memory passed with mocked Supabase/OAuth",
+    "sql": "new migration, RLS, deletion and rollback passed in local PostgreSQL WASM",
+    "lintAndWhitespace": "passed"
+  },
+  "mergeRecommendation": "draft: live Claude and hosted Supabase verification remain unrun",
+  "productionChanged": false
+}

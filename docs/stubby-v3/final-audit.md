@@ -5,7 +5,7 @@ Branch: `feature/stubby-context-v3`. Baseline commit:
 
 Status: **locally validated milestone; full Stubby 3.0 definition of done is not met**.
 No production merge, deployment, infrastructure edit or live database write was
-performed. No PR was created because the request requires readiness first.
+performed. A draft PR is requested for owner review. Merge approval remains withheld pending the staging gates in pr-review.md.
 
 ## Built
 
@@ -29,13 +29,15 @@ performed. No PR was created because the request requires readiness first.
 
 ## Validation evidence
 
+See [the PR review](pr-review.md) and `evals/stubby/pr-review-report.json` for the latest reconciliation/checks.
+
 See [the Claude provider contract](claude-provider.md), [the second review](code-review.md), `evals/stubby/review-report.json`, `evals/stubby/report.json` and `evals/stubby/sql-report.json` for executed,
 structured reports. Browser tests mock Supabase and OAuth; Claude/OpenAI tests mock HTTP.
 
 | Check | Result |
 | --- | --- |
-| Full existing + new Vitest suite | 218 files, 2,033 tests passed |
-| New tests only | 169 tests across 9 V3 eval/provider/profile/editor/remote files |
+| Full existing + new Vitest suite | 218 files, 2,042 tests passed |
+| New tests only | 178 tests across 9 V3 eval/provider/profile/editor/remote files |
 | Golden baseline comparison | 46/46 expected V3 outcomes; same candidates run through legacy checker |
 | Frontend TypeScript | Passed, no emit |
 | Backend/evals strict TypeScript | Passed via evals/stubby/tsconfig.json; entrypoint also checked with Deno 2.9.6 and local npm SDK alias |
