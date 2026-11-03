@@ -68,95 +68,187 @@ The "Verify" checks marked SQL are read-only, or are verification scripts that a
 
 ### 2. Edge function secrets
 
-Supabase dashboard > Edge Functions > Secrets (or `supabase secrets set NAME=value`):
+**What:** the secrets `stubby-scout` reads. `STUBBY_IP_SALT` is required. Without it, the function
+refuses every guest ask (503 `GUESTS_NOT_READY`) while members carry on as normal.
 
-| Secret | Value |
-|---|---|
-| `STUBBY_IP_SALT` | 32 or more random characters (`openssl rand -hex 32`). **Required**: without it every guest ask is refused. Never reuse it anywhere else; changing it later only resets the per-network counts. |
-| `GUEST_DAILY_MESSAGE_LIMIT` | `3` (the default if unset) |
-| `USER_DAILY_MESSAGE_LIMIT` | `6` (the default; replaces `STUBBY_ASKS_PER_PERSON`) |
-| `GUEST_GLOBAL_DAILY_CAP` | `60` (the default) |
-| `GUEST_IP_DAILY_LIMIT` | optional, default 3 times the guest limit |
-| `GUEST_NEW_PER_IP_HOUR` | optional, default 5 |
-| `GUEST_MAX_SEARCHES` | optional, default 3 |
-| `ALLOWED_ORIGINS` | optional, comma separated; default `https://www.onsoosh.com,https://onsoosh.com`. Add preview or staging origins, or their browser calls are refused. |
+**Make the salt** on your own computer. It is 32 random bytes written as 64 hex characters.
+Never reuse it anywhere else, and never paste it into a chat, a PR or a document:
 
-Verify:
-- [ ] `supabase secrets list` (or the dashboard) shows `STUBBY_IP_SALT` and any limits you set. Values aren't shown, only names and digests.
-- [ ] After step 3, the function's logs (Edge Functions > stubby-scout > Logs) show no `stubby-scout: guests not ready` line after a guest-shaped request. That line means the salt or the database check is missing.
+```bash
+openssl rand -hex 32
+```
+
+(If `openssl` isn't there: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.)
+
+**Where:** Supabase dashboard > project `eyzokuhhbyidvmuqfmwm` > **Edge Functions** > **Secrets**.
+Add each name and value, then Save. Or with the CLI, logged in as the project owner:
+
+```bash
+supabase secrets set --project-ref eyzokuhhbyidvmuqfmwm STUBBY_IP_SALT=<the 64 characters> GUEST_DAILY_MESSAGE_LIMIT=3 USER_DAILY_MESSAGE_LIMIT=6 GUEST_GLOBAL_DAILY_CAP=60
+```
+
+| Secret | Value | What it does |
+|---|---|---|
+| `STUBBY_IP_SALT` | the 64 characters from above | Turns each guest's network address into a one-way hash for the per-network limits; the address itself is never kept. Changing it later only resets those counts. |
+| `GUEST_DAILY_MESSAGE_LIMIT` | `3` | A guest's asks in a rolling 24 hours |
+| `USER_DAILY_MESSAGE_LIMIT` | `6` | An account's asks in a rolling 24 hours. The app's "Sign up to keep your picks and get 6 asks a day." reads this number from the server. |
+| `GUEST_GLOBAL_DAILY_CAP` | `60` | Guest asks across everyone in 24 hours; past it, guests see "Lots of asks right now. Sign up to keep going." and accounts carry on |
+| `ALLOWED_ORIGINS` | leave unset | Defaults to `https://www.onsoosh.com,https://onsoosh.com`. Set it only to add a staging or preview origin (comma separated). |
+
+Leave `GUEST_IP_DAILY_LIMIT` (3 times the guest limit), `GUEST_NEW_PER_IP_HOUR` (5) and
+`GUEST_MAX_SEARCHES` (3) unset unless there is a reason.
+
+**Verify:**
+- [ ] `supabase secrets list --project-ref eyzokuhhbyidvmuqfmwm` (or the Secrets page) lists all four names. It shows a digest, never the value.
+- [ ] After step 3: as a member on the live site, open Stubby with the browser's developer tools on
+  the Network tab. The request to `stubby-scout` with `"status":true` answers with
+  `"accountPerDay":6`. Guest numbers show in step 7.
 
 ### 3. Deploy `stubby-scout` from main
 
-The live function is still #309's (deployed Nov 3, 13:23 UTC); merging #303 didn't deploy it. Members
-keep working either way: the new function falls back to the old claim and member rule if anything
-is missing (see "Before the migrations are applied").
+**What:** the live function is still #309's, deployed Nov 3 at 13:23 UTC; merging #303 didn't
+deploy it. The new one adds the guest limits, the taste profile, the 21+ birthday flag and the
+startup check. Members keep working through the switch: it falls back to the old claim and member
+rule if anything is missing (see "Before the migrations are applied").
 
-`supabase functions deploy stubby-scout --no-verify-jwt` from an up-to-date main.
+**Where:** from an up-to-date `main`, logged in to the Supabase CLI as the project owner:
 
-Verify:
-- [ ] Supabase > Edge Functions: `stubby-scout`'s updated time is after the deploy.
-- [ ] As a member in the app: ask Stubby something. Picks come back, the ask count goes down by one.
-- [ ] As a member, ask for something 21+ ("a wine tasting tonight") on an account with no birthday:
-  "Add your birthday to see 21+ picks." shows under the picks. On an account with an adult birthday
-  it doesn't, and 21+ places can appear.
-- [ ] SQL: `select count(*) from public.stubby_asks sa where sa.asked_at > now() - interval '10 minutes';` went up by your asks.
+```bash
+supabase functions deploy stubby-scout --project-ref eyzokuhhbyidvmuqfmwm --no-verify-jwt
+```
 
-### 4. Vercel (production)
+**Verify:**
+- [ ] Dashboard > **Edge Functions**: `stubby-scout` shows a new version and an updated time after the deploy.
+- [ ] As a member on the live site, ask Stubby something. Picks come back, and the ask count goes down by one.
+- [ ] As a member with no birthday on file, ask for "a wine tasting tonight". "Add your birthday to see 21+ picks." shows under the picks. With an adult birthday on file it doesn't.
+- [ ] Dashboard > Edge Functions > `stubby-scout` > **Logs**: no errors. One `guests not ready` line is expected until step 7, because no guests can exist yet.
 
-- [ ] `/api/heic`: as a member on the live site, add a real iPhone (HEIC) photo to a Moment. It
-  converts and posts. As a signed-out visitor the endpoint answers 401.
-- [ ] If CAPTCHA is wanted (step 5), `VITE_TURNSTILE_SITE_KEY` is set in Vercel's production
-  environment, then redeploy. Verify: the sign-in page loads the Turnstile widget with no console
-  error, and the CSP test (`src/csp.test.ts`) still passes on main.
+### 4. Supabase Auth settings (everything except anonymous sign-ins)
 
-### 5. Supabase Authentication settings (everything except anonymous sign-ins)
+All under Supabase dashboard > project `eyzokuhhbyidvmuqfmwm` > **Authentication**.
 
-- [ ] Sign In / Providers: **Allow manual linking** on (`linkIdentity` needs it). Verify: on a
-  preview or staging project with anonymous sign-ins on, a guest who taps Continue with Google comes
-  back as the same user (the guest end-to-end test, `npm run e2e:guest`, checks the app side).
-- [ ] Rate limits: anonymous sign-ins per IP, **5 an hour**. Verify: the Rate limits page shows 5.
-- [ ] Emails > Change email address: the template includes `{{ .Token }}`, so a guest can confirm
-  their email with a code. Verify: send it to a test address and check the code is in the email.
-- [ ] Attack Protection: CAPTCHA (Turnstile) if wanted. It applies to every sign-in, not only
-  guests. Verify: a normal email or Google sign-in still works on the live site.
+**4a. Manual linking: on.** `linkIdentity()` needs it. That's how a guest's Google sign-up keeps the
+same account, picks and taste profile.
+- Where: **Sign In / Providers** > **User Signups** > **Allow manual linking**: on > Save.
+- [ ] Verify: the switch stays on after a reload. The end-to-end proof is the Google sign-up in step 7.
 
-### 6. Privacy Policy
+**4b. Anonymous sign-ins: 5 per IP an hour.** This must be set before step 7 turns them on.
+- Where: **Rate Limits** > **Rate limit for anonymous users** (sign-ins per hour per IP address): `5` > Save.
+- [ ] Verify: the Rate Limits page shows 5 after a reload. Live proof: a 6th new guest from one network within an hour is refused (it shows "Log in to use Stubby."). Optional.
 
-Guest asks are stored (taste profile, feedback, picks, and a salted hash of the network address
-for 2 days), and a guest quiet for 30 days is deleted with everything they made. The Privacy Policy
-(`src/app/pages/PrivacyPolicy.tsx`) has to say so before guests can ask. Not drafted yet: the
-wording needs the founder's approval like any copy.
+**4c. "Change email address" email: include the code.** A guest who signs up with email confirms with a
+6-digit code, not a link.
+- Where: **Emails** > **Templates** > **Change Email Address**. In the message body, add a line with
+  `{{ .Token }}`, for example `Your code: {{ .Token }}`. Keep the existing link too, then Save.
+- [ ] Verify: on a test account, Settings > change email to an address you can read. The email that arrives shows a 6-digit code. Then change it back.
 
-- [ ] The new section is approved, merged and live. Verify: `/privacy-policy` on the live site shows
-  it; `npm test` passes (the policy and `config.ts` are checked together).
-- [ ] If people should accept it again, `TERMS_VERSION` in `src/app/config.ts` moves to the day it
-  takes effect. Verify: an existing account is asked to accept once on its next visit.
+**4d. Leaked password protection: on.** People can set a password (Settings), so this rejects
+passwords known from breaches (HaveIBeenPwned). It clears the advisor's last warning. It may need a
+paid plan; if the switch is greyed out, that's why.
+- Where: **Attack Protection** (in some versions, **Policies** > Password security) > **Prevent use of leaked passwords**: on > Save.
+- [ ] Verify: rerun the security advisor. `auth_leaked_password_protection` is gone. Setting a password like `password123` on a test account is refused.
+
+**4e. CAPTCHA (Cloudflare Turnstile): optional, and don't turn it on yet.** Supabase's CAPTCHA setting
+applies to **every** sign-in. The app sends a Turnstile token only when it makes a guest, not for
+email codes or passwords (`AuthContext.tsx`), so switching it on today would block email sign-ins
+for everyone. It needs a small change first, so every sign-in sends a token; ask for it if wanted.
+Once that change is live:
+- Cloudflare dashboard > **Turnstile** > Add widget: domains `onsoosh.com` and `www.onsoosh.com`, mode **Invisible**. Copy the site key and the secret key.
+- Supabase > **Attack Protection** > **Enable CAPTCHA protection** > provider **Turnstile** > paste the **secret** key > Save.
+- Vercel > project `no-space-repo` > **Settings** > **Environment Variables** > add `VITE_TURNSTILE_SITE_KEY` = the **site** key, Production only. Then **Deployments** > the latest production deployment > **Redeploy**, because the key is read at build time.
+- The Privacy Policy then needs a line naming Cloudflare in "Who else sees it".
+- [ ] Verify: on the live site, logging in with an email code and with Google both work. In a private window, a guest's first ask still works. The browser console shows no Content Security Policy error (`challenges.cloudflare.com` is already allowed in `vercel.json`).
+
+### 5. Vercel (production): nothing to set
+
+`/api/heic` and `/api/geo` use the Supabase URL and anon key that are already set.
+- [ ] Verify: as a member on the live site, add an iPhone (HEIC) photo to a Moment. It converts and posts.
+
+### 6. Privacy Policy: written, in #313
+
+`src/app/pages/PrivacyPolicy.tsx` (last updated November 3, 2026) now says what the code does:
+- **A new section, "Trying Stubby without an account":**
+  - a guest account is made on the first ask, with no email, name or password;
+  - a guest's taste, thumbs and picks are kept the same way as an account's;
+  - a salted one-way hash of the network address is kept for 2 days, never the address itself;
+  - the city is suggested from the connection, and only the city name is used, only if kept;
+  - everything moves into the new account on sign-up, and nothing is merged on logging in to an existing account;
+  - a guest quiet for 30 days is deleted, with everything in it.
+- **Accounts:** the taste profile and thumbs are kept with the account and deleted with it. Asks are
+  counted for 30 days to limit them; no fixed number is written (the old "3 a day" was out of date).
+- **Birthdays:** it decides 21+ picks; it's locked once on file (correct it through us); and an
+  under-18 date isn't kept, and the account becomes Stubby only.
+- **Who else sees it:** Vercel converts HEIC photos and doesn't keep them. Analytics gets steps like
+  asking Stubby or signing up as counts only, never what you ask.
+
+`legalCopy.test.tsx` checks each of these sentences, so a later edit can't drop one by accident.
+
+- [ ] Founder's decision: whether existing accounts should accept the Privacy Policy again. If so, `TERMS_VERSION` in `src/app/config.ts` moves to the day it goes live. The checkbox and the database pick it up, and everyone is asked once on their next visit.
+- [ ] Verify after merge: the live `/privacy-policy` shows "Trying Stubby without an account" and "Last updated November 3, 2026".
 
 ### 7. Anonymous sign-ins on, last (only when the founder says so)
 
-Sign In / Providers: **Allow anonymous sign-ins**.
+Before this step: 2, 3 and 4a to 4c are done and verified, and the Privacy Policy is live.
 
-Verify, in this order:
-- [ ] The app's own check: `GET https://<project>.supabase.co/auth/v1/settings` (with the public
-  anon key) shows `"anonymous_users": true` under `external`.
-- [ ] Signed out on the live site, open Stubby: no "Log in to use Stubby." panel; the field shows.
-  No guest is made just by opening the page: SQL `select count(*) from auth.users u where u.is_anonymous;` is unchanged.
-- [ ] Ask once: a guest is made (that count goes up by one), and picks come back.
-- [ ] Ask 3 times: the sign-up card shows after the 3rd, then the 4th is the limit panel with the
-  time you can ask again, in your own time zone.
-- [ ] SQL: `select sa.guest, count(*) from public.stubby_asks sa where sa.asked_at > now() - interval '1 hour' group by 1;` shows your guest asks counted as guest.
-- [ ] Sign up from the limit panel with Google: you come back as the same user, your guest picks are
-  there, and your blocked ask is sent. SQL: that user's `is_anonymous` is now false and their
-  profile says `signed_up_from = 'stubby'`.
+**Where:** Supabase > **Authentication** > **Sign In / Providers** > **User Signups** > **Allow anonymous sign-ins**: on > Save.
 
-**To undo:** switch anonymous sign-ins off. Guests see "Log in to use Stubby." at once; nothing else
-changes. Existing guests are deleted by the nightly cleanup after 30 quiet days.
+**Verify (live smoke test).** Use a private window on a computer and on a phone. Keep the SQL editor
+open in another tab:
+1. [ ] Open `https://www.onsoosh.com` and tap **Get your first pick**. Stubby opens on `/calendar` with
+   the field showing, and no "Log in to use Stubby." panel. SQL
+   `select count(*) from auth.users u where u.is_anonymous;` is unchanged, because opening the page makes nobody.
+2. [ ] The quick-context card shows. Pick something, or tap Skip.
+3. [ ] Ask once, for example "pottery this weekend". Picks come back, and the count from step 1 is one higher.
+4. [ ] Ask twice more. After the 3rd answer, the card "Sign up to keep your picks and get 6 asks a day." shows under the picks.
+5. [ ] Ask a 4th time. The field gives way to the limit panel: "Sign up for 3 more asks today, or ask
+   again after {time}", with the time in your own time zone. SQL
+   `select sa.guest, (sa.ip_hash is not null) as hashed, count(*) from public.stubby_asks sa where sa.asked_at > now() - interval '1 hour' group by 1, 2;`
+   shows 3 guest asks with a hash.
+6. [ ] Tap **Sign up** > **Continue with Google** and finish with a Google account that has never used
+   Soosh. You come back to Stubby, signed in, with the 3 guest picks there, and your 4th ask is sent
+   for you. SQL: that user now has `is_anonymous = false` (same id), and
+   `select p.signed_up_from, p.onboarding_completed from public.profiles p where p.id = '<that id>';`
+   shows `stubby`, `false`.
+7. [ ] As that new Stubby account, try a **Space**, **logging a Moment** and **Messages**: open
+   `/#/space/<any Space's slug>`, the Log button (`/#/create`) and `/#/messages`. Each shows
+   "Finish setting up" with **Set up now** and Not now, and no Space, Moment or message is shown. In
+   Stubby, **Bring someone** shows the same sheet. The database refuses these to a Stubby account
+   anyway (`member_gate_check` checks 7 to 9 and 22 to 28); this checks what the person sees.
+8. [ ] Tap **Set up now**. Onboarding starts, and finishing it makes the account a full member.
+9. [ ] Clean up the test account afterwards (Settings > delete account, or ask support).
+
+### Rollback: turning guests off fast
+
+Two switches, in this order. Neither one touches members, their Stubby or their data.
+
+1. **New guests stop at once.** Supabase > **Authentication** > **Sign In / Providers** > **Allow
+   anonymous sign-ins**: off > Save.
+   - What people see: a signed-out visitor who opens Stubby gets "Log in to use Stubby." with **Log in**
+     and **Sign up** buttons. No field, no error, and no guest is made.
+   - What it doesn't do: a guest who already has a session in an open tab keeps it until it ends.
+2. **Existing guests stop within 5 minutes.** Supabase > **Edge Functions** > **Secrets**: delete
+   `STUBBY_IP_SALT` (keep the value somewhere safe if you want the same per-network counts back
+   later).
+   - The function then refuses every guest ask (503 `GUESTS_NOT_READY`), and the app shows those
+     guests the same "Log in to use Stubby." panel.
+   - The check is cached for up to 5 minutes per function instance.
+   - Members are unaffected: their asks never need the salt.
+
+Verify the rollback:
+- [ ] `GET https://eyzokuhhbyidvmuqfmwm.supabase.co/auth/v1/settings` (header `apikey: <the public anon key>`) shows `"anonymous_users": false` under `external`.
+- [ ] A private window on the live site shows "Log in to use Stubby." on Stubby.
+- [ ] Edge Functions > `stubby-scout` > Logs shows `stubby-scout: guests not ready` for guest requests.
+- [ ] A member's ask still works.
+
+To turn guests back on: put `STUBBY_IP_SALT` back first, then switch anonymous sign-ins on.
+Guests made before the rollback are deleted by the nightly cleanup after 30 quiet days; nothing
+else needs doing.
 
 ### After launch
 
-- [ ] The nightly jobs run: SQL `select j.jobname, d.status, d.start_time from cron.job_run_details d join cron.job j on j.jobid = d.jobid where j.jobname in ('purge-inactive-guests', 'purge-stubby-rows') order by d.start_time desc limit 4;`
-- [ ] Guest load against the cap: SQL `select count(*) from public.stubby_asks sa where sa.guest and sa.asked_at > now() - interval '24 hours';` stays under `GUEST_GLOBAL_DAILY_CAP`.
-- [ ] Run the security advisor again; compare with step 1.
+- [ ] The nightly cleanup runs. SQL: `select j.jobname, d.status, d.start_time from cron.job_run_details d join cron.job j on j.jobid = d.jobid where j.jobname in ('purge-inactive-guests', 'purge-stubby-rows') order by d.start_time desc limit 4;`
+- [ ] Guest load stays under the cap. SQL: `select count(*) from public.stubby_asks sa where sa.guest and sa.asked_at > now() - interval '24 hours';` stays under 60.
+- [ ] Rerun the security advisor and compare it with step 1.
 
 ### The startup check
 
