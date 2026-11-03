@@ -6,10 +6,13 @@
 //     midnight). When nothing fits tonight, at most 3 of the soonest after are kept, marked.
 //   - The event's own page only: landing, listing, roundup and calendar-index pages are dropped.
 //   - No 21+ or bars unless the ask asked for them. Family: no late nights.
-//   - The budget: anything over the ceiling is dropped, and "free" means the page says free.
+//   - The budget (stubby-agent C3): a limit typed in the ask is hard (over it is dropped, and
+//     "free" means the page says free, or the thing is free by nature). The profile's monthly
+//     budget is only a soft preference: nothing is dropped for it, picks that miss it come last.
 //   - Ideas (kind "idea") are never events: a real page for the place from the search, or a Soosh
 //     page Stubby offered (a Corner's start page or one of their own Pursuits). An idea fits only
-//     in a Corner they picked, or when the ask asked for that thing.
+//     in a Corner they picked, on a Soosh page Stubby offered them, or when the ask asked for it.
+//   - The same thing found twice (the same title give or take "the", at the same time) is kept once.
 //   - Best 3, at most 5, in the order the model ranked them. One why line each, 15 words at most.
 
 import type { Intent, Window } from "./intent.ts";
@@ -39,6 +42,8 @@ export interface AskPick {
   betterWithFriend: boolean;
   /** One of the soonest after "tonight", shown because nothing fit tonight. */
   after: boolean;
+  /** Misses the profile's budget (a soft preference): kept, but shown after the ones that fit it. Never saved. */
+  budgetMiss?: boolean;
 }
 
 export interface AskCheckContext {
@@ -115,6 +120,36 @@ const nyHour = (ms: number) => Number(new Intl.DateTimeFormat("en-US", { timeZon
 
 const isTrue = (v: unknown) => v === true || v === "true";
 
+/** Words that make an idea free by nature: a walk or a run outside, a public park, a library. */
+const FREE_BY_NATURE = /\b(walk|walks|walking|stroll|wander|run|running|jog|park|library|libraries|picnic|beach|waterfront|promenade|bridge)\b/i;
+/** A price stated in the title itself ("Free Thursday afternoon at ..."), read from the page. */
+const SAYS_FREE = /\bfree\b/i;
+
+/**
+ * Free by nature (stubby-agent C3): verified free, not unknown. A Soosh page Stubby offered (their
+ * own Pursuit, a Corner's start page), an idea that's a walk, a run or a public place, or a thing
+ * whose own title says free. Never an event with no price on its page and nothing saying free.
+ */
+export function freeByNature(kind: AskPick["kind"], title: string, place: string | null, soosh: boolean): boolean {
+  if (soosh || SAYS_FREE.test(title)) return true;
+  return kind === "idea" && FREE_BY_NATURE.test(`${title} ${place ?? ""}`);
+}
+
+/** Words that don't make an idea "asked for" just by being in the ask and the title. */
+const ASK_FILLER = new Set(["this", "that", "with", "your", "free", "some", "time", "week", "into", "from", "have", "just", "near", "about", "something", "things", "today", "tonight", "tomorrow", "weekend"]);
+
+const DUP_STOP = new Set(["the", "a", "an", "at", "of", "and", "in", "on", "for", "with", "to"]);
+/** A title as a duplicate key: lower case, no punctuation, no little words. "at the Museum" and "at Museum" match. */
+export function sameThing(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w && !DUP_STOP.has(w))
+    .join(" ");
+}
+
 /** Checks every pick for one ask. Keeps the model's order (its ranking by fit). */
 export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { kept: AskPick[]; dropped: Dropped[]; outcome: "found" | "after" | "nothing" } {
   const inWindow: AskPick[] = [];
@@ -123,7 +158,7 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
   const seen = new Set<string>();
   const { intent, window } = ctx;
   const askLower = ctx.askText.toLowerCase();
-  const shown = new Set((ctx.exclude ?? []).map((t) => cleanText(t).toLowerCase()));
+  const shown = new Set((ctx.exclude ?? []).map((t) => sameThing(cleanText(t))));
 
   for (const r of raw) {
     const title = cleanText(r.title);
@@ -137,7 +172,7 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
       continue;
     }
     const kind: AskPick["kind"] = r.kind === "idea" ? "idea" : "event";
-    if (shown.has(title.toLowerCase())) {
+    if (shown.has(sameThing(title))) {
       drop("Already in the deck.");
       continue;
     }
@@ -192,20 +227,21 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
       continue;
     }
 
-    // The budget, as the page states the price.
-    const low = lowestPrice(price.value);
-    if (intent.budget) {
-      if (intent.budget.free && low !== 0 && !(kind === "idea" && low === null && soosh)) {
-        drop(low === null ? "Price not listed, and only free things were asked for." : "Not free.", "budget");
-        continue;
-      }
-      if (!intent.budget.free && low !== null && low > intent.budget.max) {
-        drop(`Over the budget (about $${intent.budget.max} an outing).`, "budget");
-        continue;
-      }
+    // The budget, as the page states the price, or free by nature.
+    const stated = lowestPrice(price.value);
+    const natural = stated === null && freeByNature(kind, title, place.value, soosh);
+    const low = natural ? 0 : stated;
+    const budget = intent.budget;
+    const misses = !!budget && (budget.free ? low !== 0 : low !== null && low > budget.max);
+    // Typed in the ask (or tightened by Cheaper): a hard limit. From the profile: a soft preference.
+    if (budget && misses && budget.from === "ask") {
+      if (low === null) drop("Price not listed, and only free things were asked for.", "noprice");
+      else if (budget.free) drop("Not free.", "budget");
+      else drop(`Over the budget (about $${budget.max} an outing).`, "budget");
+      continue;
     }
     if (price.tooLong) notes.push("Price is long, check the page");
-    else if (!price.value && kind === "event") notes.push("Price not listed");
+    else if (!price.value && !natural && (kind === "event" || misses)) notes.push("Price not listed");
     if (place.tooLong) notes.push("Place shortened away, check the page");
     const unsure = optional(r.unsure, 120).value;
     if (unsure && !notes.some((n) => n.toLowerCase() === unsure.toLowerCase())) notes.push(unsure);
@@ -214,14 +250,17 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
     const cornerId = cornerName ? (ctx.corners.get(cornerName) ?? null) : null;
     if (kind === "idea") {
       const inTheirCorners = cornerId !== null && ctx.pickedCornerIds.has(cornerId);
-      const asked = (cornerName && askLower.includes(cornerName)) || title.toLowerCase().split(/\s+/).some((w) => w.length > 4 && askLower.includes(w));
-      if (!inTheirCorners && !asked) {
+      const askWords = new Set(askLower.split(/[^a-z0-9]+/));
+      // Whole words of 4 letters or more ("walk", "yoga"), leaving out filler like "this" or "free".
+      const asked = (cornerName && askLower.includes(cornerName)) || title.toLowerCase().split(/[^a-z0-9]+/).some((w) => w.length >= 4 && !ASK_FILLER.has(w) && askWords.has(w));
+      // Their own Pursuit, or a Corner's start page Stubby offered them, is always theirs.
+      if (!inTheirCorners && !asked && !soosh) {
         drop("An idea outside their Corners that the ask didn't ask for.");
         continue;
       }
     }
 
-    const k = `${title.toLowerCase()}|${startsAt}`;
+    const k = `${sameThing(title)}|${startsAt}`;
     if (seen.has(k)) {
       drop("Found twice in this ask.");
       continue;
@@ -234,13 +273,14 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
       place: place.value,
       startsAt,
       endsAt,
-      price: price.value,
+      price: price.value ?? (natural ? "Free" : null),
       url,
       cornerId,
       note: notes.length ? notes.join(". ").slice(0, 200) : null,
       why: cleanWhy(r.why),
       betterWithFriend: intent.who === "solo" && isTrue(r.better_with_friend),
       after: false,
+      ...(misses ? { budgetMiss: true } : {}),
     };
 
     // The window. Tonight also means home by midnight.
@@ -271,13 +311,17 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
     return p;
   };
 
+  // The profile's budget is soft: picks that miss it keep their order, after the ones that fit.
+  const fitsFirst = (list: AskPick[]) => [...list.filter((p) => !p.budgetMiss), ...list.filter((p) => p.budgetMiss)];
+
   if (inWindow.length > 0) {
     // The model ranks up to 10 candidates; the best 3 are kept.
-    for (const extra of inWindow.slice(ASK_BEST)) dropped.push({ title: extra.title, reason: `Over the ${ASK_BEST} picks for one ask.`, key: "other" });
-    return { kept: inWindow.slice(0, ASK_BEST).map(one), dropped, outcome: "found" };
+    const ranked = fitsFirst(inWindow);
+    for (const extra of ranked.slice(ASK_BEST)) dropped.push({ title: extra.title, reason: `Over the ${ASK_BEST} picks for one ask.`, key: "other" });
+    return { kept: ranked.slice(0, ASK_BEST).map(one), dropped, outcome: "found" };
   }
   if (later.length > 0) {
-    const soonest = [...later].sort((a, b) => a.startsAt - b.startsAt).slice(0, AFTER_MOST).map((p) => one({ ...p, after: true }));
+    const soonest = fitsFirst([...later].sort((a, b) => a.startsAt - b.startsAt)).slice(0, AFTER_MOST).map((p) => one({ ...p, after: true }));
     return { kept: soonest, dropped, outcome: "after" };
   }
   return { kept: [], dropped, outcome: "nothing" };
@@ -318,6 +362,7 @@ export function gapLines(kept: readonly AskPick[], dropped: readonly Dropped[]):
     midnight: "things that end after midnight",
     time: "things outside the time asked for",
     budget: "things over the budget",
+    noprice: "things with no price on their page (only free things fit: find ones whose page says free)",
     adult: "bars, tastings or 21+",
     nopage: "links that weren't pages from your search",
     notime: "pages with no clear date and start time",

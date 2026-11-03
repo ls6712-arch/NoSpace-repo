@@ -148,7 +148,7 @@ describe("golden case 3: \"something to do tonight\", answered Just me; Corners 
   });
 });
 
-describe("golden case 4: \"pottery tonight\", budget $50 a month", () => {
+describe("golden case 4: \"pottery tonight\", budget $50 a month (a preference, stubby-agent C3)", () => {
   const RAW: RawPick[] = [
     ev({ title: "Wheel throwing intro", price: "$35", corner: "Pottery", url: page("/classes/wheel-intro") }),
     ev({ title: "Open studio hour", price: "Free", corner: "Pottery", url: page("/studio/open-hour") }),
@@ -161,8 +161,17 @@ describe("golden case 4: \"pottery tonight\", budget $50 a month", () => {
     expect(intent.budget).toEqual({ max: 12, free: false, from: "profile" });
   });
 
-  it("keeps the free and the $10, and drops the $35 with a reason", () => {
+  // The monthly budget is a preference, not a limit (stubby-agent C3, which replaces plan §6.4 here):
+  // nothing is dropped for it, and what misses it comes after what fits, with its price shown.
+  it("keeps the free and the $10 first, and the $35 after them, not dropped", () => {
     const { result } = ctxFor("pottery tonight", RAW, { monthlyBudget: 50 });
+    expect(result.kept.map((p) => p.title)).toEqual(["Open studio hour", "Hand-building session", "Wheel throwing intro"]);
+    expect(result.kept.map((p) => p.price)).toEqual(["Free", "$10 suggested", "$35"]);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("a limit typed in the ask is still hard: the $35 is dropped with a reason", () => {
+    const { result } = ctxFor("pottery tonight under $12", RAW, { monthlyBudget: 50 });
     expect(result.kept.map((p) => p.title)).toEqual(["Open studio hour", "Hand-building session"]);
     expect(result.dropped).toEqual([{ title: "Wheel throwing intro", reason: "Over the budget (about $12 an outing).", key: "budget" }]);
   });
