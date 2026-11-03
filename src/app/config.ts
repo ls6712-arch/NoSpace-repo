@@ -70,6 +70,15 @@ export const CONTACT_EMAIL = "sushmithalekkala@gmail.com";
 export const INSTAGRAM_URL = "";
 export const TIKTOK_URL = "";
 
+// How people reach support from inside the app (founder, Nov 3, 2026), wherever a message says
+// "contact support". The one place it is set: to switch to email, or add it, change this only, for
+// example { label: "Email us", href: `mailto:${CONTACT_EMAIL}` }. The label is shown as the link
+// text, so it follows docs/style-guide.md. A test keeps the link https or mailto.
+export const SUPPORT_CONTACT = {
+  label: "Message us on X (@onsoosh)",
+  href: "https://x.com/onsoosh",
+} as const;
+
 /**
  * Ask Soosh: when a search reads like a sentence, a card at the top shows what was
  * understood and three plans. Off by default; the plans come from fixtures until the

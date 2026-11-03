@@ -903,6 +903,12 @@ The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms whe
 | Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
 | Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
 
+## Support (Nov 3, 2026)
+
+| Term | Meaning |
+|---|---|
+| Message us on X (@onsoosh) | The support link's text, to https://x.com/onsoosh, wherever a message says to contact support (founder, Nov 3, 2026). Set once, in `SUPPORT_CONTACT` (`src/app/config.ts`): an email can replace or join it there |
+
 ## Retired terms
 
 Never use these in UI copy.
