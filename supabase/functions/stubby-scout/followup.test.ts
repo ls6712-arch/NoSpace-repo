@@ -124,9 +124,10 @@ describe("the one question's answers", () => {
     const q = deps();
     const body = await (await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { skip: true } }), q.d)).json();
     expect(body.question).toBeUndefined();
+    // An answer that isn't one of the choices is refused at the door (schema.ts), never read.
     const bad = deps();
-    const asked = await (await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { when: "next blue moon" } }), bad.d)).json();
-    expect(asked).toEqual({ question: "setting", asksLeft: 2 });
+    const res = await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { when: "next blue moon" } }), bad.d);
+    expect(res.status).toBe(400);
   });
 });
 

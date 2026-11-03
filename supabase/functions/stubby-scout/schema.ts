@@ -9,7 +9,7 @@ export type Body = {
   mode: "admin" | "restock" | "ask";
   focus?: string;
   ask?: string;
-  answers?: { who?: string; when?: string; skip?: boolean; setting?: string; rememberedWho?: string };
+  answers?: { who?: (typeof WHO_VALUES)[number]; when?: string; skip?: boolean; setting?: (typeof SETTING_VALUES)[number]; rememberedWho?: (typeof WHO_VALUES)[number] };
   questions?: boolean;
   stream?: boolean;
   /**
@@ -41,6 +41,29 @@ function bool(v: unknown, name: string): boolean | undefined {
   return v;
 }
 
+/** The fixed choices the app sends as answers. Anything else is a 400, never passed on. */
+export const WHO_VALUES = ["solo", "partner", "friends", "family"] as const;
+export const SETTING_VALUES = ["in", "out"] as const;
+export const WHEN_VALUES = ["tonight", "tomorrow", "weekend"] as const;
+
+/** A value from a fixed list, checked as text of at most 20 characters first. */
+function oneOf<T extends string>(v: unknown, allowed: readonly T[], name: string): T | undefined {
+  const s = str(v, 20, name);
+  if (s === undefined) return undefined;
+  if (!(allowed as readonly string[]).includes(s)) throw new BodyError(`${name} is not one of the choices.`);
+  return s as T;
+}
+
+/** tonight, tomorrow, weekend, or a real calendar day "YYYY-MM-DD". */
+function whenValue(v: unknown): string | undefined {
+  const s = str(v, 10, "answers.when");
+  if (s === undefined || (WHEN_VALUES as readonly string[]).includes(s)) return s;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  const d = m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
+  if (!m || !d || d.getUTCFullYear() !== +m[1] || d.getUTCMonth() !== +m[2] - 1 || d.getUTCDate() !== +m[3]) throw new BodyError("answers.when is not a day.");
+  return s;
+}
+
 /** Reads and checks the raw body. Throws BodyError on anything unexpected. */
 export function parseBody(raw: string): Body {
   if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) throw new BodyError("Too long.");
@@ -69,11 +92,11 @@ export function parseBody(raw: string): Body {
     if (!isObj(v.answers)) throw new BodyError("answers must be an object.");
     only(v.answers, ["who", "when", "skip", "setting", "rememberedWho"], "answers.");
     out.answers = {
-      who: str(v.answers.who, 20, "answers.who"),
-      when: str(v.answers.when, 20, "answers.when"),
+      who: oneOf(v.answers.who, WHO_VALUES, "answers.who"),
+      when: whenValue(v.answers.when),
       skip: bool(v.answers.skip, "answers.skip"),
-      setting: str(v.answers.setting, 20, "answers.setting"),
-      rememberedWho: str(v.answers.rememberedWho, 20, "answers.rememberedWho"),
+      setting: oneOf(v.answers.setting, SETTING_VALUES, "answers.setting"),
+      rememberedWho: oneOf(v.answers.rememberedWho, WHO_VALUES, "answers.rememberedWho"),
     };
   }
 
