@@ -47,6 +47,26 @@ jobs:
       - name: Build
         run: npm run build
 
+  # stubby-scout as it is on this commit against the last deploy that was read back from the live
+  # project (supabase/deploys/stubby-scout.json). Vercel ships the app from main on every merge but
+  # the function only when someone deploys it; the two drifting apart broke Stubby live (Nov 3,
+  # 2026). On main this fails until the deploy is confirmed; on a pull request it only says a
+  # deploy will be needed after merging.
+  stubby-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Stubby deploy confirmed
+        run: |
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            node scripts/check-stubby-deploy.ts
+          else
+            node scripts/check-stubby-deploy.ts --warn
+          fi
+
   # The four iOS sizes in WebKit (iPhone SE, iPhone 15, iPad 768, iPad Pro 834):
   # layout, contrast, touch targets, no focused input under 16px (iOS zoom),
   # safe-area padding on the bottom tab bar. Non-blocking until it has been green

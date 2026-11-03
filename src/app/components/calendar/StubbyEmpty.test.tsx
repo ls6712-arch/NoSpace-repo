@@ -15,6 +15,8 @@ const api = vi.hoisted(() => ({
   removeMyPick: vi.fn(async () => ({ error: null })),
 }));
 vi.mock("../../lib/stubbyAsk", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyAsk")>()), ...api }));
+const stayIn = vi.hoisted(() => ({ fetchStayIn: vi.fn(async () => [] as unknown[]) }));
+vi.mock("../../lib/stubbyStayIn", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyStayIn")>()), ...stayIn }));
 vi.mock("motion/react", async (orig) => ({ ...(await orig<typeof import("motion/react")>()), useReducedMotion: () => false }));
 
 import { nyTimeToMs } from "../../lib/homeWeek";
@@ -163,11 +165,21 @@ describe("at most one question per ask", () => {
     await waitFor(() => expect(line()).toBe("Stay in or head out?"));
     const group = screen.getByRole("group", { name: "Stay in or head out?" });
     expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Stay in", "Head out", "Surprise me"]);
-    fireEvent.click(screen.getByRole("button", { name: "Stay in" }));
+    fireEvent.click(screen.getByRole("button", { name: "Head out" }));
     await waitFor(() => expect(calls()).toHaveLength(2));
     expect(calls()[1][0]).toBe("something fun");
-    expect(calls()[1][1].answers).toEqual({ setting: "in" });
+    expect(calls()[1][1].answers).toEqual({ setting: "out" });
     expect(calls()[1][1].questions).toBe(false);
+  });
+
+  it("Stay in is answered from their own Pursuits and Corners: no second search (hotfix, Nov 3, 2026)", async () => {
+    replies.push({ found: 0, asksLeft: 3, error: null, question: "setting" });
+    await show();
+    await askFor("something fun");
+    fireEvent.click(await screen.findByRole("button", { name: "Stay in" }));
+    expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
+    expect(stayIn.fetchStayIn).toHaveBeenCalledWith("u1", expect.anything());
+    expect(calls()).toHaveLength(1);
   });
 
   it("Surprise me as the answer is remembered for that ask too", async () => {
