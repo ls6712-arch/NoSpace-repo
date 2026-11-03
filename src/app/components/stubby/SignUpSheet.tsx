@@ -38,7 +38,7 @@ export function SignUpSheet() {
   const open = p?.kind === "sheet";
   const trigger: SignUpTrigger = p?.kind === "sheet" ? p.trigger : "header";
   const feature = p?.kind === "sheet" ? p.feature : null;
-  const body = feature ? GUEST_COPY.gate[feature] : GUEST_COPY.gate.keep;
+  const body = feature ? GUEST_COPY.gate[feature] : GUEST_COPY.gateKeep(access.accountPerDay);
 
   const remember = (method: SignUpMethod) => {
     track({ name: "signup_started", trigger, method });

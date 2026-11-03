@@ -222,6 +222,21 @@ describe("what each kind of caller may do", () => {
       expect(searches[0].prompt!.user.includes("Leave out bars, breweries, tastings and 21+.")).toBe(leftOut);
     }
   });
+
+  it("says when 21+ was left out for a signed-in person, so the app can offer Add your birthday; never to a guest", async () => {
+    for (const [who, ask, flag] of [
+      [ACCOUNT, "a wine tasting tonight", true],
+      [MEMBER_UNDER_21, "a wine tasting tonight", true],
+      [MEMBER, "a wine tasting tonight", undefined],
+      [GUEST, "a wine tasting tonight", undefined],
+      [{ ...MEMBER, guest: true }, "a wine tasting tonight", undefined],
+      [ACCOUNT, "pottery tonight", undefined],
+    ] as const) {
+      const { d } = deps(who, { taste: TASTE });
+      const body = await (await handleScout(post({ mode: "ask", ask }), d)).json();
+      expect(body.adultsLeftOut, `${JSON.stringify(who)} ${ask}`).toBe(flag);
+    }
+  });
 });
 
 describe("the one question for someone Stubby knows nothing about", () => {

@@ -57,7 +57,8 @@ export interface Profile {
    * migration. Read-only here: only claim_invite/create_invite flip it,
    * server-side. Root.tsx routes a pending account to /welcome and nowhere
    * else. */
-  access?: "active" | "pending";
+  /** "under_18": a member who gave an under-18 birthday, now Stubby only (20261111000150). */
+  access?: "active" | "pending" | "under_18";
   /**
    * "stubby" for an account made by a guest signing up from Stubby (migration
    * 20261111000050_member_gate.sql). Read only while onboarding isn't finished: such an account

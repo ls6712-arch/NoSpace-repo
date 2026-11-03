@@ -230,6 +230,12 @@ export interface AskReport {
   free: boolean;
   /** When nothing fits: the 3 most common kinds of reason, for the short reasons the person sees. */
   reasons: { key: string; count: number }[];
+  /**
+   * The ask was for 21+ things (bars, tastings) and they were left out because the caller, signed
+   * in, has no 21+ birthdate on file. Never for a guest. The app shows "Add your birthday" only if
+   * no birthday is on file at all, so an under-21 member never sees it.
+   */
+  adultsLeftOut?: boolean;
 }
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
@@ -562,6 +568,7 @@ async function ask(
   const read = readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
   // 21+ only with a birthdate on file at least 21 years ago. Guests never; nobody without one.
   const intent: Intent = who.adult21 === true && !who.guest ? read : { ...read, adults: false };
+  const adultsLeftOut = read.adults && !intent.adults && !who.guest;
 
   // Nothing known about them yet: a vague ask gets one question first, even if the app didn't ask for it.
   const knowsNothing = tasteIsEmpty(taste) && signals.length === 0 && profile.picks.length === 0 && !profile.city && !profile.area;
@@ -688,6 +695,7 @@ async function ask(
       askId,
       free,
       reasons: outcome === "nothing" ? topReasons(dropped) : [],
+      ...(adultsLeftOut ? { adultsLeftOut: true } : {}),
     };
   };
   const failed = (e: unknown) => {

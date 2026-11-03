@@ -19,6 +19,8 @@ import { useScrollMemory } from "../lib/useScrollMemory";
 import { reconcileSaves } from "../lib/bookmarksRemote";
 import { resumeCalendarChanges } from "../lib/calendarPending";
 import { FinishSettingUp, stubbyAccountMayOpen } from "../components/stubby/FinishSettingUp";
+import { Under18Screen } from "../components/stubby/Birthday";
+import { isUnder18 } from "../lib/birthday";
 import { SignUpReturnEffect } from "../components/stubby/SignUpReturnEffect";
 import { sooshOnboardingEnabled } from "../config";
 
@@ -165,6 +167,10 @@ export function Root() {
   // actually keeps it out of member features (20261111000050_member_gate.sql).
   const stubbyAccount = !!user && !!profile && !profile.onboarding_completed && profile.signed_up_from === "stubby";
   if (stubbyAccount && location.pathname === "/") return <Navigate to="/calendar" replace />;
+  // A member who gave an under-18 birthday: kept, Stubby only, never sent to onboarding again
+  // (20261111000150_birthdate_rules.sql). Every other page says so, with the way back.
+  const under18 = !!user && !!profile && isUnder18(profile.access);
+  if (under18 && location.pathname === "/") return <Navigate to="/calendar" replace />;
 
   // Post-signup onboarding (sql/onboarding-v2.sql), enforced here so it
   // can't be dodged by deep-linking straight past it. Only for a signed-in
@@ -181,6 +187,7 @@ export function Root() {
     profile &&
     !profile.onboarding_completed &&
     !stubbyAccount &&
+    !under18 &&
     location.pathname !== "/onboarding" &&
     !(sooshOnboardingEnabled && location.pathname === "/login")
   ) {
@@ -222,7 +229,7 @@ export function Root() {
       </div>
       <Header hideWithRail={rail} />
       <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
-        {stubbyAccount && !stubbyAccountMayOpen(location.pathname) ? <FinishSettingUp /> : <Outlet />}
+        {under18 && !stubbyAccountMayOpen(location.pathname) ? <Under18Screen /> : stubbyAccount && !stubbyAccountMayOpen(location.pathname) ? <FinishSettingUp /> : <Outlet />}
       </main>
       <SignUpReturnEffect />
       <CartDrawer />

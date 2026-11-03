@@ -47,6 +47,7 @@ import {
 import type { BuddyReaction } from "./StubbyBuddy";
 import { useStubbyAccess } from "../../context/StubbyAccess";
 import { GuestClosedPanel, LimitPanel } from "./GuestPrompts";
+import { hasBirthdayOnFile } from "../../lib/birthday";
 import { guestSession } from "../../../lib/guestSupabase";
 import { track } from "../../lib/analytics";
 import { RESUME_KEY } from "../../lib/signUpReturn";
@@ -131,6 +132,10 @@ export interface AskState {
   /** Stops listening. The ask was paid for, so it still counts. */
   stop: () => void;
   remove: (p: MyPick) => Promise<void>;
+  /** "Add your birthday to see 21+ picks": 21+ was left out on the last ask and no birthday is on file. */
+  offerBirthday: boolean;
+  /** A birthday was added (or an under-18 one given): the prompt goes. */
+  birthdayAdded: () => void;
 }
 
 /** With no new step for this long, he says he's still looking. */
@@ -200,6 +205,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [stalled, setStalled] = useState(false);
   const [question, setQuestion] = useState<Question | null>(null);
   const [reasons, setReasons] = useState<{ key: string; count: number }[]>([]);
+  const [offerBirthday, setOfferBirthday] = useState(false);
   const [tonight, setTonight] = useState(false);
   const [who, setWho] = useState<Who | null>(() => {
     const w = readSession<{ who?: string }>(ANSWERS_KEY)?.who;
@@ -251,6 +257,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         if (!live || !status) return;
         setPerDay(status.perDay);
         setAccountPerDay(status.accountPerDay);
+        access.setAccountPerDay(status.accountPerDay);
         setLeft(status.left);
       });
       void readTaste(client).then((t) => {
@@ -320,6 +327,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       setOutcome(null);
       setQuestion(null);
       setReasons([]);
+      setOfferBirthday(false);
       setUnderstood(null);
       setSteps([]);
       resetStall();
@@ -386,6 +394,12 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       }
       setReasons(r.reasons ?? []);
       setTonight(r.when === "tonight");
+      // Only when no birthday is on file at all: an under-21 member who has one never sees it.
+      if (r.adultsLeftOut && !guest && userId) {
+        void hasBirthdayOnFile(userId).then((has) => {
+          if (has === false) setOfferBirthday(true);
+        });
+      }
       const fresh = await fetchMyPicks(Date.now(), client);
       const id = r.askId ?? latestAskToday(fresh, Date.now());
       setPicks(fresh);
@@ -606,6 +620,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     skipContext,
     stop,
     remove,
+    offerBirthday,
+    birthdayAdded: () => setOfferBirthday(false),
   };
 }
 
