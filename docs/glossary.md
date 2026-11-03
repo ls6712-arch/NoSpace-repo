@@ -903,6 +903,29 @@ The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms whe
 | Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
 | Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
 
+## Guest Stubby and birthdays (founder, Nov 3, 2026)
+
+All approved on Nov 3, 2026 (`src/app/lib/guestCopy.ts`). No number or time is written into a line: `{n}` is an allowance from the server, `{time}` a time in the person's own time zone (`dates.ts`), `{age}` from `src/app/lib/age.ts`.
+
+| Term | Meaning |
+|---|---|
+| Sign up to keep your picks and get {n} asks a day. | The card after a guest's 3rd ask, and the sign-up sheet's general line (the same sentence) |
+| Sign up to make this a plan. / Sign up to add this to your calendar. / Sign up to ask Stubby for more. | The sign-up sheet's line when a guest taps Make it a plan, saves a pick, or a follow-up |
+| Sign up for {n} more asks today, or ask again after {time}. | Under "That's {n} for today" at a guest's limit |
+| Lots of asks right now. Sign up to keep going. | When guests together have used the day's asks |
+| You're in. Your picks are saved. | The toast after a guest signs up |
+| Finish setting up | The title of what a Stubby account sees on a members-only feature |
+| Finish setting up your account to join Spaces, log Moments and send messages. | Its line |
+| Set up now | Its button, to onboarding (the founder's change; the title stays "Finish setting up") |
+| Three quick things so my first picks fit you. | The quick-context card, Stubby's line |
+| Only the city name is kept. | Under Use my location on that card |
+| Anytime / Use these | That card's third timing chip, and its button |
+| Good pick / Not for me | Screen reader labels of the thumbs on a pick |
+| Add your birthday to see {age}+ picks. | Under the picks, only when 21+ picks were left out because no birthday is on file. The button and sheet use onboarding's words: Add your birthday, When's your birthday?, Date of birth, Never shown to anyone. |
+| Your account stays, and you can keep using Stubby. | Under onboarding's "{APP_NAME} is for people {age} and over for now." after an under-18 birthday; its button is Done |
+| Back to Stubby | The button an under-18 account sees on a members-only page |
+| Your birthday can't be changed here. To fix it, contact support. | When a birthday is already on file, followed by the support link |
+
 ## Support (Nov 3, 2026)
 
 | Term | Meaning |

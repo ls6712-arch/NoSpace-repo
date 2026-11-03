@@ -296,6 +296,8 @@ export interface AskResult {
   closed?: boolean;
   /** The time he understood ("tonight", "weekend"...), for which "nothing fits" line to say. */
   when?: string | null;
+  /** 21+ things were asked for and left out: no 21+ birthdate on file (never for a guest). */
+  adultsLeftOut?: boolean;
 }
 
 /** The person's answer to Stubby's one question. */
@@ -321,7 +323,7 @@ export interface AskFollowUp {
 const readError = (body: unknown): string | null => (body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : null);
 
 function resultOf(
-  r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown; reasons?: unknown; understood?: { when?: unknown } } | null,
+  r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown; reasons?: unknown; understood?: { when?: unknown }; adultsLeftOut?: unknown } | null,
 ): AskResult {
   const asksLeft = typeof r?.asksLeft === "number" ? r.asksLeft : null;
   if (r?.question === "setting" || r?.question === "who" || r?.question === "when" || r?.question === "what") return { found: 0, asksLeft, error: null, question: r.question };
@@ -331,7 +333,7 @@ function resultOf(
     ? (r!.reasons as unknown[]).filter((x): x is { key: string; count: number } => !!x && typeof (x as { key?: unknown }).key === "string" && typeof (x as { count?: unknown }).count === "number").slice(0, 3)
     : [];
   const when = typeof r?.understood?.when === "string" ? r.understood.when : null;
-  return { found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true, reasons, when };
+  return { found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true, reasons, when, ...(r?.adultsLeftOut === true ? { adultsLeftOut: true } : {}) };
 }
 
 /**

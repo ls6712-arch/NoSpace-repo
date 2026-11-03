@@ -23,7 +23,7 @@ was given in chat on Nov 2, 2026; the founder's decisions on it are recorded bel
 
 | Piece | Where |
 |---|---|
-| Members-only RPCs, onboarding (hotfix #304) | `supabase/migrations/20261111000000_member_rpc_gate.sql` |
+| Members-only RPCs, onboarding (hotfix #304) | `supabase/migrations/20261111000010_member_rpc_gate.sql` |
 | Who is who, deny by default | `supabase/migrations/20261111000050_member_gate.sql` |
 | Guest limits, taste, feedback, cleanup | `supabase/migrations/20261111000100_stubby_guests.sql` |
 | What non-members may reach | `supabase/security/access-allowlist.json` (checked by `accessAllowlist.test.ts` on every PR) |
@@ -41,45 +41,127 @@ client and storage key so the rest of the app still sees a signed-out visitor. S
 Google or Apple to the same user (`linkIdentity`) or verifies an email on it, so the user id, the
 picks, the taste profile and the feedback all carry over. The old guest session is ended.
 
-## Launch order (each step only after the one before it is done)
+## Launch checklist (each step only after the one before it is done)
 
-Nothing here is done by a PR. Migrations are applied from main, each with the founder's written
-approval naming the file (CLAUDE.md), then their verification scripts are run and checked for
-leftover fixture rows.
+Every merge to main is a production database deploy (founder, Nov 3, 2026): the Supabase GitHub
+integration applies new migrations from main. Nothing below is done by an agent unless the
+founder says so in writing; settings in the Supabase and Vercel dashboards are the founder's.
+Anonymous sign-ins stay **off** until the founder says otherwise.
 
-1. **Hotfix applied.** `20261111000000_member_rpc_gate.sql` (PR #304): members-only RPCs, and
-   `finish_onboarding()`. Verify with `supabase/verification/member_rpc_gate_check.sql`.
-2. **Guest Stubby migrations applied.** `20261111000050_member_gate.sql`, then
-   `20261111000100_stubby_guests.sql`, then `20261111000150_birthdate_rules.sql`. Verify with
-   `member_gate_check.sql`, `stubby_guests_check.sql` and `birthdate_rules_check.sql`. Run the
-   security advisor.
-3. **Secrets set, function deployed.** Edge function secrets (Supabase dashboard > Edge Functions >
-   Secrets, or `supabase secrets set`):
+The "Verify" checks marked SQL are read-only, or are verification scripts that always roll back
+(CLAUDE.md). Run them in the Supabase SQL editor or through the connector.
 
-   | Secret | Value |
-   |---|---|
-   | `STUBBY_IP_SALT` | 32+ random characters. **Required**: without it every guest ask is refused. |
-   | `GUEST_DAILY_MESSAGE_LIMIT` | `3` (default) |
-   | `USER_DAILY_MESSAGE_LIMIT` | `6` (default; replaces `STUBBY_ASKS_PER_PERSON`) |
-   | `GUEST_GLOBAL_DAILY_CAP` | `60` (default) |
-   | `GUEST_IP_DAILY_LIMIT` | optional, default 3x the guest limit |
-   | `GUEST_NEW_PER_IP_HOUR` | optional, default 5 |
-   | `GUEST_MAX_SEARCHES` | optional, default 3 |
-   | `ALLOWED_ORIGINS` | optional, comma separated; default `https://www.onsoosh.com,https://onsoosh.com`. Add preview or staging origins here or their browser calls are refused. |
+### 1. Migrations applied and verified: done (Nov 3, 2026)
 
-   Then `supabase functions deploy stubby-scout --no-verify-jwt`.
-4. **Dashboard settings** (Supabase > Authentication), everything except anonymous sign-ins:
-   - Sign In / Providers: **Allow manual linking** on (needed by `linkIdentity`).
-   - Rate limits: anonymous sign-ins per IP, **5 an hour**.
-   - Emails > Change email address: include `{{ .Token }}` so a guest can confirm with a code.
-   - Attack Protection: CAPTCHA (Turnstile) if wanted, then `VITE_TURNSTILE_SITE_KEY` in Vercel.
-     It applies to every sign-in, not only guests.
-5. **Anonymous sign-ins turned on, last.** Sign In / Providers: **Allow anonymous sign-ins**.
+`20261111000010_member_rpc_gate.sql` (#304, renumbered in #311), then
+`20261111000050_member_gate.sql`, `20261111000100_stubby_guests.sql` and
+`20261111000150_birthdate_rules.sql` (#303), all applied from main.
+
+- [x] Recorded on production: `select sm.version, sm.name from supabase_migrations.schema_migrations sm where sm.version >= '20261111000000' order by 1;` lists all four.
+- [x] Verification scripts, Nov 3: `member_rpc_gate_check` 30 of 30, `member_gate_check` 41 of 41,
+  `stubby_guests_check` 26 of 26, `birthdate_rules_check` 16 of 16 (setup fixed in #312), and no
+  fixture rows left behind.
+- [x] Every function body, owner, `search_path` and grant matches the migration files; policies,
+  triggers and the allowlist match `supabase/security/access-allowlist.json`.
+- [x] Security advisor: 0 errors (before and after); definer warnings 27 to 21 (`anon`) and
+  108 to 106 (`authenticated`).
+
+### 2. Edge function secrets
+
+Supabase dashboard > Edge Functions > Secrets (or `supabase secrets set NAME=value`):
+
+| Secret | Value |
+|---|---|
+| `STUBBY_IP_SALT` | 32 or more random characters (`openssl rand -hex 32`). **Required**: without it every guest ask is refused. Never reuse it anywhere else; changing it later only resets the per-network counts. |
+| `GUEST_DAILY_MESSAGE_LIMIT` | `3` (the default if unset) |
+| `USER_DAILY_MESSAGE_LIMIT` | `6` (the default; replaces `STUBBY_ASKS_PER_PERSON`) |
+| `GUEST_GLOBAL_DAILY_CAP` | `60` (the default) |
+| `GUEST_IP_DAILY_LIMIT` | optional, default 3 times the guest limit |
+| `GUEST_NEW_PER_IP_HOUR` | optional, default 5 |
+| `GUEST_MAX_SEARCHES` | optional, default 3 |
+| `ALLOWED_ORIGINS` | optional, comma separated; default `https://www.onsoosh.com,https://onsoosh.com`. Add preview or staging origins, or their browser calls are refused. |
+
+Verify:
+- [ ] `supabase secrets list` (or the dashboard) shows `STUBBY_IP_SALT` and any limits you set. Values aren't shown, only names and digests.
+- [ ] After step 3, the function's logs (Edge Functions > stubby-scout > Logs) show no `stubby-scout: guests not ready` line after a guest-shaped request. That line means the salt or the database check is missing.
+
+### 3. Deploy `stubby-scout` from main
+
+The live function is still #309's (deployed Nov 3, 13:23 UTC); merging #303 didn't deploy it. Members
+keep working either way: the new function falls back to the old claim and member rule if anything
+is missing (see "Before the migrations are applied").
+
+`supabase functions deploy stubby-scout --no-verify-jwt` from an up-to-date main.
+
+Verify:
+- [ ] Supabase > Edge Functions: `stubby-scout`'s updated time is after the deploy.
+- [ ] As a member in the app: ask Stubby something. Picks come back, the ask count goes down by one.
+- [ ] As a member, ask for something 21+ ("a wine tasting tonight") on an account with no birthday:
+  "Add your birthday to see 21+ picks." shows under the picks. On an account with an adult birthday
+  it doesn't, and 21+ places can appear.
+- [ ] SQL: `select count(*) from public.stubby_asks sa where sa.asked_at > now() - interval '10 minutes';` went up by your asks.
+
+### 4. Vercel (production)
+
+- [ ] `/api/heic`: as a member on the live site, add a real iPhone (HEIC) photo to a Moment. It
+  converts and posts. As a signed-out visitor the endpoint answers 401.
+- [ ] If CAPTCHA is wanted (step 5), `VITE_TURNSTILE_SITE_KEY` is set in Vercel's production
+  environment, then redeploy. Verify: the sign-in page loads the Turnstile widget with no console
+  error, and the CSP test (`src/csp.test.ts`) still passes on main.
+
+### 5. Supabase Authentication settings (everything except anonymous sign-ins)
+
+- [ ] Sign In / Providers: **Allow manual linking** on (`linkIdentity` needs it). Verify: on a
+  preview or staging project with anonymous sign-ins on, a guest who taps Continue with Google comes
+  back as the same user (the guest end-to-end test, `npm run e2e:guest`, checks the app side).
+- [ ] Rate limits: anonymous sign-ins per IP, **5 an hour**. Verify: the Rate limits page shows 5.
+- [ ] Emails > Change email address: the template includes `{{ .Token }}`, so a guest can confirm
+  their email with a code. Verify: send it to a test address and check the code is in the email.
+- [ ] Attack Protection: CAPTCHA (Turnstile) if wanted. It applies to every sign-in, not only
+  guests. Verify: a normal email or Google sign-in still works on the live site.
+
+### 6. Privacy Policy
+
+Guest asks are stored (taste profile, feedback, picks, and a salted hash of the network address
+for 2 days), and a guest quiet for 30 days is deleted with everything they made. The Privacy Policy
+(`src/app/pages/PrivacyPolicy.tsx`) has to say so before guests can ask. Not drafted yet: the
+wording needs the founder's approval like any copy.
+
+- [ ] The new section is approved, merged and live. Verify: `/privacy-policy` on the live site shows
+  it; `npm test` passes (the policy and `config.ts` are checked together).
+- [ ] If people should accept it again, `TERMS_VERSION` in `src/app/config.ts` moves to the day it
+  takes effect. Verify: an existing account is asked to accept once on its next visit.
+
+### 7. Anonymous sign-ins on, last (only when the founder says so)
+
+Sign In / Providers: **Allow anonymous sign-ins**.
+
+Verify, in this order:
+- [ ] The app's own check: `GET https://<project>.supabase.co/auth/v1/settings` (with the public
+  anon key) shows `"anonymous_users": true` under `external`.
+- [ ] Signed out on the live site, open Stubby: no "Log in to use Stubby." panel; the field shows.
+  No guest is made just by opening the page: SQL `select count(*) from auth.users u where u.is_anonymous;` is unchanged.
+- [ ] Ask once: a guest is made (that count goes up by one), and picks come back.
+- [ ] Ask 3 times: the sign-up card shows after the 3rd, then the 4th is the limit panel with the
+  time you can ask again, in your own time zone.
+- [ ] SQL: `select sa.guest, count(*) from public.stubby_asks sa where sa.asked_at > now() - interval '1 hour' group by 1;` shows your guest asks counted as guest.
+- [ ] Sign up from the limit panel with Google: you come back as the same user, your guest picks are
+  there, and your blocked ask is sent. SQL: that user's `is_anonymous` is now false and their
+  profile says `signed_up_from = 'stubby'`.
+
+**To undo:** switch anonymous sign-ins off. Guests see "Log in to use Stubby." at once; nothing else
+changes. Existing guests are deleted by the nightly cleanup after 30 quiet days.
+
+### After launch
+
+- [ ] The nightly jobs run: SQL `select j.jobname, d.status, d.start_time from cron.job_run_details d join cron.job j on j.jobid = d.jobid where j.jobname in ('purge-inactive-guests', 'purge-stubby-rows') order by d.start_time desc limit 4;`
+- [ ] Guest load against the cap: SQL `select count(*) from public.stubby_asks sa where sa.guest and sa.asked_at > now() - interval '24 hours';` stays under `GUEST_GLOBAL_DAILY_CAP`.
+- [ ] Run the security advisor again; compare with step 1.
 
 ### The startup check
 
-`stubby-scout` refuses every guest ask (503 `GUESTS_NOT_READY`; the app shows its usual
-"couldn't look" line) unless `public.stubby_guest_ready()` is true and `STUBBY_IP_SALT` is set. That
+`stubby-scout` refuses every guest ask (503 `GUESTS_NOT_READY`; the app shows "Log in to use
+Stubby.") unless `public.stubby_guest_ready()` is true and `STUBBY_IP_SALT` is set. That
 function is true only when the RPC gate is on, the member gate and the guest migration are applied
 (`my_access`, `claim_stubby_turn`, `stubby_profiles`, the Storage policy). It is read once every 5
 minutes per function instance. So if anonymous sign-ins are switched on too early, Stubby still
@@ -111,11 +193,13 @@ Before (live, Nov 2, 2026): 0 errors; WARN `authenticated_security_definer_funct
 WARN `anon_security_definer_function_executable` 27, WARN `auth_leaked_password_protection` 1,
 INFO `rls_enabled_no_policy` 11.
 
-After: not run against a database yet, because the migrations are not applied anywhere (no
-production, as asked). Expected: the 7 trigger-function warnings in the anon list go (EXECUTE
-revoked); the remaining definer-function warnings stay listed by the advisor but are closed at
-runtime by the RPC gate for anyone who isn't a member. Run it on a Supabase branch or staging after
-applying, and again on production after the founder applies them.
+After (production, Nov 3, 2026, once the four migrations were applied): 0 errors; WARN
+`authenticated_security_definer_function_executable` 106, WARN
+`anon_security_definer_function_executable` 21, WARN `auth_leaked_password_protection` 1,
+INFO `rls_enabled_no_policy` 9. The remaining definer functions are still listed by the advisor
+but closed at runtime by the RPC gate for anyone who isn't a member, unless they are on
+`private.access_allowlist`. Leaked password protection is a dashboard setting (Authentication >
+Attack Protection), the founder's call.
 
 ## Decisions after review (founder, Nov 2, 2026)
 
@@ -146,5 +230,5 @@ applying, and again on production after the founder applies them.
 - **Privacy Policy.** Guest asks are stored (taste profile, feedback, picks, a salted IP hash for 2
   days) and guests are deleted after 30 days of inactivity. The Privacy Policy needs to say so; not
   drafted here.
-- **Wording** marked NEW in `src/app/lib/guestCopy.ts` is waiting for approval.
+- **Wording**: all approved (founder, Nov 3, 2026), recorded in `docs/glossary.md`.
 - **Pre-existing `npm audit` findings** go in their own PRs (react-router first, then vite and vitest).

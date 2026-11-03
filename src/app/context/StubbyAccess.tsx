@@ -4,10 +4,10 @@ import { supabase } from "../../lib/supabase";
 import { ensureGuestSession, guestSession, guestSignInsOpen, guestSupabase, turnstileSiteKey } from "../../lib/guestSupabase";
 import { track, type SignUpTrigger } from "../lib/analytics";
 import { turnstileToken } from "../lib/turnstile";
-import type { AskLimit } from "../lib/stubbyAsk";
+import { ASKS_PER_DAY, type AskLimit } from "../lib/stubbyAsk";
 
 /** What a guest tried that needs an account. */
-export type GateFeature = "plan" | "calendar" | "more" | "keep";
+export type GateFeature = "plan" | "calendar" | "more";
 
 /** The one sign-up prompt on screen, if any (never two at once). */
 export type ActivePrompt = { kind: "inline_card" } | { kind: "limit"; limit: AskLimit } | { kind: "sheet"; trigger: SignUpTrigger; feature: GateFeature | null };
@@ -43,6 +43,9 @@ export interface StubbyAccess {
   noteAsk: () => number;
   /** The ask in the field when a prompt opened, kept for after sign-up. */
   draft: React.MutableRefObject<string>;
+  /** An account's daily asks, as the server last said (the config until it answers): for the sheet's line. */
+  accountPerDay: number;
+  setAccountPerDay: (n: number) => void;
 }
 
 const INLINE_SEEN_KEY = "soosh.stubby.inlineCard.session.v1";
@@ -88,6 +91,8 @@ const MEMBER_ACCESS: StubbyAccess = {
   guestMessages: 0,
   noteAsk: () => 0,
   draft: { current: "" },
+  accountPerDay: ASKS_PER_DAY,
+  setAccountPerDay: () => undefined,
 };
 
 const Ctx = createContext<StubbyAccess>(MEMBER_ACCESS);
@@ -120,6 +125,10 @@ export function StubbyAccessProvider({ guest, children }: { guest: boolean; chil
   }, [guest, markClosed]);
   const [guestMessages, setGuestMessages] = useState(() => Number(read("session", GUEST_ASKS_KEY) ?? 0) || 0);
   const draft = useRef("");
+  const [accountPerDay, setAccountPerDayState] = useState(ASKS_PER_DAY);
+  const setAccountPerDay = useCallback((n: number) => {
+    if (Number.isInteger(n) && n > 0) setAccountPerDayState(n);
+  }, []);
   const shown = useRef<SignUpTrigger | null>(null);
   /** The limit stays until it resets: closing the sheet opened from it goes back to it. */
   const lastLimit = useRef<AskLimit | null>(null);
@@ -204,9 +213,9 @@ export function StubbyAccessProvider({ guest, children }: { guest: boolean; chil
   const value = useMemo<StubbyAccess>(
     () =>
       guest
-        ? { guest: true, closed, markClosed, isClosed, client: guestSupabase, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk, draft }
+        ? { guest: true, closed, markClosed, isClosed, client: guestSupabase, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk, draft, accountPerDay, setAccountPerDay }
         : MEMBER_ACCESS,
-    [guest, closed, markClosed, isClosed, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk],
+    [guest, closed, markClosed, isClosed, ensureSession, prompt, offerInlineCard, showLimit, gate, openSignUp, dismiss, guestMessages, noteAsk, accountPerDay, setAccountPerDay],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

@@ -12,6 +12,7 @@ import { StubbyResults, type DeckActions } from "../stubby/StubbyResults";
 import { ContextCard } from "../stubby/ContextCard";
 import { GuestSignUpButton, InlineSignUpCard } from "../stubby/GuestPrompts";
 import { SignUpSheet } from "../stubby/SignUpSheet";
+import { AdultPrompt } from "../stubby/Birthday";
 import { useStubbyAccess } from "../../context/StubbyAccess";
 import { GUEST_COPY, outOfAsksLine } from "../../lib/guestCopy";
 
@@ -200,6 +201,9 @@ export const StubbyStage = forwardRef<
         }}
       />
       {access.guest && <InlineSignUpCard perDay={ask.accountPerDay} />}
+      {!access.guest && ask.offerBirthday && (
+        <AdultPrompt onAdded={ask.birthdayAdded} />
+      )}
     </>
   );
 });
