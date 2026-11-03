@@ -31,6 +31,8 @@ export interface ScenarioResult {
   hard: string[];
   /** Written expectations not met. */
   expectations: string[];
+  /** The decision trace that would be saved with the ask, if one was. */
+  trace?: DecisionTrace;
 }
 
 /** One scenario through the handler: the question or the deck, and what would be saved with the ask. */
@@ -84,7 +86,9 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
   const exp: string[] = [];
   const e = s.expect;
   if (e.question !== undefined && (body.question ?? null) !== e.question) exp.push(`question ${body.question ?? "none"}, expected ${e.question ?? "none"}`);
-  if (body.question) return { id: s.id, group: s.group, pass: hard.length + exp.length === 0, hard, expectations: exp };
+  // A question nobody expected means the deck was never checked: that fails, never a silent pass.
+  else if (e.question === undefined && body.question) exp.push(`asked ${body.question} before searching, and the scenario expected a deck`);
+  if (body.question) return { id: s.id, group: s.group, pass: hard.length + exp.length === 0, hard, expectations: exp, trace: saved[0]?.trace as DecisionTrace | undefined };
 
   const picks = body.picks ?? [];
   const dropped = body.dropped ?? [];
@@ -136,7 +140,7 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
     if (want.from !== undefined && got.from !== want.from) exp.push(`${field} from ${got.from}, expected ${want.from}`);
     if (want.strength !== undefined && got.strength !== want.strength) exp.push(`${field} is ${got.strength}, expected ${want.strength}`);
   }
-  return { id: s.id, group: s.group, pass: hard.length + exp.length === 0, hard, expectations: exp };
+  return { id: s.id, group: s.group, pass: hard.length + exp.length === 0, hard, expectations: exp, trace };
 }
 
 /** The whole set, and a table by group: what every PR reports from PR 7 on. */

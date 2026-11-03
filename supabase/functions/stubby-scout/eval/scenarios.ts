@@ -113,6 +113,8 @@ export const SCENARIOS: Scenario[] = [
     id: "budget-hard-free",
     group: "budget",
     ask: "free stuff tonight",
+    // A vague ask: "Stay in or head out?" comes first, answered here.
+    answers: { setting: "out" },
     candidates: [ev("Paid class", "/classes/paid", { price: "$20" }), ev("No price listed", "/events/unknown-price", { price: null }), ev("Free gallery talk", "/gallery/talk", { price: "Free" })],
     expect: { kept: ["Free gallery talk"], droppedKeys: ["budget", "noprice"], contract: { budget: { from: "ask", strength: "hard" } } },
   },
@@ -227,6 +229,7 @@ export const SCENARIOS: Scenario[] = [
     id: "ask-12",
     group: "real failures",
     ask: "free stuff this weekend",
+    answers: { setting: "out" },
     candidates: [ev("Pumpkin Smash at Pier 84", "/events/pumpkin-smash-pier-84", { starts: "2026-11-01T19:00", price: null, place: "Hudson River Park" })],
     expect: { outcome: "nothing", kept: [], droppedKeys: ["noprice"] },
   },

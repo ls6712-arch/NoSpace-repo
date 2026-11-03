@@ -8,7 +8,8 @@
 //   inferred  a default Stubby assumes (no bars unless asked). Never overrides what they typed.
 //   unknown   not known. An unknown hard requirement blocks a claim; an unknown detail is disclosed.
 //
-// Never the text of the ask. The trace saves the contract, where each candidate came from, why it
+// Never the text of the ask: every value in the trace is an enum, a code, a number, the rules'
+// version, or a pick's title as the search found it (contract.test.ts walks every string). The trace saves the contract, where each candidate came from, why it
 // was kept, and the rules' version, so the weekly review can see why a deck looked the way it did.
 
 import { STUBBY_CONFIG, type Source } from "./config.ts";
@@ -17,6 +18,8 @@ import type { Intent, Setting, Who, Window } from "./intent.ts";
 import type { Dropped, ReasonKey } from "./picks.ts";
 
 export type Strength = "hard" | "soft" | "inferred" | "unknown";
+/** Exclusion codes. Never words from the ask. */
+export type Exclusion = "adult";
 
 export interface Term<T> {
   value: T | null;
@@ -27,7 +30,7 @@ export interface Term<T> {
 export interface RequestContract {
   version: string;
   /** A particular thing was named (pottery, a run), and the kinds of thing the words point to. */
-  activity: Term<{ specific: boolean; vibes: string[] }>;
+  activity: Term<{ specific: boolean; vibes: Intent["vibes"] }>;
   company: Term<Who>;
   setting: Term<Setting>;
   timeWindow: Term<{ label: Window["label"]; startMs: number; endMs: number }>;
@@ -35,8 +38,8 @@ export interface RequestContract {
   /** Not read yet (PR 10): energy and travel are always unknown for now. */
   energy: Term<string>;
   travel: Term<string>;
-  /** What's left out by default unless asked: bars, breweries, tastings and 21+. */
-  exclusions: Term<string[]>;
+  /** What's left out by default unless asked, as codes: "adult" is bars, breweries, tastings and 21+. */
+  exclusions: Term<Exclusion[]>;
   /** Fields nobody knows, so no pick may claim them. */
   unknowns: string[];
 }
@@ -58,7 +61,7 @@ export function buildContract(intent: Intent, window: Window): RequestContract {
     budget: term(intent.budget ? { max: intent.budget.max, free: intent.budget.free } : null, intent.from.budget, strengthOf(intent.from.budget)),
     energy: term<string>(null, null, "unknown"),
     travel: term<string>(null, null, "unknown"),
-    exclusions: intent.adults ? term<string[]>([], "ask", "hard") : term(["bars, breweries, tastings and 21+"], "default", "inferred"),
+    exclusions: intent.adults ? term<Exclusion[]>([], "ask", "hard") : term<Exclusion[]>(["adult"], "default", "inferred"),
     unknowns: [],
   };
   contract.unknowns = (["company", "setting", "budget", "energy", "travel"] as const).filter((k) => contract[k].strength === "unknown");
