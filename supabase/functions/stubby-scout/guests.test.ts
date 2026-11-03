@@ -92,6 +92,9 @@ describe("the body is checked before anything else", () => {
     expect(parseBody(JSON.stringify({ mode: "ask", ask: "pottery", stream: true, questions: true, answers: { who: "solo" } }))).toMatchObject({ mode: "ask", ask: "pottery" });
     expect(parseBody("")).toEqual({ mode: "admin", focus: undefined, ask: undefined, questions: undefined, stream: undefined, status: undefined });
     expect(() => parseBody(JSON.stringify({ mode: "ask", followUp: { of: 1, kind: "more", titles: ["a"], extra: 1 } }))).toThrow(BodyError);
+    // The remembered chip and "Stay in or head out?" (stubby-agent B3) are the app's own answers too.
+    expect(parseBody(JSON.stringify({ mode: "ask", ask: "dinner", answers: { rememberedWho: "partner", setting: "out" } })).answers).toMatchObject({ rememberedWho: "partner", setting: "out" });
+    expect(() => parseBody(JSON.stringify({ mode: "ask", answers: { who: "solo", user_id: "x" } }))).toThrow(BodyError);
   });
 });
 

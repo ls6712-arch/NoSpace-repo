@@ -22,6 +22,9 @@ export const STUBBY_LINES = {
   found: "Here’s what I’d pick for you.",
   error: "Something went wrong on my end. Try again?",
   /** For the later plan PRs (the one question, the honest "nothing fits", the nudge). */
+  /** The first question for a vague ask (stubby-agent C4, approved Nov 3, 2026). */
+  missingSetting: "Stay in or head out?",
+  /** Asked only when company changes the options: heading out, no one named. */
   missingWho: "Going solo or with someone?",
   missingWhen: "When are you free?",
   missingVibe: "What kind of fun?",

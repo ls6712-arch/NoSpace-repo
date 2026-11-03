@@ -33,7 +33,9 @@ import {
 import { SearchError, type SearchProgress, type SearchResult } from "./search.ts";
 import { ASK_BEST, askRowFor, checkAskPicks, gapLines, topReasons, type AskPick } from "./ask.ts";
 import { askSystemPrompt, askUserPrompt, type AboutPerson, type FollowUp, type FollowUpKind } from "./askPrompt.ts";
-import { readIntent, searchWindow, type Answers, type Intent, type Who, type Window } from "./intent.ts";
+import { readIntent, searchWindow, type Answers, type Intent, type Setting, type Who, type Window } from "./intent.ts";
+import { STUBBY_CONFIG } from "./config.ts";
+import { buildContract, decisionTrace, explicitPreferences, type DecisionTrace } from "./contract.ts";
 import { BodyError, parseBody } from "./schema.ts";
 import { EMPTY_TASTE, tasteIsEmpty, tasteLines, type Signal, type Taste } from "./taste.ts";
 
@@ -176,8 +178,11 @@ export interface ScoutDeps {
      */
     claimFreeFollowUp(userId: string, askId: number, sinceMs: number): Promise<boolean>;
     finishRun(id: number, r: { searches: number; found: number; added: number; error: string | null }): Promise<void>;
-    /** `dropped`: why each candidate was dropped, saved for debugging (titles and reasons only, never the ask). */
-    finishAsk(id: number, r: { found: number; added: number; failed: boolean; dropped?: Dropped[] }): Promise<void>;
+    /**
+     * `dropped`: why each candidate was dropped, and `trace`: how the deck was chosen (stubby-agent G4).
+     * Saved for debugging and the weekly review: titles, reasons and rules only, never the ask.
+     */
+    finishAsk(id: number, r: { found: number; added: number; failed: boolean; dropped?: Dropped[]; trace?: DecisionTrace }): Promise<void>;
     /** How many asks this person has made since `ms`. */
     asksSince(userId: string, ms: number): Promise<number>;
     /** When this person's oldest ask since `ms` was made, or null. */
@@ -229,7 +234,7 @@ export interface AskReport {
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
 export interface AskQuestion {
-  question: "who" | "when" | "what";
+  question: "setting" | "who" | "when" | "what";
   asksLeft: number;
 }
 
@@ -429,7 +434,9 @@ function readAnswers(v: unknown): Answers | null {
   if (typeof a.who === "string" && (WHO_VALUES as readonly string[]).includes(a.who)) out.who = a.who as Who;
   if (typeof a.when === "string" && ((WHEN_VALUES as readonly string[]).includes(a.when) || /^\d{4}-\d{2}-\d{2}$/.test(a.when))) out.when = a.when;
   if (a.skip === true) out.skip = true;
-  return out.who || out.when || out.skip ? out : null;
+  if (a.setting === "in" || a.setting === "out") out.setting = a.setting as Setting;
+  if (typeof a.rememberedWho === "string" && (WHO_VALUES as readonly string[]).includes(a.rememberedWho)) out.rememberedWho = a.rememberedWho as Who;
+  return out.who || out.when || out.skip || out.setting || out.rememberedWho ? out : null;
 }
 
 const FOLLOW_UP_KINDS: readonly FollowUpKind[] = ["cheaper", "closer", "later", "different", "more"];
@@ -610,6 +617,7 @@ async function ask(
         exclude: followUp?.titles,
       });
 
+    let rounds = 1;
     const result = await search(null);
     let rawPicks = readPicksBlock(result.text);
     if (!rawPicks) throw new SearchError("Stubby couldn't read what he found. Try asking another way.", 502);
@@ -618,6 +626,7 @@ async function ask(
     // Fewer than 3 that fit: one more search round within the same ask, aimed at the gaps.
     if (checked.outcome !== "found" || checked.kept.length < ASK_BEST) {
       picking = false;
+      rounds = 2;
       try {
         const again = await search(gapLines(checked.outcome === "found" ? checked.kept : [], checked.dropped));
         const more = readPicksBlock(again.text) ?? [];
@@ -648,7 +657,16 @@ async function ask(
     }
 
     // A free follow-up isn't an ask of its own: its ask's counts stay as they were.
-    if (!free) await deps.server.finishAsk(askId, { found, added: mine.length, failed: false, dropped: dropped.slice(0, 30) });
+    const trace = decisionTrace({
+      contract: buildContract(asked, window),
+      preferences: explicitPreferences({ corners: person.corners, monthlyBudget: profile.monthlyBudget, freeTimes: person.freeTimes, passes: person.passes, neighborhood: person.neighborhood, city: person.city }),
+      rounds,
+      found,
+      outcome,
+      kept,
+      dropped,
+    });
+    if (!free) await deps.server.finishAsk(askId, { found, added: mine.length, failed: false, dropped: dropped.slice(0, STUBBY_CONFIG.saved.dropReasonsMost), trace });
     return {
       picks: kept.map((p) => ({
         kind: p.kind,

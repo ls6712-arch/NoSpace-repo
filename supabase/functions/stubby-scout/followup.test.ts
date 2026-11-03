@@ -105,7 +105,7 @@ describe("follow-ups", () => {
 
 describe("the one question's answers", () => {
   it("Surprise me (or a typed answer) skips the question", () => {
-    expect(readIntent("something fun", { now: NOW }).missing).toBe("who");
+    expect(readIntent("something fun", { now: NOW }).missing).toBe("setting");
     expect(readIntent("something fun", { now: NOW, answers: { skip: true } }).missing).toBeNull();
   });
 
@@ -126,7 +126,7 @@ describe("the one question's answers", () => {
     expect(body.question).toBeUndefined();
     const bad = deps();
     const asked = await (await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { when: "next blue moon" } }), bad.d)).json();
-    expect(asked).toEqual({ question: "who", asksLeft: 2 });
+    expect(asked).toEqual({ question: "setting", asksLeft: 2 });
   });
 });
 

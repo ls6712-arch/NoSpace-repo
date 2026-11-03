@@ -1,5 +1,5 @@
 // Screenshots of Stubby, the main character of Calendar, from the fixture person in the fixture Supabase.
-// The asks count, the two "Found for you" picks and the scout itself are answered here; no database or
+// The asks count, the picks and the scout itself are answered here; no database or
 // function is touched.
 //
 //   node scripts/visual/stubby-calendar.ts --out docs/qa/stubby-calendar [--dist <built dir>] [--widths 390,1280] [--themes light,dark]

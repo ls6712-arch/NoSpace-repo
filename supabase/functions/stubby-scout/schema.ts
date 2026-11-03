@@ -9,7 +9,7 @@ export type Body = {
   mode: "admin" | "restock" | "ask";
   focus?: string;
   ask?: string;
-  answers?: { who?: string; when?: string; skip?: boolean };
+  answers?: { who?: string; when?: string; skip?: boolean; setting?: string; rememberedWho?: string };
   questions?: boolean;
   stream?: boolean;
   /**
@@ -67,8 +67,14 @@ export function parseBody(raw: string): Body {
 
   if (v.answers !== undefined && v.answers !== null) {
     if (!isObj(v.answers)) throw new BodyError("answers must be an object.");
-    only(v.answers, ["who", "when", "skip"], "answers.");
-    out.answers = { who: str(v.answers.who, 20, "answers.who"), when: str(v.answers.when, 20, "answers.when"), skip: bool(v.answers.skip, "answers.skip") };
+    only(v.answers, ["who", "when", "skip", "setting", "rememberedWho"], "answers.");
+    out.answers = {
+      who: str(v.answers.who, 20, "answers.who"),
+      when: str(v.answers.when, 20, "answers.when"),
+      skip: bool(v.answers.skip, "answers.skip"),
+      setting: str(v.answers.setting, 20, "answers.setting"),
+      rememberedWho: str(v.answers.rememberedWho, 20, "answers.rememberedWho"),
+    };
   }
 
   if (v.followUp !== undefined && v.followUp !== null) {

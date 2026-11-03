@@ -56,7 +56,7 @@ import { RESUME_KEY } from "../../lib/signUpReturn";
  * tonight, found nothing, or failed.
  */
 export type AskOutcome = "found" | "after" | "nothing" | "error" | null;
-export type Question = "who" | "when" | "what";
+export type Question = "setting" | "who" | "when" | "what";
 export type Who = NonNullable<AskAnswers["who"]>;
 export type FollowUpKind = AskFollowUp["kind"];
 
@@ -70,7 +70,7 @@ export interface StepRow {
 }
 
 /** An answer to Stubby's one question. */
-export type Answer = { who: Who } | { when: string } | { what: string } | { surprise: true } | { typed: string };
+export type Answer = { setting: "in" | "out" } | { who: Who } | { when: string } | { what: string } | { surprise: true } | { typed: string };
 
 export interface AskState {
   text: string;
@@ -323,8 +323,9 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       setUnderstood(null);
       setSteps([]);
       resetStall();
-      // Who you're going with, once said, goes with every ask this session.
-      const answers: AskAnswers | undefined = who || opts.answers ? { ...(who ? { who } : {}), ...opts.answers } : undefined;
+      // Who you're going with, once said, goes with every ask this session: as a remembered chip,
+      // below what you type now (stubby-agent B3), so "with my girlfriend" wins over Just me.
+      const answers: AskAnswers | undefined = who || opts.answers ? { ...(who ? { rememberedWho: who } : {}), ...opts.answers } : undefined;
       access.draft.current = what;
       let r: Awaited<ReturnType<typeof askStubbyStream>>;
       try {
@@ -427,7 +428,8 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     (a: Answer) => {
       const base = pending.current || lastAsk.current;
       if (!base) return;
-      if ("who" in a) {
+      if ("setting" in a) void run(base, { answers: { setting: a.setting } });
+      else if ("who" in a) {
         setWho(a.who);
         writeSession(ANSWERS_KEY, { who: a.who });
         void run(base, { answers: { who: a.who } });
@@ -608,7 +610,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
 }
 
 /** Stubby's line for his one question. */
-export const QUESTION_LINE: Record<Question, string> = { who: STUBBY_LINES.missingWho, when: STUBBY_LINES.missingWhen, what: STUBBY_LINES.missingVibe };
+export const QUESTION_LINE: Record<Question, string> = { setting: STUBBY_LINES.missingSetting, who: STUBBY_LINES.missingWho, when: STUBBY_LINES.missingWhen, what: STUBBY_LINES.missingVibe };
 
 /**
  * The ask, in the page: the field ("What are you in the mood for?"), how many asks are left
@@ -703,6 +705,7 @@ export function AskStubby({
       )}
       {question && !out && (
         <div role="group" aria-label={QUESTION_LINE[question]} data-stubby-question={question} className={row}>
+          {question === "setting" && QUESTION_COPY.setting.map((c) => chip(c.label, () => answer({ setting: c.setting })))}
           {question === "who" && QUESTION_COPY.who.map((c) => chip(c.label, () => answer({ who: c.who })))}
           {question === "when" && QUESTION_COPY.when.map((c) => chip(c.label, () => answer({ when: c.when })))}
           {question === "when" && chip(QUESTION_COPY.pickADay, () => setPicking((p) => !p), "pick")}
