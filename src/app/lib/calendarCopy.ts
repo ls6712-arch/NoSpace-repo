@@ -93,8 +93,9 @@ export const ASK_COPY = {
   placeholder: "Pottery on Saturday, a free run, something outdoors",
   busy: "Looking",
   nothing: "Nothing fit this time. Try asking another way.",
-  listLabel: "Found for you",
-  cardLabel: "Found for you",
+  /** The deck's name, and the label on each card: the same words as his picks in a free slot, one word per idea (founder, Nov 3, 2026; was "Found for you"). */
+  listLabel: "Stubby’s picks",
+  cardLabel: "Stubby’s pick",
   /** The label on a do-it-yourself pick, instead of a dated ticket (approved Nov 2, 2026). */
   ideaLabel: "An idea",
   open: "Open",

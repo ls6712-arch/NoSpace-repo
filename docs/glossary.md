@@ -932,7 +932,7 @@ Superseded on Nov 2, 2026 by the Stubby rule (he talks in Ask Stubby, on the Cal
 | {n} asks left today | Beside the field's label, with plural() (Stubby plan PR 1, so the calendar shows in a phone's first screen). At 0 it goes away and Stubby's line says "That’s 3 for today. I’ll look again tomorrow." (the old "That’s your 3 for today. Stubby can look again tomorrow." is retired, Nov 2, 2026) |
 | Found {n} things. | After an ask that found something |
 | Nothing fit this time. Try asking another way. | After an ask that found nothing: Stubby's line in the bubble (he shrugs) |
-| Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
+| Stubby’s pick | The label on each card in the deck (a dashed card like Stubby’s pick in a free slot: one word per idea). The deck's accessible name is Stubby’s picks. Was "Found for you", retired Nov 3, 2026 (founder, Stubby agent PR 6). Buttons: Open (links out) · Remove |
 | Say what you’re after, like pottery on Saturday. | Error with an empty or one-letter ask |
 
 ### The Stubby dock (Nov 1, 2026)
@@ -994,6 +994,7 @@ Never a blank area. Stubby shrugs and says "Nothing fit this time. Try asking an
 | Term | Use |
 |---|---|
 | {n} was a listing page / {n} were listing pages | A reason, with plural(). The others: was/were after midnight · was/were outside the time you asked for · was/were over your budget · was a bar or 21+ / were bars or 21+ · had no page of its own / their own · had no clear time · was/were too late for kids. Joined with commas: "2 were listing pages, 1 was after midnight" |
+| {n} had no price listed | A reason, with plural() (the same for one and many), for a pick dropped because only free things were asked for and its page gives no price. Until now these were counted as "over your budget", which they weren't (Stubby agent PR 6). Until it's approved, these drops aren't named in the line. New, for approval |
 | This weekend | The same ask, for this weekend (uses an ask). While the empty state shows, the quick ideas step aside, so there's one This weekend on screen |
 | Surprise me | A surprise (uses an ask). The same words as the question chip |
 | Try different words | Back to the field, the ask selected |

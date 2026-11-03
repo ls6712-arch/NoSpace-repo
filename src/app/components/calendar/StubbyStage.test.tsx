@@ -212,7 +212,8 @@ describe("smarter picks on the stage", () => {
     await ask("something to do tonight on my own");
     // The deck shows one card at a time: the event first, then the idea after Not now.
     const event = (await screen.findByText("Wheel night")).closest("[data-pick-kind]")!;
-    expect(event.textContent).toContain("Found for you");
+    expect(event.textContent).toContain("Stubby’s pick");
+    expect(event.textContent).not.toContain("Found for you");
     expect(event.textContent).toContain("Coming alone is normal here.");
     expect(event.querySelector("a")!.getAttribute("target")).toBe("_blank");
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));
