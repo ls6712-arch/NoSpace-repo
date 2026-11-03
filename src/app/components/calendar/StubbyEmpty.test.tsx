@@ -90,8 +90,9 @@ describe("the reasons", () => {
     expect(reasonLine([{ key: "listing", count: 2 }, { key: "midnight", count: 1 }])).toBe("2 were listing pages, 1 was after midnight");
     expect(reasonLine([{ key: "budget", count: 1 }, { key: "nopage", count: 2 }, { key: "adult", count: 3 }])).toBe("1 was over your budget, 2 had no page of their own, 3 were bars or 21+");
     expect(reasonLine([{ key: "other", count: 4 }])).toBe("");
-    // No price listed is its own reason, never "over your budget". Its words wait for approval, so it isn't named yet.
-    expect(reasonLine([{ key: "noprice", count: 2 }, { key: "listing", count: 1 }])).toBe("1 was a listing page");
+    // No price listed is its own reason, never "over your budget" (approved Nov 3, 2026).
+    expect(reasonLine([{ key: "noprice", count: 2 }, { key: "listing", count: 1 }])).toBe("2 had no price listed, 1 was a listing page");
+    expect(reasonLine([{ key: "noprice", count: 1 }])).toBe("1 had no price listed");
   });
 });
 

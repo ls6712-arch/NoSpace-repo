@@ -994,7 +994,7 @@ Never a blank area. Stubby shrugs and says "Nothing fit this time. Try asking an
 | Term | Use |
 |---|---|
 | {n} was a listing page / {n} were listing pages | A reason, with plural(). The others: was/were after midnight · was/were outside the time you asked for · was/were over your budget · was a bar or 21+ / were bars or 21+ · had no page of its own / their own · had no clear time · was/were too late for kids. Joined with commas: "2 were listing pages, 1 was after midnight" |
-| {n} had no price listed | A reason, with plural() (the same for one and many), for a pick dropped because only free things were asked for and its page gives no price. Until now these were counted as "over your budget", which they weren't (Stubby agent PR 6). Until it's approved, these drops aren't named in the line. New, for approval |
+| {n} had no price listed | A reason, with plural() (the same for one and many), for a pick dropped because only free things were asked for and its page gives no price. Until now these were counted as "over your budget", which they weren't (Stubby agent PR 6). Approved by the founder, Nov 3, 2026 |
 | This weekend | The same ask, for this weekend (uses an ask). While the empty state shows, the quick ideas step aside, so there's one This weekend on screen |
 | Surprise me | A surprise (uses an ask). The same words as the question chip |
 | Try different words | Back to the field, the ask selected |
@@ -1038,3 +1038,35 @@ His other lines:
 | Error | Something went wrong on my end. Try again? |
 | Out of asks | That’s 3 for today. I’ll look again tomorrow. |
 | Bring-a-friend | This one’s better with a friend. Bring someone? |
+
+## Stubby agent (`docs/briefs/stubby-agent.md`, founder, Nov 3, 2026)
+
+**Approved by the founder, Nov 3, 2026.** Each is used only when the PR that needs it lands. Approved lines that already cover a moment stay: "On it. Checking a few places." is still the line while he looks.
+
+### Stubby's lines
+
+| Line | When | From |
+|---|---|---|
+| Stay in or head out? | The first question for a vague ask (nothing named, no one named, nowhere said). Replaces "Going solo or with someone?" as the first question; that one is asked only when company changes the options (heading out, no one named) | PR 7 |
+| Nothing fits those limits. Want to change one? | Nothing satisfies the hard limits typed in the ask | PR 10 |
+| I couldn't check the weather just now. | The weather couldn't be read for this ask | PR 8 |
+| These two fit best. | Fewer good options than usual (written for the count shown) | PR 10 |
+| Let's bring the price down. | After Cheaper | PR 10 |
+| Different direction. Keeping your limits. | After Something different | PR 10 |
+| Got it. {correction}. | A correction echoed back, for example "Got it. Solo tonight." | PR 10 |
+| Low-energy evening? Here are a few easy things. | A low-energy ask | PR 10 |
+| Rainy {day}. Want something cozy? | The greeting on a rainy day ("Rainy Monday. Want something cozy?") | PR 8 |
+| {Plan} at {time}. Leave by {time}. | Get ready, the day of a plan | PR 14 |
+| How was {plan}? | After a plan | PR 14 |
+
+### Other words
+
+| Term | Use | From |
+|---|---|---|
+| Stay in · Head out · Surprise me | The answers to "Stay in or head out?". Surprise me skips the question, as everywhere | PR 7 |
+| Event · Watch · Read · At home · Idea · Connect | The kind label on each card. They replace "An idea" | PR 11 |
+| Keep · Not now (stamps) | The swipe stamps, in sentence case like everything else: bold, letter-spaced, in a bordered, rotated box. Never capitals | PR 11 |
+| Enjoyed it · It was okay · Didn't go | The answers to "How was {plan}?" | PR 14 |
+| Partner | The label on a partner Space | When partner Spaces show |
+
+"Reflect" is internal only: it names a step in the spec's loop and never appears in the app.
