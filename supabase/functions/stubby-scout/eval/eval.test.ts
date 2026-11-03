@@ -22,12 +22,12 @@ const BASELINE: Record<string, number> = {
 };
 
 describe("the scenario set", () => {
-  it("has the 20 first scenarios (19 here, plus the privacy one below), with unique ids", () => {
-    expect(SCENARIOS).toHaveLength(19);
+  it("has the 20 first scenarios (19 here, plus the privacy one below) and the V3 ones, with unique ids", () => {
+    expect(SCENARIOS.filter((x) => !x.engines)).toHaveLength(19);
     expect(new Set(SCENARIOS.map((s) => s.id)).size).toBe(SCENARIOS.length);
   });
 
-  for (const s of SCENARIOS) {
+  for (const s of SCENARIOS.filter((x) => !x.engines || x.engines.includes("legacy"))) {
     it(`${s.group}: ${s.id}`, async () => {
       const r = await runScenario(s);
       expect(r.hard, "hard rules").toEqual([]);
@@ -43,6 +43,31 @@ describe("the scenario set", () => {
       expect(g.hard, group).toBe(0);
       expect(g.passed, group).toBeGreaterThanOrEqual(BASELINE[group] ?? 0);
     }
+  });
+});
+
+/**
+ * V3 on the same set, plus its own scenarios (Nov 3, 2026): no hard rule may fail, and no group may
+ * pass fewer than the legacy engine does. Nothing the current engine does well may get worse.
+ */
+describe("the scenario set, V3", () => {
+  for (const s of SCENARIOS.filter((x) => !x.engines || x.engines.includes("v3"))) {
+    it(`${s.group}: ${s.id}`, async () => {
+      const r = await runScenario(s, "v3");
+      expect(r.hard, "hard rules").toEqual([]);
+      expect(r.expectations, "expectations").toEqual([]);
+    });
+  }
+
+  it("no group passes fewer than legacy does, and no hard rule fails anywhere (results by group)", async () => {
+    const legacy = await runAll(SCENARIOS, "legacy");
+    const v3 = await runAll(SCENARIOS, "v3");
+    console.log(`Scenario set, legacy (rules ${STUBBY_CONFIG.version}):\n${legacy.table}\n\nScenario set, V3:\n${v3.table}`);
+    for (const [group, g] of v3.groups) {
+      expect(g.hard, group).toBe(0);
+      expect(g.passed, group).toBeGreaterThanOrEqual(legacy.groups.get(group)?.passed ?? 0);
+    }
+    for (const [group, g] of legacy.groups) expect(v3.groups.get(group)?.passed ?? 0, group).toBeGreaterThanOrEqual(g.passed);
   });
 });
 

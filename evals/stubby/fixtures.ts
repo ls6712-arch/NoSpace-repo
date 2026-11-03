@@ -28,14 +28,18 @@ export const scenarios: Scenario[] = [
   { id: "stale-evidence", candidates: [candidate({ evidence: [{ ...candidate().evidence[0], checkedAt: NOW - 25 * 3600000 }] })], outcome: "no_verified_match", reason: "missing_or_stale_evidence" },
   { id: "self-reported-membership", candidates: [candidate({ membership: "Museum membership" })], outcome: "no_verified_match", reason: "unverified_eligibility" },
   { id: "expired-membership", input: { capability: { ...input().capability, memberships: [{ name: "Studio", expiresOn: "2020-01-01", status: "self_reported" }] } }, candidates: [candidate({ membership: "Studio" })], outcome: "no_verified_match", reason: "unverified_eligibility" },
-  { id: "unknown-location", input: { profile: EMPTY_PROFILE }, candidates: [candidate()], outcome: "no_verified_match", reason: "location" },
-  { id: "revoked-memory", input: { capability: emptyCapability() }, candidates: [candidate()], outcome: "no_verified_match", reason: "location" },
+  // No city anywhere: New York, where Soosh runs (Nov 3, 2026), said in the trace as cityFrom "default".
+  { id: "no-city-means-new-york", input: { profile: EMPTY_PROFILE }, candidates: [candidate()], outcome: "verified" },
+  { id: "no-city-elsewhere-is-not-assumed", input: { profile: EMPTY_PROFILE }, candidates: [candidate({ city: "Boston" })], outcome: "no_verified_match", reason: "location" },
+  // Nothing saved in What Stubby knows: the onboarding answers are still used, with no opt-in (Nov 3, 2026).
+  { id: "onboarding-without-saved-information", input: { capability: emptyCapability() }, candidates: [candidate()], outcome: "verified" },
   { id: "wrong-city", candidates: [candidate({ city: "Boston" })], outcome: "no_verified_match", reason: "location" },
   { id: "missing-equipment", candidates: [candidate({ equipment: ["guitar"] })], outcome: "no_verified_match", reason: "equipment" },
   { id: "owned-equipment", input: { capability: { ...input().capability, equipment: ["guitar"] } }, candidates: [candidate({ equipment: ["guitar"] })], outcome: "verified" },
   { id: "unknown-travel", input: { text: "pottery tonight within 10 minutes" }, candidates: [candidate({ travelMinutes: null })], outcome: "no_verified_match", reason: "travel" },
   { id: "ends-after-midnight", candidates: [candidate({ endsAt: NOW + 11 * 3600000 })], outcome: "no_verified_match", reason: "end_time" },
-  { id: "unknown-end", candidates: [candidate({ endsAt: null })], outcome: "no_verified_match", reason: "unknown_end_time" },
+  // Disclosed, never a drop (the legacy engine kept these): partial, with "End time is unknown."
+  { id: "unknown-end", candidates: [candidate({ endsAt: null })], outcome: "partial" },
   { id: "indoors-not-outside", candidates: [candidate({ setting: "outdoor" })], outcome: "no_verified_match", reason: "setting" },
   { id: "at-home-not-venue", input: { text: "pottery at home tonight" }, candidates: [candidate()], outcome: "no_verified_match", reason: "setting" },
   { id: "citation-not-verification", candidates: [candidate({ evidence: [{ ...candidate().evidence[0], level: "search" }] })], outcome: "partial" },
@@ -59,7 +63,13 @@ export const scenarios: Scenario[] = [
   { id: "unsupported-currency-abstention", input: { text: "pottery tonight under 20 euros" }, candidates: [candidate()], outcome: "no_verified_match" },
   { id: "saved-dislike-respected", input: { capability: { ...input().capability, preferences: ["Avoid pottery"] } }, candidates: [candidate()], outcome: "no_verified_match", reason: "excluded_activity" },
   { id: "current-request-overrides-dislike", input: { text: "Actually pottery tonight", capability: { ...input().capability, preferences: ["Avoid pottery"] } }, candidates: [candidate()], outcome: "verified" },
-  { id: "family-age-policy-unknown", input: { text: "pottery for my kids tonight" }, candidates: [candidate({ minAge: null })], outcome: "no_verified_match", reason: "unknown_age_policy" },
+  // Disclosed, never a drop: partial, with "Age restrictions could not be checked." 21+ is still a drop.
+  { id: "family-age-policy-unknown", input: { text: "pottery for my kids tonight" }, candidates: [candidate({ minAge: null })], outcome: "partial" },
+  { id: "family-adults-only", input: { text: "pottery for my kids tonight" }, candidates: [candidate({ minAge: 21 })], outcome: "no_verified_match", reason: "age" },
+  // A place is its own kind: a park or a walking route's own page is never an event listing (Nov 3, 2026).
+  { id: "place-not-listing", input: { text: "a walk tonight" }, candidates: [candidate({ kind: "place", title: "Brooklyn Bridge Park walking route", tags: ["walking"], endsAt: null, setting: "outdoor", cost: { max: 0, currency: "USD" }, evidence: [{ ...candidate().evidence[0], url: "https://example.org/things-to-do/walking-route" }] })], outcome: "partial" },
+  { id: "place-roundup-still-dropped", input: { text: "a walk tonight" }, candidates: [candidate({ kind: "place", title: "Best walks", tags: ["walking"], endsAt: null, evidence: [{ ...candidate().evidence[0], url: "https://example.org/best-walking-places-nyc" }] })], outcome: "no_verified_match", reason: "listing_page" },
+  { id: "event-on-listing-still-dropped", input: { text: "a walk tonight" }, candidates: [candidate({ title: "Walk", tags: ["walking"], evidence: [{ ...candidate().evidence[0], url: "https://example.org/things-to-do/walking-route" }] })], outcome: "no_verified_match", reason: "listing_page" },
   { id: "public-corner-recognized", input: { text: "fencing tonight", knownTopics: ["Fencing"] }, candidates: [candidate()], outcome: "no_verified_match", reason: "activity" },
   { id: "specific-corner-not-generalized", input: { text: "oil painting tonight", knownTopics: ["Oil painting"] }, candidates: [candidate({ title: "Watercolor painting", tags: ["painting"] })], outcome: "no_verified_match", reason: "activity" },
 ];

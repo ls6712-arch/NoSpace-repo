@@ -27,6 +27,8 @@ import { claimTurn, readAccess } from "./claim.ts";
 import { pickKey } from "./picks.ts";
 import { runV3 } from "./v3/orchestrator.ts";
 import { createV3Provider } from "./v3/provider.ts";
+import { sooshAdapter } from "./v3/soosh.ts";
+import { claudeCareModel } from "./v3/careModel.ts";
 import { emptyCapability, parseCapability } from "../_shared/capabilityProfile.ts";
 import { runSearch } from "./search.ts";
 
@@ -62,7 +64,7 @@ async function profileOf(client: typeof server, userId: string): Promise<PersonP
     client.from("user_passes").select("kind, label, place").eq("user_id", userId).limit(20),
     client
       .from("pursuits")
-      .select("id, title")
+      .select("id, title, hobby_slug, sub_hobby")
       .eq("user_id", userId)
       .is("finished_at", null)
       .is("paused_at", null)
@@ -81,7 +83,7 @@ async function profileOf(client: typeof server, userId: string): Promise<PersonP
     city: typeof p.city === "string" ? p.city : null,
     area: typeof p.area === "string" ? p.area : null,
     passes: ((passes.data ?? []) as { kind: string; label: string; place: string | null }[]).map((r) => ({ kind: r.kind, label: r.label, place: r.place ?? null })),
-    pursuits: ((pursuits.data ?? []) as { id: string; title: string }[]).map((r) => ({ id: r.id, title: r.title })),
+    pursuits: ((pursuits.data ?? []) as { id: string; title: string; hobby_slug: string | null; sub_hobby: string | null }[]).map((r) => ({ id: r.id, title: r.title, corner: r.hobby_slug && r.sub_hobby ? `${r.hobby_slug}/${r.sub_hobby}` : null })),
   };
 }
 async function insertOnce(client: typeof server, table: string, row: Record<string, unknown>) {
@@ -194,7 +196,8 @@ function serve(req: Request): Promise<Response> {
       },
       async signals(id) {
         let query = caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id);
-        if (settings.askEngine === "v3") query = query.gte("created_at", iso(Date.now() - 60 * 86400000));
+        // V3 learns only from the last 60 days (and only with consent, handler.ts); legacy as before.
+      if (settings.askEngine === "v3" || (settings.v3Testers ?? []).length > 0) query = query.gte("created_at", iso(Date.now() - 60 * 86400000));
         const { data } = await query.order("created_at", { ascending: false }).limit(20);
         return readSignals(data);
       },
@@ -257,8 +260,11 @@ function serve(req: Request): Promise<Response> {
     },
     async v3(input) {
       const selected = createV3Provider(env, { maxSearches: input.searchLimit });
-      return runV3(input, { discovery: [selected.adapter], usage: selected.usage });
+      // Their own Pursuits and Corners first (no network), then Claude's web search.
+      const own = sooshAdapter({ pursuits: input.profile.pursuits, picks: input.profile.picks });
+      return runV3(input, { discovery: [own, selected.adapter], usage: selected.usage });
     },
+    careModel: claudeCareModel({ apiKey: env("ANTHROPIC_API_KEY") ?? "", workspaceId: env("ANTHROPIC_WORKSPACE_ID") || null, model: env("STUBBY_CLAUDE_MODEL") || env("STUBBY_SCOUT_MODEL") || DEFAULT_MODEL }),
     search: (r) =>
       runSearch({
         apiKey: env("ANTHROPIC_API_KEY")!,

@@ -31,9 +31,17 @@ describe("context, privacy and outages", () => {
     const r = input({ now: Date.parse("2026-11-04T06:00:00Z"), capability: { ...input().capability, timeZone: "America/Los_Angeles" } });
     expect(buildContext(r).window.endMs).toBe(Date.parse("2026-11-04T08:00:00Z"));
   });
-  it("revocation removes all explicit and learned context", () => {
-    const ctx = buildContext(input({ capability: { ...emptyCapability(), equipment: ["guitar"], goals: ["secret"] }, learned: [{ source: "feedback", title: "private", signal: "up" }] }));
-    expect(ctx.equipment).toEqual([]); expect(ctx.goals).toEqual([]); expect(ctx.learned).toEqual([]); expect(ctx.city).toBeNull();
+  it("deleting saved information leaves only the onboarding answers; learning needs its own opt-in", () => {
+    const ctx = buildContext(input({ capability: emptyCapability(), learned: [{ source: "feedback", title: "private", signal: "up" }] }));
+    expect(ctx.equipment).toEqual([]); expect(ctx.goals).toEqual([]); expect(ctx.learned).toEqual([]);
+    // Onboarding answers by default (Nov 3, 2026): the city and Corners they gave.
+    expect(ctx.city).toBe("New York"); expect(ctx.cityFrom).toBe("profile"); expect(ctx.interests).toEqual(["crafts/pottery"]);
+    const learning = buildContext(input({ capability: { ...emptyCapability(), consent: { memory: true, onboarding: true, feedback: true } }, learned: [{ source: "feedback", title: "liked", signal: "up" }] }));
+    expect(learning.learned).toHaveLength(1);
+  });
+  it("saved information is used when it's saved, with no opt-in", () => {
+    const ctx = buildContext(input({ capability: { ...emptyCapability(), equipment: ["guitar"], goals: ["play an open mic"] } }));
+    expect(ctx.equipment).toEqual(["guitar"]); expect(ctx.goals).toEqual(["play an open mic"]);
   });
   it("feedback requires separate opt-in", () => {
     expect(buildContext(input({ learned: [{ source: "feedback", title: "test", signal: "down" }] })).learned).toEqual([]);
@@ -43,7 +51,7 @@ describe("context, privacy and outages", () => {
   });
   it("honestly reports a provider outage", async () => {
     const r = await runV3(input(), { discovery: [{ id: "fixture", discover: async () => { throw new Error("private credential must not leak"); } }] });
-    expect(r.outcome).toBe("no_verified_match"); expect(JSON.stringify(r)).not.toContain("credential"); expect(r.warnings).toContain("Source unavailable: fixture.");
+    expect(r.outcome).toBe("no_verified_match"); expect(JSON.stringify(r)).not.toContain("credential"); expect(r.warnings).toContain("A source couldn’t be reached."); expect(JSON.stringify(r)).not.toContain("fixture");
   });
   it("times out an adapter that ignores abort", async () => {
     const r = await runV3(input(), { timeoutMs: 5, discovery: [{ id: "hang", discover: () => new Promise(() => {}) }] });

@@ -9,6 +9,40 @@ import { STUBBY_CONFIG } from "../config.ts";
 import type { DecisionTrace } from "../contract.ts";
 import { linkKey, nyLocalToMs, type Dropped, type RawPick } from "../picks.ts";
 import { SCENARIOS, type Group, type Scenario } from "./scenarios.ts";
+import { runV3 } from "../v3/orchestrator.ts";
+import { sooshAdapter } from "../v3/soosh.ts";
+import { topicChoices } from "../v3/request.ts";
+import { V3_VERSION, type Candidate, type DiscoveryAdapter } from "../v3/types.ts";
+
+export type Engine = "legacy" | "v3";
+
+/**
+ * What the web search returned, as V3's extraction would hand it over (Nov 3, 2026): the same
+ * candidates as the legacy run, from a search, so never verified. An idea with a web page is a
+ * place; Soosh pages come from the person's own Pursuits and Corners instead (soosh.ts). Tags are
+ * the Corner named, else what the ask asked for: what the search was looking for.
+ */
+export function fixtureAdapter(s: Scenario, now: number): DiscoveryAdapter {
+  const asked = topicChoices(s.ask).positive;
+  const rows: Candidate[] = s.candidates.flatMap((c, i) => {
+    const url = typeof c.url === "string" ? c.url : "";
+    if (!url.startsWith("https://")) return [];
+    const starts = nyLocalToMs(c.starts);
+    if (!Number.isFinite(starts)) return [];
+    const ends = c.ends ? nyLocalToMs(c.ends) : null;
+    const low = lowestPrice(typeof c.price === "string" ? c.price : null);
+    return [{
+      id: `fixture-${i}`, title: String(c.title).slice(0, 80), kind: c.kind === "idea" ? "place" : "event",
+      startsAt: starts, endsAt: ends !== null && Number.isFinite(ends) ? ends : null, city: "New York",
+      place: typeof c.place === "string" ? c.place.slice(0, 80) : null, setting: "unknown",
+      cost: low === null ? null : { max: low, currency: "USD" }, status: "scheduled", availability: "unknown",
+      equipment: [], membership: null, minAge: null, travelMinutes: null,
+      tags: typeof c.corner === "string" && c.corner ? [c.corner.toLowerCase()] : asked.slice(0, 3),
+      evidence: [{ url, level: "search", source: "anthropic-web-v1", checkedAt: now }],
+    }];
+  });
+  return { id: "fixture-web", discover: async () => rows };
+}
 
 const DEFAULT_NOW = "2026-11-01T17:00";
 const ADULT = /\b(brewery|breweries|bars?|pubs?|21\+|tasting|tastings|wine|beer|cocktails?|happy hour)\b/i;
@@ -36,15 +70,18 @@ export interface ScenarioResult {
 }
 
 /** One scenario through the handler: the question or the deck, and what would be saved with the ask. */
-export async function runScenario(s: Scenario): Promise<ScenarioResult> {
+export async function runScenario(s: Scenario, engine: Engine = "legacy"): Promise<ScenarioResult> {
   const now = nyLocalToMs(s.now ?? DEFAULT_NOW);
   const saved: Record<string, unknown>[] = [];
   const personal: Record<string, unknown>[] = [];
   const links = s.candidates.map((c) => c.url).filter((u): u is string => typeof u === "string" && u.startsWith("https://"));
   let round = 0;
-  const pursuits = (s.sooshLinks ?? []).filter((l) => l.startsWith("/pursuit/")).map((l) => ({ id: l.slice("/pursuit/".length), title: "Pottery" }));
+  const pursuits = (s.sooshLinks ?? []).filter((l) => l.startsWith("/pursuit/")).map((l, i) => ({ id: l.slice("/pursuit/".length), title: i === 0 ? "Pottery" : `Pottery ${i + 1}`, corner: "crafts/pottery" }));
   const d: ScoutDeps = {
-    settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
+    settings: { enabled: true, hasKey: true, askEngine: engine, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
+    v3: (req) => runV3(req, { discovery: [sooshAdapter({ pursuits: req.profile.pursuits, picks: req.profile.picks }), fixtureAdapter(s, now)] }),
+    // The care step's model, for text the keyword list can't settle: the scenario says what it answers.
+    careModel: async () => s.careModel ?? "none",
     now: () => now,
     userId: async () => "eval-user",
     // A member with a 21+ birthdate on file: the scenarios are about the deck, not who may ask.
@@ -82,7 +119,7 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
     },
   };
   const req = new Request("https://fn.example.com/stubby-scout", { method: "POST", headers: { authorization: "Bearer x" }, body: JSON.stringify({ mode: "ask", ask: s.ask, questions: true, ...(s.answers ? { answers: s.answers } : {}) }) });
-  const body = (await (await handleScout(req, d)).json()) as { question?: string; picks?: Pick[]; outcome?: string; dropped?: Dropped[] };
+  const body = (await (await handleScout(req, d)).json()) as { question?: string; picks?: Pick[]; outcome?: string; dropped?: Dropped[]; care?: unknown };
 
   const hard: string[] = [];
   const exp: string[] = [];
@@ -91,6 +128,13 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
   // A question nobody expected means the deck was never checked: that fails, never a silent pass.
   else if (e.question === undefined && body.question) exp.push(`asked ${body.question} before searching, and the scenario expected a deck`);
   if (body.question) return { id: s.id, group: s.group, pass: hard.length + exp.length === 0, hard, expectations: exp, trace: saved[0]?.trace as DecisionTrace | undefined };
+  // The care card: no picks, nothing saved, no ask used (C1).
+  if (e.care !== undefined && !!body.care !== e.care) exp.push(body.care ? "showed the care card" : "no care card");
+  if (body.care) {
+    if (saved.length || personal.length) hard.push("something was saved with a care answer");
+    if (body.picks) hard.push("picks were shown with the care card");
+    return { id: s.id, group: s.group, pass: hard.length + exp.length === 0, hard, expectations: exp };
+  }
 
   const picks = body.picks ?? [];
   const dropped = body.dropped ?? [];
@@ -123,16 +167,23 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
   for (const x of dropped) if (/^Price not listed/.test(x.reason) && x.key !== "noprice") hard.push(`"${x.title}": no price was given the reason ${x.key}`);
   // Never the ask's text, anywhere it's saved.
   if (JSON.stringify(saved).toLowerCase().includes(ask) || JSON.stringify(personal).toLowerCase().includes(ask)) hard.push("the ask's text was saved");
-  if (trace && trace.version !== STUBBY_CONFIG.version) hard.push(`the trace has version ${trace.version}`);
+  const version = engine === "v3" ? V3_VERSION : STUBBY_CONFIG.version;
+  if (trace && trace.version !== version) hard.push(`the trace has version ${trace.version}`);
   if (!trace) hard.push("no decision trace was saved");
 
   // ── this scenario's own expectations ──────────────────────────────────────────────
   const titles = picks.map((p) => p.title);
   if (e.outcome && body.outcome !== e.outcome) exp.push(`outcome ${body.outcome}, expected ${e.outcome}`);
-  if (e.kept && JSON.stringify(titles) !== JSON.stringify(e.kept)) exp.push(`kept ${JSON.stringify(titles)}, expected ${JSON.stringify(e.kept)}`);
+  // V3 ranks with its own scores (and keeps decks varied), so for V3 the same picks in any order pass.
+  const want = engine === "v3" ? (e.keptV3 ?? e.kept) : e.kept;
+  const same = engine === "v3" ? JSON.stringify([...titles].sort()) === JSON.stringify([...(want ?? [])].sort()) : JSON.stringify(titles) === JSON.stringify(want);
+  if (want && !same) exp.push(`kept ${JSON.stringify(titles)}, expected ${JSON.stringify(want)}`);
+  if (e.gentle !== undefined && (trace as { gentle?: boolean } | undefined)?.gentle !== e.gentle) exp.push(`gentle ${(trace as { gentle?: boolean } | undefined)?.gentle}, expected ${e.gentle}`);
+  if (e.mixed && new Set(picks.map((p) => (p.url.startsWith("/pursuit/") ? "pursuit" : p.url.startsWith("/start/") ? "corner" : p.kind))).size < 2) exp.push("the deck is all one kind");
   for (const t of e.includes ?? []) if (!titles.includes(t)) exp.push(`"${t}" isn't kept`);
   for (const t of e.excludes ?? []) if (titles.includes(t)) exp.push(`"${t}" is kept`);
-  for (const k of e.droppedKeys ?? []) if (!dropped.some((x) => x.key === k)) exp.push(`nothing was dropped as ${k}`);
+  // V3 keeps its drop reasons in the trace (rejected), by its own names; the legacy reasons are checked on legacy.
+  if (engine === "legacy") for (const k of e.droppedKeys ?? []) if (!dropped.some((x) => x.key === k)) exp.push(`nothing was dropped as ${k}`);
   for (const [field, want] of Object.entries(e.contract ?? {})) {
     const got = contract?.[field as keyof typeof e.contract];
     if (!got) {
@@ -146,9 +197,9 @@ export async function runScenario(s: Scenario): Promise<ScenarioResult> {
 }
 
 /** The whole set, and a table by group: what every PR reports from PR 7 on. */
-export async function runAll(scenarios: readonly Scenario[] = SCENARIOS) {
+export async function runAll(scenarios: readonly Scenario[] = SCENARIOS, engine: Engine = "legacy") {
   const results: ScenarioResult[] = [];
-  for (const s of scenarios) results.push(await runScenario(s));
+  for (const s of scenarios) if (!s.engines || s.engines.includes(engine)) results.push(await runScenario(s, engine));
   const groups = new Map<Group, { passed: number; total: number; hard: number }>();
   for (const r of results) {
     const g = groups.get(r.group) ?? { passed: 0, total: 0, hard: 0 };

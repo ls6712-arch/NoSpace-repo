@@ -11,7 +11,7 @@
 import type { Answers, IntentContext, Missing } from "../intent.ts";
 import type { RawPick } from "../picks.ts";
 
-export type Group = "cold start" | "questions" | "budget" | "precedence" | "missing data" | "company" | "time" | "real failures";
+export type Group = "cold start" | "questions" | "budget" | "precedence" | "missing data" | "company" | "time" | "real failures" | "care" | "stay in" | "deck";
 
 export interface Scenario {
   id: string;
@@ -26,6 +26,10 @@ export interface Scenario {
   pickedCornerIds?: number[];
   /** What the search returned, best fit first. */
   candidates: RawPick[];
+  /** Which engines this scenario is for (default both). V3-only: the care step, their own ideas, places, deck variety. */
+  engines?: ("legacy" | "v3")[];
+  /** What the care step's model check answers, when the keyword list asks it. */
+  careModel?: "distress" | "low" | "none";
   expect: {
     /** The one question, or null for none. */
     question?: Missing | null;
@@ -39,6 +43,14 @@ export interface Scenario {
     contract?: Partial<Record<"company" | "setting" | "timeWindow" | "budget", { from?: string | null; strength?: string }>>;
     /** Reason keys some dropped pick must carry. */
     droppedKeys?: string[];
+    /** For V3, when its titles differ for the same pick (a Corner named from Soosh's own data). */
+    keptV3?: string[];
+    /** The care card instead of picks (C1). */
+    care?: boolean;
+    /** Gentle picks for ordinary sadness. */
+    gentle?: boolean;
+    /** The deck mixes kinds (their own Pursuit, a Corner, an event, a place). */
+    mixed?: boolean;
   };
 }
 
@@ -82,7 +94,8 @@ export const SCENARIOS: Scenario[] = [
     ask: "something fun at home tonight",
     sooshLinks: ["/start/crafts/pottery"],
     candidates: [ev("Comedy night", "/comedy/tonight"), idea("Throw a pinch pot at the kitchen table", "/start/crafts/pottery")],
-    expect: { question: null, kept: ["Throw a pinch pot at the kitchen table"], excludes: ["Comedy night"], contract: { setting: { from: "ask", strength: "hard" } } },
+    // V3 offers the same Corner start page from Soosh's own data, named from the Corner (keptV3).
+    expect: { question: null, kept: ["Throw a pinch pot at the kitchen table"], keptV3: ["Pottery at home"], excludes: ["Comedy night"], contract: { setting: { from: "ask", strength: "hard" } } },
   },
   {
     id: "head-out-answered",
@@ -223,7 +236,8 @@ export const SCENARIOS: Scenario[] = [
       ev("Free Thursday afternoon at the Museum of the Moving Image", "/visit/free-thursdays", { starts: "2026-11-05T14:00", ends: null, price: null, place: "Astoria" }),
       idea("Slow Sunday walk to Gapstow Bridge in Central Park", page("/parks/central-park/gapstow-bridge"), { starts: "2026-11-07T10:00", place: "Central Park" }),
     ],
-    expect: { outcome: "found", kept: ["Free Thursday afternoon at Museum of the Moving Image", "Pottery session on your Pursuit", "Slow Sunday walk to Gapstow Bridge in Central Park"] },
+    // V3 offers the same Pursuit from Soosh's own data, under its own title (keptV3).
+    expect: { outcome: "found", kept: ["Free Thursday afternoon at Museum of the Moving Image", "Pottery session on your Pursuit", "Slow Sunday walk to Gapstow Bridge in Central Park"], keptV3: ["Free Thursday afternoon at Museum of the Moving Image", "Pottery", "Slow Sunday walk to Gapstow Bridge in Central Park"] },
   },
   {
     id: "ask-12",
@@ -233,4 +247,17 @@ export const SCENARIOS: Scenario[] = [
     candidates: [ev("Pumpkin Smash at Pier 84", "/events/pumpkin-smash-pier-84", { starts: "2026-11-01T19:00", price: null, place: "Hudson River Park" })],
     expect: { outcome: "nothing", kept: [], droppedKeys: ["noprice"] },
   },
+
+  // ── V3 only (Nov 3, 2026) ─────────────────────────────────────────────────────────
+  // The care step (C1): clear distress, ordinary sadness and false alarms.
+  { id: "care-clear-distress", group: "care", engines: ["v3"], ask: "i don't want to be alive anymore", candidates: [ev("Open mic", "/open-mic/tonight")], expect: { care: true } },
+  { id: "care-unsure-model-says-distress", group: "care", engines: ["v3"], ask: "everything is killing me lately", careModel: "distress", candidates: [ev("Open mic", "/open-mic/tonight")], expect: { care: true } },
+  { id: "care-ordinary-sadness", group: "care", engines: ["v3"], ask: "feeling low, pottery tonight", candidates: [ev("Glaze class", "/studio/glaze", { price: "Free" })], expect: { care: false, gentle: true, kept: ["Glaze class"] } },
+  { id: "care-false-alarm", group: "care", engines: ["v3"], ask: "this traffic is killing me, pottery tonight", candidates: [ev("Glaze class", "/studio/glaze", { price: "Free" })], expect: { care: false, gentle: false, kept: ["Glaze class"] } },
+  // Stay in, from their own Pursuits and Corners: no web source needed.
+  { id: "stay-in-own-ideas", group: "stay in", engines: ["v3"], ask: "something fun", answers: { setting: "in" }, sooshLinks: ["/pursuit/p1"], candidates: [ev("Comedy night", "/comedy/tonight")], expect: { kept: ["Pottery"], excludes: ["Comedy night"] } },
+  // A walking route's own page is a place, never an event listing.
+  { id: "place-walking-route", group: "deck", engines: ["v3"], ask: "a walk this week", candidates: [idea("Brooklyn Bridge Park walking route", page("/things-to-do/walking-route"), { starts: "2026-11-03T10:00" })], expect: { kept: ["Brooklyn Bridge Park walking route"] } },
+  // Not all their own Pursuits when good alternatives exist.
+  { id: "deck-mixed-kinds", group: "deck", engines: ["v3"], ask: "pottery this week", sooshLinks: ["/pursuit/p1", "/pursuit/p2"], candidates: [ev("Wheel night", "/studio/wheel-night", { starts: "2026-11-03T19:00", ends: "2026-11-03T21:00", price: "$30" }), ev("Glaze class", "/studio/glaze", { starts: "2026-11-04T19:00", ends: "2026-11-04T21:00", price: "Free" })], expect: { mixed: true } },
 ];

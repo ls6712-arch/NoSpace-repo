@@ -9,7 +9,10 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
-/** The same optional editor in onboarding and account settings. Nothing is learned by default. */
+/**
+ * The same optional editor in onboarding and account settings (Nov 3, 2026). Stubby uses the
+ * onboarding answers and anything saved here by default; learning from feedback is the only opt-in.
+ */
 export function CapabilityEditor() {
   const { user } = useAuth();
   if (!user || user.is_anonymous) return null;
@@ -50,13 +53,12 @@ function CapabilityForm({ userId }: { userId: string }) {
   };
   return <details className="rounded-control border border-border bg-card p-4">
     <summary className="min-h-11 cursor-pointer text-body font-semibold">What Stubby knows</summary>
-    <p className="mb-3 text-small text-muted-foreground">Optional. Choose what Stubby uses for suggestions. You can change or delete it here.</p>
+    <p className="mb-3 text-small text-muted-foreground">Stubby uses your onboarding answers and anything you save here to fit picks to you. Learning from your feedback is off unless you turn it on. You can change or delete it here.</p>
     {loading && <p role="status">Loading…</p>}
     {message && <p role="status" className="mb-3 text-small">{message}</p>}
     {!loading && loaded && <fieldset disabled={busy} className="flex flex-col gap-4">
-      {([ ["memory", "Use my saved information"], ["onboarding", "Use my onboarding answers"], ["feedback", "Learn from my feedback"] ] as const).map(([key, label]) =>
-        <Label key={key} className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={profile.consent[key]} onChange={e => patch({ consent: { ...profile.consent, [key]: e.target.checked } })} />{label}</Label>)}
-      <p className="text-small text-muted-foreground">Saved information is used only when the first option is on. Feedback stays separate from what you tell Stubby.</p>
+      <Label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={profile.consent.feedback} onChange={e => patch({ consent: { memory: e.target.checked, onboarding: true, feedback: e.target.checked } })} />Learn from my feedback</Label>
+      <p className="text-small text-muted-foreground">Your thumbs up and down on his picks, from the last 60 days. Off unless you turn it on.</p>
       <Label htmlFor={`${id}-tz`}>Timezone</Label>
       <Input id={`${id}-tz`} value={profile.timeZone} onChange={e => patch({ timeZone: e.target.value })} maxLength={80} />
       <Label htmlFor={`${id}-budget`}>Budget for an activity in dollars</Label>

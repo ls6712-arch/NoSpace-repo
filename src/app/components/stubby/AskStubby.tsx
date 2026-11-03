@@ -41,6 +41,7 @@ import {
   type AskAnswers,
   type AskFollowUp,
   type AskStep,
+  type CareCard,
   type IntelligenceNotice,
   type MyPick,
   type Understood,
@@ -144,6 +145,8 @@ export interface AskState {
    * a search or an ask. Null when the last ask wasn't Stay in; empty when there was nothing.
    */
   stayIn: StayInCard[] | null;
+  /** Clear distress (stubby-agent C1): the care card instead of picks. Kept only on screen. */
+  care: CareCard | null;
   /** From the Stay in empty state: the same ask, heading out instead. */
   headOut: () => void;
 }
@@ -219,6 +222,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [offerBirthday, setOfferBirthday] = useState(false);
   const [tonight, setTonight] = useState(false);
   const [stayIn, setStayIn] = useState<StayInCard[] | null>(null);
+  const [care, setCare] = useState<CareCard | null>(null);
   const [who, setWho] = useState<Who | null>(() => {
     const w = readSession<{ who?: string }>(ANSWERS_KEY)?.who;
     return w && (WHO_VALUES as readonly string[]).includes(w) ? (w as Who) : null;
@@ -344,6 +348,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       setUnderstood(null);
       setSteps([]);
       setStayIn(null);
+      setCare(null);
       // Stay in, answered or typed: their own Pursuits and Corners, never the web search (which
       // drops every event, so it could come back with nothing). No ask is used.
       if (opts.answers?.setting === "in" || (!opts.followUp && opts.answers?.setting !== "out" && saysStayIn(what))) {
@@ -399,6 +404,11 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
           access.showLimit(r.limit);
         }
         react.current?.("shrug");
+        return;
+      }
+      if (r.care) {
+        // No picks, no ask used, and the words stay only in the field. Stubby doesn't react.
+        setCare(r.care);
         return;
       }
       if (r.question) {
@@ -661,6 +671,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     birthdayAdded: () => setOfferBirthday(false),
     stayIn,
     headOut,
+    care,
   };
 }
 

@@ -1,5 +1,6 @@
 import { expect, it, vi } from "vitest";
-import { handleScout, EMPTY_PROFILE, type ScoutDeps, readSettings } from "../../supabase/functions/stubby-scout/handler.ts";
+import { handleScout, engineFor, type ScoutDeps, readSettings } from "../../supabase/functions/stubby-scout/handler.ts";
+import type { V3DecisionTrace } from "../../supabase/functions/stubby-scout/v3/types.ts";
 import { runV3 } from "../../supabase/functions/stubby-scout/v3/orchestrator.ts";
 import { candidate, input, NOW } from "./fixtures.ts";
 import { createV3Provider } from "../../supabase/functions/stubby-scout/v3/provider.ts";
@@ -25,7 +26,9 @@ it("reuses verified identity, atomic quota, and private persistence without publ
   expect(d.server.insertPersonal).toHaveBeenCalledWith(expect.objectContaining({ user_id: "alice", ask_id: 7 }));
   expect(d.server.insertPick).not.toHaveBeenCalled(); expect(d.search).not.toHaveBeenCalled();
   const trace = vi.mocked(d.server.finishAsk).mock.calls[0][1].trace;
-  expect(trace).toMatchObject({ version: "stubby-v3.3", outcome: "verified", sources: [{ rank: 0 }] });
+  expect(trace).toMatchObject({ version: "stubby-v3.4", engine: "v3", outcome: "verified", sources: [{ rank: 0 }], deck: [{ rank: 0, source: "web", kind: "event" }] });
+  // The request contract (PR 7) is saved with every V3 ask too.
+  expect(trace!.contract).toMatchObject({ budget: { strength: "hard", from: "ask" } });
   expect(JSON.stringify(trace)).not.toContain(input().text);
 });
 it("cross-user forged fields are refused before tools execute", async () => {
@@ -77,11 +80,15 @@ it("does not truncate a late hard constraint in a valid 500-character request", 
   await handleScout(ask({ ask: text }), d);
   expect(d.v3).toHaveBeenCalledWith(expect.objectContaining({ text }));
 });
-it("missing/revoked memory is not sent to the model, including legacy onboarding", async () => {
+it("uses the onboarding answers with nothing saved, and feedback only with its opt-in (Nov 3, 2026)", async () => {
   const d = deps(); d.db.capability = async () => { throw new Error("missing migration"); };
+  vi.mocked(d.db.signals!).mockResolvedValue([{ signal: "up", title: "Wheel night", kind: "event" }]);
   await handleScout(ask({ answers: { skip: true } }), d);
-  expect(d.db.profile).not.toHaveBeenCalled();
-  expect(d.v3).toHaveBeenCalledWith(expect.objectContaining({ profile: EMPTY_PROFILE, learned: [] }));
+  expect(d.db.profile).toHaveBeenCalled();
+  expect(d.v3).toHaveBeenCalledWith(expect.objectContaining({ profile: input().profile, learned: [] }));
+  d.db.capability = vi.fn(async () => ({ ...input().capability, consent: { memory: true, onboarding: true, feedback: true } }));
+  await handleScout(ask({ answers: { skip: true } }), d);
+  expect(vi.mocked(d.v3!).mock.calls[1][0].learned).toEqual([{ source: "feedback", signal: "up", title: "Wheel night", kind: "event" }]);
 });
 it("streams the V3 outcome and distinguishes a persistence failure from a recommendation", async () => {
   const d = deps(); const res = await handleScout(ask({ stream: true }), d);
@@ -90,17 +97,42 @@ it("streams the V3 outcome and distinguishes a persistence failure from a recomm
   const body = await (await handleScout(ask(), d)).json();
   expect(body.picks).toEqual([]); expect(body.intelligence.outcome).toBe("no_verified_match");
 });
-it("selects keys by server-side provider flag, keeping Anthropic as rollback", () => {
-  const env: Record<string, string> = { STUBBY_ASK_ENGINE: "v3", STUBBY_V3_PROVIDER: "openai", OPENAI_API_KEY: "test" };
-  expect(readSettings(k => env[k])).toMatchObject({ askEngine: "v3", askHasKey: true, hasKey: false });
-  delete env.STUBBY_ASK_ENGINE;
-  expect(readSettings(k => env[k])).toMatchObject({ askEngine: "legacy", askHasKey: false });
+it("V3 is per account: STUBBY_V3_TESTERS only, everyone else stays on legacy, guests never test", () => {
+  const id = "0b6e7f6a-1c2d-4e5f-8a9b-0c1d2e3f4a5b";
+  const read = readSettings((k) => ({ STUBBY_V3_TESTERS: ` ${id.toUpperCase()}, not-an-id ,`, ANTHROPIC_API_KEY: "k" })[k]);
+  expect(read).toMatchObject({ askEngine: "legacy", askHasKey: true, v3Testers: [id] });
+  expect(engineFor(read, id, { guest: false, member: true })).toBe("shadow");
+  expect(engineFor(read, "someone-else", { guest: false, member: true })).toBe("legacy");
+  expect(engineFor(read, id, { guest: true, member: false })).toBe("legacy");
+  expect(engineFor(readSettings((k) => ({ STUBBY_ASK_ENGINE: "v3" })[k]), "anyone", { guest: true, member: false })).toBe("v3");
+  expect(readSettings(() => undefined)).toMatchObject({ askEngine: "legacy", v3Testers: [] });
+});
+it("shadow compare: a tester sees the V3 deck, and both decks are saved in the trace, never the ask", async () => {
+  const d = deps(); d.settings = { ...d.settings, askEngine: "legacy", v3Testers: ["alice"] };
+  const legacyPick = { kind: "event", title: "Legacy wheel night", place: "Brooklyn", starts: "2026-11-03T19:30", ends: "2026-11-03T21:00", price: "$15", url: "https://example.org/studio/legacy", corner: null, why: "Good.", unsure: null };
+  d.search = vi.fn(async () => ({ text: `<picks>${JSON.stringify([legacyPick])}</picks>`, sourceLinks: new Set(["example.org/studio/legacy"]), searches: 1 }));
+  // Not the fixture's "indoors": legacy reads that as Stay in and keeps no events (V3 reads indoor).
+  const text = "pottery tonight under $20";
+  const body = await (await handleScout(ask({ ask: text }), d)).json();
+  expect(body.picks.map((p: { title: string }) => p.title)).toEqual(["Indoor pottery"]);
+  expect(d.server.insertPersonal).toHaveBeenCalledTimes(1);
+  expect(d.server.insertPick).not.toHaveBeenCalled();
+  const trace = vi.mocked(d.server.finishAsk).mock.calls[0][1].trace as V3DecisionTrace;
+  expect(trace.deck.map(p => p.title)).toEqual(["Indoor pottery"]);
+  expect(trace.legacy).toMatchObject({ outcome: "found", deck: [{ title: "Legacy wheel night", source: "web" }] });
+  expect(JSON.stringify(trace)).not.toContain(text);
+  expect(new TextEncoder().encode(JSON.stringify(trace)).length).toBeLessThan(16384);
+  // A legacy failure never costs the tester their V3 deck.
+  d.search = vi.fn(async () => { throw new Error("down"); });
+  const again = await (await handleScout(ask({ ask: text }), d)).json();
+  expect(again.picks).toHaveLength(1);
+  expect((vi.mocked(d.server.finishAsk).mock.calls[1][1].trace as V3DecisionTrace).legacy).toEqual({ failed: true });
 });
 it("runs an authenticated V3 ask through Claude with the existing key and saves only private picks", async () => {
-  const values: Record<string, string> = { STUBBY_ASK_ENGINE: "v3", STUBBY_SCOUT_ENABLED: "true", ANTHROPIC_API_KEY: "existing-test-key" };
+  const values: Record<string, string> = { STUBBY_V3_TESTERS: "0b6e7f6a-1c2d-4e5f-8a9b-0c1d2e3f4a5b", STUBBY_SCOUT_ENABLED: "true", ANTHROPIC_API_KEY: "existing-test-key" };
   const env = (key: string) => values[key];
   const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(wireResponse(claudeResearch)).mockResolvedValueOnce(wireResponse(claudeStructured()));
-  const d = deps(); d.settings = readSettings(env);
+  const d = deps(); d.settings = { ...readSettings(env), askEngine: "v3" };
   d.v3 = async request => {
     const selected = createV3Provider(env, { fetchImpl, maxSearches: request.searchLimit });
     return runV3(request, { discovery: [selected.adapter], usage: selected.usage });

@@ -10,13 +10,19 @@ vi.mock("../../lib/capabilityProfileRemote", () => remote);
 vi.mock("../../lib/tasteRemote", () => ({ fetchTaste: async () => ({ picks: [], windows: [], budget: null }), fetchPasses: async () => [] }));
 beforeEach(() => { vi.clearAllMocks(); remote.fetchCapability.mockResolvedValue(emptyCapability()); remote.saveCapability.mockResolvedValue(undefined); remote.deleteCapability.mockResolvedValue(undefined); });
 afterEach(cleanup);
-const show = async () => { render(<MemoryRouter><CapabilityEditor /></MemoryRouter>); fireEvent.click(screen.getByText("What Stubby knows")); await screen.findByText("Use my saved information"); };
-it("makes consent optional and saves edited resources without auto-learning", async () => {
-  await show(); const consent = screen.getByLabelText("Use my saved information") as HTMLInputElement;
-  expect(consent.checked).toBe(false); fireEvent.click(consent);
+const show = async () => { render(<MemoryRouter><CapabilityEditor /></MemoryRouter>); fireEvent.click(screen.getByText("What Stubby knows")); await screen.findByText("Learn from my feedback"); };
+it("uses onboarding answers by default; learning from feedback is the only switch, and it starts off (Nov 3, 2026)", async () => {
+  await show();
+  expect(screen.queryByLabelText("Use my onboarding answers")).toBeNull();
+  expect(screen.queryByLabelText("Use my saved information")).toBeNull();
+  const learn = screen.getByLabelText("Learn from my feedback") as HTMLInputElement;
+  expect(learn.checked).toBe(false);
   fireEvent.change(screen.getByLabelText("Equipment and resources"), { target: { value: "guitar\npaints" } });
   fireEvent.click(screen.getByText("Save changes"));
-  await waitFor(() => expect(remote.saveCapability).toHaveBeenCalledWith(expect.objectContaining({ equipment: ["guitar", "paints"], consent: { memory: true, onboarding: false, feedback: false } }), undefined, "alice"));
+  await waitFor(() => expect(remote.saveCapability).toHaveBeenCalledWith(expect.objectContaining({ equipment: ["guitar", "paints"], consent: { memory: false, onboarding: false, feedback: false } }), undefined, "alice"));
+  fireEvent.click(learn);
+  fireEvent.click(screen.getByText("Save changes"));
+  await waitFor(() => expect(remote.saveCapability).toHaveBeenLastCalledWith(expect.objectContaining({ consent: { memory: true, onboarding: true, feedback: true } }), undefined, "alice"));
 });
 it("asks before deleting and clears only after successful deletion", async () => {
   await show(); fireEvent.click(screen.getByText("Delete saved information"));

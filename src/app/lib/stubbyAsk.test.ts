@@ -19,7 +19,7 @@ vi.mock("../../lib/supabase", () => {
   };
 });
 
-import { askStubbyStream, fetchMyPicks, type AskStep } from "./stubbyAsk";
+import { askStubbyStream, fetchMyPicks, readCare, type AskStep } from "./stubbyAsk";
 import { STUBBY_VERSION } from "../../../supabase/functions/_shared/stubbyVersion.ts";
 
 const NOW = Date.UTC(2026, 10, 1, 22);
@@ -135,3 +135,27 @@ describe("askStubbyStream", () => {
   });
 });
 
+describe("the care card (stubby-agent C1)", () => {
+  const card = {
+    line: "That sounds really hard. You don’t have to handle it alone.",
+    resources: [{ label: "Call 988", detail: "988 Suicide and Crisis Lifeline, any time", href: "tel:988" }, { label: "Bad", detail: "x", href: "javascript:alert(1)" }],
+    emergency: { label: "Call 911", detail: "If you’re in danger right now", href: "tel:911" },
+    friend: { label: "Message a friend", href: "/messages" },
+  };
+  it("keeps only tel:, sms: and https: links, and the friend link only to Messages", () => {
+    const c = readCare(card)!;
+    expect(c.resources.map((r) => r.href)).toEqual(["tel:988"]);
+    expect(c.emergency?.href).toBe("tel:911");
+    expect(c.friend).toEqual({ label: "Message a friend", href: "/messages" });
+    expect(readCare({ ...card, friend: { label: "x", href: "https://evil.example" } })!.friend).toBeNull();
+    expect(readCare({ nope: true })).toBeNull();
+  });
+  it("comes back as a care answer, with no picks and no ask used", async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ care: card }), { status: 200, headers: { "content-type": "application/json" } }));
+    const r = await askStubbyStream("i want to die", { onStep: () => undefined });
+    expect(r.care?.line).toBe(card.line);
+    expect(r.found).toBe(0);
+    expect(r.asksLeft).toBeNull();
+    vi.unstubAllGlobals();
+  });
+});

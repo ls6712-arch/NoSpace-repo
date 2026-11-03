@@ -45,7 +45,7 @@ PLAYWRIGHT_CHROMIUM=/usr/bin/chromium npm run e2e:guest
 ```
 
 It builds with the frontend V3 flag and mocks Supabase, including Google return.
-It is not a live OAuth, live OpenAI or hosted RLS test. Keep those outcomes separate.
+It is not a live OAuth, live Claude or hosted RLS test. Keep those outcomes separate.
 
 The second review adds reasoning.test.ts and expands the frozen golden set to
 46 scenarios. review-report.json summarizes the executed full suite and separates
@@ -62,11 +62,13 @@ JSON
 DENO_DIR=/tmp/stubby-deno-cache DENO_NO_UPDATE_CHECK=1 /tmp/stubby-edge-tools/node_modules/.bin/deno check --no-remote --config /tmp/stubby-deno.json supabase/functions/stubby-scout/index.ts
 ```
 
-Claude provider tests are in anthropic.test.ts and provider.test.ts. Both adapters
-share modelContract.ts and are covered by the original OpenAI protocol tests.
+Claude provider tests are in anthropic.test.ts and provider.test.ts. V3 is Claude only
+(Nov 3, 2026): the OpenAI adapter and its tests are removed. care.test.ts covers the care step,
+soosh.test.ts their own Pursuits and Corners, materials and deck variety.
 compatibility-review-report.json contains the latest complete local validation
 summary. pr-review-report.json preserves the reconciliation review,
 provider-report.json the provider-stage results, and review-report.json the
 earlier reasoning review. Real credit balances
 and charges are not asserted by HTTP mocks. See docs/stubby-v3/claude-provider.md
-for the default routing, existing secret reuse and explicit OpenAI opt-in.
+for the existing secret reuse. The PR 7 scenario set runs through both engines by group in
+supabase/functions/stubby-scout/eval/eval.test.ts.

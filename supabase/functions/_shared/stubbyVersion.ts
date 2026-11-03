@@ -3,10 +3,11 @@
 // updating, try again in a minute." instead of a bare 400, and sends its own on every answer.
 //
 // Bump STUBBY_VERSION whenever what the app sends or what the function answers changes shape.
-// stubbyVersion.test.ts holds schema.ts (the request check) to the hash below, so changing the
+// version.test.ts holds schema.ts (the request check) to the hash below, so changing the
 // request check without a bump fails npm test. Pure, no dependencies: imported by both sides.
 
-export const STUBBY_VERSION = "2026-11-03.2";
+/** .3 (Nov 3, 2026): an answer can be a care card (V3, stubby-agent C1). */
+export const STUBBY_VERSION = "2026-11-03.3";
 export const STUBBY_VERSION_HEADER = "stubby-version";
 
 /** sha256 of supabase/functions/stubby-scout/schema.ts at this version. Update it with the bump. */

@@ -1,6 +1,10 @@
--- Private capability extension. Original onboarding stays in its existing tables.
--- Apply only to an approved test project first. Rollback paired below.
-begin;
+-- Private capability extension for Stubby V3 (#316): What Stubby knows (timezone, budget for an
+-- activity, equipment, goals, preferences, memberships) and the learn-from-feedback opt-in. Original
+-- onboarding stays in its existing tables and is used by default (Nov 3, 2026); only learning from
+-- feedback needs consent.feedback. Applied on merge (the project is linked to main), approved by name
+-- first. No explicit transaction: the integration runs each migration file in its own.
+-- Verification: supabase/verification/stubby_capabilities_check.sql.
+-- Rollback: rollback_20261112000000_stubby_capabilities.sql.
 create table if not exists public.stubby_capabilities (
   user_id uuid primary key references auth.users(id) on delete cascade,
   profile jsonb not null check (coalesce((
@@ -42,4 +46,3 @@ insert into private.access_allowlist (kind, name, reason) values
   ('table_nonmember', 'stubby_capabilities', 'Owner-only memory for non-anonymous accounts; no guest access'),
   ('rpc_account', 'forget_stubby_memory', 'Caller-scoped deletion of private memory and feedback')
 on conflict (kind, name) do update set reason = excluded.reason;
-commit;

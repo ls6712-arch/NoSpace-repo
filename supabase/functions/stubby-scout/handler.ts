@@ -40,10 +40,14 @@ import { BodyError, parseBody } from "./schema.ts";
 import { EMPTY_TASTE, tasteIsEmpty, tasteLines, type Signal, type Taste } from "./taste.ts";
 import { STUBBY_UPDATING, STUBBY_VERSION, STUBBY_VERSION_HEADER, versionMatches } from "../_shared/stubbyVersion.ts";
 
-import { emptyCapability, type CapabilityProfile } from "../_shared/capabilityProfile.ts";
-import { currentIntent } from "./v3/context.ts";
+import { emptyCapability, validTimeZone, type CapabilityProfile } from "../_shared/capabilityProfile.ts";
+import { currentIntent, learnsFromFeedback } from "./v3/context.ts";
 import { providerHasKey } from "./v3/provider.ts";
-import type { RequestInput, V3Report, V3DecisionTrace } from "./v3/types.ts";
+import { careCheck, type CareModel } from "./v3/care.ts";
+import { careCountry, DRAFTED_ON, type CareResource } from "./v3/careResources.ts";
+import { isSoosh } from "./v3/evidence.ts";
+import { needsLine } from "./v3/soosh.ts";
+import type { RequestInput, TraceDeckPick, V3Report, V3DecisionTrace } from "./v3/types.ts";
 
 export const CITY = "new-york";
 /** The morning restock fills this many days ahead. */
@@ -55,8 +59,11 @@ const DAY_MS = 24 * 3_600_000;
 export interface ScoutSettings {
   enabled: boolean;
   hasKey: boolean;
+  /** "v3": V3 for everyone (only when the founder says so). Otherwise legacy, except for v3Testers. */
   askEngine?: "legacy" | "v3";
   askHasKey?: boolean;
+  /** STUBBY_V3_TESTERS: the accounts that get V3, with legacy run alongside to compare (shadow). */
+  v3Testers?: readonly string[];
   runsPerDay: number;
   maxSearches: number;
   restockSearches: number;
@@ -128,8 +135,8 @@ export interface PersonProfile {
   city: string | null;
   area: string | null;
   passes: { label: string; place: string | null; kind?: string }[];
-  /** Their own Pursuits that are going (not finished, paused, let go, archived or a one-off plan). */
-  pursuits: { id: string; title: string }[];
+  /** Their own Pursuits that are going (not finished, paused, let go, archived or a one-off plan), with their Corner when known. */
+  pursuits: { id: string; title: string; corner?: string | null }[];
 }
 
 export const EMPTY_PROFILE: PersonProfile = { picks: [], windows: [], monthlyBudget: null, city: null, area: null, passes: [], pursuits: [] };
@@ -204,6 +211,8 @@ export interface ScoutDeps {
   };
   search(r: SearchRequest): Promise<SearchResult>;
   v3?(input: RequestInput): Promise<V3Report>;
+  /** The care step's model check (v3/care.ts), for text the keyword list can't settle. Never stores the text. */
+  careModel?: CareModel;
 }
 
 export interface ScoutReport {
@@ -247,6 +256,36 @@ export interface AskReport {
    */
   adultsLeftOut?: boolean;
   intelligence?: Pick<V3Report, "outcome" | "fallback" | "warnings">;
+}
+
+/**
+ * The care card (stubby-agent C1): instead of picks, when an ask reads as clear distress. No ask is
+ * used and nothing about it is stored. The app shows the line, the resources for their country, the
+ * emergency line and a way to message a friend.
+ */
+export interface CareAnswer {
+  care: {
+    line: string;
+    resources: CareResource[];
+    emergency: CareResource;
+    friend: { label: string; href: string };
+    draftedOn: string;
+  };
+}
+export const CARE_LINE = "That sounds really hard. You don’t have to handle it alone.";
+export const CARE_FRIEND = { label: "Message a friend", href: "/messages" };
+
+/** Which engine answers this caller: V3 for everyone only when switched on; testers get V3 with legacy alongside. Guests never test. */
+export function engineFor(s: ScoutSettings, userId: string, who: CallerInfo): "legacy" | "v3" | "shadow" {
+  if (s.askEngine === "v3") return "v3";
+  if (!who.guest && (s.v3Testers ?? []).includes(userId)) return "shadow";
+  return "legacy";
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** STUBBY_V3_TESTERS: user ids, comma or space separated. Anything that isn't a user id is ignored. */
+export function readTesters(v: string | undefined): string[] {
+  return [...new Set((v ?? "").split(/[\s,]+/).map((x) => x.trim().toLowerCase()).filter((x) => UUID.test(x)))].slice(0, 50);
 }
 
 /** Answered instead of searching when one thing worth a question is missing, and the app asked to be asked. No ask is used. */
@@ -566,8 +605,10 @@ async function ask(
   stream = false,
   followUp: (FollowUp & { of: number }) | null = null,
 ): Promise<Response> {
+  const engine = engineFor(deps.settings, userId, who);
+  const v3 = engine !== "legacy";
   // Their own words, one plain line. Double quotes become single so the prompt stays one quote.
-  const text = cleanText(raw).replace(/"/g, "'").slice(0, deps.settings.askEngine === "v3" ? 500 : 200);
+  const text = cleanText(raw).replace(/"/g, "'").slice(0, v3 ? 500 : 200);
   if (text.length < 2) return fail(400, "Say what you're after, like pottery on Saturday.");
 
   const now = deps.now();
@@ -575,20 +616,39 @@ async function ask(
   const asksPerPerson = limits.perPerson;
   // Follow-ups (Cheaper, Closer and the rest) are for accounts: the app asks a guest to sign up.
   if (followUp && who.guest) return json(403, { error: "Sign up to ask Stubby for more.", code: "SIGNUP_REQUIRED" });
-  // Read as them, from their own rows only. Best effort: without it, he still searches.
-  const v3 = deps.settings.askEngine === "v3";
   if (v3 && !deps.v3) return fail(503, "Stubby’s new search is unavailable.");
+
+  // Read as them, from their own rows only. Best effort: without it, he still searches. The
+  // onboarding answers are used by default (Nov 3, 2026); learning from feedback is the only opt-in.
   const capability = v3 && !who.guest && deps.db.capability ? await deps.db.capability(userId).catch(() => emptyCapability()) : emptyCapability();
-  const canUseOnboarding = !v3 || (capability.consent.memory && capability.consent.onboarding);
-  const profile = canUseOnboarding ? await deps.db.profile(userId).catch(() => EMPTY_PROFILE) : EMPTY_PROFILE;
+  const profile = await deps.db.profile(userId).catch(() => EMPTY_PROFILE);
+  const zone = validTimeZone(capability.timeZone) ? capability.timeZone : "America/New_York";
+
+  // Step 1, safety routing (C1), before anything is claimed: clear distress gets the care card and
+  // no picks. Nothing about it is stored, and no ask is used.
+  let gentle = false;
+  if (v3) {
+    const level = await careCheck(text, deps.careModel);
+    if (level === "distress") {
+      const country = careCountry(profile.city, zone);
+      const answer: CareAnswer = { care: { line: CARE_LINE, resources: country.resources, emergency: country.emergency, friend: CARE_FRIEND, draftedOn: DRAFTED_ON } };
+      return json(200, answer);
+    }
+    gentle = level === "low";
+  }
+
   const taste = (!v3 || who.guest) && deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
-  const signals = (!v3 || (capability.consent.memory && capability.consent.feedback)) && deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
+  // Legacy reads feedback as it always has (it runs alongside V3 for testers); V3 only with consent.
+  const signals = (engine !== "v3" || learnsFromFeedback(capability)) && deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
   const corners = await deps.server.corners();
   const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
   const picked = profile.picks.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []));
-  const read = v3 ? currentIntent(text, now, capability.consent.memory ? capability.timeZone : "America/New_York", answers, corners.map(c => c.name)) : readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers });
+  const legacyRead = engine !== "v3" ? readIntent(text, { now, windows: profile.windows, monthlyBudget: profile.monthlyBudget, cornerNames: picked.map((c) => c.name), answers }) : null;
+  const read = v3 ? currentIntent(text, now, zone, answers, corners.map(c => c.name)) : legacyRead!;
   // 21+ only with a birthdate on file at least 21 years ago. Guests never; nobody without one.
-  const intent: Intent = who.adult21 === true && !who.guest ? read : { ...read, adults: false };
+  const adultOk = who.adult21 === true && !who.guest;
+  const intent: Intent = adultOk ? read : { ...read, adults: false };
+  const legacyIntent: Intent | null = legacyRead ? (adultOk ? legacyRead : { ...legacyRead, adults: false }) : null;
   const adultsLeftOut = read.adults && !intent.adults && !who.guest;
 
   // Nothing known about them yet: a vague ask gets one question first, even if the app didn't ask for it.
@@ -607,49 +667,21 @@ async function ask(
   const askId = claim.askId;
   // A free follow-up's picks rank after its ask's own.
   const rankFrom = free ? 10 : 0;
+  const maxSearches = who.guest ? Math.min(deps.settings.guestMaxSearches ?? 3, deps.settings.maxSearches) : deps.settings.maxSearches;
 
   let found = 0;
-  // Everything from the search to the saved picks. Streams its steps through `emit` when asked.
-  const work = async (emit: Emit): Promise<AskReport> => {
-    if (v3) {
-      // Quotas and identity have already been verified. No public-pick write exists on this path.
-      const zone = capability.consent.memory ? capability.timeZone : "America/New_York";
-      const change = followUp ? applyFollowUp(intent, searchWindow(intent, now, zone), followUp.kind, now) : null;
-      const report = await deps.v3!({ text, now, profile, capability, knownTopics: corners.map(c => c.name),
-        learned: signals.map(s => ({ source: "feedback" as const, ...s })),
-        adult21: who.adult21 === true && !who.guest, answers, searchLimit: who.guest ? Math.min(deps.settings.guestMaxSearches ?? 3, deps.settings.maxSearches) : deps.settings.maxSearches, sessionCity: who.guest ? taste.city : null,
-        budgetOverride: followUp?.kind === "cheaper" ? change?.intent.budget?.max : undefined,
-        travelOverride: followUp?.kind === "closer" ? 20 : undefined,
-        notBefore: followUp?.kind === "later" ? Math.max(now, intent.when?.startMs ?? now) + 2 * 3600000 : undefined, exclude: followUp?.titles ?? [] });
-      emit("picking", { type: "picking" });
-      const mine: AskPick[] = [];
-      for (const [rank, r] of report.recommendations.entries()) {
-        const c = r.candidate;
-        const p: AskPick = { kind: c.kind, title: c.title, place: c.place, startsAt: c.startsAt, endsAt: c.endsAt,
-          price: c.cost ? c.cost.max === 0 ? "Free" : `Up to $${c.cost.max}` : null,
-          url: c.evidence[0].url, cornerId: null,
-          note: [r.verification === "partial" ? "Details need confirmation." : "Source verified.", ...r.uncertainties].join(" ").slice(0, 200),
-          why: r.explanation, after: false, betterWithFriend: false };
-        if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
-      }
-      const rejected: Record<string, number> = {};
-      for (const d of report.dropped) rejected[d.reason] = (rejected[d.reason] ?? 0) + 1;
-      if (!free) await deps.server.finishAsk(askId, { found: report.recommendations.length, added: mine.length, failed: false,
-        trace: { version: report.version, outcome: report.outcome, found: report.recommendations.length, added: mine.length,
-          usage: report.usage, rejected, sources: report.recommendations.slice(0, 3).map((r, rank) => ({ rank,
-            evidence: r.candidate.evidence.slice(0, 3), verification: r.verification })) } });
-      return { picks: mine.map(p => ({ ...p, startsAt: new Date(p.startsAt).toISOString(), endsAt: p.endsAt === null ? null : new Date(p.endsAt).toISOString() })),
-        outcome: mine.length ? "found" : "nothing", understood: understoodOf(change?.intent ?? intent), dropped: [],
-        asksLeft: Math.max(0, asksPerPerson - await deps.server.asksSince(userId, now - DAY_MS)), askId, free, reasons: [],
-        ...(adultsLeftOut ? { adultsLeftOut: true } : {}),
-        intelligence: { outcome: mine.length ? report.outcome : "no_verified_match", fallback: report.fallback ?? (mine.length ? null : "No new picks were saved. Try different words."), warnings: report.warnings } };
-    }
-    const changed = followUp ? applyFollowUp(intent, searchWindow(intent, now), followUp.kind, now) : { intent, window: searchWindow(intent, now) };
+
+  /**
+   * The legacy engine's deck for this ask, nothing saved: what it searched, kept and dropped. Shown
+   * and saved on the legacy path; on the shadow path only compared, in the trace.
+   */
+  const legacyDeck = async (li: Intent, emit: Emit, live: boolean) => {
+    const changed = followUp ? applyFollowUp(li, searchWindow(li, now), followUp.kind, now) : { intent: li, window: searchWindow(li, now) };
     const window = changed.window;
     const asked = changed.intent;
     const person = aboutPerson(profile, picked, taste, signals);
     let picking = false;
-    const onProgress = stream
+    const onProgress = live && stream
       ? (e: SearchProgress) => {
           if (e.type === "picking") picking = true;
           emit(e.type, e);
@@ -660,7 +692,7 @@ async function ask(
         focus: null,
         ask: text,
         cornerNames: corners.map((c) => c.name),
-        maxSearches: who.guest ? Math.min(deps.settings.guestMaxSearches ?? 3, deps.settings.maxSearches) : deps.settings.maxSearches,
+        maxSearches,
         prompt: { system: askSystemPrompt(), user: askUserPrompt(text, asked, window, person, now, followUp, gaps) },
         onProgress,
       });
@@ -698,9 +730,75 @@ async function ask(
         // The second round is a bonus: what the first one found still stands.
       }
     }
-    if (stream && !picking) emit("picking", { type: "picking" });
-    found = rawPicks.length;
-    const { kept, dropped, outcome } = checked;
+    if (live && stream && !picking) emit("picking", { type: "picking" });
+    return { ...checked, found: rawPicks.length, rounds, asked, window, person };
+  };
+
+  /** V3, saved and shown. On the shadow path, legacy runs alongside and its deck goes in the trace only. */
+  const v3Work = async (emit: Emit): Promise<AskReport> => {
+    const change = followUp ? applyFollowUp(intent, searchWindow(intent, now, zone), followUp.kind, now) : null;
+    const input: RequestInput = { text, now, profile, capability, knownTopics: corners.map(c => c.name),
+      learned: learnsFromFeedback(capability) ? signals.map(s => ({ source: "feedback" as const, ...s })) : [],
+      adult21: adultOk, answers, searchLimit: maxSearches, sessionCity: who.guest ? taste.city : null, gentle,
+      budgetOverride: followUp?.kind === "cheaper" ? change?.intent.budget?.max : undefined,
+      travelOverride: followUp?.kind === "closer" ? 20 : undefined,
+      notBefore: followUp?.kind === "later" ? Math.max(now, intent.when?.startMs ?? now) + 2 * 3600000 : undefined, exclude: followUp?.titles ?? [] };
+    const [report, shadow] = await Promise.all([
+      deps.v3!(input),
+      engine === "shadow" && legacyIntent ? legacyDeck(legacyIntent, emit, false).catch(() => null) : Promise.resolve(null),
+    ]);
+    emit("picking", { type: "picking" });
+    const mine: AskPick[] = [];
+    for (const [rank, r] of report.recommendations.entries()) {
+      const c = r.candidate;
+      const own = isSoosh(c);
+      const p: AskPick = { kind: c.kind === "event" ? "event" : "idea", title: c.title, place: c.place, startsAt: c.startsAt, endsAt: c.endsAt,
+        // Their own Pursuit or Corner: no price claimed; what it needs is the note instead of an uncertainty.
+        price: own ? null : c.cost ? c.cost.max === 0 ? "Free" : `Up to $${c.cost.max}` : null,
+        url: c.evidence[0].url, cornerId: null,
+        note: own ? needsLine(c.needs) : [r.verification === "partial" ? "Details need confirmation." : "Source verified.", ...r.uncertainties].join(" ").slice(0, 200),
+        why: r.explanation, after: r.after === true, betterWithFriend: false };
+      if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
+    }
+    const rejected: Record<string, number> = {};
+    for (const d of report.dropped) rejected[d.reason] = (rejected[d.reason] ?? 0) + 1;
+    const typed = change?.intent ?? intent;
+    // The contract says what bound this ask: a typed budget is hard; the onboarding budget is soft (C3).
+    const softBudget = capability.perActivityBudget ?? (profile.monthlyBudget !== null ? Math.floor(profile.monthlyBudget / 4) : null);
+    const asked: Intent = typed.budget || softBudget === null ? typed : { ...typed, budget: { max: softBudget, free: softBudget === 0, from: "profile" }, from: { ...typed.from, budget: "profile" } };
+    const window = asked.when ?? searchWindow(asked, now, zone);
+    const deckOf = (r: V3Report["recommendations"]): TraceDeckPick[] => r.slice(0, 5).map((x, rank) => ({ title: x.candidate.title.slice(0, 80), kind: x.candidate.kind,
+      source: isSoosh(x.candidate) ? "soosh" : "web", verification: x.verification, rank, after: x.after === true }));
+    const trace: V3DecisionTrace = {
+      version: report.version, engine: "v3",
+      contract: buildContract(asked, window),
+      preferences: explicitPreferences({ corners: picked.map(c => c.name), monthlyBudget: profile.monthlyBudget, freeTimes: windowWords(profile.windows), passes: profile.passes.map(p => p.label), neighborhood: cleanText(profile.area) || null, city: cleanText(profile.city) || null }).map(p => p.attribute),
+      cityFrom: report.cityFrom ?? null, gentle, outcome: report.outcome, found: report.recommendations.length, added: mine.length, usage: report.usage, rejected,
+      deck: deckOf(report.recommendations),
+      sources: report.recommendations.slice(0, 3).map((r, rank) => ({ rank, evidence: r.candidate.evidence.slice(0, 2), verification: r.verification })),
+    };
+    if (engine === "shadow") {
+      const dropped: Record<string, number> = {};
+      for (const d of shadow?.dropped ?? []) dropped[d.key ?? "other"] = (dropped[d.key ?? "other"] ?? 0) + 1;
+      trace.legacy = shadow
+        ? { version: STUBBY_CONFIG.version, outcome: shadow.outcome, found: shadow.found, rounds: shadow.rounds, dropped,
+            deck: shadow.kept.slice(0, 5).map((p, rank) => ({ title: p.title.slice(0, 80), kind: p.kind, source: p.url.startsWith("/") ? "soosh" : "web", verification: p.note ? "partial" : "verified", rank, after: p.after })) }
+        : { failed: true };
+    }
+    if (!free) await deps.server.finishAsk(askId, { found: report.recommendations.length, added: mine.length, failed: false, trace: fitTrace(trace) });
+    const outcome = mine.length === 0 ? "nothing" : report.after ? "after" : "found";
+    return { picks: mine.map(p => ({ ...p, startsAt: new Date(p.startsAt).toISOString(), endsAt: p.endsAt === null ? null : new Date(p.endsAt).toISOString() })),
+      outcome, understood: understoodOf(asked), dropped: [],
+      asksLeft: Math.max(0, asksPerPerson - await deps.server.asksSince(userId, now - DAY_MS)), askId, free, reasons: [],
+      ...(adultsLeftOut ? { adultsLeftOut: true } : {}),
+      intelligence: { outcome: mine.length ? report.outcome : "no_verified_match", fallback: report.fallback ?? (mine.length ? null : "No new picks were saved. Try different words."), warnings: report.warnings } };
+  };
+
+  // Everything from the search to the saved picks. Streams its steps through `emit` when asked.
+  const work = async (emit: Emit): Promise<AskReport> => {
+    if (v3) return v3Work(emit);
+    const { kept, dropped, outcome, found: n, rounds, asked, window, person } = await legacyDeck(intent, emit, true);
+    found = n;
 
     const mine: AskPick[] = [];
     for (const [rank, p] of kept.entries()) if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
@@ -775,6 +873,15 @@ async function ask(
   });
 }
 
+/** The saved trace stays under the column's 16 KB: evidence goes first, then the decks shrink. Never the ask. */
+export function fitTrace(t: V3DecisionTrace): V3DecisionTrace {
+  const size = (x: unknown) => new TextEncoder().encode(JSON.stringify(x)).length;
+  let out = t;
+  if (size(out) > 15_000) out = { ...out, sources: [] };
+  if (size(out) > 15_000) out = { ...out, deck: out.deck.slice(0, 3), legacy: out.legacy && "deck" in out.legacy ? { ...out.legacy, deck: out.legacy.deck.slice(0, 3) } : out.legacy };
+  return out;
+}
+
 const cornerMap = (corners: readonly { id: number; name: string }[]) => new Map(corners.map((c) => [c.name.trim().toLowerCase(), c.id]));
 
 /** The settings from the environment, clamped so a typo can't open the tap. */
@@ -787,7 +894,9 @@ export function readSettings(env: (k: string) => string | undefined): ScoutSetti
     enabled: env("STUBBY_SCOUT_ENABLED") === "true",
     hasKey: !!env("ANTHROPIC_API_KEY"),
     askEngine: env("STUBBY_ASK_ENGINE") === "v3" ? "v3" : "legacy",
-    askHasKey: env("STUBBY_ASK_ENGINE") === "v3" ? providerHasKey(env) : !!env("ANTHROPIC_API_KEY"),
+    // Both engines use Claude with the same key (V3 is Claude only, Nov 3, 2026).
+    askHasKey: providerHasKey(env),
+    v3Testers: readTesters(env("STUBBY_V3_TESTERS")),
     runsPerDay: int("STUBBY_SCOUT_RUNS_PER_DAY", 3, 20),
     maxSearches: int("STUBBY_SCOUT_MAX_SEARCHES", 5, 20),
     restockSearches: int("STUBBY_RESTOCK_SEARCHES", 3, 10),

@@ -8,11 +8,12 @@ import { Chip } from "../ui/Chip";
 import { cn } from "../ui/utils";
 import { pickPill } from "../../lib/cityPicks";
 import { plural } from "../../lib/plural";
-import { ASK_COPY, EMPTY_COPY, SHEET, STAY_IN_COPY, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { ASK_COPY, CARE_COPY, EMPTY_COPY, SHEET, STAY_IN_COPY, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
 import { cardCount, frontCard, selectionFull } from "../../lib/stubbyDeck";
 import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
 import type { StayInCard } from "../../lib/stubbyStayIn";
+import type { CareCard } from "../../lib/stubbyAsk";
 import { GUEST_COPY } from "../../lib/guestCopy";
 import type { AskState, StepRow } from "./AskStubby";
 
@@ -64,7 +65,8 @@ export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: {
   const chips = understood ? [UNDERSTOOD_COPY.when[understood.when ?? ""], UNDERSTOOD_COPY.who[understood.who ?? ""]].filter(Boolean) : [];
   const hasDeck = deck.all.length > 0 || deck.selection.length > 0;
   const stayIn = !busy ? state.stayIn : null;
-  if (!busy && !error && !status && !empty && !stayIn && !hasDeck && earlier.length === 0) return null;
+  const care = !busy ? state.care : null;
+  if (!busy && !error && !status && !empty && !stayIn && !care && !hasDeck && earlier.length === 0) return null;
   return (
     <div data-stubby-results="" className="mb-6 flex flex-col gap-3">
       {busy && chips.length > 0 && (
@@ -112,6 +114,7 @@ export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: {
         <p>{state.intelligence.outcome === "verified" ? "Source details checked." : state.intelligence.outcome === "partial" ? "Some details need confirmation. Check the source before you go." : state.intelligence.fallback}</p>
         {state.intelligence.warnings.map((w, i) => <p key={i}>{w}</p>)}
       </div>}
+      {care && <Care card={care} />}
       {stayIn && <StayIn cards={stayIn} onHeadOut={state.headOut} />}
       {empty && <Empty state={state} onTryDifferent={onTryDifferent} />}
       {deck.all.length > 0 && <Deck state={state} onBring={onBring} />}
@@ -144,6 +147,44 @@ function Empty({ state, onTryDifferent }: { state: AskState; onTryDifferent?: ()
           {EMPTY_COPY.differentWords}
         </Button>
       </div>
+    </section>
+  );
+}
+
+/**
+ * The care card (stubby-agent C1): a calm card in place of picks. The brief's line, someone to talk
+ * to in their country, the emergency line, and a way to message a friend. No activity picks.
+ */
+function Care({ card }: { card: CareCard }) {
+  const headingId = useId();
+  return (
+    <section data-stubby-care="" aria-labelledby={headingId} className="flex flex-col gap-3 rounded-card border border-border bg-card p-4">
+      <p id={headingId} className="text-body font-semibold">{card.line}</p>
+      {card.resources.length > 0 && (
+        <ul aria-label={CARE_COPY.resourcesLabel} className="flex flex-col gap-2">
+          {card.resources.map((r) => (
+            <li key={r.href} className="flex flex-col gap-0.5">
+              <Button asChild variant="coral" className="self-start">
+                <a href={r.href}>{r.label}</a>
+              </Button>
+              <span className="text-small text-muted-foreground">{r.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {card.friend && (
+          <Button asChild variant="outline">
+            <Link to={card.friend.href}>{card.friend.label}</Link>
+          </Button>
+        )}
+        {card.emergency && (
+          <Button asChild variant="outline">
+            <a href={card.emergency.href}>{card.emergency.label}</a>
+          </Button>
+        )}
+      </div>
+      {card.emergency && <p className="text-small text-muted-foreground">{card.emergency.detail}</p>}
     </section>
   );
 }
