@@ -8,7 +8,9 @@ This branch contains a locally tested V3 milestone behind server/frontend flags.
 It is not enabled or deployed. Live/provider and broader interpretation work
 remains; see [the final audit](final-audit.md) for detailed evidence and blockers.
 
-- [Pull request review and merge holds](pr-review.md)
+- [Latest compatibility review and merge holds](compatibility-review.md)
+- [Prepared pull request description](pull-request.md)
+- [Earlier pull request review](pr-review.md)
 - [Onboarding review and redesign proposal](onboarding-redesign.md)
 - [Claude provider and existing API credits](claude-provider.md)
 - [Second code review and reasoning checks](code-review.md)

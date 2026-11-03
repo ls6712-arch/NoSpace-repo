@@ -15,7 +15,7 @@ guest readiness, strict request parsing, atomic database quotas and SSE. V3 adds
 | Context | server clock, IANA timezone, local calendar windows, city, budget, equipment and consent precedence |
 | World discovery | normalized `DiscoveryAdapter` pipeline and Claude and optional OpenAI hosted web search adapters |
 | Feasibility | deterministic time, price, location, setting, travel, age, equipment, membership and calendar filters |
-| Recommendation | bounded deterministic score, novelty penalty, topic diversity and reasons |
+| Recommendation | bounded deterministic score, novelty bonus, topic diversity and reasons |
 | Evidence | safe source URLs, 24-hour check freshness, provider versus search provenance, explicit uncertainty |
 
 Files are under `supabase/functions/stubby-scout/v3/`. Ports are typed in

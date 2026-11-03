@@ -6,8 +6,8 @@ works, and what remains before release.
 
 **Current status:** implemented and tested locally on
 `feature/stubby-context-v3`; not deployed or enabled in production. The reviewed
-code is `fefd4c3`, with the review recorded in `6ea533d`. The local suite passed
-**2,042 tests**. Live Claude and hosted Supabase validation remain outstanding,
+code is `275dcea`, with findings in [the compatibility review](compatibility-review.md).
+The local suite passed **2,050 tests**. Live Claude and hosted Supabase validation remain outstanding,
 so this is a working foundation rather than completion of the full V3 brief.
 The implementation contract version is `stubby-v3.3`; the product is called
 Stubby 3.0.
@@ -495,13 +495,13 @@ allowlist. No live migration has been applied as part of this work.
 ## 11. Testing and review results
 
 These are the latest **recorded checks of the reconciled code**, summarized in
-[`pr-review-report.json`](../../evals/stubby/pr-review-report.json).
+[`compatibility-review-report.json`](../../evals/stubby/compatibility-review-report.json).
 They should be distinguished from live integration evidence.
 
 | Check | Recorded result and scope |
 | --- | --- |
-| Full suite | 2,042 passed, 0 failed, 0 skipped across 218 files |
-| V3/capability subset | 178 passed across 9 files, including preserved earlier tests |
+| Full suite | 2,050 passed, 0 failed, 0 skipped across 218 files |
+| V3/capability subset | 186 passed across 9 files, including preserved earlier tests |
 | Frozen golden evaluation | 46/46 expected outcomes; compares actual legacy/V3 deterministic checks, not live model quality |
 | Type checking | Frontend/backend strict TypeScript passed |
 | Edge entrypoint | Deno 2.9.6 check passed using an offline alias to installed Supabase npm types |
@@ -534,7 +534,7 @@ npm run lint
 The focused V3 command is useful during iteration; it is already part of the
 full suite. The evaluation README also documents browser, isolated SQL and
 offline Deno checks. Earlier review reports are historical snapshots; use
-`pr-review-report.json` for the latest complete local count.
+`compatibility-review-report.json` for the latest complete local count.
 
 ## 12. Remaining work and release sequence
 

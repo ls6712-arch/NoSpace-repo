@@ -4,6 +4,10 @@ Target: `main`. Branch: `feature/stubby-context-v3`.
 Required PR label/title marker: **DO NOT MERGE — OWNER APPROVAL REQUIRED**.
 Recommendation: **draft pending staging verification**.
 
+Follow-up: [the latest compatibility review](compatibility-review.md) records
+the birthday/Corner-ranking fixes and the updated 2,050-test result. The counts
+below preserve the earlier reconciliation review.
+
 ## Scope and preserved work
 
 The feature is opt-in: existing production asks remain on the legacy engine until
