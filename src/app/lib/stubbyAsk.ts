@@ -157,7 +157,7 @@ export interface AskResult {
   /** A follow-up that cost nothing (the first after an ask). */
   free?: boolean;
   /** Stubby needs one answer first; nothing was searched and no ask was used. */
-  question?: "who" | "when" | "what";
+  question?: "setting" | "who" | "when" | "what";
   /** When nothing fits: the 3 most common kinds of reason, with counts. */
   reasons?: { key: string; count: number }[];
   /** The time he understood ("tonight", "weekend"...), for which "nothing fits" line to say. */
@@ -171,6 +171,10 @@ export interface AskAnswers {
   when?: string;
   /** Surprise me, or an answer typed into the ask. */
   skip?: boolean;
+  /** The answer to "Stay in or head out?". */
+  setting?: "in" | "out";
+  /** Who they said earlier this session (the chip): below what they type now. */
+  rememberedWho?: "solo" | "partner" | "friends" | "family";
 }
 
 /** A follow-up on the deck. The first after an ask is free. */
@@ -186,7 +190,7 @@ function resultOf(
   r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown; reasons?: unknown; understood?: { when?: unknown } } | null,
 ): AskResult {
   const asksLeft = typeof r?.asksLeft === "number" ? r.asksLeft : null;
-  if (r?.question === "who" || r?.question === "when" || r?.question === "what") return { found: 0, asksLeft, error: null, question: r.question };
+  if (r?.question === "setting" || r?.question === "who" || r?.question === "when" || r?.question === "what") return { found: 0, asksLeft, error: null, question: r.question };
   const found = Array.isArray(r?.picks) ? r!.picks!.length : 0;
   const outcome: AskOutcome = r?.outcome === "after" || r?.outcome === "nothing" || r?.outcome === "found" ? r.outcome : found > 0 ? "found" : "nothing";
   const reasons = Array.isArray(r?.reasons)

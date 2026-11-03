@@ -13,6 +13,7 @@
 //     page Stubby offered (a Corner's start page or one of their own Pursuits). An idea fits only
 //     in a Corner they picked, on a Soosh page Stubby offered them, or when the ask asked for it.
 //   - The same thing found twice (the same title give or take "the", at the same time) is kept once.
+//   - Stay in (typed or answered) means ideas only: no events.
 //   - Best 3, at most 5, in the order the model ranked them. One why line each, 15 words at most.
 
 import type { Intent, Window } from "./intent.ts";
@@ -174,6 +175,11 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
     const kind: AskPick["kind"] = r.kind === "idea" ? "idea" : "event";
     if (shown.has(sameThing(title))) {
       drop("Already in the deck.");
+      continue;
+    }
+    // Stay in, typed or answered, is a hard limit (stubby-agent C3): nothing that means going out.
+    if (kind === "event" && intent.setting === "in") {
+      drop("They want to stay in.");
       continue;
     }
 

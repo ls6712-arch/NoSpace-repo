@@ -153,12 +153,16 @@ Deno.serve((req) => {
       async finishRun(id, r) {
         await server.from("scout_runs").update({ finished_at: new Date().toISOString(), ...r }).eq("id", id);
       },
-      async finishAsk(id, { dropped, ...r }) {
-        // Why each candidate was dropped (titles and reasons only, never the ask), for debugging.
-        // Before migration 20261109000000 the column isn't there: the counts are still saved.
+      async finishAsk(id, { dropped, trace, ...r }) {
+        // Why each candidate was dropped and how the deck was chosen (titles, reasons and rules only,
+        // never the ask), for debugging. Before migration 20261111000000 there's no decision_trace
+        // column: the drop reasons are still saved; before 20261109000000, the counts.
         const reasons = dropped?.map((d) => ({ title: d.title.slice(0, 80), reason: d.reason.slice(0, 120) })) ?? null;
-        const { error } = await server.from("stubby_asks").update({ ...r, drop_reasons: reasons }).eq("id", id);
-        if (error) await server.from("stubby_asks").update(r).eq("id", id);
+        const asks = () => server.from("stubby_asks");
+        const { error } = await asks().update({ ...r, drop_reasons: reasons, decision_trace: trace ?? null }).eq("id", id);
+        if (!error) return;
+        const second = await asks().update({ ...r, drop_reasons: reasons }).eq("id", id);
+        if (second.error) await asks().update(r).eq("id", id);
       },
       async asksSince(user, ms) {
         const { count, error } = await server.from("stubby_asks").select("id", { count: "exact", head: true }).eq("user_id", user).gte("asked_at", iso(ms));

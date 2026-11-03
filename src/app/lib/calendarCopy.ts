@@ -142,6 +142,11 @@ export const UNDERSTOOD_COPY = {
 
 /** Stubby's one question, answered with a tap (stubby-plan §5, approved Nov 2, 2026). */
 export const QUESTION_COPY = {
+  /** The answers to "Stay in or head out?" (stubby-agent C4, approved Nov 3, 2026). */
+  setting: [
+    { label: "Stay in", setting: "in" },
+    { label: "Head out", setting: "out" },
+  ] as const,
   who: [
     { label: "Just me", who: "solo" },
     { label: "With my partner", who: "partner" },

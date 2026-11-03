@@ -4,7 +4,7 @@
 // preferences, never as instructions. Their ask is quoted as a wish. Pages are data. The model
 // only searches and writes; ask.ts checks every field it returns.
 
-import type { Intent, Who, Window } from "./intent.ts";
+import type { Intent, Setting, Who, Window } from "./intent.ts";
 import { ASK_CANDIDATES, AFTER_MOST, WHY_WORDS } from "./ask.ts";
 import { msToNyLocal } from "./picks.ts";
 
@@ -29,6 +29,11 @@ const WHO_GUIDE: Record<Who, string> = {
   friends:
     "They are going with friends. Lean toward group-friendly things: games nights, team activities, markets, classes that take bookings for 3 or more. Avoid anything capped at 1 or 2 people.",
   family: "They are going with their family, kids included. Only all-ages, daytime, free or cheap things. Nothing 21+ and no late nights.",
+};
+
+const SETTING_GUIDE: Record<Setting, string> = {
+  in: "They want to stay in. Only ideas to do at home: make, cook, read, watch, or a session on one of their own Pursuits. No events and nothing that needs going out.",
+  out: "They want to head out: places and events, or an idea somewhere outside the house. Nothing to do at home.",
 };
 
 const WINDOW_WORDS: Record<Window["label"], string> = {
@@ -119,6 +124,7 @@ export function askUserPrompt(
     gaps ?? "",
     when,
     intent.who ? WHO_GUIDE[intent.who] : "",
+    intent.setting ? SETTING_GUIDE[intent.setting] : "",
     intent.who === "family" ? "" : intent.adults ? "" : "Leave out bars, breweries, tastings and 21+.",
     "",
     about(person, intent),

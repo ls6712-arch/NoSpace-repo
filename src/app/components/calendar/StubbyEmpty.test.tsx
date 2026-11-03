@@ -146,13 +146,28 @@ describe("at most one question per ask", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
     await waitFor(() => expect(calls()).toHaveLength(3));
     expect(calls()[2][0]).toBe("something fun");
-    expect(calls()[2][1].answers).toEqual({ who: "solo" });
+    expect(calls()[2][1].answers).toEqual({ rememberedWho: "solo", who: "solo" });
     // This weekend after that: still answered.
     fireEvent.click(await screen.findByRole("button", { name: "This weekend" }));
     await waitFor(() => expect(calls()).toHaveLength(4));
-    expect(calls()[3][1].answers).toEqual({ who: "solo", when: "weekend" });
+    expect(calls()[3][1].answers).toEqual({ rememberedWho: "solo", who: "solo", when: "weekend" });
     // Only the very first call let him ask.
     expect(calls().filter(([, o]) => o.questions).length).toBe(1);
+  });
+
+  it("a vague ask is asked Stay in or head out? first, and a tap answers it (stubby-agent C4)", async () => {
+    replies.push({ found: 0, asksLeft: 3, error: null, question: "setting" });
+    replies.push({ ...NOTHING, reasons: [] });
+    await show();
+    await askFor("something fun");
+    await waitFor(() => expect(line()).toBe("Stay in or head out?"));
+    const group = screen.getByRole("group", { name: "Stay in or head out?" });
+    expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Stay in", "Head out", "Surprise me"]);
+    fireEvent.click(screen.getByRole("button", { name: "Stay in" }));
+    await waitFor(() => expect(calls()).toHaveLength(2));
+    expect(calls()[1][0]).toBe("something fun");
+    expect(calls()[1][1].answers).toEqual({ setting: "in" });
+    expect(calls()[1][1].questions).toBe(false);
   });
 
   it("Surprise me as the answer is remembered for that ask too", async () => {

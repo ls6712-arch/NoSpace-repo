@@ -113,7 +113,7 @@ describe("Stubby's one question", () => {
     await waitFor(() => expect(document.querySelector("[data-stubby-who]")?.textContent).toContain("Just me"));
     // The next ask carries it.
     await askFor("pottery tonight");
-    expect(lastOpts()[1].answers).toEqual({ who: "solo" });
+    expect(lastOpts()[1].answers).toEqual({ rememberedWho: "solo" });
     fireEvent.click(screen.getByRole("button", { name: "Remove: Just me" }));
     expect(document.querySelector("[data-stubby-who]")).toBeNull();
     await askFor("pottery tonight");
