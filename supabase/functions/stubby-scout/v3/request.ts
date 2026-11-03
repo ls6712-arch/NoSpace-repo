@@ -15,7 +15,9 @@ const TOPICS: Record<string, string> = {
 };
 export function negated(text: string, at: number): boolean {
   const clause = text.slice(Math.max(0, at - 100), at).split(/[.,;!?]|\b(?:but|instead|however|actually)\b/i).at(-1) ?? "";
-  return /\b(?:not|no|never|avoid|without|except|don['’]t|do not|doesn['’]t|isn['’]t|is not|can['’]t|cannot)\b/i.test(clause.replace(/\bnot only\b/gi, ""));
+  const scope = clause.replace(/\bnot only\b|\b(?:no|not)\s+(?:more|less|later|earlier)\s+than\b/gi, "")
+    .replace(/\b(?:don['’]t|do not|can['’]t|cannot)\s+(?:want to\s+)?(?:spend|pay)\b/gi, "spend");
+  return /\b(?:not|no|never|avoid|without|except|don['’]t|do not|doesn['’]t|isn['’]t|is not|can['’]t|cannot)\b/i.test(scope);
 }
 const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export function safeTopics(catalog: readonly string[]): string[] {
@@ -111,12 +113,14 @@ export function cityKey(city: string): string {
   const normalized = city.toLowerCase().replace(/[-_,.]/g, " ").replace(/\s+/g, " ").trim();
   return /^(?:nyc|new york(?: city| ny)?)$/.test(normalized) ? "new york" : normalized;
 }
-function cityIn(text: string): string | undefined {
+function cityIn(text: string): string | null | undefined {
   for (const m of text.matchAll(/\b(?:in|near|around)\s+([a-z][a-z ]{1,60})/gi)) {
     if (negated(text, m.index!)) continue;
     const city = [...CITIES].sort((a, b) => b.length - a.length).find(c => m[1].toLowerCase() === c.toLowerCase() || m[1].toLowerCase().startsWith(`${c.toLowerCase()} `));
     if (city) return city;
   }
+  // Do not search the saved home city when a different, unrecognized named place was requested.
+  if (/\b(?:in|near|around)\s+[A-Z][a-z]+\b/.test(text)) return null;
   return undefined;
 }
 function settingOf(text: string, answer?: Answers["setting"]) {
@@ -155,5 +159,6 @@ export function parseRequest(text: string, now: number, tz: string, answers: Ans
   intent.when = time.window;
   const invalidMoney = /[€£¥]|\b(?:EUR|GBP|JPY|INR|euros?|pounds?|yen|rupees?)\b|\$\s*-\s*\d|\$\s*\d+[.,]\d{3,}(?!\d)/.test(text.replace(/\$\s*\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?/g, ""));
   if (invalidMoney) time.window.endMs = time.window.startMs;
-  return { intent, window: time.window, ...setting, topics, city: cityIn(text), resources: resourceChanges(text), issues: [...(time.invalid ? ["time"] : []), ...(invalidMoney ? ["budget"] : [])] };
+  const city = cityIn(text);
+  return { intent, window: time.window, ...setting, topics, city, resources: resourceChanges(text), issues: [...(time.invalid ? ["time"] : []), ...(invalidMoney ? ["budget"] : []), ...(city === null ? ["location"] : [])] };
 }

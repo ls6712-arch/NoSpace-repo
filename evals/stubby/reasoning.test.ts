@@ -24,6 +24,12 @@ describe("practical request understanding", () => {
     expect(ctx.requestedTopics).not.toContain("pottery");
     expect(rankCandidates([candidate()], ctx, []).recommendations).toEqual([]);
   });
+  it.each(["No more than $20 on pottery tonight", "I don't want to spend more than $20 on pottery tonight"])("does not confuse budget restrictions with activity exclusions: %s", text => {
+    const ctx = buildContext(input({ text }));
+    expect(ctx.requestedTopics).toContain("pottery"); expect(ctx.excludedTopics).not.toContain("pottery");
+    expect(ctx.hardBudget).toBe(20);
+    expect(rankCandidates([candidate()], ctx, []).recommendations).toHaveLength(1);
+  });
   it("does not confuse stay home with do not stay home", () => {
     expect(buildContext(input({ text: "I don't want to stay home tonight. Something indoors." })).setting).toBe("indoor");
     expect(buildContext(input({ text: "Not outdoors, please" })).setting).not.toBe("outdoor");
@@ -36,6 +42,18 @@ describe("practical request understanding", () => {
   it("respects explicit city overrides instead of searching the saved home city", () => {
     expect(buildContext(input({ text: "I want pottery in Boston tonight" })).city).toBe("Boston");
     expect(rankCandidates([candidate()], buildContext(input({ text: "pottery in Boston tonight" })), []).recommendations).toEqual([]);
+  });
+  it("never searches the home city when a different unrecognized named city was requested", async () => {
+    const source = { id: "fixture", discover: vi.fn(async () => [candidate()]) };
+    const r = await runV3(input({ text: "pottery in Oslo tonight" }), { discovery: [source] });
+    expect(r.outcome).toBe("no_verified_match"); expect(source.discover).not.toHaveBeenCalled(); expect(r.fallback).toMatch(/city/);
+  });
+  it("keeps owned gear separate from onboarding memberships", () => {
+    const ctx = buildContext(input({ profile: { ...input().profile, passes: [
+      { kind: "gear", label: "Guitar", place: null }, { kind: "bike", label: "Bike", place: null },
+      { kind: "museum", label: "Museum", place: null },
+    ] } }));
+    expect(ctx.memberships.map(m => m.name)).toEqual(["Museum"]);
   });
   it("honors resources stated now and removal of outdated resources", () => {
     expect(buildContext(input({ text: "I have a guitar. Something to do at home." })).equipment).toContain("guitar");

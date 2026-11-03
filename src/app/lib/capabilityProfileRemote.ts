@@ -1,3 +1,6 @@
+import { fetchPasses, fetchTaste } from "./tasteRemote";
+import { capabilityProfileFromTaste, type PersonalCapabilityProfileV1 } from "./capabilityProfile";
+
 import { supabase } from "../../lib/supabase";
 import { emptyCapability, parseCapability, type CapabilityProfile } from "./capabilityProfile";
 type Client = typeof supabase;
@@ -25,4 +28,29 @@ export async function deleteCapability(client: Client = supabase, expectedUserId
   const id = await owner(client, expectedUserId);
   const { error } = await client!.rpc("forget_stubby_memory", { expected_user: id });
   if (error) throw new Error("Your saved information wasn’t deleted. Try again.");
+}
+
+/**
+ * Read-only bridge from existing onboarding data into Stubby's capability
+ * contract. No new table, no migration, and no production behavior change.
+ * Caller must pass the authenticated user's ID; Supabase RLS remains the
+ * authorization boundary.
+ */
+export async function fetchCapabilityProfile(
+  authenticatedUserId: string,
+  nowUtc: string = new Date().toISOString(),
+): Promise<PersonalCapabilityProfileV1> {
+  if (!authenticatedUserId.trim()) throw new Error("Authenticated user required");
+  await owner(supabase, authenticatedUserId);
+  const [taste, passes] = await Promise.all([
+    fetchTaste(authenticatedUserId),
+    fetchPasses(authenticatedUserId),
+  ]);
+  return capabilityProfileFromTaste({
+    windows: taste.windows,
+    monthlyBudget: taste.budget,
+    passes,
+    picks: taste.picks,
+    updatedAtUtc: nowUtc,
+  });
 }

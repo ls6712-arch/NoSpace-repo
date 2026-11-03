@@ -1,5 +1,6 @@
 import type { Answers } from "../intent.ts";
 import { parseRequest, topicChoices, safeTopics } from "./request.ts";
+import { passCapabilityKind } from "../../_shared/onboardingCapability.ts";
 import { validTimeZone } from "../../_shared/capabilityProfile.ts";
 import { cleanCity } from "../taste.ts";
 import { V3_VERSION, type Context, type RequestInput } from "./types.ts";
@@ -20,7 +21,7 @@ export function buildContext(input: RequestInput): Context {
   const storedExclusions = remember ? c.preferences.flatMap(p => topicChoices(p).negative).filter(t => !requestedTopics.includes(t)) : [];
   const equipment = [...new Set([...(remember ? c.equipment : []), ...parsed.resources.add])].filter(x => !parsed.resources.remove.includes(x.toLowerCase()));
   return {
-    version: V3_VERSION, now, timeZone, city: cleanCity(parsed.city) ?? cleanCity(input.sessionCity) ?? (onboard ? cleanCity(p.city) : null),
+    version: V3_VERSION, now, timeZone, city: parsed.city === null ? null : cleanCity(parsed.city) ?? cleanCity(input.sessionCity) ?? (onboard ? cleanCity(p.city) : null),
     window,
     hardBudget: input.budgetOverride ?? (intent.budget?.from === "ask" ? intent.budget.max : null),
     softBudget: soft,
@@ -32,7 +33,7 @@ export function buildContext(input: RequestInput): Context {
     requestedTopics, topicCatalog: safeTopics(input.knownTopics ?? []), equipment, interests: onboard ? p.picks : [],
     goals: remember ? c.goals : [], preferences: remember ? c.preferences : [],
     learned: remember && c.consent.feedback ? input.learned : [],
-    memberships: remember ? [...c.memberships, ...(onboard ? p.passes.map(m => ({ name: m.place ? `${m.label} (${m.place})` : m.label, expiresOn: null, status: "self_reported" as const })) : [])].slice(0, 20) : [], usualWindows: onboard ? p.windows : [],
+    memberships: remember ? [...c.memberships, ...(onboard ? p.passes.filter(m => passCapabilityKind(m.kind ?? "other") !== "equipment").map(m => ({ name: m.place ? `${m.label} (${m.place})` : m.label, expiresOn: null, status: "self_reported" as const })) : [])].slice(0, 20) : [], usualWindows: onboard ? p.windows : [],
     busy: [], weather: "unknown",
   };
 }

@@ -59,7 +59,7 @@ async function corners(client: typeof server) {
 async function profileOf(client: typeof server, userId: string): Promise<PersonProfile> {
   const [priv, passes, pursuits] = await Promise.all([
     client.from("profile_private").select("picks, free_windows, monthly_budget, city, area").eq("user_id", userId).maybeSingle(),
-    client.from("user_passes").select("label, place").eq("user_id", userId).limit(20),
+    client.from("user_passes").select("kind, label, place").eq("user_id", userId).limit(20),
     client
       .from("pursuits")
       .select("id, title")
@@ -80,7 +80,7 @@ async function profileOf(client: typeof server, userId: string): Promise<PersonP
     monthlyBudget: typeof p.monthly_budget === "number" ? p.monthly_budget : null,
     city: typeof p.city === "string" ? p.city : null,
     area: typeof p.area === "string" ? p.area : null,
-    passes: ((passes.data ?? []) as { label: string; place: string | null }[]).map((r) => ({ label: r.label, place: r.place ?? null })),
+    passes: ((passes.data ?? []) as { kind: string; label: string; place: string | null }[]).map((r) => ({ kind: r.kind, label: r.label, place: r.place ?? null })),
     pursuits: ((pursuits.data ?? []) as { id: string; title: string }[]).map((r) => ({ id: r.id, title: r.title })),
   };
 }

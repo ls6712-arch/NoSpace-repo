@@ -18,7 +18,7 @@ export async function runV3(input: RequestInput, deps: { discovery: DiscoveryAda
     const ctx = buildContext(input);
     if (ctx.issues.length || ctx.window.endMs <= ctx.window.startMs) return {
       version: V3_VERSION, outcome: "no_verified_match", recommendations: [], dropped: [],
-      fallback: ctx.issues.includes("budget") ? "No verified match. Use a budget in US dollars so Stubby can check the price." : "No verified match. Choose a clear date and time so Stubby can check what fits.",
+      fallback: ctx.issues.includes("location") ? "No verified match. Confirm your city before Stubby searches nearby." : ctx.issues.includes("budget") ? "No verified match. Use a budget in US dollars so Stubby can check the price." : "No verified match. Choose a clear date and time so Stubby can check what fits.",
       warnings: [], usage: { input: 0, output: 0, calls: 0 },
     };
     if (deps.context?.weather) {

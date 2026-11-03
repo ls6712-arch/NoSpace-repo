@@ -126,7 +126,7 @@ export interface PersonProfile {
   monthlyBudget: number | null;
   city: string | null;
   area: string | null;
-  passes: { label: string; place: string | null }[];
+  passes: { label: string; place: string | null; kind?: string }[];
   /** Their own Pursuits that are going (not finished, paused, let go, archived or a one-off plan). */
   pursuits: { id: string; title: string }[];
 }
