@@ -11,6 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Build output (dist/, dist-e2e/ and the rest) is never committed.
+      - name: No build output in git
+        run: bash scripts/check-no-build-output.sh && bash scripts/check-no-build-output.selftest.sh
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
