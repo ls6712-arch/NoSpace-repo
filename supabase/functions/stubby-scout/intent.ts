@@ -8,14 +8,25 @@
 //   budget  a per-outing ceiling: "free", "under $20" or "cheap" in the ask, else about a
 //           quarter of the monthly budget.
 //   what    the kind of thing, when the ask names one.
-// And whether one thing is still missing that's worth one question (who, then when, then what).
+//   setting stay in or head out, when the ask says (stubby-agent C3).
+// And whether one thing is still missing that's worth one question (stubby-agent C4): a vague ask
+// with no one named is asked "Stay in or head out?"; who is asked only when company changes the
+// options (heading out, no one named); then when, then what kind. Never more than one per ask.
+//
+// Precedence (stubby-agent B3, config.ts): what they typed now wins over a chip remembered from
+// earlier asks, so "with my girlfriend" beats a remembered Just me. A tap made for this ask
+// (Stubby's question, This weekend) is the person changing the ask, so for the time it wins over
+// the words it replaces. Every value carries where it came from (`from`), for the decision trace.
 
 import { HOME_TZ } from "./picks.ts";
+import type { Source } from "./config.ts";
 
 export type Who = "solo" | "partner" | "friends" | "family";
 export type WhenLabel = "tonight" | "today" | "tomorrow" | "weekend" | "day" | "week";
 export type Vibe = "active" | "make" | "food" | "chill" | "learn";
-export type Missing = "who" | "when" | "what";
+export type Missing = "setting" | "who" | "when" | "what";
+/** Stay in (at home) or head out. */
+export type Setting = "in" | "out";
 
 export interface Window {
   startMs: number;
@@ -42,8 +53,12 @@ export interface Intent {
   specific: boolean;
   /** The ask asks for bars, breweries, tastings or 21+: otherwise those are left out. */
   adults: boolean;
+  /** Stay in or head out, when the ask says or they answered. Null: either. */
+  setting: Setting | null;
   /** The one question worth asking, or null. Never more than one per ask. */
   missing: Missing | null;
+  /** Where each value came from (stubby-agent B3), for the decision trace. Null: not known. */
+  from: { who: Source | null; when: Source | null; setting: Source | null; budget: Source | null };
 }
 
 export interface Answers {
@@ -52,6 +67,10 @@ export interface Answers {
   when?: "tonight" | "tomorrow" | "weekend" | string;
   /** Surprise me, or an answer typed into the ask: no question, he searches. */
   skip?: boolean;
+  /** The answer to "Stay in or head out?". */
+  setting?: Setting;
+  /** Who they said in an earlier ask, remembered for the session as a chip. Below what they type now. */
+  rememberedWho?: Who;
 }
 
 /** A day picked as "YYYY-MM-DD": that whole day in New York (from now, if it's today). Null if not a real day. */
@@ -125,6 +144,11 @@ const VIBES: [Vibe, RegExp][] = [
   ["learn", /\b(learn|learning|class|classes|lecture|talk|course|lesson|lessons|seminar|reading group)\b/i],
 ];
 
+/** Stay in: at home. */
+const STAY_IN = /\b(stay in|staying in|stay home|at home|from home|night in|indoors|on the couch|on the sofa)\b/i;
+/** Head out: leave the house. */
+const HEAD_OUT = /\b(head out|heading out|go out|going out|get out|out of the house|out and about|outdoors|outside|night out|out (tonight|today|tomorrow|this weekend))\b/i;
+
 const ADULTS = /\b(brewery|breweries|bars?|pubs?|21\+|tasting|tastings|wine|beer|cocktails?|happy hour)\b/i;
 
 /** Words that carry no "what": an ask made only of these and a time or a who needs one question. */
@@ -176,12 +200,22 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
   const lower = text.toLowerCase();
   const answers = ctx.answers ?? null;
 
-  let who: Who | null = null;
-  for (const [w, re] of WHO) if (re.test(text)) { who = w; break; }
-  if (answers?.who) who = answers.who;
+  // Who: what they typed, then their answer to the question, then the chip remembered from before.
+  let typedWho: Who | null = null;
+  for (const [w, re] of WHO) if (re.test(text)) { typedWho = w; break; }
+  const who = typedWho ?? answers?.who ?? answers?.rememberedWho ?? null;
+  const whoFrom: Source | null = typedWho ? "ask" : answers?.who ? "answer" : answers?.rememberedWho ? "session" : null;
 
-  let when = readWhen(text, ctx.now);
-  if (answers?.when) when = dayWindow(answers.when, ctx.now) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now) ?? when;
+  // When: a tap made for this ask wins over the words it replaces (This weekend on a "tonight" ask).
+  const typedWhen = readWhen(text, ctx.now);
+  const answeredWhen = answers?.when ? (dayWindow(answers.when, ctx.now) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now)) : null;
+  const when = answeredWhen ?? typedWhen;
+  const whenFrom: Source | null = answeredWhen ? "answer" : typedWhen ? "ask" : null;
+
+  // Stay in or head out: typed, else answered.
+  const typedSetting: Setting | null = STAY_IN.test(text) ? "in" : HEAD_OUT.test(text) ? "out" : null;
+  const setting = typedSetting ?? answers?.setting ?? null;
+  const settingFrom: Source | null = typedSetting ? "ask" : answers?.setting ? "answer" : null;
 
   const vibes = VIBES.filter(([, re]) => re.test(text)).map(([v]) => v);
   const corners = (ctx.cornerNames ?? []).map((c) => c.toLowerCase()).filter((c) => c.length > 2);
@@ -197,21 +231,26 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
 
   const hasWindows = (ctx.windows ?? []).length > 0;
   let missing: Missing | null = null;
-  // One question per ask: once they have answered, he searches.
-  if (!answers?.who && !answers?.when && !answers?.skip) {
-    if (!specific && !who) missing = "who";
-    else if (!specific && !when && !hasWindows) missing = "when";
+  // One question per ask, only when the answer changes what's possible: once answered, he searches.
+  // Staying in, who's coming changes little, so it's never asked then.
+  if (!answers?.who && !answers?.when && !answers?.skip && !answers?.setting) {
+    if (!specific && !setting && !who) missing = "setting";
+    else if (!specific && setting === "out" && !who) missing = "who";
+    else if (!specific && setting !== "in" && !when && !hasWindows) missing = "when";
     else if (!specific && content.length === 0 && who && when) missing = "what";
   }
 
+  const budget = readBudget(text, ctx.monthlyBudget);
   return {
     when,
     who,
-    budget: readBudget(text, ctx.monthlyBudget),
+    budget,
     vibes,
     specific,
     adults: ADULTS.test(text),
+    setting,
     missing,
+    from: { who: whoFrom, when: whenFrom, setting: settingFrom, budget: budget ? budget.from : null },
   };
 }
 

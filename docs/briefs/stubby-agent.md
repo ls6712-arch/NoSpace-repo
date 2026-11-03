@@ -2,7 +2,7 @@
 
 **Status:** proposed, for founder approval. Nothing here is built until the founder says "build PR n".
 **Put in repo as:** `docs/briefs/stubby-agent.md`.
-**Replaces:** Part 3 of `docs/briefs/stubby-plan.md` ("Stubby's brain"). Parts 1 and 2 of the plan stay as the history of what's built. **Where they disagree, this document wins.**
+**Replaces:** Part 3 of `docs/briefs/stubby-plan.md` ("Stubby's brain", §19 to 22), plus the algorithm parts of §5 to 8 and §10 to 12 wherever they conflict (founder, Nov 3, 2026). Parts 1 and 2 stay for what's built and for §13's moment details. Circles were retired (the `remove_circles` migration): wherever this spec once said Circles, it means Spaces. Parts 1 and 2 of the plan stay as the history of what's built. **Where they disagree, this document wins.**
 **Sources:** the Stubby plan (Nov 1 to 2, 2026), the founder's live tests (asks 9, 11 and 12), and the "Stubby: Personalization and Suggestion Algorithm" proposal, with the founder's adjustments and additions.
 
 > **The promise:** not "Stubby knows everything about you." It's: **"Stubby uses what you've chosen to share, checks what's actually possible, helps you go do it, and gets easier to steer over time."**
@@ -71,7 +71,7 @@ Never merge them into one opaque "personality" blob.
 | **Current moment** | Local time, time left today, weekday or weekend, holiday, season, daylight, weather, calendar windows | Refreshed per ask | computed (§13 of the plan), Open-Meteo, Calendar |
 | **Practical resources** | Materials at home, transport, subscriptions, workspace | Used only when known; **otherwise marked unknown** | new, progressive |
 
-**Your world** (Pursuits with last session and goal, Moments logged, Stubs, Corner affinity) and **your people** (connections, shared Corners, friends' plans **you're allowed to see**, Circles and Spaces) are read as evidence for these layers.
+**Your world** (Pursuits with last session and goal, Moments logged, Stubs, Corner affinity) and **your people** (connections, shared Corners, friends' plans **you're allowed to see**, Spaces) are read as evidence for these layers.
 
 ### B2. The preference record
 
@@ -184,7 +184,7 @@ If something important is still unknown after asking, pick options that don't de
 | C | **Soosh opportunities** | Space events, open Pursuits with room, City picks, **friends' visible plans** | Database |
 | D | **Local discovery** | Verified events and places in **their** city and time zone, via web search | Web search |
 | E | **Stay-in discovery** | Watch, read, browse, make, cook | Web search plus catalogs (TMDB, Open Library) |
-| F | **Connection** | Message a friend who shares a Corner, invite to a Pursuit, join a Circle or Space, come-alone events | Database |
+| F | **Connection** | Message a friend who shares a Corner, invite to a Pursuit, join a Space, come-alone events | Database |
 
 - **Cheap and local first, but don't automatically rank database picks above better outside options.**
 - **Show something fast:** A, B, C and F answer in about 2 seconds. Show those cards first, then add D and E cards to the back of the deck as they're verified. The streamed steps must match **real** work, never fake progress.

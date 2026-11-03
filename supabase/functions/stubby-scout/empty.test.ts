@@ -163,13 +163,14 @@ describe("at most one question per ask", () => {
     }
   });
 
-  it("for any ask, the question is one of who, when or what, and only one", () => {
-    for (const ask of ["something fun", "something to do", "anything tonight", "ideas", "something with friends", "tonight with friends", "fun stuff"]) {
+  it("for any ask, the question is one of stay in or head out, who, when or what, and only one", () => {
+    for (const ask of ["something fun", "something to do", "anything tonight", "ideas", "something with friends", "tonight with friends", "fun stuff", "something out tonight"]) {
       const intent = readIntent(ask, { now: NOW });
-      expect([null, "who", "when", "what"]).toContain(intent.missing);
+      expect([null, "setting", "who", "when", "what"]).toContain(intent.missing);
       // Answering it leaves nothing more to ask.
-      const answered = readIntent(ask, { now: NOW, answers: intent.missing === "who" ? { who: "solo" } : intent.missing === "when" ? { when: "tonight" } : { skip: true } });
-      expect(answered.missing).toBeNull();
+      const answer =
+        intent.missing === "setting" ? { setting: "out" as const } : intent.missing === "who" ? { who: "solo" as const } : intent.missing === "when" ? { when: "tonight" } : { skip: true };
+      expect(readIntent(ask, { now: NOW, answers: answer }).missing).toBeNull();
     }
   });
 });

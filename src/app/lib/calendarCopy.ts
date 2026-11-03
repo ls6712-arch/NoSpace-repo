@@ -142,6 +142,11 @@ export const UNDERSTOOD_COPY = {
 
 /** Stubby's one question, answered with a tap (stubby-plan §5, approved Nov 2, 2026). */
 export const QUESTION_COPY = {
+  /** The answers to "Stay in or head out?" (stubby-agent C4, approved Nov 3, 2026). */
+  setting: [
+    { label: "Stay in", setting: "in" },
+    { label: "Head out", setting: "out" },
+  ] as const,
   who: [
     { label: "Just me", who: "solo" },
     { label: "With my partner", who: "partner" },
@@ -168,6 +173,8 @@ export const EMPTY_COPY = {
     midnight: ["was after midnight", "were after midnight"],
     time: ["was outside the time you asked for", "were outside the time you asked for"],
     budget: ["was over your budget", "were over your budget"],
+    /** Only free things were asked for and the page gives no price (approved Nov 3, 2026). */
+    noprice: ["had no price listed", "had no price listed"],
     adult: ["was a bar or 21+", "were bars or 21+"],
     nopage: ["had no page of its own", "had no page of their own"],
     notime: ["had no clear time", "had no clear time"],

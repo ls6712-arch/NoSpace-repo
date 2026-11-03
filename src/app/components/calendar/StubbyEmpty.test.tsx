@@ -90,8 +90,9 @@ describe("the reasons", () => {
     expect(reasonLine([{ key: "listing", count: 2 }, { key: "midnight", count: 1 }])).toBe("2 were listing pages, 1 was after midnight");
     expect(reasonLine([{ key: "budget", count: 1 }, { key: "nopage", count: 2 }, { key: "adult", count: 3 }])).toBe("1 was over your budget, 2 had no page of their own, 3 were bars or 21+");
     expect(reasonLine([{ key: "other", count: 4 }])).toBe("");
-    // No price listed is its own reason, never "over your budget". Its words wait for approval, so it isn't named yet.
-    expect(reasonLine([{ key: "noprice", count: 2 }, { key: "listing", count: 1 }])).toBe("1 was a listing page");
+    // No price listed is its own reason, never "over your budget" (approved Nov 3, 2026).
+    expect(reasonLine([{ key: "noprice", count: 2 }, { key: "listing", count: 1 }])).toBe("2 had no price listed, 1 was a listing page");
+    expect(reasonLine([{ key: "noprice", count: 1 }])).toBe("1 had no price listed");
   });
 });
 
@@ -145,13 +146,28 @@ describe("at most one question per ask", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Try again" }));
     await waitFor(() => expect(calls()).toHaveLength(3));
     expect(calls()[2][0]).toBe("something fun");
-    expect(calls()[2][1].answers).toEqual({ who: "solo" });
+    expect(calls()[2][1].answers).toEqual({ rememberedWho: "solo", who: "solo" });
     // This weekend after that: still answered.
     fireEvent.click(await screen.findByRole("button", { name: "This weekend" }));
     await waitFor(() => expect(calls()).toHaveLength(4));
-    expect(calls()[3][1].answers).toEqual({ who: "solo", when: "weekend" });
+    expect(calls()[3][1].answers).toEqual({ rememberedWho: "solo", who: "solo", when: "weekend" });
     // Only the very first call let him ask.
     expect(calls().filter(([, o]) => o.questions).length).toBe(1);
+  });
+
+  it("a vague ask is asked Stay in or head out? first, and a tap answers it (stubby-agent C4)", async () => {
+    replies.push({ found: 0, asksLeft: 3, error: null, question: "setting" });
+    replies.push({ ...NOTHING, reasons: [] });
+    await show();
+    await askFor("something fun");
+    await waitFor(() => expect(line()).toBe("Stay in or head out?"));
+    const group = screen.getByRole("group", { name: "Stay in or head out?" });
+    expect([...group.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["Stay in", "Head out", "Surprise me"]);
+    fireEvent.click(screen.getByRole("button", { name: "Stay in" }));
+    await waitFor(() => expect(calls()).toHaveLength(2));
+    expect(calls()[1][0]).toBe("something fun");
+    expect(calls()[1][1].answers).toEqual({ setting: "in" });
+    expect(calls()[1][1].questions).toBe(false);
   });
 
   it("Surprise me as the answer is remembered for that ask too", async () => {
