@@ -83,7 +83,8 @@ export interface AtHomeInput {
   windows: readonly WeekWindow[];
 }
 
-const doableAtHome = (key: string) => {
+/** A Corner whose guide step can be done at home: not outdoors, not with other people, not adults only. */
+export const doableAtHome = (key: string) => {
   const [spaceSlug = "", slug = ""] = key.split("/");
   const g = cornerGuide(spaceSlug, slug);
   return !!g && !g.adultsOnly && g.where !== "outdoors" && g.together !== "together" && g.step.trim().length > 0;

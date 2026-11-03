@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock("../../lib/stubbyAsk", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyAsk")>()), ...api }));
 
+import { MemoryRouter } from "react-router";
 import { AskStubby, useAskStubby } from "./AskStubby";
 import { StubbyResults } from "./StubbyResults";
 import type { BuddyReaction } from "./StubbyBuddy";
@@ -122,5 +123,46 @@ describe("AskStubby", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Remove: Wheel night" }));
     await waitFor(() => expect((api.removeMyPick.mock.calls[0] as unknown[] | undefined)?.[0]).toBe(9));
     expect(screen.queryByText("Wheel night")).toBeNull();
+  });
+
+  it("answers Stay in from their own Pursuits and Corners, never the search, and says so when there's nothing", async () => {
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: 3, error: null, question: "setting" });
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "something fun" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Stay in" }));
+    // No account in the test: nothing to go on, so the honest empty state with its ways on.
+    expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Head out" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Start a Pursuit" }).getAttribute("href")).toBe("/pursuits/new");
+    expect(screen.getByRole("link", { name: "Go to Discover" })).toBeTruthy();
+    // Only the first ask went out; Stay in used no search and no ask.
+    expect(api.askStubbyStream).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("3 asks left today")).toBeTruthy();
+
+    // Head out sends the same ask again, heading out.
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: 3, error: null });
+    fireEvent.click(screen.getByRole("button", { name: "Head out" }));
+    await waitFor(() => expect(api.askStubbyStream).toHaveBeenCalledTimes(2));
+    expect(api.askStubbyStream.mock.calls[1]?.[0]).toBe("something fun");
+    expect((api.askStubbyStream.mock.calls[1]?.[1] as { answers?: { setting?: string } }).answers?.setting).toBe("out");
+  });
+
+  it("an ask that says stay in skips the search too", async () => {
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "a cozy night in" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
+    expect(api.askStubbyStream).not.toHaveBeenCalled();
   });
 });
