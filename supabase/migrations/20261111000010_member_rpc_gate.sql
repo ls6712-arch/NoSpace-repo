@@ -1,5 +1,9 @@
 -- Hotfix: members-only RPCs, and no skipping the 18+ birthday step.
 --
+-- Renumbered from 20261111000000 on Nov 3, 2026 before it ever ran: #309's
+-- 20261111000000_stubby_ask_decision_trace.sql took that version on production, so under the old
+-- number this file would have been treated as applied and skipped. Nothing else changed.
+--
 -- Two gaps found on the live project on Nov 2, 2026 (read-only queries):
 --   1. A signed-in account that hasn't finished onboarding (not a member: private.is_active() is
 --      false) can call every security definer RPC directly: 108 of them are executable by
@@ -32,7 +36,7 @@
 --
 -- Every column inside every subquery is table-qualified (CLAUDE.md).
 -- Verification: supabase/verification/member_rpc_gate_check.sql.
--- Rollback: rollback_20261111000000_member_rpc_gate.sql.
+-- Rollback: rollback_20261111000010_member_rpc_gate.sql.
 
 -- ─────────────────────────────────────────────────────────────────────────
 -- 1. Who is calling

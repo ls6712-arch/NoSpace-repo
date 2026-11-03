@@ -20,6 +20,19 @@ jobs:
           node-version: 22
           cache: npm
 
+      # Every merge to main is a production database deploy: no two migrations with one version,
+      # and nothing new that sorts before what main (production) already has.
+      - name: Migration versions
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ -n "$BASE_REF" ]; then
+            git fetch --no-tags --depth=1 origin "$BASE_REF"
+            node scripts/check-migrations.ts "origin/$BASE_REF"
+          else
+            node scripts/check-migrations.ts
+          fi
+
       - run: npm ci
 
       - name: Design tokens
