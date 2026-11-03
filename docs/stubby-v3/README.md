@@ -1,8 +1,12 @@
 # Stubby 3.0
 
+Start with **[the complete Stubby guide](guide.md)** for what changed, the
+architecture and request flow, memory and consent, Claude credits, configuration,
+code map, testing and release gaps.
+
 This branch contains a locally tested V3 milestone behind server/frontend flags.
-It is not enabled or deployed, and live/provider and broader interpretation work
-remains. Start with [the final audit](final-audit.md) for evidence and blockers.
+It is not enabled or deployed. Live/provider and broader interpretation work
+remains; see [the final audit](final-audit.md) for detailed evidence and blockers.
 
 - [Pull request review and merge holds](pr-review.md)
 - [Claude provider and existing API credits](claude-provider.md)

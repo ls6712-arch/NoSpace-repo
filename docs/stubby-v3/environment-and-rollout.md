@@ -15,7 +15,7 @@ Keep credentials in its server-side secret settings; never send values in chat.
 | `STUBBY_V3_PROVIDER` | Defaults to `anthropic`; `openai` is an explicit alternative; unknown names fail closed |
 | `STUBBY_CLAUDE_MODEL` | Optional V3 override; otherwise reuse STUBBY_SCOUT_MODEL, then claude-haiku-5-5 |
 | `OPENAI_API_KEY` | Needed only when STUBBY_V3_PROVIDER=openai |
-| `STUBBY_ASK_ENGINE=v3` | Selects V3 for asks only; omit/use legacy for Anthropic |
+| `STUBBY_ASK_ENGINE=v3` | Selects V3 for asks only; omit/use legacy for the original ask engine |
 | `STUBBY_OPENAI_MODEL` | Optional Responses-compatible model; tested requests use gpt-4.1 |
 | `STUBBY_SCOUT_ENABLED=true` | Existing kill switch |
 | `STUBBY_IP_SALT` | Existing guest HMAC salt and readiness requirement |
@@ -60,8 +60,9 @@ There are two model phases, one allowed transient HTTP retry across them, and
 at most three total API calls per ask. Hosted search is the only tool, with at
 most two searches per research attempt (a retried research call may be charged
 again). Phase outputs cap at 2500/4000 tokens, input text/candidate payloads are
-bounded, and the complete operation has a 35-second deadline (45-second maximum
-for injected configurations). The UI uses the existing stream and Stop behavior.
+bounded, and V3 context/discovery orchestration has a 35-second deadline
+(45-second maximum for injected configurations). This does not bound all database
+work or end-to-end UI latency. The UI uses the existing stream and Stop behavior.
 No second search round, agent continuation loop or background inference exists
 in V3. Existing atomic daily quotas bound ask volume. These are request bounds,
 not a guaranteed dollar bill; provider spend limits and measured live latency

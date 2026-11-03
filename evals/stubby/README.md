@@ -64,7 +64,8 @@ DENO_DIR=/tmp/stubby-deno-cache DENO_NO_UPDATE_CHECK=1 /tmp/stubby-edge-tools/no
 
 Claude provider tests are in anthropic.test.ts and provider.test.ts. Both adapters
 share modelContract.ts and are covered by the original OpenAI protocol tests.
-provider-report.json contains the latest full-suite/provider validation summary;
-review-report.json preserves the earlier reasoning review. Real credit balances
+pr-review-report.json contains the latest complete local validation summary;
+provider-report.json preserves the provider-stage results, and review-report.json
+preserves the earlier reasoning review. Real credit balances
 and charges are not asserted by HTTP mocks. See docs/stubby-v3/claude-provider.md
 for the default routing, existing secret reuse and explicit OpenAI opt-in.
