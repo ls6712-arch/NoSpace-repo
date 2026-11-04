@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useJournalSlice, type Project } from "../lib/journal";
 import {
   fetchPursuitAsProject,
   fetchPursuitMembers,
 } from "../lib/pursuitsRemote";
+import { compatibleProject } from "../lib/pursuitCompatibility";
 import { workflowOf } from "../lib/pursuitWorkflow";
 import { WorkflowPursuit } from "../components/pursuit/workflow/WorkflowPursuit";
 import { Pursuit as LegacyPursuit } from "./LegacyPursuit";
 export function Pursuit() {
   const { id } = useParams();
+  const [params] = useSearchParams();
   const { user, isConfigured } = useAuth();
   const projects = useJournalSlice((s) => s.projects);
   const local = projects.find((p) => p.id === id);
@@ -37,7 +39,8 @@ export function Pursuit() {
       live = false;
     };
   }, [id, !!local, user?.id]);
-  const project = local ?? remote;
+  const source = local ?? remote;
+  const project = source && !source.plan ? compatibleProject(source) : source;
   const participant =
     !isConfigured ||
     (!!user &&
@@ -45,7 +48,10 @@ export function Pursuit() {
       (!project.ownerId ||
         project.ownerId === user.id ||
         project.role === "member"));
-  return project && workflowOf(project) && participant ? (
+  return project &&
+    workflowOf(project) &&
+    participant &&
+    params.get("legacy") !== "1" ? (
     <WorkflowPursuit
       key={`${project.id}:${user?.id ?? "local"}`}
       project={project}

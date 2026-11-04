@@ -8,6 +8,9 @@ export interface ChecklistItem {
 }
 export interface Workflow {
   version: 2;
+  legacy?: import("./pursuitCompatibility").LegacySource;
+  startingAmount?: number;
+  startingUserId?: string;
   tracking: Tracking;
   target?: number;
   unit: string;
@@ -15,6 +18,8 @@ export interface Workflow {
   items: ChecklistItem[];
 }
 export interface Contribution {
+  legacy_id?: string;
+  image_url?: string;
   id: string;
   pursuit_id: string;
   user_id: string;
@@ -46,6 +51,7 @@ export interface Discussion {
   created_at: string;
 }
 export interface Meeting {
+  legacy_id?: number;
   id: string;
   pursuit_id: string;
   user_id: string;
@@ -131,7 +137,8 @@ export function validateWorkflow(w: Workflow): string | null {
       (w.tracking === "sessions" && !Number.isInteger(w.target)))
   )
     return "Enter a valid target.";
-  if (w.tracking === "total" && !w.unit.trim()) return "Enter a unit.";
+  if (w.tracking === "total" && !w.unit.trim() && !w.legacy)
+    return "Enter a unit.";
   if (
     w.tracking === "checklist" &&
     !w.items.some((i) => !i.archived && i.title.trim())
@@ -161,7 +168,7 @@ export function progressFor(
     ? entries.filter((e) => e.user_id === userId)
     : entries;
   const items = w.items.filter((i) => !i.archived);
-  const current =
+  const logged =
     w.tracking === "checklist"
       ? new Set(
           relevant
@@ -173,6 +180,12 @@ export function progressFor(
         : w.tracking === "total"
           ? relevant.reduce((n, e) => n + e.amount, 0)
           : relevant.length;
+  const current =
+    logged +
+    (w.tracking === "updates" ||
+    (userId && w.startingUserId && userId !== w.startingUserId)
+      ? 0
+      : (w.startingAmount ?? 0));
   const total =
     w.tracking === "checklist"
       ? items.length
@@ -229,12 +242,18 @@ export function validateContribution(w: Workflow, e: Contribution) {
   if (
     !e.id ||
     !Number.isFinite(e.amount) ||
-    e.amount <= 0 ||
+    (e.legacy_id ? e.amount < 0 : e.amount <= 0) ||
     e.amount > 100000000
   )
     throw new Error("Enter a valid amount.");
   if (!Number.isFinite(Date.parse(e.occurred_at)))
     throw new Error("Choose a valid date.");
+  if (
+    w.legacy?.measure &&
+    !w.legacy.measure.allowDecimals &&
+    !Number.isInteger(e.amount)
+  )
+    throw new Error("Enter a whole amount.");
   if (e.note.length > 1000) throw new Error("Shorten your note.");
   if (w.tracking === "sessions" && e.amount !== 1)
     throw new Error("Log one session at a time.");
