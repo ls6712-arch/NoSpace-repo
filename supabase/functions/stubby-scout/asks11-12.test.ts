@@ -47,47 +47,25 @@ const ASK_11: RawPick[] = [
   { kind: "idea", title: "Slow Sunday walk to Gapstow Bridge in Central Park", place: "Central Park", starts: "2026-11-07T10:00", price: null, url: page("/parks/central-park/gapstow-bridge"), corner: null },
 ];
 
-describe("ask 11, with a $0 monthly budget (a preference, not a limit)", () => {
-  const { intent, result } = check("a walk or something chill this week", ASK_11, { monthlyBudget: 0 });
-
-  it("reads the $0 as from the profile, so it's soft", () => {
-    expect(intent.budget).toEqual({ max: 0, free: true, from: "profile" });
+describe("ask 11: explicit free-only and unknown prices",()=>{
+  it("preserves the original free-only answer as a hard constraint",()=>{
+    const {intent,result}=check("a walk or something chill this week",ASK_11,{monthlyBudget:0});
+    expect(intent.budget).toEqual({max:0,free:true,from:"profile"});
+    expect(result.outcome).toBe("nothing");expect(result.kept).toEqual([]);
+    expect(result.dropped.every(d=>d.key==="noprice")).toBe(true);
   });
-
-  it("keeps 3: the free museum afternoon, their own Pursuit and the walk, each free", () => {
-    expect(result.outcome).toBe("found");
-    expect(result.kept.map((p) => [p.title, p.price])).toEqual([
-      ["Free Thursday afternoon at Museum of the Moving Image", "Free"],
-      ["Pottery session on your Pursuit", "Free"],
-      ["Slow Sunday walk to Gapstow Bridge in Central Park", "Free"],
-    ]);
+  it("does not infer free admission from a title, a park, or an owned Pursuit",()=>{
+    const {result}=check("a walk or free stuff this week",ASK_11);
+    expect(result.kept).toEqual([]);
+    expect(result.dropped.some(d=>d.key==="budget")).toBe(false);
   });
-
-  it("the run with no price isn't dropped for it: it ranks after the free ones, and only loses on the count of 3", () => {
-    expect(result.dropped).toEqual([
-      { title: "Free Thursday afternoon at the Museum of the Moving Image", reason: "Found twice in this ask.", key: "other" },
-      { title: "Central Park Beginner Runners, Sunday run", reason: "Over the 3 picks for one ask.", key: "other" },
-    ]);
+  it("retains an unknown price when no money constraint was given, with a disclosure",()=>{
+    const {result}=check("a walk or something chill this week",[ASK_11[0]]);
+    expect(result.kept[0]).toMatchObject({price:null,note:"Price not listed"});
   });
-
-  it("with room for it, the run shows with Price not listed", () => {
-    const { result: r } = check("a walk or something chill this week", [ASK_11[0]], { monthlyBudget: 0 });
-    expect(r.kept).toHaveLength(1);
-    expect(r.kept[0]).toMatchObject({ price: null, note: "Price not listed" });
-  });
-});
-
-describe("ask 11, with free typed in the ask (a hard limit)", () => {
-  const { result } = check("a walk or free stuff this week", ASK_11);
-
-  it("still keeps the three that are free, and drops the run honestly: no price, not over a budget", () => {
-    expect(result.kept.map((p) => p.title)).toEqual([
-      "Free Thursday afternoon at Museum of the Moving Image",
-      "Pottery session on your Pursuit",
-      "Slow Sunday walk to Gapstow Bridge in Central Park",
-    ]);
-    expect(result.dropped).toContainEqual({ title: "Central Park Beginner Runners, Sunday run", reason: "Price not listed, and only free things were asked for.", key: "noprice" });
-    expect(result.dropped.some((d) => d.key === "budget")).toBe(false);
+  it("can recommend confirmed free activities without guessing other costs",()=>{
+    const {result}=check("a walk or free stuff this week",ASK_11.map((p,i)=>i===1||i===4?{...p,price:"Free"}:p));
+    expect(result.kept.map(p=>p.title)).toEqual([ASK_11[1].title,ASK_11[4].title]);
   });
 });
 
@@ -97,14 +75,14 @@ describe("ask 12: Pumpkin Smash at Pier 84, no price on its page", () => {
   it("a hard free can't be met by an unknown price: dropped as no price, and the reasons say so", () => {
     const { result } = check("free stuff this weekend", [smash]);
     expect(result.outcome).toBe("nothing");
-    expect(result.dropped).toEqual([{ title: "Pumpkin Smash at Pier 84", reason: "Price not listed, and only free things were asked for.", key: "noprice" }]);
+    expect(result.dropped).toEqual([{ title: "Pumpkin Smash at Pier 84", reason: "Price not listed, so the budget could not be checked.", key: "noprice" }]);
     // Never "was over your budget": the reason key is its own.
     expect(topReasons(result.dropped)).toEqual([{ key: "noprice", count: 1 }]);
   });
 
-  it("under a soft $0 it's kept, marked Price not listed", () => {
+  it("a saved free-only choice also excludes unknown price", () => {
     const { result } = check("something this weekend", [smash], { monthlyBudget: 0 });
-    expect(result.kept[0]).toMatchObject({ title: "Pumpkin Smash at Pier 84", price: null, note: "Price not listed" });
+    expect(result.kept).toEqual([]);expect(result.dropped[0].key).toBe("noprice");
   });
 
   it("an event in a park is not free by nature: only ideas are", () => {
@@ -177,6 +155,6 @@ describe("what the model is told", () => {
   it("free by nature is free, each thing once, and the second round hears why free things were dropped", () => {
     expect(askSystemPrompt()).toContain('has the price "free"');
     expect(askSystemPrompt()).toContain("Report each thing once, under one title.");
-    expect(gapLines([], [{ title: "x", reason: "Price not listed, and only free things were asked for.", key: "noprice" }])).toContain("1 things with no price on their page");
+    expect(gapLines([], [{ title: "x", reason: "Price not listed, so the budget could not be checked.", key: "noprice" }])).toContain("1 things with no price on their page");
   });
 });

@@ -47,7 +47,7 @@ export function buildContext(input: RequestInput): Context {
     issues: parsed.issues,
     travelMax: input.travelOverride ?? (travel ? Number(travel[1]) : null),
     adult21: input.adult21, adultsRequested: intent.adults, family: intent.who === "family",
-    requestedTopics, topicsHard: !/\bor (something|anything)\b/i.test(text), topicCatalog: safeTopics(input.knownTopics ?? []), equipment, interests: p.picks,
+    requestedTopics, topicsHard: !/\bor (something|anything)\b/i.test(text), topicCatalog: safeTopics(input.knownTopics ?? []), equipment, interests: normalized.interests.map(i=>i.key),
     goals: c.goals, preferences: c.preferences,
     learned: learnsFromFeedback(c) ? lastingFeedback(input.learned) : [],
     memberships: [...c.memberships, ...p.passes.filter(m => passCapabilityKind(m.kind ?? "other") !== "equipment").map(m => ({ name: m.place ? `${m.label} (${m.place})` : m.label, expiresOn: null, status: "self_reported" as const }))].slice(0, 20),

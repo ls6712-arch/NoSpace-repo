@@ -16,7 +16,7 @@ describe("V3 golden constraints", () => {
   });
   it("executes the baseline and generates a structured comparison", async () => {
     const r = await evaluate(); expect(r.passed).toBe(r.total); expect(r.total).toBeGreaterThan(20);
-    expect(r.rows.find(x => x.id === "unknown-paid-price")?.baselineKept).toBeGreaterThan(0);
+    expect(r.rows.find(x => x.id === "unknown-paid-price")?.baselineKept).toBe(0);
   });
 });
 describe("context, privacy and outages", () => {

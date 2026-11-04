@@ -290,7 +290,7 @@ describe("a pick that needs the host's approval", () => {
   const group = (needsApproval: boolean) => {
     hook.value = data({
       budget: 50,
-      stubby: { picks: [pottery], events: [], pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(10, 31, 19), hostName: "Priya Shah", needsApproval }], area: "" },
+      stubby: { picks: [pottery], events: [], pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(10, 31, 19), endsAt:ny(10,31,21), hostName: "Priya Shah", needsApproval }], area: "" },
     });
   };
 

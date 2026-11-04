@@ -31,6 +31,14 @@ describe("shared meanings on recommendation surfaces",()=>{
    expect(stubbyPicks({...input,events:[event],activityBudget:20,passes,slots:[{key:"one",startMs:startsAt,endMs:startsAt+7200000}],declined:{},taken:new Set()}).size).toBe(0);
    expect(costFits(priceMaximum(event.price),20)).toBe(false);
  });
+ it("uses the free-time answer to schedule flexible first steps and labels exploration honestly",()=>{
+   const p={...emptyPersonalization(),rhythm:["morning" as const]};
+   const plan=atHomePlans({...input,personalization:p,timeZone:"America/New_York"})[0];
+   expect(new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",hourCycle:"h23"}).format(plan.startsAt!)).toBe("09");
+   expect(plan.when).toContain("morning");
+   const explored=atHomePlans({...input,picks:[],allowDiscovery:true});
+   expect(explored.length).toBeGreaterThan(0);expect(explored.every(p=>p.reason==="A starting point to explore.")).toBe(true);
+ });
  it("does not invent an end time to fit an exact calendar stretch",()=>{
    const startsAt=now+4*3600000;
    expect(stubbyPicks({...input,events:[{eventId:1,cornerKey:guitar.key,title:"Lesson",startsAt,online:true,price:"Free"}],slots:[{key:"one",startMs:startsAt,endMs:startsAt+7200000}],declined:{},taken:new Set()}).size).toBe(0);

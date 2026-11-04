@@ -1,5 +1,5 @@
 import { costFits } from "./personalization";
-import { activityScore } from "../../../supabase/functions/_shared/activityFit";
+import { activityScore } from "./activityFit";
 import type { Personalization } from "./personalization";
 import { reasonLine, parsePrice, passFor, MIN_LEAD_MS, WEEK_MS, type LiveEventInput, type LivePursuitInput, type PlanInput } from "./firstPlan";
 import { nyParts } from "./homeWeek";
@@ -49,6 +49,7 @@ export interface PickInput {
   now: number;
   personalization?: Personalization;
   activityBudget?: number | null;
+  timeZone?:string;
   slots: readonly PickSlot[];
   picks: PlanInput["picks"];
   events: readonly LiveEventInput[];
@@ -153,7 +154,7 @@ export function stubbyPicks(input: PickInput): Map<string, StubbyPick> {
       .filter((c) => !used.has(c.pick.id) && c.pick.startsAt >= slot.startMs && c.pick.endsAt <= slot.endMs)
       .sort((a, b) => {
         const near = Number(!!area && b.place.toLowerCase().includes(area)) - Number(!!area && a.place.toLowerCase().includes(area));
-        return (input.personalization ? activityScore(b.pick.corner.key,input.personalization)-activityScore(a.pick.corner.key,input.personalization) : 0) || near || a.pick.startsAt - b.pick.startsAt || a.pick.id.localeCompare(b.pick.id);
+        return (input.personalization ? activityScore(b.pick.corner.key,input.personalization,b.pick.startsAt,input.timeZone)-activityScore(a.pick.corner.key,input.personalization,a.pick.startsAt,input.timeZone) : 0) || near || a.pick.startsAt - b.pick.startsAt || a.pick.id.localeCompare(b.pick.id);
       });
     if (fits[0]) {
       out.set(slot.key, fits[0].pick);

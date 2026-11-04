@@ -32,7 +32,7 @@ export function FreeScreen() {
     return () => {
       live = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
   const toggle = (key: string) => {
     setError(null);
@@ -74,7 +74,7 @@ export function FreeScreen() {
         </>
       }
     >
-      <TimeGrid windows={windows} onToggle={toggle} />
+      <fieldset disabled={!loaded || saving}><TimeGrid windows={windows} onToggle={toggle} /></fieldset>
       <p aria-live="polite" className="ob-label text-body">
         {windowCountLine(windows.length)}
       </p>

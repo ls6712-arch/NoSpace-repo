@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
+import { emptyCapability } from "./capabilityProfile";
 import { emptyPersonalization } from "./personalization";
-import { readPersonalization, savePersonalization } from "./personalizationRemote";
+import { readPersonalization, readPreferenceBundle, savePersonalization } from "./personalizationRemote";
 vi.mock("../../lib/supabase", () => ({ supabase: null }));
 function client() {
   const query = { select: vi.fn(), eq: vi.fn(), maybeSingle: vi.fn(async () => ({ data: { personalization: emptyPersonalization(), revision: 2 }, error: null })) };
@@ -28,4 +29,11 @@ it("sends partial revision-checked edits and surfaces a concurrent save", async 
   expect(c.rpc).toHaveBeenCalledWith("save_personalization",{expected_user:"alice",expected_revision:2,changes:{motivations:["make"]}});
   c.rpc.mockResolvedValueOnce({data:null,error:{code:"40001"}} as never);
   await expect(savePersonalization("alice",2,{rhythm:[]},c as never)).rejects.toThrow("changed elsewhere");
+});
+
+it("loads preferences, revision and legacy answers from one owner-scoped snapshot",async()=>{
+ const c=client();c.rpc.mockResolvedValue({data:{value:emptyPersonalization(),revision:9,capability:emptyCapability(),taste:{picks:["music/guitar"],windows:["mon-eve"],budget:100},passes:[]},error:null} as never);
+ const saved=await readPreferenceBundle("alice",c as never);
+ expect(c.rpc).toHaveBeenCalledWith("read_personalization",{expected_user:"alice"});
+ expect(c.from).not.toHaveBeenCalled();expect(saved.revision).toBe(9);expect(saved.taste.picks).toEqual(["music/guitar"]);
 });

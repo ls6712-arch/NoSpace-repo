@@ -94,19 +94,19 @@ describe("candidateSpans", () => {
   ];
   const pursuits = [{ cornerKey: "art/drawing", pursuitId: "x", title: "Sketch", startsAt: 160 * HOUR, hostName: "Sam" }];
 
-  it("keeps only what fits the budget, with a pass covering its own Corner", () => {
-    const spans = candidateSpans({ events, pursuits, budget: 50, passes: [] });
-    expect(spans.map((s) => s.startMs / HOUR)).toEqual([100, 120, 160]);
+  it("requires stated duration and applies a per-activity ceiling without inferred pass coverage", () => {
+    const spans = candidateSpans({ events, pursuits, budget: 50, activityBudget:50, passes: [] });
+    expect(spans.map((s) => s.startMs / HOUR)).toEqual([100]);
     const free = candidateSpans({ events, pursuits, budget: 0, passes: [climbing] });
-    expect(free.map((s) => s.startMs / HOUR)).toEqual([100, 120, 160]);
+    expect(free.map((s) => s.startMs / HOUR)).toEqual([]);
     const none = candidateSpans({ events, pursuits: [], budget: 0, passes: [] });
-    expect(none.map((s) => s.startMs / HOUR)).toEqual([120]);
+    expect(none.map((s) => s.startMs / HOUR)).toEqual([]);
   });
 
-  it("uses a listing's own end, else 2 hours", () => {
-    const spans = candidateSpans({ events, pursuits, budget: 50, passes: [] });
+  it("uses stated ends and excludes unknown ends instead of inventing duration", () => {
+    const spans = candidateSpans({ events, pursuits, budget: 50, activityBudget:50, passes: [] });
     expect((spans[0].endMs - spans[0].startMs) / HOUR).toBe(3);
-    expect((spans[1].endMs - spans[1].startMs) / HOUR).toBe(2);
+    expect(spans).toHaveLength(1);
   });
 });
 

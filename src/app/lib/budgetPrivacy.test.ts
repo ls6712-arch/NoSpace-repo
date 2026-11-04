@@ -19,6 +19,8 @@ const ALLOWED = new Set([
   "pages/WhoCanSeeMyTime.tsx",
   "pages/onboarding/screens/YoursScreen.tsx",
   "components/settings/CapabilityEditor.tsx",
+  // Authenticated owner-only contextual preference editor.
+  "components/settings/PersonalizationEditor.tsx",
   // The owner-only card on your own profile (its section is not part of the public profile).
   "components/profile/PlanningCard.tsx",
 ]);

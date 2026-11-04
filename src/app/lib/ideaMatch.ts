@@ -1,5 +1,5 @@
-import { activityScore } from "../../../supabase/functions/_shared/activityFit";
-import type { Personalization } from "./personalization";
+import { activityScore, activityCost } from "../../../supabase/functions/_shared/activityFit";
+import { costFits, type Personalization } from "./personalization";
 import { isBrowsableCorner } from "../data/hobbies";
 import { CORNER_IDEAS, type CornerIdea, type IdeaSpend, type IdeaTime, type IdeaWho } from "../data/cornerIdeas";
 
@@ -43,7 +43,7 @@ export const ROW_SIZE = 6;
 
 export function ideasFor(
   pills: IdeaPills,
-  opts: { personalization?: Personalization; picks?: readonly string[]; affinity?: ReadonlyMap<string, number>; limit?: number } = {},
+  opts: { equipment?:string[]; activityBudget?:number|null; personalization?: Personalization; picks?: readonly string[]; affinity?: ReadonlyMap<string, number>; limit?: number } = {},
 ): MatchedIdea[] {
   const picks = new Set(opts.picks ?? []);
   const affinity = opts.affinity ?? new Map<string, number>();
@@ -51,7 +51,9 @@ export function ideasFor(
     .filter(([key, idea]) => {
       if (idea.adultsOnly) return false;
       const [space, corner] = key.split("/");
-      return isBrowsableCorner(space, corner) && fitsPills(idea, pills);
+      const pillLimit=pills.spend==="free" ? 0 : pills.spend==="under25" ? 25 : null;
+      const limit=opts.activityBudget==null ? pillLimit : pillLimit===null ? opts.activityBudget : Math.min(pillLimit,opts.activityBudget);
+      return isBrowsableCorner(space, corner) && fitsPills(idea, {...pills,spend:"treat"}) && costFits(activityCost(key,opts.equipment ?? []),limit);
     })
     .map(([key, idea]) => ({ key, idea }));
   matched.sort(

@@ -52,7 +52,7 @@ export function PicksScreen() {
     return () => {
       live = false;
     };
-  }, [user, city]);
+  }, [user?.id, city]);
 
   // The friend's Corner starts picked, once, and only when nothing was saved before. They can unpick it.
   useEffect(() => {

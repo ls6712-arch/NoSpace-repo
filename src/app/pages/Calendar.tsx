@@ -140,7 +140,7 @@ export function Calendar() {
             now,
             slots: pickSlots(baseDays),
             picks: data.stubby.picks,
-            personalization:data.stubby.personalization,activityBudget:data.stubby.activityBudget,
+            personalization:data.stubby.personalization,activityBudget:data.stubby.activityBudget,timeZone:data.stubby.timeZone,
             events: data.stubby.events,
             pursuits: data.stubby.pursuits,
             area: data.stubby.area,

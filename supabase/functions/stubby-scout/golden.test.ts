@@ -157,18 +157,18 @@ describe("golden case 4: \"pottery tonight\", budget $50 a month (a preference, 
     ev({ title: "Hand-building session", price: "$10 suggested", corner: "Pottery", url: page("/classes/hand-building") }),
   ];
 
-  it("asks nothing and searches straight away, with a ceiling of about $12", () => {
+  it("asks nothing and searches straight away, without dividing monthly money into outings", () => {
     const intent = readIntent("pottery tonight", { now: NOW, monthlyBudget: 50 });
     expect(intent.missing).toBeNull();
-    expect(intent.budget).toEqual({ max: 12, free: false, from: "profile" });
+    expect(intent.budget).toBeNull();
   });
 
   // The monthly budget is a preference, not a limit (stubby-agent C3, which replaces plan §6.4 here):
   // nothing is dropped for it, and what misses it comes after what fits, with its price shown.
-  it("keeps the free and the $10 first, and the $35 after them, not dropped", () => {
+  it("does not reorder by an invented activity budget", () => {
     const { result } = ctxFor("pottery tonight", RAW, { monthlyBudget: 50 });
-    expect(result.kept.map((p) => p.title)).toEqual(["Open studio hour", "Hand-building session", "Wheel throwing intro"]);
-    expect(result.kept.map((p) => p.price)).toEqual(["Free", "$10 suggested", "$35"]);
+    expect(result.kept.map((p) => p.title)).toEqual(["Wheel throwing intro", "Open studio hour", "Hand-building session"]);
+    expect(result.kept.map((p) => p.price)).toEqual(["$35", "Free", "$10 suggested"]);
     expect(result.dropped).toEqual([]);
   });
 
@@ -206,7 +206,7 @@ describe("golden case 5: \"free stuff this weekend with the kids\", no profile",
       ["Kids planetarium show", "Not free."],
       ["Glow in the dark skate", "Too late for a family outing."],
       ["Beer garden family afternoon", "A bar, brewery, tasting or 21+, and the ask didn't ask for one."],
-      ["Craft corner for kids", "Price not listed, and only free things were asked for."],
+      ["Craft corner for kids", "Price not listed, so the budget could not be checked."],
     ]);
   });
 });
@@ -221,9 +221,9 @@ describe("the rules behind them", () => {
     }
   });
 
-  it("reads the lowest price a page states", () => {
+  it("uses the highest stated price and never makes missing costs free", () => {
     expect(lowestPrice("Free")).toBe(0);
-    expect(lowestPrice("$15 to $30")).toBe(15);
+    expect(lowestPrice("$15 to $30")).toBe(30);
     expect(lowestPrice("Pay what you wish")).toBeNull();
     expect(lowestPrice(null)).toBeNull();
   });

@@ -1,0 +1,901 @@
+{
+  "version": "stubby-v3.4",
+  "fixtureClock": "2026-11-03T19:00:00.000Z",
+  "liveProviders": false,
+  "total": 51,
+  "passed": 51,
+  "rows": [
+    {
+      "id": "tonight-under-20-indoors",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "unknown-paid-price",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "maximum-range-price",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "explicit-overrides-default",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "free-not-paid",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "free-confirmed",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "cancelled-event",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "unavailable"
+      ]
+    },
+    {
+      "id": "sold-out",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "unavailable"
+      ]
+    },
+    {
+      "id": "outdated-event",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "time"
+      ]
+    },
+    {
+      "id": "stale-evidence",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "missing_or_stale_evidence"
+      ]
+    },
+    {
+      "id": "self-reported-membership",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "unverified_eligibility"
+      ]
+    },
+    {
+      "id": "expired-membership",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "unverified_eligibility"
+      ]
+    },
+    {
+      "id": "no-city-means-new-york",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "no-city-elsewhere-is-not-assumed",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "onboarding-without-saved-information",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "wrong-city",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "missing-equipment",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "equipment"
+      ]
+    },
+    {
+      "id": "owned-equipment",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "unknown-travel",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "travel"
+      ]
+    },
+    {
+      "id": "ends-after-midnight",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "end_time"
+      ]
+    },
+    {
+      "id": "unknown-end",
+      "pass": true,
+      "expected": "partial",
+      "actual": "partial",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "indoors-not-outside",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "setting"
+      ]
+    },
+    {
+      "id": "at-home-not-venue",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "setting"
+      ]
+    },
+    {
+      "id": "citation-not-verification",
+      "pass": true,
+      "expected": "partial",
+      "actual": "partial",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "unsafe-url",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": []
+    },
+    {
+      "id": "prompt-injection-no-side-effects",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "unverified-adult",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "age"
+      ]
+    },
+    {
+      "id": "availability-is-not-free-admission",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "exact-decimal-ceiling",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "decimal-over-budget",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "budget-written-as-dollars",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "negated-free",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "negative-activity",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "excluded_activity"
+      ]
+    },
+    {
+      "id": "current-city-overrides-home",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "known-city-alias",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "idea-still-needs-locality",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "event-listing-page",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "listing_page"
+      ]
+    },
+    {
+      "id": "requested-evening-hours",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "time"
+      ]
+    },
+    {
+      "id": "fits-requested-evening-hours",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "contradictory-hours",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": []
+    },
+    {
+      "id": "invalid-calendar-date",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": []
+    },
+    {
+      "id": "unsupported-currency-abstention",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": []
+    },
+    {
+      "id": "saved-dislike-respected",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "excluded_activity"
+      ]
+    },
+    {
+      "id": "current-request-overrides-dislike",
+      "pass": true,
+      "expected": "verified",
+      "actual": "verified",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "family-age-policy-unknown",
+      "pass": true,
+      "expected": "partial",
+      "actual": "partial",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "family-adults-only",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "age"
+      ]
+    },
+    {
+      "id": "place-not-listing",
+      "pass": true,
+      "expected": "partial",
+      "actual": "partial",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 1,
+      "reasons": []
+    },
+    {
+      "id": "place-roundup-still-dropped",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "listing_page"
+      ]
+    },
+    {
+      "id": "event-on-listing-still-dropped",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "nothing",
+      "baselineKept": 0,
+      "v3Kept": 0,
+      "reasons": [
+        "listing_page"
+      ]
+    },
+    {
+      "id": "public-corner-recognized",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "activity"
+      ]
+    },
+    {
+      "id": "specific-corner-not-generalized",
+      "pass": true,
+      "expected": "no_verified_match",
+      "actual": "no_verified_match",
+      "baselineOutcome": "found",
+      "baselineKept": 1,
+      "v3Kept": 0,
+      "reasons": [
+        "activity"
+      ]
+    }
+  ],
+  "comparison": "Frozen synthetic candidates through origin/main c7a4f6a and implementation. No provider calls or live usefulness claim.",
+  "before": [
+    {
+      "id": "tonight-under-20-indoors",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "unknown-paid-price",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "maximum-range-price",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "explicit-overrides-default",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "free-not-paid",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "free-confirmed",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "cancelled-event",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "unavailable"
+      ]
+    },
+    {
+      "id": "sold-out",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "unavailable"
+      ]
+    },
+    {
+      "id": "outdated-event",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "time"
+      ]
+    },
+    {
+      "id": "stale-evidence",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "missing_or_stale_evidence"
+      ]
+    },
+    {
+      "id": "self-reported-membership",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "unverified_eligibility"
+      ]
+    },
+    {
+      "id": "expired-membership",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "unverified_eligibility"
+      ]
+    },
+    {
+      "id": "no-city-means-new-york",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "no-city-elsewhere-is-not-assumed",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "onboarding-without-saved-information",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "wrong-city",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "missing-equipment",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "equipment"
+      ]
+    },
+    {
+      "id": "owned-equipment",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "unknown-travel",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "travel"
+      ]
+    },
+    {
+      "id": "ends-after-midnight",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "end_time"
+      ]
+    },
+    {
+      "id": "unknown-end",
+      "outcome": "partial",
+      "reasons": []
+    },
+    {
+      "id": "indoors-not-outside",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "setting"
+      ]
+    },
+    {
+      "id": "at-home-not-venue",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "setting"
+      ]
+    },
+    {
+      "id": "citation-not-verification",
+      "outcome": "partial",
+      "reasons": []
+    },
+    {
+      "id": "unsafe-url",
+      "outcome": "no_verified_match",
+      "reasons": []
+    },
+    {
+      "id": "prompt-injection-no-side-effects",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "unverified-adult",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "age"
+      ]
+    },
+    {
+      "id": "availability-is-not-free-admission",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "exact-decimal-ceiling",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "decimal-over-budget",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "budget-written-as-dollars",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "budget"
+      ]
+    },
+    {
+      "id": "negated-free",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "negative-activity",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "excluded_activity"
+      ]
+    },
+    {
+      "id": "current-city-overrides-home",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "known-city-alias",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "idea-still-needs-locality",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "location"
+      ]
+    },
+    {
+      "id": "event-listing-page",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "listing_page"
+      ]
+    },
+    {
+      "id": "requested-evening-hours",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "time"
+      ]
+    },
+    {
+      "id": "fits-requested-evening-hours",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "contradictory-hours",
+      "outcome": "no_verified_match",
+      "reasons": []
+    },
+    {
+      "id": "invalid-calendar-date",
+      "outcome": "no_verified_match",
+      "reasons": []
+    },
+    {
+      "id": "unsupported-currency-abstention",
+      "outcome": "no_verified_match",
+      "reasons": []
+    },
+    {
+      "id": "saved-dislike-respected",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "excluded_activity"
+      ]
+    },
+    {
+      "id": "current-request-overrides-dislike",
+      "outcome": "verified",
+      "reasons": []
+    },
+    {
+      "id": "family-age-policy-unknown",
+      "outcome": "partial",
+      "reasons": []
+    },
+    {
+      "id": "family-adults-only",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "age"
+      ]
+    },
+    {
+      "id": "place-not-listing",
+      "outcome": "partial",
+      "reasons": []
+    },
+    {
+      "id": "place-roundup-still-dropped",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "listing_page"
+      ]
+    },
+    {
+      "id": "event-on-listing-still-dropped",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "listing_page"
+      ]
+    },
+    {
+      "id": "public-corner-recognized",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "activity"
+      ]
+    },
+    {
+      "id": "specific-corner-not-generalized",
+      "outcome": "no_verified_match",
+      "reasons": [
+        "activity"
+      ]
+    }
+  ]
+}

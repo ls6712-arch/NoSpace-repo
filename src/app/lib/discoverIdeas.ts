@@ -26,7 +26,7 @@ export function defaultPills(taste: Pick<Taste, "windows" | "budget"> | null, no
   const next = left[0];
   let time: IdeaTime = "tonight";
   if (next && next.slot === "day" && left.some((w) => w.day === next.day && w.offset === next.offset && w.slot === "eve")) time = "weekend";
-  const spend: IdeaSpend = taste?.budget === 0 ? "free" : "under25";
+  const spend: IdeaSpend = taste?.budget === 0 ? "free" : "treat";
   return { time, spend, who: "friend" };
 }
 

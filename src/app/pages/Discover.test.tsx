@@ -140,7 +140,7 @@ describe("Discover ideas", () => {
     show();
     await settle();
     expect(screen.getByRole("combobox", { name: "Time: Weekend" })).toBeTruthy();
-    expect(screen.getByRole("combobox", { name: "Spend: Under $25" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Spend: Treat me" })).toBeTruthy();
   });
 
   it("reshuffles the row at once when a pill changes, with no network call", async () => {
@@ -232,7 +232,7 @@ describe("Discover pill dropdowns", () => {
     await settle();
     const cases: [string, string[], string][] = [
       ["Time", ["An hour", "Tonight", "Weekend"], "Tonight"],
-      ["Spend", ["Free", "Under $25", "Treat me"], "Under $25"],
+      ["Spend", ["Free", "Under $25", "Treat me"], "Treat me"],
       ["Who", ["Solo", "A friend", "New people"], "A friend"],
     ];
     for (const [group, values, current] of cases) {

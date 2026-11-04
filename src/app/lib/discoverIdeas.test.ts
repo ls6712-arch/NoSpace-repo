@@ -6,9 +6,9 @@ import { nyTimeToMs } from "./homeWeek";
 const THU_NOON = nyTimeToMs(2026, 10, 29, 12);
 
 describe("defaultPills", () => {
-  it("starts at Tonight, Under $25 and A friend with nothing saved", () => {
-    expect(defaultPills(null, THU_NOON)).toEqual({ time: "tonight", spend: "under25", who: "friend" });
-    expect(defaultPills({ windows: [], budget: null }, THU_NOON)).toEqual({ time: "tonight", spend: "under25", who: "friend" });
+  it("starts at Tonight, no spending ceiling and A friend with nothing saved", () => {
+    expect(defaultPills(null, THU_NOON)).toEqual({ time: "tonight", spend: "treat", who: "friend" });
+    expect(defaultPills({ windows: [], budget: null }, THU_NOON)).toEqual({ time: "tonight", spend: "treat", who: "friend" });
   });
 
   it("takes Time from the next free window: an evening is Tonight, all day is Weekend", () => {
@@ -19,9 +19,9 @@ describe("defaultPills", () => {
     expect(defaultPills({ windows: ["thu-eve", "sat-day", "sat-eve"], budget: 50 }, THU_NOON).time).toBe("tonight");
   });
 
-  it("takes Spend from the monthly budget: 0 is Free, anything else Under $25", () => {
+  it("takes Spend from the monthly budget: 0 is Free, anything else is unknown", () => {
     expect(defaultPills({ windows: [], budget: 0 }, THU_NOON).spend).toBe("free");
-    for (const budget of [50, 100, 200] as const) expect(defaultPills({ windows: [], budget }, THU_NOON).spend).toBe("under25");
+    for (const budget of [50, 100, 200] as const) expect(defaultPills({ windows: [], budget }, THU_NOON).spend).toBe("treat");
   });
 });
 

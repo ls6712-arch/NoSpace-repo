@@ -127,6 +127,7 @@ export interface SearchRequest {
 
 /** What the edge function reads about the person who asks, as them (their own rows only). */
 export interface PersonProfile {
+  legacyMotivations?:string[];
   personalization?: import("../_shared/personalization.ts").Personalization;
   /** Corner keys, "space-slug/corner-slug". */
   picks: string[];
@@ -642,8 +643,8 @@ async function ask(
     gentle = level === "low";
   }
 
-  const taste = (!v3 || who.guest) && deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
-  // Legacy reads feedback as it always has (it runs alongside V3 for testers); V3 only with consent.
+  const taste = deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
+  // All engines require explicit opt-in before using saved feedback.
   const signals = learnsFromFeedback(capability) && deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
   const corners = await deps.server.corners();
   const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
@@ -742,7 +743,7 @@ async function ask(
   /** V3, saved and shown. On the shadow path, legacy runs alongside and its deck goes in the trace only. */
   const v3Work = async (emit: Emit): Promise<AskReport> => {
     const change = followUp ? applyFollowUp(intent, searchWindow(intent, now, zone), followUp.kind, now) : null;
-    const input: RequestInput = { text, now, profile, capability, knownTopics: corners.map(c => c.name),
+    const input: RequestInput = { text, now, profile:{...profile,...(taste.interests.length ? {legacyMotivations:taste.interests} : {})}, capability, knownTopics: corners.map(c => c.name),
       learned: learnsFromFeedback(capability) ? signals.map(s => ({ source: "feedback" as const, ...s })) : [],
       adult21: adultOk, answers, searchLimit: maxSearches, sessionCity: who.guest ? taste.city : null, gentle,
       budgetOverride: followUp?.kind === "cheaper" ? change?.intent.budget?.max : undefined,
@@ -769,14 +770,14 @@ async function ask(
     for (const d of report.dropped) rejected[d.reason] = (rejected[d.reason] ?? 0) + 1;
     const typed = change?.intent ?? intent;
     // The contract says what bound this ask: a typed budget is hard; the onboarding budget is soft (C3).
-    const softBudget = capability.perActivityBudget;
+    const softBudget = capability.perActivityBudget ?? (profile.monthlyBudget===0 ? 0 : null);
     const asked: Intent = typed.budget || softBudget === null ? typed : { ...typed, budget: { max: softBudget, free: softBudget === 0, from: "profile" }, from: { ...typed.from, budget: "profile" } };
     const window = asked.when ?? searchWindow(asked, now, zone);
     const deckOf = (r: V3Report["recommendations"]): TraceDeckPick[] => r.slice(0, 5).map((x, rank) => ({ title: x.candidate.title.slice(0, 80), kind: x.candidate.kind,
       source: isSoosh(x.candidate) ? "soosh" : "web", verification: x.verification, rank, after: x.after === true }));
     const trace: V3DecisionTrace = {
       version: report.version, engine: "v3",
-      contract: buildContract(asked, window),
+      contract: (()=>{const result=buildContract(asked,window);if(softBudget!==null && !typed.budget)result.budget.strength="hard";return result;})(),
       preferences: explicitPreferences({ corners: picked.map(c => c.name), monthlyBudget: profile.monthlyBudget, freeTimes: windowWords(profile.windows), passes: profile.passes.map(p => p.label), neighborhood: cleanText(profile.area) || null, city: cleanText(profile.city) || null }).map(p => p.attribute),
       cityFrom: report.cityFrom ?? null, gentle, outcome: report.outcome, found: report.recommendations.length, added: mine.length, usage: report.usage, rejected,
       deck: deckOf(report.recommendations),
@@ -822,7 +823,7 @@ async function ask(
 
     // A free follow-up isn't an ask of its own: its ask's counts stay as they were.
     const trace = decisionTrace({
-      contract: buildContract(asked, window),
+      contract: buildContract(asked,window),
       preferences: explicitPreferences({ corners: person.corners, monthlyBudget: profile.monthlyBudget, freeTimes: person.freeTimes, passes: person.passes, neighborhood: person.neighborhood, city: person.city }),
       rounds,
       found,

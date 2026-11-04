@@ -5,6 +5,13 @@ alter table public.stubby_feedback
  add constraint feedback_reason_valid check(reason is null or reason in ('price','time','distance','activity','today')),
  add constraint feedback_scope_valid check(scope in ('request','usual') and (reason is distinct from 'today' or scope='request') and (reason is null or signal='down'));
 
+-- Preserve existing opted-in positive signals. Old unqualified rejections stay temporary.
+update public.stubby_feedback as f set scope='usual'
+where f.signal in ('up','save') and exists(
+ select 1 from public.stubby_capabilities as c join auth.users as u on u.id=c.user_id
+ where c.user_id=f.user_id and c.profile->'consent'->'feedback'='true'::jsonb and coalesce(u.is_anonymous,false)=false
+);
+
 -- Existing column grants stay narrow. Only this caller-checked RPC can edit reason/scope.
 create or replace function public.record_stubby_feedback(pick bigint, reaction text, reason text default null, scope text default 'request')
 returns void language plpgsql security definer set search_path='' as $$

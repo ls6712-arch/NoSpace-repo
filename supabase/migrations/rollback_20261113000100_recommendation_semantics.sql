@@ -323,3 +323,6 @@ grant execute on function public.home_suggestions(integer) to authenticated;
 delete from public.app_config where key='recommendation_traits_v1';
 drop function if exists private.personalization_score(jsonb,jsonb,text);
 drop function if exists private.recommendation_price_max(text);
+
+delete from public.app_config where key='recommendation_aliases_v1';
+drop function if exists private.personalization_interest_key(text);

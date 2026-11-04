@@ -56,3 +56,13 @@ it("does not apply a late response after an account changes",async()=>{
  await act(async()=>done({value:{...emptyPersonalization(),motivations:["make"]},capability:emptyCapability(),revision:4}));
  expect(screen.getByRole("button",{name:"Making something"}).getAttribute("aria-pressed")).toBe("false");
 });
+
+it("does not advance from a save that completes after leaving an account form",async()=>{
+ let complete!:(v:unknown)=>void;mocks.save.mockReturnValueOnce(new Promise(r=>{complete=r;}));
+ const view=render(<HumanQuestion question="motivations"/>);
+ await waitFor(()=>expect((screen.getByRole("button",{name:"Next"}) as HTMLButtonElement).disabled).toBe(false));
+ fireEvent.click(screen.getByRole("button",{name:"Making something"}));fireEvent.click(screen.getByRole("button",{name:"Next"}));
+ await waitFor(()=>expect(mocks.save).toHaveBeenCalled());view.unmount();
+ await act(async()=>complete({value:emptyPersonalization(),revision:5}));
+ expect(mocks.next).not.toHaveBeenCalled();
+});

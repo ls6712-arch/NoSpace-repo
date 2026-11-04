@@ -58,7 +58,7 @@ export function buildContract(intent: Intent, window: Window): RequestContract {
     company: term(intent.who, intent.from.who, strengthOf(intent.from.who)),
     setting: term(intent.setting, intent.from.setting, strengthOf(intent.from.setting)),
     timeWindow: term({ label: window.label, startMs: window.startMs, endMs: window.endMs }, timeFrom, window.hard ? "hard" : "inferred"),
-    budget: term(intent.budget ? { max: intent.budget.max, free: intent.budget.free } : null, intent.from.budget, strengthOf(intent.from.budget)),
+    budget: term(intent.budget ? { max: intent.budget.max, free: intent.budget.free } : null, intent.from.budget, intent.budget?.free ? "hard" : strengthOf(intent.from.budget)),
     energy: term<string>(null, null, "unknown"),
     travel: term<string>(null, null, "unknown"),
     exclusions: intent.adults ? term<Exclusion[]>([], "ask", "hard") : term<Exclusion[]>(["adult"], "default", "inferred"),

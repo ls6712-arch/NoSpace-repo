@@ -1,3 +1,4 @@
+import { TimeGrid } from "../onboarding/TimeGrid";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { usePreferenceDraft } from "../../lib/usePreferenceDraft";
@@ -20,7 +21,8 @@ function Editor({userId}:{userId:string}){
   <button className="min-h-11 underline" type="button" disabled={draft.busy} onClick={()=>{setSaved(false);draft.reload();}}>Reload saved answers</button>
   {draft.status==="ready" && <fieldset disabled={draft.busy} className="flex flex-col gap-6">
     {(["motivations","interests","rhythm"] as const).map(question=><fieldset key={question} className="flex flex-col gap-3"><legend className="mb-3 font-semibold">{QUESTION_TITLES[question]}</legend><PreferenceFields question={question} draft={draft}/></fieldset>)}
-    <Button onClick={()=>void draft.save({motivations:draft.value.motivations,interests:draft.value.interests,rhythm:draft.value.rhythm,durationMax:draft.value.durationMax}).then(ok=>setSaved(ok))}>Save preferences</Button>
+    <fieldset><legend>Usual free times</legend><TimeGrid windows={draft.windows} onToggle={key=>draft.setWindows(w=>w.includes(key)?w.filter(x=>x!==key):[...w,key])}/><Button variant="outline" onClick={()=>draft.setWindows([])}>Clear usual free times</Button></fieldset>
+    <Button onClick={()=>void draft.save({windows:draft.windows,motivations:draft.value.motivations,interests:draft.value.interests,rhythm:draft.value.rhythm,durationMax:draft.value.durationMax}).then(ok=>setSaved(ok))}>Save preferences</Button>
     {saved && <p role="status">Your preferences are saved.</p>}
   </fieldset>}
  </details>;
@@ -46,8 +48,9 @@ function ContextForm({userId,plan,onSaved}:{userId:string;plan:Plan;onSaved:()=>
   {draft.error && <p role="alert">{draft.error}</p>}{message && <p role="status">{message}</p>}
   {draft.status==="failed" && <Button variant="outline" onClick={draft.reload}>Try loading again</Button>}
   <fieldset disabled={draft.status!=="ready" || draft.busy} className="flex flex-col gap-4">
-   <label className="flex flex-col gap-2">Usual budget for one activity in dollars<input type="number" min={0} max={10000} step="0.01" className="min-h-11 rounded-control border border-border bg-background p-3" value={draft.capability.perActivityBudget ?? ""} onChange={e=>draft.setCapability(c=>({...c,perActivityBudget:e.target.value===""?null:Number(e.target.value)}))}/></label>
-   {needsResources && <label className="flex flex-col gap-2">What do you already have for this?<textarea rows={3} className="rounded-control border border-border bg-background p-3" maxLength={2400} value={draft.capability.equipment.join("\n")} onChange={e=>draft.setCapability(c=>({...c,equipment:e.target.value.split("\n").map(x=>x.trim()).filter(Boolean)}))}/><span className="text-small text-muted-foreground">One resource per line. Save an empty list to remove saved resources.</span></label>}
+   <label className="flex flex-col gap-2">Time zone<input aria-label="Time zone" className="min-h-11 rounded-control border border-border bg-background p-3" value={draft.capability.timeZone} maxLength={80} onChange={e=>draft.setCapability(c=>({...c,timeZone:e.target.value}))}/></label>
+   <label className="flex flex-col gap-2">Usual budget for one activity in dollars<input aria-label="Usual budget for one activity in dollars" type="number" min={0} max={10000} step="0.01" className="min-h-11 rounded-control border border-border bg-background p-3" value={draft.capability.perActivityBudget ?? ""} onChange={e=>draft.setCapability(c=>({...c,perActivityBudget:e.target.value===""?null:Number(e.target.value)}))}/></label>
+   {needsResources && <label className="flex flex-col gap-2">What do you already have for this?<textarea aria-label="What do you already have for this?" rows={3} className="rounded-control border border-border bg-background p-3" maxLength={2400} value={draft.capability.equipment.join("\n")} onChange={e=>draft.setCapability(c=>({...c,equipment:e.target.value.split("\n").map(x=>x.trim()).filter(Boolean)}))}/><span className="text-small text-muted-foreground">One resource per line. Save an empty list to remove saved resources.</span></label>}
    {physical && <label className="flex flex-col gap-2">An area that works for you, if you like<input className="min-h-11 rounded-control border border-border bg-background p-3" value={area} maxLength={120} onChange={e=>{setArea(e.target.value);setPlaceTouched(true);}}/></label>}
    <Button onClick={()=>void save()}>Update suggestions</Button>
   </fieldset>

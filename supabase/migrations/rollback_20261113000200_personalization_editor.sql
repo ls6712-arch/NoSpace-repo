@@ -1,3 +1,8 @@
+delete from private.access_allowlist where kind='rpc_account' and name='read_personalization';
+drop function if exists public.read_personalization(uuid);
+drop trigger if exists invalidate_personalization_resources on public.user_passes;
+drop trigger if exists invalidate_personalization_windows on public.profile_private;
+drop function if exists private.invalidate_personalization_editor();
 -- Roll back UI writers first. Keep the compatible validator so saved metadata is retained.
 drop trigger if exists sync_legacy_personalization on public.profile_private;
 drop function if exists private.sync_legacy_personalization();

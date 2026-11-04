@@ -17,9 +17,9 @@ export function PreferenceFields({question,draft}:{question:PreferenceQuestion;d
  const id=useId();const [query,setQuery]=useState("");
  const {value,setValue}=draft;
  const patch=(p:Partial<Personalization>)=>setValue(v=>({...v,...p}));
- if(question==="motivations")return <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{MOTIVATIONS.map(k=><ChoiceChip key={k} pressed={value.motivations.includes(k)} onToggle={()=>patch({motivations:multi(value.motivations,k)})}>{MOTIVATION_LABELS[k]}</ChoiceChip>)}</div>;
+ if(question==="motivations")return <div className="grid grid-cols-1 gap-2 tab:grid-cols-2">{MOTIVATIONS.map(k=><ChoiceChip key={k} pressed={value.motivations.includes(k)} onToggle={()=>patch({motivations:multi(value.motivations,k)})}>{MOTIVATION_LABELS[k]}</ChoiceChip>)}</div>;
  if(question==="rhythm")return <div className="flex flex-col gap-4">
-  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{RHYTHMS.map(k=><ChoiceChip key={k} pressed={value.rhythm.includes(k)} onToggle={()=>patch({rhythm:multi(value.rhythm,k)})}>{RHYTHM_LABELS[k]}</ChoiceChip>)}</div>
+  <div className="grid grid-cols-1 gap-2 tab:grid-cols-2">{RHYTHMS.map(k=><ChoiceChip key={k} pressed={value.rhythm.includes(k)} onToggle={()=>patch({rhythm:multi(value.rhythm,k)})}>{RHYTHM_LABELS[k]}</ChoiceChip>)}</div>
   <label htmlFor={`${id}-duration`}>A comfortable amount of time, if you know</label>
   <select className="min-h-11 rounded-control border border-border bg-background p-3" id={`${id}-duration`} value={value.durationMax ?? ""} onChange={e=>patch({durationMax:e.target.value?Number(e.target.value):null})}>
    <option value="">It depends</option>{[15,30,60,120].map(n=><option key={n} value={n}>{n} minutes</option>)}
@@ -34,11 +34,10 @@ export function PreferenceFields({question,draft}:{question:PreferenceQuestion;d
   <div className="grid grid-cols-2 gap-2" aria-label="Interests">{options.map(c=><ChoiceChip key={c.key} pressed={selected.has(c.key)} onToggle={()=>patch({interests:selected.has(c.key)?value.interests.filter(i=>i.key!==c.key):[...value.interests,{key:c.key,relationship:"unspecified",experience:"unspecified"}]})}>{c.name}</ChoiceChip>)}</div>
   {query && choices.length===0 && <p>No matching interests yet. You can explore without choosing.</p>}
   {value.interests.map((interest,n)=><fieldset key={interest.key} className="rounded-control border border-border p-3"><legend>{preferenceName(interest.key)}</legend>
-   <label className="flex flex-col gap-2" htmlFor={`${id}-relationship-${n}`}>How does this fit you?
+   <label className="flex flex-col gap-2" htmlFor={`${id}-relationship-${n}`}>How does this fit you?</label>
     <select id={`${id}-relationship-${n}`} className="min-h-11 rounded-control border border-border bg-background p-2" value={interest.relationship} onChange={e=>patch({interests:value.interests.map(i=>i.key===interest.key?{...i,relationship:e.target.value as typeof interest.relationship}:i)})}>
      <option value="unspecified">I’m not sure yet</option><option value="enjoy">I already love it</option><option value="try">I want to try it</option><option value="returning">I’m coming back to it</option>
     </select>
-   </label>
    <label className="mt-2 flex min-h-11 items-center gap-2"><input type="checkbox" checked={interest.experience==="beginner"} onChange={e=>patch({interests:value.interests.map(i=>i.key===interest.key?{...i,experience:e.target.checked?"beginner":"unspecified"}:i)})}/>I’m new to this</label>
   </fieldset>)}
  </div>;

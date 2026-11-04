@@ -172,6 +172,8 @@ describe("free (screen 8)", () => {
 
   it("saves the windows", async () => {
     render(<FreeScreen />);
+    await waitFor(()=>expect(remote.fetchTaste).toHaveBeenCalled());
+    await waitFor(()=>expect(screen.getByRole("button",{name:"Saturday daytime, off"}).matches(":disabled")).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Saturday daytime, off" }));
     fireEvent.click(screen.getByRole("button", { name: "Monday evening, off" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
@@ -182,15 +184,18 @@ describe("free (screen 8)", () => {
 
   it("skips: saves nothing, and Stubby shrugs", async () => {
     render(<FreeScreen />);
+    await waitFor(()=>expect(remote.fetchTaste).toHaveBeenCalled());
+    await waitFor(()=>expect(screen.getByRole("button",{name:"Saturday daytime, off"}).matches(":disabled")).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalledWith({ reaction: "shrug" }));
-    expect(remote.savePrivate).toHaveBeenCalledWith("u1", { free_windows: null });
+    expect(remote.savePrivate).not.toHaveBeenCalled();
   });
 });
 
 describe("yours (screen 9)", () => {
-  it("adds a pass per kind with Stubby showing it's yours, and takes it off on a second tap", () => {
+  it("adds a pass per kind with Stubby showing it's yours, and takes it off on a second tap", async () => {
     render(<YoursScreen />);
+    await waitFor(()=>expect((screen.getByRole("button",{name:"Next"}) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Climbing" }));
     expect(flow.react).toHaveBeenLastCalledWith("yours");
     expect(screen.getByRole("button", { name: "Climbing" }).getAttribute("aria-pressed")).toBe("true");
@@ -204,19 +209,21 @@ describe("yours (screen 9)", () => {
 
   it("has Skip beside the four amounts at the same weight, and Skip means no budget", async () => {
     render(<YoursScreen />);
+    await waitFor(()=>expect((screen.getByRole("button",{name:"Next"}) as HTMLButtonElement).disabled).toBe(false));
     for (const name of ["Free only", "$50", "$100", "$200", "Skip"]) expect(screen.getByRole("button", { name })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "$100" }));
     fireEvent.click(screen.getByRole("button", { name: "Skip" }));
     expect(flow.react).toHaveBeenLastCalledWith("shrug");
     expect(screen.getByRole("button", { name: "$100" }).getAttribute("aria-pressed")).toBe("false");
-    expect(screen.getByText("Your first plan will look for free things. Pass coverage needs confirmation.")).toBeTruthy();
+    expect(screen.getByText("Your saved budget stays as it is. Pass coverage needs confirmation.")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalledWith({ stamp: true }));
-    expect(remote.savePrivate).toHaveBeenCalledWith("u1", { monthly_budget: null });
+    expect(remote.savePrivate).not.toHaveBeenCalled();
   });
 
   it("saves a chosen budget, and Free only is 0 not null", async () => {
     render(<YoursScreen />);
+    await waitFor(()=>expect((screen.getByRole("button",{name:"Next"}) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Free only" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalled());
@@ -230,14 +237,15 @@ describe("yours (screen 9)", () => {
 
   it("can be left empty: Next is always on", async () => {
     render(<YoursScreen />);
-    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(false);
+    await waitFor(()=>expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalled());
     expect(remote.savePasses.mock.calls[0][1]).toEqual([]);
   });
 
-  it("never claims a pass makes anything free", () => {
+  it("never claims a pass makes anything free", async () => {
     const { container } = render(<YoursScreen />);
+    await waitFor(()=>expect((screen.getByRole("button",{name:"Next"}) as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Museum" }));
     expect(container.textContent).not.toMatch(/\$0|with your pass|free with/i);
   });

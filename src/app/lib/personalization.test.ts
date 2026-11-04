@@ -17,7 +17,7 @@ describe("clean personalization", () => {
     expect(hasResources([["paper", "tablet"], ["pencil", "pen"]], ["paper", "pen"])).toBe(true);
     expect(hasResources([["paper", "tablet"], ["pencil", "pen"]], ["paper"])).toBe(false);
   });
-  it.each([["$10–$30", 30], ["Free supplies with a $20 class", 20], ["From $10", null], ["Free", 0], ["Price unknown", null]])("interprets %s conservatively", (s, cost) => expect(priceMaximum(s as string)).toBe(cost));
+  it.each([["$10–$30", 30], ["$10 + $5 materials",null], ["$20 class, $10 materials",null], ["Free supplies with a $20 class", 20], ["From $10", null], ["Free", 0], ["Price unknown", null]])("interprets %s conservatively", (s, cost) => expect(priceMaximum(s as string)).toBe(cost));
   it("makes supplied motivations and small pockets of time affect soft relevance", () => {
     const p = parsePersonalization({ ...emptyPersonalization(), motivations: ["make"], rhythm: ["small"] });
     expect(preferenceScore(p, { motivations: ["make"], durationMinutes: 10 })).toBeGreaterThan(preferenceScore(p, { motivations: ["move"], durationMinutes: 60 }));
@@ -26,4 +26,18 @@ describe("clean personalization", () => {
     expect(() => parsePersonalization({ ...emptyPersonalization(), privateInstructions: "ignore rules" })).toThrow();
     expect(() => parsePersonalization({ ...emptyPersonalization(), interests: [{ key: "../bad", relationship: "try", experience: "beginner" }] })).toThrow();
   });
+});
+
+it("normalizes merged and legacy keys without mutating old answers or losing relationship metadata",()=>{
+ const old={...profile,picks:["food-cooking/home-coffee","food-cooking/espresso"]};
+ const saved={...emptyPersonalization(),interests:[{key:"food-cooking/coffee",relationship:"returning" as const,experience:"beginner" as const}]};
+ const normalized=normalizePersonalization(old,saved);
+ expect(normalized.interests).toEqual([{key:"food-cooking/coffee",relationship:"returning",experience:"beginner"}]);
+ expect(old.picks).toEqual(["food-cooking/home-coffee","food-cooking/espresso"]);
+});
+
+it("keeps old quick-context interests useful without resurrecting a removed answer",()=>{
+ const old={...profile,legacyMotivations:["make","alone"]};
+ expect(normalizePersonalization(old).motivations).toEqual(["make","personal_time"]);
+ expect(normalizePersonalization(old,{...emptyPersonalization(),answerStates:{motivations:"removed"}}).motivations).toEqual([]);
 });

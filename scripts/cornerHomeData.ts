@@ -4,7 +4,7 @@ import { CORNER_PREP } from "../src/app/data/cornerPrep.ts";
 import { CURATED_CORNERS } from "../src/app/data/curatedCorners.ts";
 import { FIRST_STEP_FACTS } from "../src/app/data/activityRequirements.ts";
 import { MOODS } from "../src/app/data/moods.ts";
-import { allSubHobbies } from "../src/app/data/hobbies.ts";
+import { allSubHobbies, LEGACY_SPACES, MERGED_CORNERS, canonicalCorner } from "../src/app/data/hobbies.ts";
 
 export interface CornerHomeEntry {
   key: string;
@@ -14,12 +14,12 @@ export interface CornerHomeEntry {
   needs: string[];
   /** The guide step works at home: not outdoors, not with other people, not adults only. */
   atHome: boolean;
-  facts: { motivations: string[]; social: string; durationMinutes: number | null; beginner: boolean | null; resources: { required: string[][]; optional: string[]; alternatives?: string[][] }; costMode: string };
+  facts: { motivations: string[]; social: string; durationMinutes: number | null; beginner: boolean | null; resources: { required: string[][]; optional: string[]; alternatives?: string[][] }; costMode: string; suitability:{home:boolean|null;venue:boolean|null;outdoor:boolean|null;online:boolean|null}; source:{kind:"guide";confidence:"reviewed"|"unconfirmed"}; durationBasis:"estimate"|"unknown" };
 }
 
 export function cornerHomeEntries(): CornerHomeEntry[] {
   return Object.entries(CORNER_GUIDES)
-    .map(([key, g]) => {
+    .map(([key, g]):CornerHomeEntry => {
       const [space, slug] = key.split("/");
       const name = allSubHobbies.find((s) => s.hobbySlug === space && s.slug === slug)?.label ?? slug;
       const curated = CURATED_CORNERS.find((c) => c.spaceSlug === space && c.slug === slug);
@@ -27,16 +27,26 @@ export function cornerHomeEntries(): CornerHomeEntry[] {
       const reviewed = FIRST_STEP_FACTS[slug];
       const statedMinutes = /\b(\d+)\s*(?:minutes?|mins?)\b/i.exec(g.step);
       const motivations = MOODS.filter(m => m.matches(g, space, slug)).map(m => ({people:"company",alone:"personal_time",outside:"explore",haveIt:"explore",play:"explore"} as Record<string,string>)[m.id] ?? m.id);
+      const atHome=!g.adultsOnly && g.together!=="together" && (reviewed?.atHome===true || curated?.setting==="home");
       return { key, name, step: g.step.trim(), needs,
-        atHome: !g.adultsOnly && g.together !== "together" && (reviewed?.atHome === true || curated?.setting === "home"),
+        atHome,
         facts: { motivations: [...new Set(motivations)], social: g.together,
           durationMinutes: statedMinutes ? Number(statedMinutes[1]) : curated?.durationMinutes ?? null,
           beginner: reviewed?.beginner ?? null, resources: reviewed?.resources ?? { required: [], optional: [] },
-          costMode: reviewed?.costMode ?? "unknown" } };
+          costMode: reviewed?.costMode ?? "unknown",
+          suitability:{home:atHome ? true : null,venue:null,outdoor:g.where==="outdoors" ? true : null,online:null},
+          source:{kind:"guide",confidence:reviewed ? "reviewed" : "unconfirmed"},durationBasis:statedMinutes || curated?.durationMinutes ? "estimate" : "unknown" } };
     })
     .sort((a, b) => a.key.localeCompare(b.key));
 }
 
+export function cornerAliases():Record<string,string>{
+  const aliases:Record<string,string>={...MERGED_CORNERS};
+  for(const [oldSpace,current] of Object.entries(LEGACY_SPACES)) for(const c of allSubHobbies.filter(c=>c.hobbySlug===current)){
+    const canonical=canonicalCorner(current,c.slug);aliases[`${oldSpace}/${c.slug}`]=`${canonical.spaceSlug}/${canonical.slug}`;
+  }
+  return aliases;
+}
 export function renderCornerHome(entries: readonly CornerHomeEntry[]): string {
   const rows = entries.map((e) => `  ${JSON.stringify(e.key)}: { name: ${JSON.stringify(e.name)}, step: ${JSON.stringify(e.step)}, needs: ${JSON.stringify(e.needs)}, atHome: ${e.atHome}, facts: ${JSON.stringify(e.facts)} },`);
   return [
@@ -49,12 +59,13 @@ export function renderCornerHome(entries: readonly CornerHomeEntry[]): string {
     "  step: string;",
     "  needs: string[];",
     "  atHome: boolean;",
-    "  facts: { motivations: string[]; social: string; durationMinutes: number | null; beginner: boolean | null; resources: { required: string[][]; optional: string[]; alternatives?: string[][] }; costMode: string };",
+    `  facts: { motivations: string[]; social: string; durationMinutes: number | null; beginner: boolean | null; resources: { required: string[][]; optional: string[]; alternatives?: string[][] }; costMode: string; suitability:{home:boolean|null;venue:boolean|null;outdoor:boolean|null;online:boolean|null}; source:{kind:"guide";confidence:"reviewed"|"unconfirmed"}; durationBasis:"estimate"|"unknown" };`,
     "}",
     "",
     "export const CORNER_HOME: Readonly<Record<string, CornerHome>> = {",
     ...rows,
     "};",
+    `export const CORNER_ALIASES:Readonly<Record<string,string>>=${JSON.stringify(cornerAliases())};`,
     "",
   ].join("\n");
 }

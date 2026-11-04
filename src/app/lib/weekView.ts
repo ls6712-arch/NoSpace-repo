@@ -1,3 +1,4 @@
+import { costFits } from "./personalization";
 import { formatDate, formatWeekday } from "./dates";
 import { HOME_TZ, nyParts, nyTimeToMs, type WeekPlan, type WeekWindow } from "./homeWeek";
 import { plural } from "./plural";
@@ -249,14 +250,13 @@ export function goodPlanHours(free: readonly Span[], candidates: readonly Span[]
  * their picked Corners (the fetch only looks there) that fit their budget.
  * A listing blocks out its own length, a session 2 hours.
  */
-export function candidateSpans(input: { events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; budget: number | null; passes: readonly Pass[] }): Span[] {
+export function candidateSpans(input: { events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; budget: number | null; activityBudget?:number|null; passes: readonly Pass[] }): Span[] {
   const spans: Span[] = [];
   for (const e of input.events) {
-    const hasPass = !!passFor(e.cornerKey.split("/")[1] ?? "", input.passes);
-    if (!affordable(input.budget, parsePrice(e.price), hasPass)) continue;
+    if (!costFits(parsePrice(e.price),input.activityBudget ?? (input.budget===0?0:null)) || !e.endsAt || e.endsAt<=e.startsAt) continue;
     spans.push(planSpan(e.startsAt, e.endsAt));
   }
-  for (const p of input.pursuits) spans.push(planSpan(p.startsAt));
+  for (const p of input.pursuits) if(p.endsAt && p.endsAt>p.startsAt && costFits(null,input.activityBudget ?? (input.budget===0?0:null))) spans.push(planSpan(p.startsAt,p.endsAt));
   return spans;
 }
 

@@ -44,7 +44,7 @@ export function YoursScreen() {
     return () => {
       live = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
   const toggleKind = (kind: PassKind) => {
     touched.current = true;
@@ -116,7 +116,7 @@ export function YoursScreen() {
         </>
       }
     >
-      <fieldset className="flex flex-col gap-2">
+      <fieldset disabled={!loaded || saving} className="flex flex-col gap-2">
         <legend className="ob-label mb-2 text-small">Passes and gear</legend>
         <ul className="grid grid-cols-2 gap-2">
           {PASS_KINDS.map((k) => (
@@ -138,7 +138,7 @@ export function YoursScreen() {
           onChange={(e) => setPlace(p.id, e.target.value)}
         />
       ))}
-      <fieldset className="flex flex-col gap-2">
+      <fieldset disabled={!loaded || saving} className="flex flex-col gap-2">
         <legend className="ob-label text-body">A month for doing things</legend>
         <p className="mb-1 text-small ob-muted">Only you see this.</p>
         <ul className="grid grid-cols-2 gap-2">

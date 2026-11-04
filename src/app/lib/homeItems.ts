@@ -80,6 +80,7 @@ export interface AtHomeInput {
   personalization?: Personalization;
   equipment?: string[];
   activityBudget?: number | null;
+  timeZone?:string;
   /** Corner keys already on the list (a listing in the same Corner). */
   exclude: ReadonlySet<string>;
   picks: readonly string[];
@@ -154,7 +155,7 @@ export function buildHomeItems(
   minimum = 4,
 ): HomeItem[] {
   const listed = suggestions.map(itemFromSuggestion);
-  if(fill.personalization) listed.sort((a,b)=>activityScore(b.corner.key,fill.personalization!)-activityScore(a.corner.key,fill.personalization!));
+  if(fill.personalization) listed.sort((a,b)=>activityScore(b.corner.key,fill.personalization!,b.startsAt,fill.timeZone)-activityScore(a.corner.key,fill.personalization!,a.startsAt,fill.timeZone));
   const exclude = new Set(listed.map((i) => i.corner.key));
   return [...listed, ...atHomeItems({ ...fill, need: minimum - listed.length, exclude })];
 }

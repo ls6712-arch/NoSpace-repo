@@ -1,3 +1,4 @@
+import { CORNER_ALIASES } from "./cornerHome.ts";
 /** Shared private personalization and feasibility vocabulary. No network, browser or model dependency. */
 export const MOTIVATIONS = ["make", "learn", "move", "company", "personal_time", "explore"] as const;
 export type Motivation = typeof MOTIVATIONS[number];
@@ -41,7 +42,9 @@ export function parsePersonalization(value: unknown): Personalization {
   if (value.answerStates !== undefined && (!obj(value.answerStates) || Object.entries(value.answerStates).some(([k,v]) => !["motivations","interests","rhythm","durationMax","equipment"].includes(k) || !["answered","removed"].includes(v as string)))) throw new Error("Check your answer states.");
   return { ...(value.answerStates ? { answerStates:value.answerStates as Personalization["answerStates"] } : {}), ...(value.resourceMode ? {resourceMode:value.resourceMode as Personalization["resourceMode"]} : {}), version: 1, motivations: choices(value.motivations, MOTIVATIONS), interests, rhythm: choices(value.rhythm, RHYTHMS), durationMax: value.durationMax as number | null, confirmedAt: value.confirmedAt as string | null };
 }
+export const interestKey=(key:string)=>CORNER_ALIASES[key] ?? key;
 export interface ProfileInput {
+  legacyMotivations?:readonly string[];
   picks: readonly string[];
   windows: readonly string[];
   monthlyBudget: number | null;
@@ -49,10 +52,15 @@ export interface ProfileInput {
 }
 /** One adapter for existing answers: legacy relationships and confirmation dates remain unknown. */
 export function normalizePersonalization(profile: ProfileInput, saved: Personalization = emptyPersonalization(), equipment: readonly string[] = [], perActivityBudget: number | null = null) {
-  const picks = [...new Set(profile.picks.filter(keyValid))];
-  const interests = picks.map(key => saved.interests.find(i => i.key === key) ?? { key, relationship: "unspecified" as const, experience: "unspecified" as const });
+  const picks = [...new Set(profile.picks.filter(keyValid).map(interestKey))];
+  const interests = picks.map(key => {
+    const existing=saved.interests.find(i=>interestKey(i.key)===key);
+    return existing ? {...existing,key} : {key,relationship:"unspecified" as const,experience:"unspecified" as const};
+  });
+  const legacyMotivations=(profile.legacyMotivations ?? []).flatMap(k=>({make:["make"],learn:["learn"],move:["move"],people:["company"],alone:["personal_time"],outside:["explore"],play:["explore"],haveIt:["explore"]} as Record<string,Motivation[]>)[k] ?? []);
+  const motivations=saved.motivations.length || saved.answerStates?.motivations ? saved.motivations : [...new Set(legacyMotivations)];
   const passEquipment = (saved.resourceMode === "explicit" ? [] : profile.passes).flatMap(p => p.kind === "bike" ? ["bicycle"] : p.kind === "gear" && resourceId(p.label) !== "gear" ? [resourceId(p.label)] : []);
-  return { ...saved, interests, usualWindows: [...new Set(profile.windows)], monthlyBudget: profile.monthlyBudget,
+  return { ...saved, motivations, interests, usualWindows: [...new Set(profile.windows)], monthlyBudget: profile.monthlyBudget,
     // Monthly money is a planning amount. The original zero choice explicitly meant Free only.
     activityBudget: perActivityBudget, freeOnly: profile.monthlyBudget === 0 && perActivityBudget === null,
     equipment: [...new Set([...equipment, ...passEquipment].map(resourceId).filter(Boolean))] };
@@ -77,8 +85,9 @@ export function costFits(cost: number | null, ceiling: number | null): boolean {
 /** Conservative total from a host's price text; do not treat "free supplies with a $20 class" as zero. */
 export function priceMaximum(text: string | null | undefined): number | null {
   if (!text) return null;
-  if (/\$[\d,.]+\s*[-–]\s*\d|[€£¥]|\b(?:EUR|GBP|INR|from|starting|plus|fees extra)\b/i.test(text)) return null;
+  if (/\+|\$[\d,.]+\s*[-–]\s*\d|[€£¥]|\b(?:EUR|GBP|INR|CAD|AUD|NZD|HKD|from|starting|plus|fees extra)\b/i.test(text)) return null;
   const amounts = [...text.matchAll(/\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/g)].map(m => Number(m[1].replace(/,/g, "")));
+  if (amounts.length>1 && !/\$[\d,.]+\s*(?:to|[-–])\s*\$[\d,.]+/i.test(text)) return null;
   if (amounts.length) return Math.max(...amounts);
   return /^\s*(?:free|no cost|0)\s*[.!]?\s*$/i.test(text) ? 0 : null;
 }
