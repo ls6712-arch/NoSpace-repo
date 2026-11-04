@@ -18,6 +18,7 @@ import { nyTimeToMs } from "../../lib/homeWeek";
 import { HELLO_KEY } from "../../lib/stubbyStage";
 import { SETTLE_MS } from "../stubby/StubbyBuddy";
 import { StubbyStage, type StubbyStageHandle } from "./StubbyStage";
+import { RESUME_KEY } from "../../lib/signUpReturn";
 
 // Fixed clock: Sunday Nov 1, 2026, 5:00 pm New York.
 const NOW = nyTimeToMs(2026, 11, 1, 17);
@@ -64,6 +65,25 @@ const line = () => document.querySelector("[data-stubby-line]")?.textContent;
 const state = () => document.querySelector("[data-stubby-stage] [data-stubby-state]")?.getAttribute("data-stubby-state");
 
 describe("the Stubby stage", () => {
+  it("opens a landing example as an editable draft without submitting or reapplying it",async()=>{
+    const ui=<MemoryRouter initialEntries={[{pathname:"/calendar",state:{landingExample:"photo-walk"}}]}><StubbyStage greeting={{now:NOW,windows:[],plans:[]}}/></MemoryRouter>;
+    const view=render(ui);
+    const field=screen.getByRole("textbox",{name:"What are you in the mood for?"}) as HTMLInputElement;
+    expect(field.value).toBe("I’d like to take a photo walk outside.");
+    await screen.findByText("3 asks left today");
+    expect(api.askStubbyStream).not.toHaveBeenCalled();
+    fireEvent.change(field,{target:{value:"pottery on Saturday"}});
+    view.rerender(ui);
+    expect(field.value).toBe("pottery on Saturday");
+  });
+
+  it("keeps the signup return draft ahead of the landing example",async()=>{
+    window.sessionStorage.setItem(RESUME_KEY,JSON.stringify({draft:"My original request",send:false}));
+    render(<MemoryRouter initialEntries={[{pathname:"/calendar",state:{landingExample:"sketch"}}]}><StubbyStage greeting={{now:NOW,windows:[],plans:[]}}/></MemoryRouter>);
+    await waitFor(()=>expect((screen.getByRole("textbox",{name:"What are you in the mood for?"}) as HTMLInputElement).value).toBe("My original request"));
+    expect(api.askStubbyStream).not.toHaveBeenCalled();
+  });
+
   it("greets with a line about your week, read out as text, with Stubby himself hidden", async () => {
     stage();
     await waitFor(() => expect(line()).toBe("You’re free tonight from 6. Want ideas?"));
