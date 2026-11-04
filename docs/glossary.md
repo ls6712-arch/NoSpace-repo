@@ -911,6 +911,12 @@ Examples do not save answers, create a plan, prepare an invitation or use recomm
 | Example activity | Always visible over the interactive example; never a personalized or scheduled result |
 | At home / Outside | Local example choices; they do not write preferences |
 | Another example | Cycles only within the selected setting |
+| Choose a setting or try another example. | Instruction above the photo-backed example |
+| Pause motion / Play motion | Stops or resumes the page's decorative graphics, photo movement and Stubby animations. Does not save a preference |
+| Motion off | Shown when the device requests reduced motion; animations remain off |
+| Tap Stubby / Play with Stubby | Visible instruction and accessible name for the same native play button. Reacts locally and never makes a plan or uses an ask |
+| Swipe the photo to change the example. | Touch shortcut with equivalent native buttons. Vertical scrolling is preserved |
+| Photo: {credit} | Link to the recorded photograph source. Uses Unsplash when an older library entry has no photographer credit |
 | What you’ll need | Expands the activity details |
 | Choose either option / Optional | Distinguishes whole required bundles from optional supplies |
 | Suggested time / Cost / Activity guide | Example facts. Practice time is suggested; missing price or unconfirmed ownership never means free |

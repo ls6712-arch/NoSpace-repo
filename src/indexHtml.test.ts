@@ -29,6 +29,7 @@ describe("index.html crawler copy", () => {
     const faq = data["@graph"].find((n: { "@type": string }) => n["@type"] === "FAQPage");
     const pairs = faq.mainEntity.map((e: { name: string; acceptedAnswer: { text: string } }) => [e.name, e.acceptedAnswer.text]);
     expect(pairs).toEqual(LANDING_COPY.faq.map(({ q, a }) => [q, a]));
+    expect(html).not.toContain("Where are local suggestions available?");
   });
 
   it("keeps the crawler copy inside #root, so React replaces it", () => {

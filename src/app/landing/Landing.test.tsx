@@ -7,9 +7,11 @@ import { LANDING_COPY as COPY } from "./copy";
 import { ACTIVITY_EXAMPLES, exampleFromEntry } from "./examples";
 import { startContent } from "../lib/startContent";
 
-vi.mock("motion/react", () => ({ useReducedMotion: () => true }));
+const motion = vi.hoisted(() => ({ reduced: true }));
+vi.mock("motion/react", () => ({ useReducedMotion: () => motion.reduced }));
 
 beforeEach(() => {
+  motion.reduced = true;
   vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -20,6 +22,27 @@ afterEach(() => {
 });
 
 describe("landing page", () => {
+  it("removes the local-suggestions question and uses actual photographs", () => {
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    expect(screen.queryByText("Where are local suggestions available?")).toBeNull();
+    expect(document.querySelectorAll(".lp-activity-photo img").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: COPY.motionDevice }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("pauses the page's motion while keeping the example controls usable", () => {
+    motion.reduced = false;
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    expect(document.querySelector(".lp")?.getAttribute("data-motion")).toBe("on");
+    expect(screen.getByRole("button", { name: COPY.playStubby })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: COPY.pauseMotion }));
+    expect(document.querySelector(".lp")?.getAttribute("data-motion")).toBe("off");
+    expect(screen.queryByRole("button", { name: COPY.playStubby })).toBeNull();
+    const preview = within(screen.getByRole("group", { name: COPY.exampleLabel }));
+    fireEvent.click(preview.getByRole("button", { name: COPY.outside }));
+    expect(preview.getByRole("heading", { name: "Take a photo walk" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: COPY.playMotion }));
+    expect(document.querySelector(".lp")?.getAttribute("data-motion")).toBe("on");
+  });
   it("has no in-page #links: the app uses hash routing, so they would be read as routes", () => {
     const { container } = render(
       <MemoryRouter>

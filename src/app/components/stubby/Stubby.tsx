@@ -276,6 +276,7 @@ export function Stubby({
   size = 160,
   onDark = false,
   followPointer = false,
+  motionEnabled = true,
   label,
   onPoke,
   className,
@@ -288,6 +289,8 @@ export function Stubby({
   onDark?: boolean;
   /** Eyes follow the pointer. Use on the welcome and on screens where Stubby is the hero. */
   followPointer?: boolean;
+  /** A local pause control may stop motion without changing the device preference. */
+  motionEnabled?: boolean;
   /** Read out by screen readers. Leave empty when the text next to Stubby says the same thing. */
   label?: string;
   /** Tapping Stubby always squishes it. Pass a handler only when the tap should also do something. */
@@ -299,7 +302,7 @@ export function Stubby({
   const mark = size < 56;
   // Without the Web Animations API (an old browser, or a test runner) Stubby holds still instead of crashing.
   const canAnimate = typeof Element !== "undefined" && typeof Element.prototype.animate === "function";
-  const still = reduce || mark || !canAnimate;
+  const still = reduce || !motionEnabled || mark || !canAnimate;
   const clipId = `stubby-tab-${useId().replace(/:/g, "")}`;
 
   const [face, setFace] = useState<Face>(REST[state].face);
