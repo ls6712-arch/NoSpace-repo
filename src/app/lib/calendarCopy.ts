@@ -172,6 +172,14 @@ export const QUESTION_COPY = {
  * already in docs/glossary.md: the At-home badge, What you’ll need, Head out, Start a Pursuit,
  * Go to Discover, and the nothing-fit line.
  */
+/**
+ * The care card (stubby-agent C1). The line is the brief's own; the rest is new, for approval
+ * (docs/glossary.md). Resource labels come from the function's reviewed list (careResources.ts).
+ */
+export const CARE_COPY = {
+  resourcesLabel: "Someone to talk to",
+};
+
 export const STAY_IN_COPY = {
   badge: "At home",
   needs: "What you’ll need",

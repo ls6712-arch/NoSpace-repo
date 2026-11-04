@@ -31,7 +31,7 @@ const args = process.argv.slice(2);
 const distArg = args.includes("--dist") ? args[args.indexOf("--dist") + 1] : null;
 const dist = path.resolve(ROOT, distArg ?? "dist-e2e");
 if (!distArg) {
-  const r = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: ANON_KEY } });
+  const r = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_STUBBY_V3: "true", VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: ANON_KEY } });
   if (r.status !== 0) throw new Error("build failed");
 }
 
@@ -109,6 +109,8 @@ const json = (route: Route, status: number, body: unknown, extra: Record<string,
   route.fulfill({ status, headers: { ...cors, "content-type": "application/json", ...extra }, body: JSON.stringify(body) });
 const bearer = (route: Route) => (route.request().headers()["authorization"] ?? "").replace(/^Bearer\s+/i, "");
 
+let capability: Record<string, unknown> | null = null;
+
 async function supabase(route: Route) {
   const req = route.request();
   if (process.env.E2E_DEBUG) console.log("  >", req.method(), req.url().replace(SUPA, "").slice(0, 110), (req.headers()["authorization"] ?? "").slice(-8));
@@ -165,6 +167,16 @@ async function supabase(route: Route) {
   if (p.startsWith("/rest/v1/")) {
     const table = p.slice("/rest/v1/".length);
     const one = (req.headers()["accept"] ?? "").includes("vnd.pgrst.object");
+    if (table === "stubby_capabilities") {
+      if (req.method() === "GET") return json(route, 200, one ? (capability ? { profile: capability } : null) : capability ? [{ profile: capability }] : []);
+      if (req.method() === "POST") {
+        const row = req.postDataJSON();
+        if (row.user_id !== GUEST_ID) throw new Error("Capability write used another user");
+        capability = row.profile;
+        return json(route, 201, []);
+      }
+    }
+    if (table === "rpc/forget_stubby_memory") { if (req.postDataJSON().expected_user !== GUEST_ID) return json(route, 403, {}); capability = null; return json(route, 200, null); }
     if (table === "personal_picks" && req.method() === "GET") return json(route, 200, state.picks);
     if (table === "stubby_asks") return json(route, 200, [], { "content-range": `0-0/${anonymous ? state.guestAsks : state.guestAsks + state.accountAsks.length}` });
     if (table === "profiles" && req.method() === "GET" && !anonymous && token) {
@@ -312,6 +324,25 @@ try {
   if (state.forgedFieldsSeen) fail("the app sent a user_id or guest_id in a body");
 
   if (problems.length) fail(problems.join("\n"));
+  step("authenticated account edits, reloads, and deletes optional Stubby memory");
+  await page.goto(`${ORIGIN}/#/account`);
+  await page.locator("summary:visible").filter({ hasText: "What Stubby knows" }).click();
+  const editor = page.locator("details:visible").filter({ has: page.getByText("What Stubby knows", { exact: true }) });
+  await editor.getByLabel("Use my saved information", { exact: true }).check();
+  await editor.getByLabel("Equipment and resources", { exact: true }).fill("guitar");
+  await editor.getByRole("button", { name: "Save changes", exact: true }).click();
+  await editor.getByText("Your changes are saved.", { exact: true }).waitFor();
+  if (!capability || JSON.stringify(capability).includes("verified")) fail("Memory was missing or claimed verified membership");
+  await page.reload();
+  await page.locator("summary:visible").filter({ hasText: "What Stubby knows" }).click();
+  await editor.getByLabel("Equipment and resources").waitFor();
+  await page.waitForFunction(() => document.querySelector<HTMLTextAreaElement>("textarea[id$='-equipment']")?.value === "guitar");
+  await editor.getByRole("button", { name: "Delete saved information", exact: true }).click();
+  await editor.getByRole("button", { name: "Delete", exact: true }).click();
+  await editor.getByText(/saved information and feedback are deleted/).waitFor();
+  if (capability !== null) fail("Memory was not deleted");
+  if (problems.length) fail(problems.join("\n"));
+  console.log("PASS authenticated memory edit, reload, delete");
   console.log("PASS guest → 3 asks → card → limit → Google sign-up → same chat, draft sent");
 } catch (e) {
   console.error(`FAIL ${(e as Error).message}`);

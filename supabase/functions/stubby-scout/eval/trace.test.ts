@@ -5,7 +5,8 @@
 import { describe, expect, it } from "vitest";
 import { STUBBY_CONFIG } from "../config.ts";
 import type { DecisionTrace } from "../contract.ts";
-import { runScenario } from "./run.ts";
+import { runScenario, type Engine } from "./run.ts";
+import { V3_VERSION } from "../v3/types.ts";
 import { SCENARIOS, type Scenario } from "./scenarios.ts";
 
 /** Every string value a trace may hold, outside pick titles and the version. */
@@ -25,6 +26,14 @@ const ENUMS = new Set<string>([
   // pick fields and outcomes
   "event", "idea", "web", "soosh", "valid", "uncertain", "rank", "after_budget", "soonest_after",
   "found", "after", "nothing",
+  // V3 (types.ts V3DecisionTrace): engine, kinds, verification, where the city came from, evidence levels and sources
+  "v3", "place", "verified", "partial", "no_verified_match", "ask", "session", "profile", "default",
+  "provider", "search", "anthropic-web-v1", "soosh-db", "fixture-web",
+]);
+/** V3's own keys, its drop reasons (feasibility.ts) and its usage counts. */
+const V3_KEYS = new Set<string>([
+  "engine", "cityFrom", "gentle", "added", "usage", "input", "output", "calls", "rejected", "deck", "verification", "after", "sources", "evidence", "url", "level", "checkedAt", "legacy", "failed",
+  "unclear_request", "missing_or_stale_evidence", "listing_page", "unavailable", "end_time", "location", "travel", "travel_time", "age", "excluded_activity", "unverified_eligibility", "equipment", "calendar_conflict", "family_time", "weather", "duplicate", "setting", "budget", "time", "activity",
 ]);
 
 /** Every object key a trace may use: its schema, and reason codes for the drop counts. */
@@ -38,17 +47,22 @@ const KEYS = new Set<string>([
 ]);
 
 /** Every string and key in a trace that isn't normalised, with where it is. */
-function freeText(trace: DecisionTrace, titles: ReadonlySet<string>): string[] {
+function freeText(trace: DecisionTrace, titles: ReadonlySet<string>, engine: Engine = "legacy"): string[] {
   const bad: string[] = [];
+  const v3 = engine === "v3";
   const walk = (v: unknown, path: string) => {
     if (typeof v === "string") {
-      const isTitle = /^picks\.\d+\.title$/.test(path) && titles.has(v);
-      const isVersion = (path === "version" || path === "contract.version") && v === STUBBY_CONFIG.version;
-      if (!isTitle && !isVersion && !ENUMS.has(v)) bad.push(`${path} = ${JSON.stringify(v)}`);
+      // A pick's title as found, or one of their own Pursuits or Corners by its own name ("Pottery", "Pottery at home").
+      const own = v3 && (/^Pottery( \d+)?$/.test(v) || / at home$/.test(v));
+      const isTitle = /^(picks|deck|legacy\.deck)\.\d+\.title$/.test(path) && (titles.has(v) || own);
+      const isVersion = ((path === "version" || path === "contract.version" || path === "legacy.version") && (v === STUBBY_CONFIG.version || (v3 && v === V3_VERSION)));
+      // A source's own page: where a pick came from, never typed.
+      const isSource = v3 && /^sources\.\d+\.evidence\.\d+\.url$/.test(path) && /^(https:\/\/example\.org\/|\/(start|pursuit)\/)/.test(v);
+      if (!isTitle && !isVersion && !isSource && !ENUMS.has(v)) bad.push(`${path} = ${JSON.stringify(v)}`);
     } else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${path}.${i}`));
     else if (v && typeof v === "object") {
       for (const [k, x] of Object.entries(v)) {
-        if (!KEYS.has(k)) bad.push(`${path ? `${path}.` : ""}${k} (key)`);
+        if (!KEYS.has(k) && !(v3 && V3_KEYS.has(k))) bad.push(`${path ? `${path}.` : ""}${k} (key)`);
         walk(x, path ? `${path}.${k}` : k);
       }
     } else if (!(v === null || typeof v === "number" || typeof v === "boolean")) bad.push(`${path} is a ${typeof v}`);
@@ -86,16 +100,19 @@ const LEAKY: Scenario[] = [
 ];
 
 describe("the decision trace holds only normalised values", () => {
-  for (const s of [...SCENARIOS, ...LEAKY]) {
-    it(`${s.id}: no free text, and nothing typed`, async () => {
-      const r = await runScenario(s);
-      // A question is answered before any search: nothing is saved, so there's no trace.
-      if (s.expect.question) return expect(r.trace).toBeUndefined();
+  const runs = [...SCENARIOS, ...LEAKY].flatMap((s) => (["legacy", "v3"] as const).filter((e) => !s.engines || s.engines.includes(e)).map((engine) => ({ s, engine })));
+  for (const { s, engine } of runs) {
+    it(`${engine}, ${s.id}: no free text, and nothing typed`, async () => {
+      const r = await runScenario(s, engine);
+      // A question is answered before any search, and a care answer saves nothing: no trace.
+      if (s.expect.question || s.expect.care) return expect(r.trace).toBeUndefined();
       expect(r.trace, "a trace was saved").toBeDefined();
-      expect(freeText(r.trace!, titlesOf(s))).toEqual([]);
+      expect(freeText(r.trace!, titlesOf(s), engine)).toEqual([]);
       // No word they typed (4 letters or more, other than one of the enums) appears anywhere in it.
       const json = JSON.stringify(r.trace).toLowerCase();
-      const titles = [...titlesOf(s)].join(" ").toLowerCase();
+      // V3 also names their own Pursuits and Corners (and links their pages): not typed, theirs.
+      const own = engine === "v3" ? ["Pottery", "Pottery at home", ...(s.sooshLinks ?? [])] : [];
+      const titles = [...titlesOf(s), ...own].join(" ").toLowerCase();
       for (const w of s.ask.toLowerCase().split(/[^a-z0-9$']+/)) {
         if (w.length < 4 || ENUMS.has(w) || KEYS.has(w) || titles.includes(w)) continue;
         expect(json, `"${w}" from the ask`).not.toContain(w);

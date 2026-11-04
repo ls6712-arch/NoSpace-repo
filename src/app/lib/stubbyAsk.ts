@@ -301,7 +301,48 @@ export interface Understood {
 /** One step from the stream, as it happens. */
 export type AskStep = { type: "understood"; understood: Understood } | { type: "search"; query: string } | { type: "pages"; count: number } | { type: "picking" };
 
+export interface IntelligenceNotice {
+  outcome: "verified" | "partial" | "no_verified_match";
+  fallback: string | null;
+  warnings: string[];
+}
+/** One link on the care card: tel:, sms: or https: only, else it isn't shown. */
+export interface CareLink {
+  label: string;
+  detail: string;
+  href: string;
+}
+/**
+ * The care card (stubby-agent C1), instead of picks, when an ask reads as clear distress. Nothing
+ * about it is stored and no ask is used; the app shows it and keeps nothing either.
+ */
+export interface CareCard {
+  line: string;
+  resources: CareLink[];
+  emergency: CareLink | null;
+  friend: { label: string; href: string } | null;
+}
+const SAFE_CARE_HREF = /^(tel:\+?\d{2,15}|sms:\d{2,15}|https:\/\/[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"'<>]*)?)$/i;
+const careLink = (v: unknown): CareLink | null => {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  return typeof o.label === "string" && typeof o.detail === "string" && typeof o.href === "string" && SAFE_CARE_HREF.test(o.href)
+    ? { label: o.label.slice(0, 60), detail: o.detail.slice(0, 120), href: o.href }
+    : null;
+};
+/** The care card from the function's answer, or null. Only safe links; nothing else is read. */
+export function readCare(v: unknown): CareCard | null {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  if (typeof o.line !== "string" || !Array.isArray(o.resources)) return null;
+  const friend = o.friend && typeof o.friend === "object" && (o.friend as { href?: unknown }).href === "/messages" && typeof (o.friend as { label?: unknown }).label === "string"
+    ? { label: (o.friend as { label: string }).label.slice(0, 40), href: "/messages" }
+    : null;
+  return { line: o.line.slice(0, 160), resources: o.resources.map(careLink).filter((x): x is CareLink => !!x).slice(0, 4), emergency: careLink(o.emergency), friend };
+}
+
 export interface AskResult {
+  intelligence?: IntelligenceNotice;
   found: number;
   asksLeft: number | null;
   error: string | null;
@@ -317,6 +358,8 @@ export interface AskResult {
   limit?: AskLimit;
   /** Guests aren't open (the function's startup check): shown as "Log in to use Stubby", not an error. */
   closed?: boolean;
+  /** Clear distress: the care card, and no picks. */
+  care?: CareCard;
   /** The time he understood ("tonight", "weekend"...), for which "nothing fits" line to say. */
   when?: string | null;
   /** 21+ things were asked for and left out: no 21+ birthdate on file (never for a guest). */
@@ -346,8 +389,10 @@ export interface AskFollowUp {
 const readError = (body: unknown): string | null => (body && typeof body === "object" && typeof (body as { error?: unknown }).error === "string" ? (body as { error: string }).error : null);
 
 function resultOf(
-  r: { picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown; reasons?: unknown; understood?: { when?: unknown }; adultsLeftOut?: unknown } | null,
+  r: { intelligence?: unknown; picks?: unknown[]; asksLeft?: number; outcome?: unknown; askId?: unknown; free?: unknown; question?: unknown; reasons?: unknown; understood?: { when?: unknown }; adultsLeftOut?: unknown; care?: unknown } | null,
 ): AskResult {
+  const care = readCare(r?.care);
+  if (care) return { found: 0, asksLeft: null, error: null, care };
   const asksLeft = typeof r?.asksLeft === "number" ? r.asksLeft : null;
   if (r?.question === "setting" || r?.question === "who" || r?.question === "when" || r?.question === "what") return { found: 0, asksLeft, error: null, question: r.question };
   const found = Array.isArray(r?.picks) ? r!.picks!.length : 0;
@@ -356,7 +401,10 @@ function resultOf(
     ? (r!.reasons as unknown[]).filter((x): x is { key: string; count: number } => !!x && typeof (x as { key?: unknown }).key === "string" && typeof (x as { count?: unknown }).count === "number").slice(0, 3)
     : [];
   const when = typeof r?.understood?.when === "string" ? r.understood.when : null;
-  return { found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true, reasons, when, ...(r?.adultsLeftOut === true ? { adultsLeftOut: true } : {}) };
+  const v = r?.intelligence as Partial<IntelligenceNotice> | undefined;
+  const intelligence: IntelligenceNotice | undefined = v && ["verified", "partial", "no_verified_match"].includes(v.outcome ?? "")
+    ? { outcome: v.outcome!, fallback: typeof v.fallback === "string" ? v.fallback.slice(0, 240) : null, warnings: Array.isArray(v.warnings) ? v.warnings.filter((w): w is string => typeof w === "string").slice(0, 5).map(w => w.slice(0, 160)) : [] } : undefined;
+  return { intelligence, found, asksLeft, error: null, outcome, askId: typeof r?.askId === "number" ? r.askId : undefined, free: r?.free === true, reasons, when, ...(r?.adultsLeftOut === true ? { adultsLeftOut: true } : {}) };
 }
 
 /**

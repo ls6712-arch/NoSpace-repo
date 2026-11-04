@@ -1,3 +1,5 @@
+import { stubbyV3Enabled } from "../../../lib/capabilityProfile";
+import { CapabilityEditor } from "../../../components/settings/CapabilityEditor";
 import { useEffect, useRef, useState } from "react";
 import { ChoiceChip } from "../../../components/onboarding/ChoiceChip";
 import { PillButton } from "../../../components/ui/PillButton";
@@ -153,9 +155,10 @@ export function YoursScreen() {
           </li>
         </ul>
         <p aria-live="polite" className={skipped ? "text-small ob-muted" : "sr-only"}>
-          {skipped ? "Your first plan will use free things and what your passes cover." : ""}
+          {skipped ? "Your first plan will look for free things. Pass coverage needs confirmation." : ""}
         </p>
       </fieldset>
+      {stubbyV3Enabled && <CapabilityEditor />}
     </ScreenFrame>
   );
 }

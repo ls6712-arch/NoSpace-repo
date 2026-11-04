@@ -165,4 +165,23 @@ describe("AskStubby", () => {
     expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
     expect(api.askStubbyStream).not.toHaveBeenCalled();
   });
+
+  it("shows the care card in place of picks, with someone to talk to and a way to message a friend", async () => {
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: null, care: { line: "That sounds really hard. You don’t have to handle it alone.", resources: [{ label: "Call 988", detail: "988 Suicide and Crisis Lifeline, any time", href: "tel:988" }], emergency: { label: "Call 911", detail: "If you’re in danger right now", href: "tel:911" }, friend: { label: "Message a friend", href: "/messages" } } });
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery tonight" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    expect(await screen.findByText("That sounds really hard. You don’t have to handle it alone.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Call 988" }).getAttribute("href")).toBe("tel:988");
+    expect(screen.getByRole("link", { name: "Message a friend" }).getAttribute("href")).toBe("/messages");
+    expect(screen.getByRole("link", { name: "Call 911" }).getAttribute("href")).toBe("tel:911");
+    // No ask was used, and no picks.
+    expect(screen.getByText("3 asks left today")).toBeTruthy();
+    expect(screen.getByTestId("outcome").textContent).toBe("null");
+  });
 });

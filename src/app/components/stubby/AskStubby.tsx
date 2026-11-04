@@ -41,6 +41,8 @@ import {
   type AskAnswers,
   type AskFollowUp,
   type AskStep,
+  type CareCard,
+  type IntelligenceNotice,
   type MyPick,
   type Understood,
 } from "../../lib/stubbyAsk";
@@ -75,6 +77,7 @@ export interface StepRow {
 export type Answer = { setting: "in" | "out" } | { who: Who } | { when: string } | { what: string } | { surprise: true } | { typed: string };
 
 export interface AskState {
+  intelligence?: IntelligenceNotice;
   text: string;
   setText: (text: string) => void;
   busy: boolean;
@@ -142,6 +145,8 @@ export interface AskState {
    * a search or an ask. Null when the last ask wasn't Stay in; empty when there was nothing.
    */
   stayIn: StayInCard[] | null;
+  /** Clear distress (stubby-agent C1): the care card instead of picks. Kept only on screen. */
+  care: CareCard | null;
   /** From the Stay in empty state: the same ask, heading out instead. */
   headOut: () => void;
 }
@@ -204,6 +209,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [found, setFound] = useState<number | null>(null);
+  const [intelligence, setIntelligence] = useState<IntelligenceNotice | undefined>();
   const [outcome, setOutcome] = useState<AskOutcome>(null);
   const [left, setLeft] = useState<number | null>(null);
   const [picks, setPicks] = useState<MyPick[]>([]);
@@ -216,6 +222,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [offerBirthday, setOfferBirthday] = useState(false);
   const [tonight, setTonight] = useState(false);
   const [stayIn, setStayIn] = useState<StayInCard[] | null>(null);
+  const [care, setCare] = useState<CareCard | null>(null);
   const [who, setWho] = useState<Who | null>(() => {
     const w = readSession<{ who?: string }>(ANSWERS_KEY)?.who;
     return w && (WHO_VALUES as readonly string[]).includes(w) ? (w as Who) : null;
@@ -332,6 +339,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       controller.current = c;
       setBusy(true);
       setError(null);
+      setIntelligence(undefined);
       setFound(null);
       setOutcome(null);
       setQuestion(null);
@@ -340,6 +348,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
       setUnderstood(null);
       setSteps([]);
       setStayIn(null);
+      setCare(null);
       // Stay in, answered or typed: their own Pursuits and Corners, never the web search (which
       // drops every event, so it could come back with nothing). No ask is used.
       if (opts.answers?.setting === "in" || (!opts.followUp && opts.answers?.setting !== "out" && saysStayIn(what))) {
@@ -397,6 +406,11 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         react.current?.("shrug");
         return;
       }
+      if (r.care) {
+        // No picks, no ask used, and the words stay only in the field. Stubby doesn't react.
+        setCare(r.care);
+        return;
+      }
       if (r.question) {
         // One question, answered with a tap. Nothing was searched; no ask was used.
         pending.current = what;
@@ -417,6 +431,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
         track({ name: "stubby_message_sent", who: guest ? "guest" : "user", messageNumber: n });
         if (guest && n >= 3) access.offerInlineCard();
       }
+      setIntelligence(r.intelligence);
       setReasons(r.reasons ?? []);
       setTonight(r.when === "tonight");
       // Only when no birthday is on file at all: an under-21 member who has one never sees it.
@@ -617,6 +632,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     error,
     status,
     outcome,
+    intelligence,
     left,
     earlier,
     understood,
@@ -655,6 +671,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     birthdayAdded: () => setOfferBirthday(false),
     stayIn,
     headOut,
+    care,
   };
 }
 

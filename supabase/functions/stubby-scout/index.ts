@@ -25,6 +25,11 @@ import { readSignals, readTaste } from "./taste.ts";
 import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, originAllowed, type Access } from "../_shared/access.ts";
 import { claimTurn, readAccess } from "./claim.ts";
 import { pickKey } from "./picks.ts";
+import { runV3 } from "./v3/orchestrator.ts";
+import { createV3Provider } from "./v3/provider.ts";
+import { sooshAdapter } from "./v3/soosh.ts";
+import { claudeCareModel } from "./v3/careModel.ts";
+import { emptyCapability, parseCapability } from "../_shared/capabilityProfile.ts";
 import { runSearch } from "./search.ts";
 
 const env = (k: string) => Deno.env.get(k);
@@ -56,10 +61,10 @@ async function corners(client: typeof server) {
 async function profileOf(client: typeof server, userId: string): Promise<PersonProfile> {
   const [priv, passes, pursuits] = await Promise.all([
     client.from("profile_private").select("picks, free_windows, monthly_budget, city, area").eq("user_id", userId).maybeSingle(),
-    client.from("user_passes").select("label, place").eq("user_id", userId).limit(20),
+    client.from("user_passes").select("kind, label, place").eq("user_id", userId).limit(20),
     client
       .from("pursuits")
-      .select("id, title")
+      .select("id, title, hobby_slug, sub_hobby")
       .eq("user_id", userId)
       .is("finished_at", null)
       .is("paused_at", null)
@@ -77,8 +82,8 @@ async function profileOf(client: typeof server, userId: string): Promise<PersonP
     monthlyBudget: typeof p.monthly_budget === "number" ? p.monthly_budget : null,
     city: typeof p.city === "string" ? p.city : null,
     area: typeof p.area === "string" ? p.area : null,
-    passes: ((passes.data ?? []) as { label: string; place: string | null }[]).map((r) => ({ label: r.label, place: r.place ?? null })),
-    pursuits: ((pursuits.data ?? []) as { id: string; title: string }[]).map((r) => ({ id: r.id, title: r.title })),
+    passes: ((passes.data ?? []) as { kind: string; label: string; place: string | null }[]).map((r) => ({ kind: r.kind, label: r.label, place: r.place ?? null })),
+    pursuits: ((pursuits.data ?? []) as { id: string; title: string; hobby_slug: string | null; sub_hobby: string | null }[]).map((r) => ({ id: r.id, title: r.title, corner: r.hobby_slug && r.sub_hobby ? `${r.hobby_slug}/${r.sub_hobby}` : null })),
   };
 }
 async function insertOnce(client: typeof server, table: string, row: Record<string, unknown>) {
@@ -180,12 +185,20 @@ function serve(req: Request): Promise<Response> {
       existingKeys: (a, b) => existingKeys(caller as typeof server, a, b),
       insertPick: (row) => insertOnce(caller as typeof server, "city_picks", row),
       profile: (id) => profileOf(caller as typeof server, id),
+      async capability(id) {
+        const { data, error } = await caller.from("stubby_capabilities").select("profile").eq("user_id", id).maybeSingle();
+        if (error || !data) return emptyCapability();
+        try { return parseCapability(data.profile); } catch { return emptyCapability(); }
+      },
       async taste(id) {
         const { data } = await caller.from("stubby_profiles").select("city, interests, timing, budget").eq("user_id", id).maybeSingle();
         return readTaste(data);
       },
       async signals(id) {
-        const { data } = await caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id).order("created_at", { ascending: false }).limit(20);
+        let query = caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id);
+        // V3 learns only from the last 60 days (and only with consent, handler.ts); legacy as before.
+      if (settings.askEngine === "v3" || (settings.v3Testers ?? []).length > 0) query = query.gte("created_at", iso(Date.now() - 60 * 86400000));
+        const { data } = await query.order("created_at", { ascending: false }).limit(20);
         return readSignals(data);
       },
     },
@@ -245,6 +258,13 @@ function serve(req: Request): Promise<Response> {
       insertPick: (row) => insertOnce(server, "city_picks", row),
       insertPersonal: (row) => insertOnce(server, "personal_picks", row),
     },
+    async v3(input) {
+      const selected = createV3Provider(env, { maxSearches: input.searchLimit });
+      // Their own Pursuits and Corners first (no network), then Claude's web search.
+      const own = sooshAdapter({ pursuits: input.profile.pursuits, picks: input.profile.picks });
+      return runV3(input, { discovery: [own, selected.adapter], usage: selected.usage });
+    },
+    careModel: claudeCareModel({ apiKey: env("ANTHROPIC_API_KEY") ?? "", workspaceId: env("ANTHROPIC_WORKSPACE_ID") || null, model: env("STUBBY_CLAUDE_MODEL") || env("STUBBY_SCOUT_MODEL") || DEFAULT_MODEL }),
     search: (r) =>
       runSearch({
         apiKey: env("ANTHROPIC_API_KEY")!,

@@ -395,6 +395,9 @@ describe("the request", () => {
     expect(s).toEqual({
       enabled: true,
       hasKey: true,
+      askHasKey: true,
+      askEngine: "legacy",
+      v3Testers: [],
       runsPerDay: 20,
       maxSearches: 5,
       restockSearches: 3,

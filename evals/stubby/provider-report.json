@@ -1,0 +1,37 @@
+{
+  "version": "stubby-v3.3",
+  "defaultProvider": "anthropic",
+  "providerSdkContract": "@anthropic-ai/sdk 1.4.0 inspected, not installed as a runtime dependency",
+  "executedAt": "2026-11-03T21:48:05.873Z",
+  "fullSuite": {
+    "files": 218,
+    "passed": 2033,
+    "failed": 0,
+    "skipped": 0,
+    "success": true
+  },
+  "v3": {
+    "files": 9,
+    "passed": 169,
+    "goldenPassed": 46,
+    "goldenTotal": 46
+  },
+  "checks": {
+    "frontendTypes": "passed",
+    "backendTypes": "passed",
+    "denoEntrypoint": "passed with Deno 2.9.6 and local Supabase npm 2.116.0 alias",
+    "claudeProtocol": "passed with synthetic HTTP responses, same-key workspace/model selection and no OpenAI failover",
+    "build": "passed",
+    "guestBrowser": "passed with mocked Supabase and OAuth",
+    "authenticatedBrowser": "passed with mocked Supabase",
+    "lint": "passed",
+    "migrationAndAccessChecks": "passed"
+  },
+  "unrun": [
+    "live Anthropic credit balance or charge",
+    "hosted Supabase schema/auth/RLS",
+    "live provider quality/cost",
+    "live weather/calendar/travel providers"
+  ],
+  "productionChanged": false
+}

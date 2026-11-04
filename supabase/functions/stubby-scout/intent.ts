@@ -74,18 +74,19 @@ export interface Answers {
 }
 
 /** A day picked as "YYYY-MM-DD": that whole day in New York (from now, if it's today). Null if not a real day. */
-export function dayWindow(day: string, now: number): Window | null {
+export function dayWindow(day: string, now: number, timeZone = HOME_TZ): Window | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
   if (!m) return null;
   const [y, mo, d] = m.slice(1).map(Number);
-  const start = nyTime(y, mo, d, 0);
-  const end = nyTime(y, mo, d + 1, 0);
-  const p = nyParts(start);
+  const start = nyTime(y, mo, d, 0, 0, timeZone);
+  const end = nyTime(y, mo, d + 1, 0, 0, timeZone);
+  const p = nyParts(start, timeZone);
   if (p.y !== y || p.m !== mo || p.d !== d || end <= now) return null;
   return { startMs: Math.max(start, now), endMs: end, label: "day", hard: true };
 }
 
 export interface IntentContext {
+  timeZone?: string;
   now: number;
   /** The usual week: "sat-eve" and the like. */
   windows?: readonly string[];
@@ -104,27 +105,27 @@ export const DEFAULT_DAYS = 7;
 const fmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" });
 const DOW: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
-export function nyParts(ms: number) {
+export function nyParts(ms: number, timeZone = HOME_TZ) {
   const p: Record<string, string> = {};
-  for (const x of fmt.formatToParts(new Date(ms))) p[x.type] = x.value;
+  for (const x of (timeZone === HOME_TZ ? fmt : new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" })).formatToParts(new Date(ms))) p[x.type] = x.value;
   return { y: Number(p.year), m: Number(p.month), d: Number(p.day), hour: Number(p.hour), minute: Number(p.minute), dow: DOW[p.weekday] ?? 0 };
 }
 
 /** A New York wall clock time to ms. Day overflow (d + 1) is fine. */
-export function nyTime(y: number, m: number, d: number, hour: number, minute = 0): number {
+export function nyTime(y: number, m: number, d: number, hour: number, minute = 0, timeZone = HOME_TZ): number {
   const guess = Date.UTC(y, m - 1, d, hour, minute);
   let ms = guess;
   for (let i = 0; i < 2; i++) {
-    const p = nyParts(ms);
+    const p = nyParts(ms, timeZone);
     ms += guess - Date.UTC(p.y, p.m - 1, p.d, p.hour, p.minute);
   }
   return ms;
 }
 
 /** Midnight at the start of the day `offset` days from now's day. */
-const dayStart = (now: number, offset: number) => {
-  const t = nyParts(now);
-  return nyTime(t.y, t.m, t.d + offset, 0);
+const dayStart = (now: number, offset: number, timeZone = HOME_TZ) => {
+  const t = nyParts(now, timeZone);
+  return nyTime(t.y, t.m, t.d + offset, 0, 0, timeZone);
 };
 
 // ── the words ─────────────────────────────────────────────────────────────
@@ -156,20 +157,20 @@ const EMPTY_WORDS = new Set(
   "a an and any anything are around can do doing for get go good i id i'd ideas idea im i'm in is it let's lets me my near need of on or out over please plans plan some something stuff that the things thing this to up want what with you".split(" "),
 );
 
-function readWhen(text: string, now: number): Window | null {
+function readWhen(text: string, now: number, timeZone = HOME_TZ): Window | null {
   const t = text.toLowerCase();
-  const today = nyParts(now);
-  const endOfDay = (offset: number) => dayStart(now, offset + 1);
+  const today = nyParts(now, timeZone);
+  const endOfDay = (offset: number) => dayStart(now, offset + 1, timeZone);
   if (/\b(tonight|this evening|later today)\b/.test(t)) return { startMs: now, endMs: endOfDay(0), label: "tonight", hard: true };
   if (/\btoday\b/.test(t)) return { startMs: now, endMs: endOfDay(0), label: "today", hard: true };
-  if (/\btomorrow\b/.test(t)) return { startMs: dayStart(now, 1), endMs: endOfDay(1), label: "tomorrow", hard: true };
+  if (/\btomorrow\b/.test(t)) return { startMs: dayStart(now, 1, timeZone), endMs: endOfDay(1), label: "tomorrow", hard: true };
   // This weekend's Friday, in days from today: already in the weekend, the Friday just gone.
   const toFri = today.dow === 6 ? -1 : today.dow === 0 ? -2 : 5 - today.dow;
   const weekend = (fromFri: number): Window => {
-    const p = nyParts(dayStart(now, fromFri) + 12 * HOUR);
-    const start = nyTime(p.y, p.m, p.d, 17);
+    const p = nyParts(dayStart(now, fromFri, timeZone) + 12 * HOUR, timeZone);
+    const start = nyTime(p.y, p.m, p.d, 17, 0, timeZone);
     // Friday 5 pm to the end of Sunday; already in it, from now.
-    return { startMs: Math.max(start, now), endMs: dayStart(now, fromFri + 3), label: "weekend", hard: true };
+    return { startMs: Math.max(start, now), endMs: dayStart(now, fromFri + 3, timeZone), label: "weekend", hard: true };
   };
   if (/\bnext weekend\b/.test(t)) return weekend(toFri + 7);
   if (/\b(this weekend|weekend|saturday and sunday)\b/.test(t)) return weekend(toFri);
@@ -177,10 +178,10 @@ function readWhen(text: string, now: number): Window | null {
   for (const [i, name] of days.entries()) {
     if (new RegExp(`\\b${name}\\b`).test(t)) {
       const offset = (i - today.dow + 7) % 7;
-      return { startMs: offset === 0 ? now : dayStart(now, offset), endMs: endOfDay(offset), label: "day", hard: true };
+      return { startMs: offset === 0 ? now : dayStart(now, offset, timeZone), endMs: endOfDay(offset), label: "day", hard: true };
     }
   }
-  if (/\bthis week\b/.test(t)) return { startMs: now, endMs: dayStart(now, DEFAULT_DAYS), label: "week", hard: true };
+  if (/\bthis week\b/.test(t)) return { startMs: now, endMs: dayStart(now, DEFAULT_DAYS, timeZone), label: "week", hard: true };
   return null;
 }
 
@@ -207,8 +208,8 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
   const whoFrom: Source | null = typedWho ? "ask" : answers?.who ? "answer" : answers?.rememberedWho ? "session" : null;
 
   // When: a tap made for this ask wins over the words it replaces (This weekend on a "tonight" ask).
-  const typedWhen = readWhen(text, ctx.now);
-  const answeredWhen = answers?.when ? (dayWindow(answers.when, ctx.now) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now)) : null;
+  const typedWhen = readWhen(text, ctx.now, ctx.timeZone);
+  const answeredWhen = answers?.when ? (dayWindow(answers.when, ctx.now, ctx.timeZone) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now, ctx.timeZone)) : null;
   const when = answeredWhen ?? typedWhen;
   const whenFrom: Source | null = answeredWhen ? "answer" : typedWhen ? "ask" : null;
 
@@ -255,6 +256,6 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
 }
 
 /** The window the search looks in: the ask's own, else the next 7 days. */
-export function searchWindow(intent: Intent, now: number): Window {
-  return intent.when ?? { startMs: now, endMs: dayStart(now, DEFAULT_DAYS + 1), label: "week", hard: false };
+export function searchWindow(intent: Intent, now: number, timeZone = HOME_TZ): Window {
+  return intent.when ?? { startMs: now, endMs: dayStart(now, DEFAULT_DAYS + 1, timeZone), label: "week", hard: false };
 }
