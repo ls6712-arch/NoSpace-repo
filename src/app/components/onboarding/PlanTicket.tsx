@@ -22,6 +22,7 @@ export function PlanTicket({ plan, children }: { plan: Plan; children?: ReactNod
         {(plan.when || plan.where) && (
           <p className="ob-label mt-2 text-body">{[plan.when, plan.where].filter(Boolean).join(" · ")}</p>
         )}
+        {plan.timing === "suggested" && <p className="ob-label mt-1 text-small">Suggested time</p>}
         {plan.hostName && plan.kind !== "invite" && <p className="ob-label mt-1 text-small">{`With ${plan.hostName}`}</p>}
         {plan.step && <p className="mt-2 text-small">{plan.step}</p>}
         {plan.cost && <p className="ob-label mt-2 text-small">{plan.cost}</p>}

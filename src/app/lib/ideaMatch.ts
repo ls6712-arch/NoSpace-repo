@@ -1,3 +1,5 @@
+import { activityScore } from "../../../supabase/functions/_shared/activityFit";
+import type { Personalization } from "./personalization";
 import { isBrowsableCorner } from "../data/hobbies";
 import { CORNER_IDEAS, type CornerIdea, type IdeaSpend, type IdeaTime, type IdeaWho } from "../data/cornerIdeas";
 
@@ -41,7 +43,7 @@ export const ROW_SIZE = 6;
 
 export function ideasFor(
   pills: IdeaPills,
-  opts: { picks?: readonly string[]; affinity?: ReadonlyMap<string, number>; limit?: number } = {},
+  opts: { personalization?: Personalization; picks?: readonly string[]; affinity?: ReadonlyMap<string, number>; limit?: number } = {},
 ): MatchedIdea[] {
   const picks = new Set(opts.picks ?? []);
   const affinity = opts.affinity ?? new Map<string, number>();
@@ -54,7 +56,7 @@ export function ideasFor(
     .map(([key, idea]) => ({ key, idea }));
   matched.sort(
     (a, b) =>
-      Number(picks.has(b.key)) - Number(picks.has(a.key)) ||
+      (opts.personalization ? activityScore(b.key,opts.personalization)-activityScore(a.key,opts.personalization) : 0) || Number(picks.has(b.key)) - Number(picks.has(a.key)) ||
       (affinity.get(b.key) ?? 0) - (affinity.get(a.key) ?? 0) ||
       a.key.localeCompare(b.key),
   );

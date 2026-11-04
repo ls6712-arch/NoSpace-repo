@@ -13,6 +13,8 @@ const writing: FirstStepFacts = { atHome: true, beginner: true,
 const guitar: FirstStepFacts = { atHome: true, beginner: true, resources: { required: [["guitar"]], optional: ["pick"] }, costMode: "owned_resources" };
 const reading: FirstStepFacts = { atHome: true, beginner: true, resources: { required: [["book"]], optional: ["bookmark"] }, costMode: "owned_resources" };
 export const FIRST_STEP_FACTS: Readonly<Record<string, FirstStepFacts>> = {
+  cooking: { atHome: true, beginner: true, resources: { required: [["ingredients"], ["kitchen"]], optional: [] }, costMode: "unknown" },
+  "home-coffee": { atHome: true, beginner: true, resources: { required: [["coffee"], ["pour-over equipment"]], optional: [] }, costMode: "unknown" },
   drawing, sketching: drawing, illustration: drawing, guitar,
   writing, "creative-writing": writing, poetry: writing,
   reading, books: reading,

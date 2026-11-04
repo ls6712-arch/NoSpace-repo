@@ -1,3 +1,5 @@
+import { personalizationInputs } from "./personalizationInputs";
+import { humanOnboardingEnabled } from "./personalization";
 import { supabase } from "../../lib/supabase";
 import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, newProject, startProject, type PursuitMember } from "./journal";
 import { fetchCornersLive } from "./cornersLive";
@@ -122,7 +124,8 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
     }
   }
 
-  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
+  const personal=await personalizationInputs(ctx.userId,taste,passes);
+  return { personalization:personal.value,equipment:personal.equipment,activityBudget:personal.perActivityBudget,allowDiscovery:humanOnboardingEnabled,now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
 }
 
 // ── "I'm going" ───────────────────────────────────────────────────────────

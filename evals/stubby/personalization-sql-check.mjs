@@ -7,7 +7,7 @@ const read=p=>readFileSync(new URL(`../../${p}`,import.meta.url),"utf8");
 const login=async(id,anonymous=false)=>{await db.exec('reset role');await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:id,role:"authenticated",is_anonymous:anonymous})]);await db.exec('set role authenticated');};
 const save=async(id,revision,changes)=> (await db.query('select public.save_personalization($1,$2,$3::jsonb) as result',[id,revision,JSON.stringify(changes)])).rows[0].result;
 try {
- await db.exec(`create schema private;create schema auth;create role authenticated;create role anon;
+ await db.exec(`create schema private;create schema auth;create table public.app_config(key text primary key,value jsonb);create role authenticated;create role anon;
  create table private.access_allowlist(kind text,name text,reason text,primary key(kind,name));
  create table auth.users(id uuid primary key,is_anonymous boolean default false);
  insert into auth.users(id) values('${alice}'),('${bob}');
@@ -23,6 +23,9 @@ try {
  create policy own_feedback on public.stubby_feedback for all to authenticated using(user_id=auth.uid());`);
  await db.exec(read('supabase/migrations/20261112000000_stubby_capabilities.sql'));
  await db.exec(read('supabase/migrations/20261113000000_clean_personalization.sql'));
+ await db.exec(read('supabase/migrations/20261113000100_recommendation_semantics.sql'));
+ try {await db.exec(read('supabase/verification/recommendation_semantics_check.sql'));throw new Error('Expected rollback');}
+ catch(e){assert.match(e.message,/RESULTS:/);assert.doesNotMatch(e.message,/FAIL|ERROR|BLOCKED/);await db.exec('rollback');}
  await login(alice);
  let result=await save(alice,0,{motivations:['make'],interests:[{key:'music/guitar',relationship:'returning',experience:'beginner'}]});
  assert.equal(result.revision,1);assert.ok(result.value.confirmedAt);
@@ -45,6 +48,6 @@ try {
  catch(e){assert.match(e.message,/RESULTS:/);assert.doesNotMatch(e.message,/FAIL|ERROR|BLOCKED/);await db.exec('rollback');}
  await login(alice);await db.query('select public.forget_stubby_memory($1)',[alice]);
  assert.equal((await db.query('select * from public.stubby_capabilities')).rows.length,0);
- await db.exec('reset role');await db.exec(read('supabase/migrations/rollback_20261113000000_clean_personalization.sql'));
+ await db.exec('reset role');await db.exec(read('supabase/migrations/rollback_20261113000100_recommendation_semantics.sql'));await db.exec(read('supabase/migrations/rollback_20261113000000_clean_personalization.sql'));
  console.log('PASS: owner/RLS, atomic mirror rollback, invalid data, old client preservation, stale revisions, guest denial, deletion and SQL rollback');
 } finally { await db.close(); }

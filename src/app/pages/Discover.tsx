@@ -1,3 +1,5 @@
+import { readPersonalization } from "../lib/personalizationRemote";
+import { emptyPersonalization } from "../lib/personalization";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
@@ -120,6 +122,7 @@ export function Discover() {
   );
 
   // ---------- Ideas: local, instant ----------
+  const [personalization,setPersonalization]=useState(emptyPersonalization);
   const [taste, setTaste] = useState<Taste | null>(null);
   const [passes, setPasses] = useState<Pass[]>([]);
   const [passCorners, setPassCorners] = useState<PassCorners>({});
@@ -135,6 +138,7 @@ export function Discover() {
   useEffect(() => {
     if (!user) return;
     let live = true;
+    void readPersonalization(user.id).then(r=>{if(live && (r.status === "ready" || r.status === "missing")) setPersonalization(r.value);});
     void fetchTaste(user.id).then((t) => {
       if (!live) return;
       setTaste(t);
@@ -148,7 +152,7 @@ export function Discover() {
     };
   }, [user?.id]);
 
-  const ideas = useMemo(() => ideasFor(pills, { picks: taste?.picks, affinity }), [pills, taste?.picks, affinity]);
+  const ideas = useMemo(() => ideasFor(pills, { personalization,picks: taste?.picks, affinity }), [pills, taste?.picks, affinity,personalization]);
   const changePills = (next: Pills) => {
     touched.current = true;
     setPills(next);

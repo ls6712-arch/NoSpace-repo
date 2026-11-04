@@ -73,7 +73,7 @@ export function costFits(cost: number | null, ceiling: number | null): boolean {
 /** Conservative total from a host's price text; do not treat "free supplies with a $20 class" as zero. */
 export function priceMaximum(text: string | null | undefined): number | null {
   if (!text) return null;
-  if (/[€£¥]|\b(?:EUR|GBP|INR|from|starting|plus|fees extra)\b/i.test(text)) return null;
+  if (/\$[\d,.]+\s*[-–]\s*\d|[€£¥]|\b(?:EUR|GBP|INR|from|starting|plus|fees extra)\b/i.test(text)) return null;
   const amounts = [...text.matchAll(/\$\s*(\d+(?:,\d{3})*(?:\.\d{1,2})?)/g)].map(m => Number(m[1].replace(/,/g, "")));
   if (amounts.length) return Math.max(...amounts);
   return /^\s*(?:free|no cost|0)\s*[.!]?\s*$/i.test(text) ? 0 : null;

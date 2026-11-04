@@ -1,4 +1,4 @@
-import { hasResources, requirementsFit } from "../../_shared/personalization.ts";
+import { costFits, hasResources, requirementsFit } from "../../_shared/personalization.ts";
 import { nyParts } from "../intent.ts";
 import { isListingPage } from "../ask.ts";
 import { matchesTopic, cityKey } from "./request.ts";
@@ -30,7 +30,7 @@ export function feasible(c: Candidate, ctx: Context): { ok: false; reason: strin
   if (!Number.isFinite(c.startsAt) || c.startsAt < Math.max(ctx.now, ctx.window.startMs) || c.startsAt >= ctx.window.endMs) return no("time");
   if (c.endsAt !== null && (!Number.isFinite(c.endsAt) || c.endsAt <= c.startsAt || c.endsAt > ctx.window.endMs || c.endsAt - c.startsAt > 12 * HOUR)) return no("end_time");
   if (ctx.durationMax !== null && (c.endsAt === null || (c.endsAt - c.startsAt) / 60000 > ctx.durationMax)) return no("duration");
-  if (ctx.hardBudget !== null && (!c.cost || c.cost.currency !== "USD" || c.cost.max > ctx.hardBudget)) return no("budget");
+  if (!costFits(c.cost?.currency === "USD" ? c.cost.max : null,ctx.hardBudget)) return no("budget");
   if (ctx.setting && c.setting !== ctx.setting && !(ctx.setting === "indoor" && c.setting === "home")) return no("setting");
   if (ctx.awayFromHome && c.setting === "home") return no("setting");
   if (c.setting !== "home" && (!ctx.city || !c.city || cityKey(c.city) !== cityKey(ctx.city))) return no("location");

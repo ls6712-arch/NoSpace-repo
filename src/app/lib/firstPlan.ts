@@ -1,3 +1,5 @@
+import { activityFor, activityCost, activityScore } from "../../../supabase/functions/_shared/activityFit";
+import { costFits, priceMaximum, type Personalization } from "./personalization";
 import { cornerGuide } from "../data/cornerGuides";
 import { formatTime, formatWeekday } from "./dates";
 import { DAYS, SLOTS, type DayKey, type Pass, type PassKind, type SlotKey, windowKey } from "./tasteModel";
@@ -34,6 +36,7 @@ export interface Plan {
   hostName?: string;
   /** At-home: the guide's first step. */
   step?: string;
+  timing?: "fixed" | "suggested";
 }
 
 export interface LiveEventInput {
@@ -50,6 +53,7 @@ export interface LiveEventInput {
 }
 
 export interface LivePursuitInput {
+  endsAt?: number | null;
   cornerKey: string;
   pursuitId: string;
   title: string;
@@ -71,6 +75,10 @@ export interface InviteInput {
 
 export interface PlanInput {
   now: number;
+  personalization?: Personalization;
+  equipment?: string[];
+  activityBudget?: number | null;
+  allowDiscovery?: boolean;
   picks: { key: string; name: string; spaceSlug: string; slug: string }[];
   windows: readonly string[];
   /** Dollars a month, 0 for free only, null when skipped. */
@@ -170,10 +178,7 @@ export function headlineFor(startsAt: number | null, now: number): string {
 
 /** "$12" or "Free" from a host's own words; null when it says nothing usable. */
 export function parsePrice(text: string | null | undefined): number | null {
-  if (!text) return null;
-  if (/\bfree\b/i.test(text)) return 0;
-  const m = /\$\s?(\d+(?:\.\d+)?)/.exec(text);
-  return m ? Number(m[1]) : null;
+  return priceMaximum(text);
 }
 
 /** Which kind of pass covers a Corner. Only the pairs that are plainly true. */
@@ -189,10 +194,8 @@ export function passFor(cornerSlug: string, passes: readonly Pass[]): Pass | nul
  * Free only allows free things and things a pass of theirs is for. A set
  * budget allows a listing whose price is unknown or within the month.
  */
-export function affordable(budget: number | null, price: number | null, hasPass: boolean): boolean {
-  if (hasPass) return true;
-  if (budget === null || budget === 0) return price === 0;
-  return price === null || price <= budget;
+export function affordable(monthlyBudget: number | null, price: number | null, _hasPass: boolean): boolean {
+  return costFits(price, monthlyBudget === 0 ? 0 : null);
 }
 
 const firstOf = (name: string) => name.trim().split(/\s+/)[0] ?? "";
@@ -254,7 +257,7 @@ export function buildPlans(input: PlanInput): Plan[] {
     if (!pick || !fit) continue;
     const price = parsePrice(e.price);
     const pass = passFor(pick.slug, passes);
-    if (!affordable(budget, price, !!pass)) continue;
+    if (!costFits(price, input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     live.push({
       id: `event:${e.eventId}`,
       kind: "event",
@@ -271,6 +274,7 @@ export function buildPlans(input: PlanInput): Plan[] {
   }
   for (const p of input.pursuits) {
     const pick = pickByKey.get(p.cornerKey);
+    if (!costFits(null, input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     const fit = inWindow(p.startsAt);
     if (!pick || !fit) continue;
     live.push({
@@ -294,6 +298,7 @@ export function buildPlans(input: PlanInput): Plan[] {
   }
 
   plans.push(...atHomePlans(input));
+  if(input.personalization) plans.sort((a,b) => Number(b.kind === "invite")-Number(a.kind === "invite") || activityScore(b.corner.key,input.personalization!)-activityScore(a.corner.key,input.personalization!));
   return plans;
 }
 
@@ -303,14 +308,17 @@ export function atHomePlans(input: PlanInput): Plan[] {
   const slots = upcomingWindows(windows, now);
   const fallback = defaultWindow(now);
   const out: Plan[] = [];
-  for (const pick of input.picks) {
+  const fallbackPicks = input.allowDiscovery && input.picks.length === 0 ? ["art-creative/drawing","books-writing/reading","books-writing/creative-writing"].flatMap(key=>{
+    const a=activityFor(key);if(!a)return [];const [spaceSlug,slug]=a.key.split("/");return [{key:a.key,name:a.name,spaceSlug,slug}];
+  }) : input.picks;
+  for (const pick of fallbackPicks) {
     const guide = cornerGuide(pick.spaceSlug, pick.slug);
-    if (!guide || guide.adultsOnly || guide.where === "outdoors" || guide.together === "together") continue;
+    if (!guide || !activityFor(pick.key)?.atHome) continue;
     // A skipped budget or Free only means nothing that has to be bought.
-    if ((budget === null || budget === 0) && !guide.haveIt) continue;
+    if (!costFits(activityCost(pick.key,input.equipment ?? []),input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     const w = slots.length > 0 ? slots[out.length % slots.length] : fallback;
     out.push({
-      id: `home:${pick.key}`,
+      id: `home:${pick.key}`,timing:"suggested",
       kind: "at-home",
       title: `${pick.name} at home`,
       corner: pick,

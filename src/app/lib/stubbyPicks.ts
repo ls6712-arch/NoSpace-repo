@@ -1,4 +1,7 @@
-import { reasonLine, affordable, parsePrice, passFor, MIN_LEAD_MS, WEEK_MS, type LiveEventInput, type LivePursuitInput, type PlanInput } from "./firstPlan";
+import { costFits } from "./personalization";
+import { activityScore } from "../../../supabase/functions/_shared/activityFit";
+import type { Personalization } from "./personalization";
+import { reasonLine, parsePrice, passFor, MIN_LEAD_MS, WEEK_MS, type LiveEventInput, type LivePursuitInput, type PlanInput } from "./firstPlan";
 import { nyParts } from "./homeWeek";
 import type { Pass } from "./tasteModel";
 import { planSpan } from "./weekView";
@@ -44,6 +47,8 @@ export interface StubbyPick {
 
 export interface PickInput {
   now: number;
+  personalization?: Personalization;
+  activityBudget?: number | null;
   slots: readonly PickSlot[];
   picks: PlanInput["picks"];
   events: readonly LiveEventInput[];
@@ -90,7 +95,7 @@ function candidates(input: PickInput): Candidate[] {
     if (!corner || !ok(id, e.startsAt)) continue;
     const pass = passFor(corner.slug, passes);
     const price = parsePrice(e.price);
-    if (!affordable(budget, price, !!pass)) continue;
+    if (!costFits(price,input.activityBudget ?? (budget === 0 ? 0 : null)) || !e.endsAt || e.endsAt <= e.startsAt) continue;
     out.push({
       place: e.place ?? "",
       pick: {
@@ -101,7 +106,7 @@ function candidates(input: PickInput): Candidate[] {
         startsAt: e.startsAt,
         endsAt: planSpan(e.startsAt, e.endsAt).endMs,
         where: e.place || (e.online ? "Online" : undefined),
-        cost: pass ? `your ${pass.label.toLowerCase()} pass` : price === null ? undefined : price === 0 ? "Free" : `$${price}`,
+        cost: price === null ? undefined : price === 0 ? "Free" : `$${price}`,
         reason: reasonLine({ windowKey: windowKey(e.startsAt), cornerName: corner.name, pass }),
         eventId: e.eventId,
       },
@@ -110,7 +115,7 @@ function candidates(input: PickInput): Candidate[] {
   for (const p of input.pursuits) {
     const corner = byKey.get(p.cornerKey);
     const id = `pursuit:${p.pursuitId}`;
-    if (!corner || !ok(id, p.startsAt)) continue;
+    if (!corner || !ok(id, p.startsAt) || !p.endsAt || p.endsAt <= p.startsAt || !costFits(null,input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     out.push({
       place: "",
       pick: {
@@ -119,7 +124,7 @@ function candidates(input: PickInput): Candidate[] {
         title: p.title,
         corner,
         startsAt: p.startsAt,
-        endsAt: planSpan(p.startsAt).endMs,
+        endsAt: p.endsAt!,
         reason: reasonLine({ windowKey: windowKey(p.startsAt), cornerName: corner.name, pass: passFor(corner.slug, passes) }),
         pursuitId: p.pursuitId,
         hostName: p.hostName.trim().split(/\s+/)[0],
@@ -148,7 +153,7 @@ export function stubbyPicks(input: PickInput): Map<string, StubbyPick> {
       .filter((c) => !used.has(c.pick.id) && c.pick.startsAt >= slot.startMs && c.pick.endsAt <= slot.endMs)
       .sort((a, b) => {
         const near = Number(!!area && b.place.toLowerCase().includes(area)) - Number(!!area && a.place.toLowerCase().includes(area));
-        return near || a.pick.startsAt - b.pick.startsAt || a.pick.id.localeCompare(b.pick.id);
+        return (input.personalization ? activityScore(b.pick.corner.key,input.personalization)-activityScore(a.pick.corner.key,input.personalization) : 0) || near || a.pick.startsAt - b.pick.startsAt || a.pick.id.localeCompare(b.pick.id);
       });
     if (fits[0]) {
       out.set(slot.key, fits[0].pick);

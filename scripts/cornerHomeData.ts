@@ -28,7 +28,7 @@ export function cornerHomeEntries(): CornerHomeEntry[] {
       const statedMinutes = /\b(\d+)\s*(?:minutes?|mins?)\b/i.exec(g.step);
       const motivations = MOODS.filter(m => m.matches(g, space, slug)).map(m => ({people:"company",alone:"personal_time",outside:"explore",haveIt:"explore",play:"explore"} as Record<string,string>)[m.id] ?? m.id);
       return { key, name, step: g.step.trim(), needs,
-        atHome: !g.adultsOnly && (reviewed?.atHome === true || curated?.setting === "home"),
+        atHome: !g.adultsOnly && g.together !== "together" && (reviewed?.atHome === true || curated?.setting === "home"),
         facts: { motivations: [...new Set(motivations)], social: g.together,
           durationMinutes: statedMinutes ? Number(statedMinutes[1]) : curated?.durationMinutes ?? null,
           beginner: reviewed?.beginner ?? null, resources: reviewed?.resources ?? { required: [], optional: [] },

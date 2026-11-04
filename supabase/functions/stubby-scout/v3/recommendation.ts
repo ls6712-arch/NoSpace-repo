@@ -1,3 +1,4 @@
+import { preferenceScore } from "../../_shared/personalization.ts";
 import { matchesTopic, topicChoices } from "./request.ts";
 import { nyParts } from "../intent.ts";
 import { feasible } from "./feasibility.ts";
@@ -54,13 +55,16 @@ export function rankCandidates(candidates: Candidate[], ctx: Context, exclude: s
     const affinity = explicit ? 0 : Math.max(-25, Math.min(15, learned.reduce((n, s) => n + (s.signal === "down" ? -15 : s.signal === "save" ? 8 : 6), 0)));
     const when = nyParts(c.startsAt, ctx.timeZone);
     const day = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][when.dow];
-    const usual = ctx.usualWindows.includes(`${day}-${when.hour < 17 ? "day" : "eve"}`);
+    const usual = ctx.usualWindows.includes(`${day}-${when.hour < 18 ? "day" : "eve"}`);
     const goalMatch = [...ctx.goals, ...ctx.preferences].some(x => topicChoices(x).positive.some(t => matchesTopic(tags, t)));
     // Soosh's own ideas are checked by definition, so they get a smaller bonus than a verified source:
     // otherwise every deck would be the person's own Pursuits.
     const quality = soosh ? 8 : check.verified ? 20 : 0;
     const gentle = ctx.gentle ? (GENTLE.test(`${c.title} ${tags} ${c.setting}`) ? 8 : 0) - (LOUD.test(`${c.title} ${tags}`) ? 20 : 0) : 0;
-    const score = 40 + (usual ? 4 : 0) + (goalMatch ? 3 : 0) + quality + Math.min(matches, 3) * 5
+    const personal = c.traits ? preferenceScore(ctx.personalization,c.traits,ctx.personalization.interests.find(i => c.tags.some(t => matchesTopic(t,i.key.split("/").at(-1)!.replace(/-/g," "))))?.key) : 0;
+    const rhythm = ctx.personalization.rhythm;
+    const rhythmFit = (rhythm.includes("morning") && when.hour < 12) || (rhythm.includes("evening") && when.hour >= 18) || (rhythm.includes("weekend") && (when.dow === 0 || when.dow === 6));
+    const score = 40 + personal + (rhythmFit ? 3 : 0) + (usual ? 4 : 0) + (goalMatch ? 3 : 0) + quality + Math.min(matches, 3) * 5
       + (explicit ? 6 : 0)
       + (ctx.softBudget !== null && c.cost && c.cost.max <= ctx.softBudget ? 10 : 0)
       + (c.equipment.length ? 5 : 0) + affinity + gentle
