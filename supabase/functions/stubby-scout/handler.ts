@@ -742,7 +742,9 @@ async function ask(
 
   /** V3, saved and shown. On the shadow path, legacy runs alongside and its deck goes in the trace only. */
   const v3Work = async (emit: Emit): Promise<AskReport> => {
-    const change = followUp ? applyFollowUp(intent, searchWindow(intent, now, zone), followUp.kind, now) : null;
+    const usualCeiling=capability.perActivityBudget ?? (profile.monthlyBudget===0 ? 0 : null);
+    const followIntent=!intent.budget && usualCeiling!==null ? {...intent,budget:{max:usualCeiling,free:usualCeiling===0,from:"profile" as const}} : intent;
+    const change = followUp ? applyFollowUp(followIntent, searchWindow(intent, now, zone), followUp.kind, now) : null;
     const input: RequestInput = { text, now, profile:{...profile,...(taste.interests.length ? {legacyMotivations:taste.interests} : {})}, capability, knownTopics: corners.map(c => c.name),
       learned: learnsFromFeedback(capability) ? signals.map(s => ({ source: "feedback" as const, ...s })) : [],
       adult21: adultOk, answers, searchLimit: maxSearches, sessionCity: who.guest ? taste.city : null, gentle,

@@ -7,6 +7,7 @@ describe("clean personalization", () => {
     expect(p.interests).toEqual([{ key: "music/guitar", relationship: "unspecified", experience: "unspecified" }]);
     expect(p.confirmedAt).toBeNull(); expect(p.monthlyBudget).toBe(100); expect(p.activityBudget).toBeNull();
     expect(p.equipment).toEqual(["bicycle"]);
+    expect(normalizePersonalization(profile,{...emptyPersonalization(),resourceMode:"explicit"}).equipment).toEqual([]);
   });
   it("separates unknown money from explicitly free-only", () => {
     expect(costFits(null, null)).toBe(true); expect(costFits(null, 0)).toBe(false);

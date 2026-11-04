@@ -72,6 +72,10 @@ try {
  await assert.rejects(save(alice,1,{rhythm:['small']}),e=>e.code==='40001');
  result=await save(alice,2,{rhythm:['small']});assert.deepEqual(result.value.motivations,['make']);assert.equal(result.revision,3);
  result=await save(alice,3,{motivations:[]});assert.equal(result.value.answerStates.motivations,'removed');
+ const capability=(await db.query('select profile from public.stubby_capabilities where user_id=$1',[alice])).rows[0].profile;
+ result=await save(alice,result.revision,{windows:[],capability:{...capability,equipment:[]},resourceMode:'explicit'});
+ assert.equal(result.value.answerStates.windows,'removed');assert.equal(result.value.answerStates.equipment,'removed');
+ assert.deepEqual((await db.query('select free_windows from public.profile_private where user_id=$1',[alice])).rows[0].free_windows,[]);
  await db.query("update public.profile_private set picks=ARRAY['music/piano'] where user_id=$1",[alice]);
  await assert.rejects(save(alice,result.revision,{rhythm:['weekend']}),e=>e.code==='40001');
  const legacy=(await db.query('select personalization from public.stubby_capabilities where user_id=$1',[alice])).rows[0].personalization;assert.equal(legacy.interests[0].key,'music/piano');assert.equal(legacy.interests[0].experience,'unspecified');

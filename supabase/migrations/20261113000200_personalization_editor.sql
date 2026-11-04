@@ -21,7 +21,7 @@ begin
   end loop;
   if (select count(*) from jsonb_array_elements(p->'interests') as a(value)) <> (select count(distinct a.value->>'key') from jsonb_array_elements(p->'interests') as a(value)) then return false; end if;
   if p ? 'resourceMode' and coalesce(p->>'resourceMode','') not in ('legacy','explicit') then return false; end if;
-  if p ? 'answerStates' and (jsonb_typeof(p->'answerStates') <> 'object' or exists(select 1 from jsonb_each_text(p->'answerStates') as a(key,value) where a.key not in ('motivations','interests','rhythm','durationMax','equipment') or a.value not in ('answered','removed'))) then return false; end if;
+  if p ? 'answerStates' and (jsonb_typeof(p->'answerStates') <> 'object' or exists(select 1 from jsonb_each_text(p->'answerStates') as a(key,value) where a.key not in ('motivations','interests','rhythm','durationMax','equipment','windows') or a.value not in ('answered','removed'))) then return false; end if;
   return true;
 exception when others then return false;
 end $$;
@@ -62,12 +62,12 @@ begin
   current_row := (select c from public.stubby_capabilities as c where c.user_id=expected_user for update);
   if current_row.revision is distinct from expected_revision then raise exception 'Preferences changed. Reload before saving.' using errcode='40001'; end if;
   states:=coalesce(current_row.personalization->'answerStates','{}');
-  for field in select k.name from jsonb_object_keys(changes) as k(name) where k.name in ('motivations','interests','rhythm','durationMax') loop
+  for field in select k.name from jsonb_object_keys(changes) as k(name) where k.name in ('motivations','interests','rhythm','durationMax','windows') loop
     states:=states || jsonb_build_object(field,case when changes->field in ('[]'::jsonb,'null'::jsonb) then 'removed' else 'answered' end);
   end loop;
   if changes ? 'capability' then
     if not private.valid_capability_extension(changes->'capability') then raise exception 'Invalid saved information' using errcode='22023'; end if;
-    if changes->'capability'->'equipment' is distinct from current_row.profile->'equipment' then
+    if changes->'capability'->'equipment' is distinct from current_row.profile->'equipment' or changes->>'resourceMode'='explicit' then
       states:=states || jsonb_build_object('equipment',case when changes->'capability'->'equipment'='[]'::jsonb then 'removed' else 'answered' end);
     end if;
   end if;

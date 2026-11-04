@@ -155,3 +155,12 @@ it("runs an authenticated V3 ask through Claude with the existing key and saves 
   expect(d.server.insertPersonal).toHaveBeenCalledWith(expect.objectContaining({ user_id: "alice", ask_id: 7 }));
   expect(vi.mocked(d.server.finishAsk).mock.calls[0][1].trace).toMatchObject({ usage: { calls: 2 }, sources: [{ evidence: [{ source: "anthropic-web-v1" }] }] });
 });
+
+it.each([[20,null,10],[null,0,0]])("Cheaper tightens a saved activity ceiling without relaxing free-only",async(activityBudget,monthlyBudget,expected)=>{
+ const d=deps();
+ d.db.capability=async()=>({...input().capability,perActivityBudget:activityBudget});
+ d.db.profile=async()=>({...input().profile,monthlyBudget});
+ const result=await handleScout(ask({ask:"pottery tonight",followUp:{of:7,kind:"cheaper",titles:[]}}),d);
+ expect(result.status).toBe(200);
+ expect(d.v3).toHaveBeenCalledWith(expect.objectContaining({budgetOverride:expected}));
+});

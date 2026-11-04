@@ -13,7 +13,7 @@ export interface InterestPreference {
 export interface Personalization {
   version: 1;
   resourceMode?: "legacy" | "explicit";
-  answerStates?: Partial<Record<"motivations" | "interests" | "rhythm" | "durationMax" | "equipment", "answered" | "removed">>;
+  answerStates?: Partial<Record<"motivations" | "interests" | "rhythm" | "durationMax" | "equipment" | "windows", "answered" | "removed">>;
   motivations: Motivation[];
   interests: InterestPreference[];
   rhythm: (typeof RHYTHMS[number])[];
@@ -39,7 +39,7 @@ export function parsePersonalization(value: unknown): Personalization {
   if (value.durationMax !== null && (typeof value.durationMax !== "number" || !Number.isInteger(value.durationMax) || value.durationMax < 5 || value.durationMax > 480)) throw new Error("Choose a duration from 5 to 480 minutes.");
   if (value.confirmedAt !== null && (typeof value.confirmedAt !== "string" || !Number.isFinite(Date.parse(value.confirmedAt)))) throw new Error("Check the confirmation time.");
   if (value.resourceMode !== undefined && !["legacy","explicit"].includes(value.resourceMode as string)) throw new Error("Check your resource choices.");
-  if (value.answerStates !== undefined && (!obj(value.answerStates) || Object.entries(value.answerStates).some(([k,v]) => !["motivations","interests","rhythm","durationMax","equipment"].includes(k) || !["answered","removed"].includes(v as string)))) throw new Error("Check your answer states.");
+  if (value.answerStates !== undefined && (!obj(value.answerStates) || Object.entries(value.answerStates).some(([k,v]) => !["motivations","interests","rhythm","durationMax","equipment","windows"].includes(k) || !["answered","removed"].includes(v as string)))) throw new Error("Check your answer states.");
   return { ...(value.answerStates ? { answerStates:value.answerStates as Personalization["answerStates"] } : {}), ...(value.resourceMode ? {resourceMode:value.resourceMode as Personalization["resourceMode"]} : {}), version: 1, motivations: choices(value.motivations, MOTIVATIONS), interests, rhythm: choices(value.rhythm, RHYTHMS), durationMax: value.durationMax as number | null, confirmedAt: value.confirmedAt as string | null };
 }
 export const interestKey=(key:string)=>CORNER_ALIASES[key] ?? key;
