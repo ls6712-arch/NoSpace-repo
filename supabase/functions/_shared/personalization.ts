@@ -11,6 +11,8 @@ export interface InterestPreference {
 }
 export interface Personalization {
   version: 1;
+  resourceMode?: "legacy" | "explicit";
+  answerStates?: Partial<Record<"motivations" | "interests" | "rhythm" | "durationMax" | "equipment", "answered" | "removed">>;
   motivations: Motivation[];
   interests: InterestPreference[];
   rhythm: (typeof RHYTHMS[number])[];
@@ -26,7 +28,7 @@ function choices<T extends string>(v: unknown, allowed: readonly T[]): T[] {
   return [...new Set(v)] as T[];
 }
 export function parsePersonalization(value: unknown): Personalization {
-  if (!obj(value) || value.version !== 1 || Object.keys(value).some(k => !["version", "motivations", "interests", "rhythm", "durationMax", "confirmedAt"].includes(k))) throw new Error("These preferences cannot be read. Reload before editing.");
+  if (!obj(value) || value.version !== 1 || Object.keys(value).some(k => !["version", "motivations", "interests", "rhythm", "durationMax", "confirmedAt", "answerStates", "resourceMode"].includes(k))) throw new Error("These preferences cannot be read. Reload before editing.");
   if (!Array.isArray(value.interests) || value.interests.length > 50) throw new Error("Choose up to 50 interests.");
   const interests: InterestPreference[] = value.interests.map(i => {
     if (!obj(i) || Object.keys(i).some(k => !["key", "relationship", "experience"].includes(k)) || !keyValid(i.key) || !RELATIONSHIPS.includes(i.relationship as never) || !EXPERIENCE.includes(i.experience as never)) throw new Error("Check your interests.");
@@ -35,7 +37,9 @@ export function parsePersonalization(value: unknown): Personalization {
   if (new Set(interests.map(i => i.key)).size !== interests.length) throw new Error("Choose each interest once.");
   if (value.durationMax !== null && (typeof value.durationMax !== "number" || !Number.isInteger(value.durationMax) || value.durationMax < 5 || value.durationMax > 480)) throw new Error("Choose a duration from 5 to 480 minutes.");
   if (value.confirmedAt !== null && (typeof value.confirmedAt !== "string" || !Number.isFinite(Date.parse(value.confirmedAt)))) throw new Error("Check the confirmation time.");
-  return { version: 1, motivations: choices(value.motivations, MOTIVATIONS), interests, rhythm: choices(value.rhythm, RHYTHMS), durationMax: value.durationMax as number | null, confirmedAt: value.confirmedAt as string | null };
+  if (value.resourceMode !== undefined && !["legacy","explicit"].includes(value.resourceMode as string)) throw new Error("Check your resource choices.");
+  if (value.answerStates !== undefined && (!obj(value.answerStates) || Object.entries(value.answerStates).some(([k,v]) => !["motivations","interests","rhythm","durationMax","equipment"].includes(k) || !["answered","removed"].includes(v as string)))) throw new Error("Check your answer states.");
+  return { ...(value.answerStates ? { answerStates:value.answerStates as Personalization["answerStates"] } : {}), ...(value.resourceMode ? {resourceMode:value.resourceMode as Personalization["resourceMode"]} : {}), version: 1, motivations: choices(value.motivations, MOTIVATIONS), interests, rhythm: choices(value.rhythm, RHYTHMS), durationMax: value.durationMax as number | null, confirmedAt: value.confirmedAt as string | null };
 }
 export interface ProfileInput {
   picks: readonly string[];
@@ -47,7 +51,7 @@ export interface ProfileInput {
 export function normalizePersonalization(profile: ProfileInput, saved: Personalization = emptyPersonalization(), equipment: readonly string[] = [], perActivityBudget: number | null = null) {
   const picks = [...new Set(profile.picks.filter(keyValid))];
   const interests = picks.map(key => saved.interests.find(i => i.key === key) ?? { key, relationship: "unspecified" as const, experience: "unspecified" as const });
-  const passEquipment = profile.passes.flatMap(p => p.kind === "bike" ? ["bicycle"] : p.kind === "gear" && resourceId(p.label) !== "gear" ? [resourceId(p.label)] : []);
+  const passEquipment = (saved.resourceMode === "explicit" ? [] : profile.passes).flatMap(p => p.kind === "bike" ? ["bicycle"] : p.kind === "gear" && resourceId(p.label) !== "gear" ? [resourceId(p.label)] : []);
   return { ...saved, interests, usualWindows: [...new Set(profile.windows)], monthlyBudget: profile.monthlyBudget,
     // Monthly money is a planning amount. The original zero choice explicitly meant Free only.
     activityBudget: perActivityBudget, freeOnly: profile.monthlyBudget === 0 && perActivityBudget === null,

@@ -37,6 +37,7 @@ export interface Plan {
   /** At-home: the guide's first step. */
   step?: string;
   timing?: "fixed" | "suggested";
+  needs?: string;
 }
 
 export interface LiveEventInput {
@@ -326,6 +327,8 @@ export function atHomePlans(input: PlanInput): Plan[] {
       when: windowWhen(w),
       reason: reasonLine({ windowKey: slots.length > 0 ? w.key : null, cornerName: pick.name, pass: passFor(pick.slug, passes) }),
       step: guide.step,
+      cost: activityCost(pick.key,input.equipment ?? []) === 0 ? "Free with the resources listed" : "Materials cost unknown",
+      needs: (()=>{const r=activityFor(pick.key)!.facts.resources;return [r.required.map(g=>g.join(" or ")).join(", "), r.alternatives?.map(b=>b.join(" + ")).join(" or ")].filter(Boolean).join("; ") || "Check what you need before starting.";})(),
     });
   }
   return out;

@@ -26,6 +26,9 @@ try {
  await db.exec(read('supabase/migrations/20261113000100_recommendation_semantics.sql'));
  try {await db.exec(read('supabase/verification/recommendation_semantics_check.sql'));throw new Error('Expected rollback');}
  catch(e){assert.match(e.message,/RESULTS:/);assert.doesNotMatch(e.message,/FAIL|ERROR|BLOCKED/);await db.exec('rollback');}
+ await db.exec(read('supabase/migrations/20261113000200_personalization_editor.sql'));
+ try {await db.exec(read('supabase/verification/personalization_editor_check.sql'));throw new Error('Expected rollback');}
+ catch(e){assert.match(e.message,/RESULTS:/);assert.doesNotMatch(e.message,/FAIL|ERROR|BLOCKED/);await db.exec('rollback');}
  await login(alice);
  let result=await save(alice,0,{motivations:['make'],interests:[{key:'music/guitar',relationship:'returning',experience:'beginner'}]});
  assert.equal(result.revision,1);assert.ok(result.value.confirmedAt);
@@ -38,6 +41,10 @@ try {
  await db.query("update public.stubby_capabilities set profile=jsonb_set(profile,'{equipment}','[\"guitar\"]') where user_id=$1",[alice]);
  await assert.rejects(save(alice,1,{rhythm:['small']}),e=>e.code==='40001');
  result=await save(alice,2,{rhythm:['small']});assert.deepEqual(result.value.motivations,['make']);assert.equal(result.revision,3);
+ result=await save(alice,3,{motivations:[]});assert.equal(result.value.answerStates.motivations,'removed');
+ await db.query("update public.profile_private set picks=ARRAY['music/piano'] where user_id=$1",[alice]);
+ await assert.rejects(save(alice,result.revision,{rhythm:['weekend']}),e=>e.code==='40001');
+ const legacy=(await db.query('select personalization from public.stubby_capabilities where user_id=$1',[alice])).rows[0].personalization;assert.equal(legacy.interests[0].key,'music/piano');assert.equal(legacy.interests[0].experience,'unspecified');
  await login(bob);assert.equal((await db.query('select * from public.stubby_capabilities')).rows.length,0);
  await assert.rejects(save(alice,3,{}),e=>e.code==='42501');
  await assert.rejects(save(bob,0,{extra:'bad'}),e=>e.code==='22023');
@@ -48,6 +55,6 @@ try {
  catch(e){assert.match(e.message,/RESULTS:/);assert.doesNotMatch(e.message,/FAIL|ERROR|BLOCKED/);await db.exec('rollback');}
  await login(alice);await db.query('select public.forget_stubby_memory($1)',[alice]);
  assert.equal((await db.query('select * from public.stubby_capabilities')).rows.length,0);
- await db.exec('reset role');await db.exec(read('supabase/migrations/rollback_20261113000100_recommendation_semantics.sql'));await db.exec(read('supabase/migrations/rollback_20261113000000_clean_personalization.sql'));
+ await db.exec('reset role');await db.exec(read('supabase/migrations/rollback_20261113000200_personalization_editor.sql'));await db.exec(read('supabase/migrations/rollback_20261113000100_recommendation_semantics.sql'));await db.exec(read('supabase/migrations/rollback_20261113000000_clean_personalization.sql'));
  console.log('PASS: owner/RLS, atomic mirror rollback, invalid data, old client preservation, stale revisions, guest denial, deletion and SQL rollback');
 } finally { await db.close(); }

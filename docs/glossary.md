@@ -1163,3 +1163,8 @@ Shown in place of picks when an ask reads as clear distress. No ask is used and 
 | Delete Stubby’s saved information and feedback? This keeps your onboarding answers. | Before deleting |
 | Your changes are saved. · Your changes weren’t saved. Try again. · Stubby’s saved information and feedback are deleted. Your onboarding answers are unchanged. · Your saved information wasn’t deleted. Try again. · Stubby couldn’t load your saved information. Try again later. | After saving or deleting |
 | Your first plan will look for free things. Pass coverage needs confirmation. | Onboarding, after passes |
+
+## Private personalization
+
+The human onboarding questions and editable summary are approved in the clean personalization build brief.
+Use “What would you like to make more room for?”, “What do you already love, or keep meaning to try?” and “What does a little free time look like for you?”. One interest, Help me explore and Skip for now are valid paths. “Suggested time” identifies a flexible suggestion, not an event booking. Cost unknown means check cost; it never means Free. Private preferences, goals and feedback are never public profile copy.

@@ -25,6 +25,7 @@ export function PlanTicket({ plan, children }: { plan: Plan; children?: ReactNod
         {plan.timing === "suggested" && <p className="ob-label mt-1 text-small">Suggested time</p>}
         {plan.hostName && plan.kind !== "invite" && <p className="ob-label mt-1 text-small">{`With ${plan.hostName}`}</p>}
         {plan.step && <p className="mt-2 text-small">{plan.step}</p>}
+        {plan.needs && <p className="mt-2 text-small">{`Needs: ${plan.needs}`}</p>}
         {plan.cost && <p className="ob-label mt-2 text-small">{plan.cost}</p>}
         <p className="mt-3 text-small">{plan.reason}</p>
         {children && <div className="mt-4">{children}</div>}

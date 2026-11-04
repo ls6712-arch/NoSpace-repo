@@ -1,3 +1,4 @@
+import { parseCapability, type CapabilityProfile } from "./capabilityProfile";
 import { supabase } from "../../lib/supabase";
 import { emptyPersonalization, parsePersonalization, type Personalization } from "./personalization";
 type Client = typeof supabase;
@@ -21,11 +22,21 @@ export async function readPersonalization(expected: string, client: Client = sup
   } catch(e) { return { status: "unavailable", error: e instanceof Error ? e.message : "Your preferences couldn’t load." }; }
 }
 /** Patch semantics distinguish Skip (no call), explicit empty/clear and an actual edit. */
-export async function savePersonalization(expected: string, revision: number, changes: Partial<Omit<Personalization,"confirmedAt">>, client: Client = supabase) {
+export async function savePersonalization(expected: string, revision: number, changes: Partial<Omit<Personalization,"confirmedAt" | "answerStates">> & { capability?: CapabilityProfile }, client: Client = supabase) {
   await owner(client, expected);
   if (!Number.isSafeInteger(revision) || revision < 0) throw new Error("Reload before saving.");
   const { data, error } = await client!.rpc("save_personalization", { expected_user: expected, expected_revision: revision, changes });
   if (error) throw new Error(error.code === "40001" ? "Your preferences changed elsewhere. Reload before saving." : "Your changes weren’t saved. Try again.");
   if (!data || !Number.isSafeInteger(data.revision)) throw new Error("Your save couldn’t be confirmed. Reload before editing.");
   return { value: parsePersonalization(data.value), revision: data.revision as number };
+}
+
+/** Read profile and revision together: an editor never pairs newer revision with older data. */
+export async function readPreferenceBundle(expected: string, client: Client = supabase) {
+  await owner(client,expected);
+  const {data,error}=await client!.from("stubby_capabilities").select("personalization, revision, profile").eq("user_id",expected).maybeSingle();
+  if(error) throw new Error("Your preferences couldn’t load. Try again.");
+  if(!data) return {value:emptyPersonalization(),revision:0,capability:parseCapability({version:1,consent:{memory:false,onboarding:false,feedback:false},timeZone:"America/New_York",perActivityBudget:null,equipment:[],goals:[],preferences:[],memberships:[]})};
+  if(!Number.isSafeInteger(data.revision) || data.revision<0) throw new Error("Reload before editing your preferences.");
+  return {value:parsePersonalization(data.personalization),revision:data.revision as number,capability:parseCapability(data.profile)};
 }

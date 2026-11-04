@@ -40,7 +40,7 @@ export function PicksScreen() {
 
   useEffect(() => {
     let live = true;
-    void Promise.all([user ? fetchTaste(user.id) : Promise.resolve(null), fetchCornerActivity(city)]).then(([taste, act]) => {
+    void Promise.all([user ? fetchTaste(user.id,{strict:true}) : Promise.resolve(null), fetchCornerActivity(city)]).then(([taste, act]) => {
       if (!live) return;
       if (taste && taste.picks.length > 0) {
         hadSaved.current = true;
@@ -48,7 +48,7 @@ export function PicksScreen() {
       }
       setActivity(act);
       setLoaded(true);
-    });
+    }).catch(()=>{if(live)setError("Your interests couldn’t load. Try again later.");});
     return () => {
       live = false;
     };
@@ -100,7 +100,7 @@ export function PicksScreen() {
 
   const enough = hasEnoughPicks(selected.length);
   const save = async () => {
-    if (saving || !enough) return;
+    if (saving || !enough || !loaded) return;
     setSaving(true);
     setError(null);
     const saved = user ? await savePrivate(user.id, { picks: selected }) : { error: null };
@@ -123,7 +123,7 @@ export function PicksScreen() {
               {error}
             </p>
           )}
-          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving || !enough}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void save()} disabled={saving || !enough || !loaded}>
             {enough ? "Next" : picksMissingLine(selected.length)}
           </PillButton>
         </>

@@ -9,6 +9,7 @@ import { isCounted, type OnboardingStep } from "./steps";
  * Nothing here asks for or saves anything.
  */
 const HEADLINE: Record<OnboardingStep, string> = {
+  review: "Does this feel like you?",
   welcome: "Stop saying you’ll do it.",
   signup: "Sign up",
   code: "Code",

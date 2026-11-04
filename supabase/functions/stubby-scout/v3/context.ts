@@ -39,7 +39,7 @@ export function buildContext(input: RequestInput): Context {
     ownedOnly: /\b(?:use what I (?:already )?have|only what I (?:already )?have|no new (?:gear|equipment))\b/i.test(text),
     durationMax: (() => { const m = /\b(?:I have|I[’']ve got|for)\s+(\d{1,3})\s*(?:minutes?|mins?)\b/i.exec(text); return m ? Number(m[1]) : null; })(),
     window,
-    hardBudget: input.budgetOverride ?? (intent.budget?.from === "ask" ? intent.budget.max : normalized.freeOnly ? 0 : null),
+    hardBudget: input.budgetOverride ?? (intent.budget?.from === "ask" ? intent.budget.max : normalized.activityBudget ?? (normalized.freeOnly ? 0 : null)),
     softBudget: soft,
     setting: parsed.setting, awayFromHome: parsed.awayFromHome,
     excludedTopics: [...new Set([...parsed.topics.negative, ...storedExclusions])],
