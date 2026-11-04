@@ -34,6 +34,8 @@ function rowToProject(row: any): Project {
     customSpace: row.custom_space ?? undefined,
     inspiredByPostId: row.inspired_by_post_id ?? undefined,
     shared: !!row.shared,
+    targetMoments: row.target_moments ?? null,
+    archivedAt: row.archived_at ? Date.parse(row.archived_at) : undefined,
     // Column from supabase/migrations/20261031185723_calendar_edits.sql; absent reads as a Pursuit.
     plan: row.is_plan ? true : undefined,
     startedAt: new Date(row.started_at).getTime(),
@@ -693,7 +695,7 @@ export async function markAsPlan(pursuitId: string): Promise<void> {
 /** Restore versioned progress into the existing Shelf cache on a fresh device. */
 async function restoreWorkflowProgress(userId: string) {
   if (!supabase) return;
-  const projects = getJournal().projects.filter(p => p.measure?.workflow);
+  const projects = getJournal().projects.filter(p => p.measure?.workflow && !p.measure.workflow.legacy);
   if (!projects.length) return;
   const ids = projects.map(p => p.id);
   const [entries, goals] = await Promise.all([

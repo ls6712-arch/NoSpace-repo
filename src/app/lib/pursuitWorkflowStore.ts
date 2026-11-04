@@ -1,3 +1,8 @@
+import {
+  changeLegacyProgress,
+  mergeLegacyData,
+  readLegacyData,
+} from "./pursuitCompatibility";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { LOCAL_CLEARED_EVENT } from "./localData";
@@ -47,6 +52,13 @@ export function storeLocalWorkflow(id: string, data: WorkflowData) {
 }
 export const newWorkflowId = (): string => crypto.randomUUID();
 export function measureFor(w: Workflow) {
+  if (w.legacy?.measure)
+    return {
+      ...w.legacy.measure,
+      target: w.target ?? 0,
+      unit: w.unit,
+      workflow: w,
+    };
   return {
     ...defaultMeasure(
       w.tracking === "total"
@@ -144,7 +156,20 @@ export async function fetchWorkflow(id: string): Promise<WorkflowData> {
   );
   return data;
 }
-export function useWorkflowData(id: string, signedIn: boolean) {
+export function useWorkflowData(
+  id: string,
+  signedIn: boolean,
+  compatibility?: Project,
+  uid = "local",
+) {
+  async function read() {
+    const current = signedIn ? await fetchWorkflow(id) : localWorkflow(id);
+    if (!compatibility?.measure?.workflow?.legacy) return current;
+    return mergeLegacyData(
+      current,
+      await readLegacyData(compatibility, uid, signedIn),
+    );
+  }
   const [data, setData] = useState<WorkflowData>(() =>
     signedIn ? emptyWorkflowData() : localWorkflow(id),
   );
@@ -155,12 +180,17 @@ export function useWorkflowData(id: string, signedIn: boolean) {
     let live = true;
     const load = async () => {
       if (!signedIn) {
-        setData(localWorkflow(id));
+        try {
+          setData(await read());
+          setError("");
+        } catch (e) {
+          if (live) setError((e as Error).message);
+        }
         setLoading(false);
         return;
       }
       try {
-        const result = await fetchWorkflow(id);
+        const result = await read();
         if (live) {
           setData(result);
           setError("");
@@ -174,7 +204,14 @@ export function useWorkflowData(id: string, signedIn: boolean) {
     setLoading(true);
     void load();
     const localChange = () => {
-      if (!signedIn && live) setData(localWorkflow(id));
+      if (!signedIn && live)
+        void read()
+          .then((result) => {
+            if (live) setData(result);
+          })
+          .catch((e) => {
+            if (live) setError((e as Error).message);
+          });
     };
     listeners.add(localChange);
     // Poll only while visible, also refreshing on return to this tab.
@@ -189,15 +226,52 @@ export function useWorkflowData(id: string, signedIn: boolean) {
       clearInterval(timer);
       window.removeEventListener("focus", poll);
     };
-  }, [id, signedIn, refresh]);
+  }, [id, signedIn, refresh, !!compatibility?.measure?.workflow?.legacy, uid]);
   async function put<K extends Collection>(
     key: K,
     rows: WorkflowData[K],
     removeId?: string,
   ) {
+    if (
+      compatibility &&
+      key === "contributions" &&
+      (removeId?.startsWith("legacy:") ||
+        (rows as WorkflowData["contributions"])[0]?.legacy_id)
+    ) {
+      await changeLegacyProgress(
+        compatibility,
+        (rows as WorkflowData["contributions"])[0],
+        removeId,
+        signedIn,
+      );
+      setData(await read());
+      return;
+    }
     if (signedIn) {
       if (!supabase) throw new Error("Couldn’t connect. Try again.");
-      if (removeId) {
+      if (
+        key === "sessions" &&
+        (rows as WorkflowData["sessions"])[0]?.legacy_id != null
+      ) {
+        const { error } = await supabase.rpc("edit_legacy_pursuit_session", {
+          p_pursuit: id,
+          p_rows: rows,
+        });
+        if (error) throw new Error("The session couldn’t be saved. Try again.");
+      } else if (
+        key === "attendance" &&
+        (rows as WorkflowData["attendance"])[0]?.session_id.startsWith(
+          "legacy-session:",
+        )
+      ) {
+        const row = (rows as WorkflowData["attendance"])[0];
+        const { error } = await supabase.rpc("legacy_pursuit_rsvp", {
+          p_pursuit: id,
+          p_session: Number(row.session_id.replace("legacy-session:", "")),
+          p_going: row.going,
+        });
+        if (error) throw new Error("Changes couldn’t be saved. Try again.");
+      } else if (removeId) {
         const { data: removed, error } = await supabase
           .from(tableNames[key])
           .delete()
@@ -240,9 +314,10 @@ export function useWorkflowData(id: string, signedIn: boolean) {
         if (error)
           throw new Error("Changes couldn’t be saved. Refresh and try again.");
       }
-      const next = await fetchWorkflow(id);
+      const next = await read();
       setData(next);
-      if (key === "notices") window.dispatchEvent(new Event("pursuit-notices-changed"));
+      if (key === "notices")
+        window.dispatchEvent(new Event("pursuit-notices-changed"));
     } else {
       const current = { ...localWorkflow(id) };
       const nextRows = [
@@ -273,7 +348,7 @@ export function useWorkflowData(id: string, signedIn: boolean) {
         (current[key] as unknown[]) = nextRows;
       }
       storeLocalWorkflow(id, { ...current });
-      setData({ ...current });
+      setData(await read());
     }
   }
   return { data, loading, error, retry: () => setRefresh((n) => n + 1), put };
@@ -289,7 +364,12 @@ export async function recordWorkflowMoment(
   note = "",
 ) {
   const w = project.measure?.workflow;
-  if (!w || !["sessions", "total"].includes(w.tracking)) return null;
+  if (
+    !w ||
+    w.legacy?.kind === "moments" ||
+    !["sessions", "total"].includes(w.tracking)
+  )
+    return null;
   const bytes = new Uint8Array(
     await crypto.subtle.digest(
       "SHA-256",
@@ -310,7 +390,10 @@ export async function recordWorkflowMoment(
     amount: w.tracking === "sessions" ? 1 : amount,
     occurred_at: now,
     created_at: now,
-    note: postId != null && (project.mode ?? "solo") === "solo" ? note.slice(0, 1000) : "",
+    note:
+      postId != null && (project.mode ?? "solo") === "solo"
+        ? note.slice(0, 1000)
+        : "",
     post_id: postId ?? null,
   };
   if (userId) {

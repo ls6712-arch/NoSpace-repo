@@ -116,6 +116,7 @@ export interface StubItem {
 }
 
 export interface PursuitItem {
+  workflow?: {current:number;target:number|null;unit:string;tracking:string;status:string};
   id: string;
   category: string;
   goal: string;
@@ -189,7 +190,13 @@ export const getMomentHold = (postId: number) => rpc<string | null>("get_moment_
 /** Shows your own held Moment to others now. */
 export const releaseMoment = (postId: number) => rpc<null>("release_moment", { p_post_id: postId });
 export const fetchStubs = (profileId: string) => rpc<StubItem[]>("get_profile_stubs", { p_profile: profileId });
-export const fetchPursuits = (profileId: string) => rpc<PursuitItem[]>("get_profile_pursuits", { p_profile: profileId });
+export async function fetchPursuits(profileId: string): Promise<ProfileResult<PursuitItem[]>> {
+  if(!supabase) return {ok:false,message:"Couldn’t load this. Try again."};
+  const result=await supabase.rpc("get_compatible_profile_pursuits",{p_profile:profileId});
+  if(result.error && ['PGRST202','42883'].includes(result.error.code)) return rpc<PursuitItem[]>("get_profile_pursuits",{p_profile:profileId});
+  if(result.error) return {ok:false,message:result.error.message};
+  return {ok:true,value:result.data as PursuitItem[]};
+}
 
 export const fetchMyPlanning = () => rpc<PlanningPrefs>("get_my_planning");
 export const savePlanning = (p: Omit<PlanningPrefs, "calendarConnected" | "planningPaused">) =>

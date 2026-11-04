@@ -130,6 +130,8 @@ export interface ProgressEntry {
 }
 
 export interface Project {
+  targetMoments?: number | null;
+  archivedAt?: number;
   workflowPersonal?: import("./pursuitWorkflow").PersonalGoal;
   id: string;
   title: string;
@@ -863,4 +865,9 @@ export function projectWorkflowProgress(projectId: string, entries: ProgressEntr
   const updated = { ...project, measure: { ...project.measure, target }, workflowPersonal: personal };
   if (JSON.stringify(progress) === JSON.stringify(state.progress) && JSON.stringify(updated) === JSON.stringify(project)) return;
   commit({ ...state, progress, projects: state.projects.map(p => p.id === projectId ? updated : p) });
+}
+
+/** Correct a legacy entry without replacing its identity or links. */
+export function updateLegacyProgress(entryId: string, amount: number, note: string) {
+  commit({...state,progress:state.progress.map(e=>e.id===entryId?{...e,amount,note}:e)});
 }

@@ -20,6 +20,7 @@ import {
   addJoinedProject,
   dropProject,
   projectWorkflowProgress,
+  useJournalSlice,
   type Project,
 } from "../../../lib/journal";
 import {
@@ -51,6 +52,11 @@ import { BottomSheet } from "../../ui/BottomSheet";
 import { GoalFields, Field, fieldClass } from "./GoalFields";
 import { PersonAvatar } from "../../../pages/CreatePursuit";
 import { fetchPursuitAsProject } from "../../../lib/pursuitsRemote";
+import {
+  compatibleProject,
+  legacyLabel,
+} from "../../../lib/pursuitCompatibility";
+import { NextSessionCard } from "../NextSessionCard";
 import { usePeopleSearch } from "../../../lib/people";
 
 const panel = "rounded-card border border-border bg-card p-4 tab:p-5";
@@ -89,7 +95,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
     error: loadError,
     retry,
     put,
-  } = useWorkflowData(project.id, !!user);
+  } = useWorkflowData(project.id, !!user, w.legacy ? project : undefined, uid);
   const [membersVersion, setMembersVersion] = useState(0);
   const members = usePursuitMembers(
     project,
@@ -115,10 +121,18 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
     id === uid
       ? "You"
       : (people.find((p) => p.userId === id)?.displayName ?? "Someone");
-  const moments = posts.filter((p) => p.pursuitId === project.id);
+  const cachedProject = useJournalSlice((state) =>
+    state.projects.find((p) => p.id === project.id),
+  );
+  const privatePlan = cachedProject ?? initial;
+  const entryProject = useJournalSlice((state) => state.entryProject);
+  const moments = posts.filter(
+    (p) =>
+      p.pursuitId === project.id || entryProject[String(p.id)] === project.id,
+  );
   const personal = data.goals.find((g) => g.user_id === uid);
   useEffect(() => {
-    if (loading || loadError) return;
+    if (loading || loadError || w.legacy) return;
     const rows = data.contributions
       .filter((e) => collective || e.user_id === uid)
       .filter(
@@ -143,15 +157,31 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
   }, [data, loading, loadError, collective, uid, project.id, w, personal]);
 
   const status = collective
-    ? project.finishedAt
+    ? project.finishedAt || project.letGoAt
       ? "finished"
       : project.pausedAt
         ? "paused"
         : "active"
-    : (personal?.status ?? "active");
+    : (personal?.status ??
+      (project.finishedAt || project.letGoAt
+        ? "finished"
+        : project.pausedAt
+          ? "paused"
+          : "active"));
   const summary = progressFor(
     w,
-    data.contributions,
+    !user && w.legacy?.kind === "moments"
+      ? moments.map((p) => ({
+          id: `moment:${p.id}`,
+          pursuit_id: project.id,
+          user_id: uid,
+          amount: 1,
+          occurred_at: new Date(p.createdAt).toISOString(),
+          created_at: new Date(p.createdAt).toISOString(),
+          note: "",
+          post_id: p.id,
+        }))
+      : data.contributions,
     collective ? undefined : uid,
     collective ? w.target : personal ? personal.target : w.target,
   );
@@ -166,10 +196,10 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
     const refreshProject = async () => {
       if (document.hidden || guard.current) return;
       const latest = await fetchPursuitAsProject(project.id);
-      if (live && latest && workflowOf(latest)) {
-        const updated = { ...latest, role: project.role };
+      if (live && latest && !latest.plan) {
+        const updated = compatibleProject({ ...latest, role: project.role });
         setProject(updated);
-        addJoinedProject(updated);
+        if (!workflowOf(updated)?.legacy) addJoinedProject(updated);
       }
     };
     void refreshProject();
@@ -229,7 +259,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
     setEntry(existing ?? null);
     entryId.current = existing?.id ?? newWorkflowId();
     entryCreatedAt.current = existing?.created_at ?? new Date().toISOString();
-    setAmount(String(existing?.amount ?? 1));
+    setAmount(String(existing?.amount ?? project.measure?.defaultAmount ?? 1));
     setNote(existing?.note ?? "");
     setDate(
       toDateInput(existing ? Date.parse(existing.occurred_at) : Date.now()),
@@ -263,9 +293,12 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
       pursuit_id: project.id,
       user_id: uid,
       amount: w.tracking === "total" ? Number(amount) : 1,
-      occurred_at: new Date(`${date}T12:00:00`).toISOString(),
+      occurred_at: entry?.legacy_id
+        ? entry.occurred_at
+        : new Date(`${date}T12:00:00`).toISOString(),
       created_at: entryCreatedAt.current,
       note: note.trim(),
+      legacy_id: entry?.legacy_id,
       post_id: postId ? Number(postId) : null,
       item_id: w.tracking === "checklist" ? itemId : null,
       session_id: meeting?.id ?? entry?.session_id ?? null,
@@ -290,7 +323,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
       user_id: uid,
       target: personal ? personal.target : (w.target ?? null),
       finish_by: personal ? personal.finish_by : (w.finishBy ?? null),
-      status: personal?.status ?? "active",
+      status: personal?.status ?? status,
       muted: personal?.muted ?? false,
       reminder_minutes: personal?.reminder_minutes ?? null,
       ...patch,
@@ -302,7 +335,16 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
         ...project,
         finishedAt: next === "finished" ? Date.now() : undefined,
         pausedAt: next === "paused" ? Date.now() : undefined,
+        letGoAt: undefined,
       };
+      if (project.letGoAt && user && supabase) {
+        const result = await supabase
+          .from("pursuits")
+          .update({ let_go_at: null })
+          .eq("id", project.id);
+        if (result.error)
+          throw new Error("Changes couldn’t be saved. Try again.");
+      }
       await saveWorkflowProject(updated, !!user);
       setProject(updated);
     } else await put("goals", [goalRow({ status: next })]);
@@ -386,6 +428,10 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
     setText("");
   }
   function progressText(current: number, target?: number) {
+    if (!w.unit && w.legacy)
+      return target != null
+        ? `${formatAmount(current)} of ${formatAmount(target)}`
+        : formatAmount(current);
     const unit =
       w.tracking === "sessions"
         ? "sessions"
@@ -463,12 +509,28 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
               id={`pursuit-tab-${value}`}
               aria-selected={tab === value}
               tabIndex={tab === value ? 0 : -1}
-              onKeyDown={event => {
-                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+              onKeyDown={(event) => {
+                if (
+                  !["ArrowLeft", "ArrowRight", "Home", "End"].includes(
+                    event.key,
+                  )
+                )
+                  return;
                 event.preventDefault();
-                const next = event.key === 'Home' ? 'progress' : event.key === 'End' ? 'chat' : value === 'progress' ? 'chat' : 'progress';
+                const next =
+                  event.key === "Home"
+                    ? "progress"
+                    : event.key === "End"
+                      ? "chat"
+                      : value === "progress"
+                        ? "chat"
+                        : "progress";
                 setTab(next);
-                (event.currentTarget.parentElement?.querySelector(`#pursuit-tab-${next}`) as HTMLButtonElement | null)?.focus();
+                (
+                  event.currentTarget.parentElement?.querySelector(
+                    `#pursuit-tab-${next}`,
+                  ) as HTMLButtonElement | null
+                )?.focus();
               }}
               aria-controls={`pursuit-${value}`}
               className={`min-h-11 flex-1 rounded-control text-small ${tab === value ? "bg-surface-muted font-semibold" : ""}`}
@@ -546,6 +608,20 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                     </span>
                   )}
                 </div>
+                {w.legacy && legacyLabel(project) && (
+                  <p className="mt-3 text-small text-muted-foreground">
+                    {legacyLabel(project)}
+                  </p>
+                )}
+                {w.legacy?.measure?.milestones?.filter(Boolean).length ? (
+                  <ul className="mt-3 list-inside list-disc text-small">
+                    {w.legacy.measure.milestones
+                      .filter(Boolean)
+                      .map((name, index) => (
+                        <li key={index}>{name}</li>
+                      ))}
+                  </ul>
+                ) : null}
                 {w.tracking !== "updates" ? (
                   <>
                     <p className="mt-3 text-title">
@@ -587,7 +663,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                   </p>
                 )}
                 {status === "active" ? (
-                  w.tracking === "updates" ? (
+                  w.tracking === "updates" || w.legacy?.kind === "moments" ? (
                     <Link
                       to={`/create?pursuit=${project.id}`}
                       className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-control bg-accent text-small font-semibold text-accent-foreground"
@@ -716,6 +792,16 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                   </ul>
                 )}
               </section>
+              {w.legacy &&
+                (privatePlan.nextSessionAt || privatePlan.timesPerWeek) && (
+                  <NextSessionCard
+                    project={privatePlan}
+                    myMomentTimes={[
+                      ...moments.map((p) => p.createdAt),
+                      ...privateMoments.map((p) => p.createdAt),
+                    ]}
+                  />
+                )}
               <section className={panel}>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lead">Next session</h2>
@@ -779,7 +865,13 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                       ))}
                       <button
                         className={action}
-                        onClick={() => comments(`session:${s.id}`)}
+                        onClick={() =>
+                          comments(
+                            s.legacy_id != null
+                              ? `legacy-session:${s.legacy_id}`
+                              : `session:${s.id}`,
+                          )
+                        }
                       >
                         Discuss
                       </button>
@@ -891,6 +983,13 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                             ? "One session completed"
                             : `${formatAmount(e.amount)} ${w.unit}`}
                       </p>
+                      {e.image_url && (
+                        <ImageWithFallback
+                          src={e.image_url}
+                          alt="Moment"
+                          className="mt-3 max-h-80 w-full rounded-control object-cover"
+                        />
+                      )}
                       {e.note && (
                         <p className="mt-2 whitespace-pre-wrap text-small">
                           {e.note}
@@ -904,18 +1003,28 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                         ) : (
                           <button
                             className={action}
-                            onClick={() => comments(`entry:${e.id}`)}
+                            onClick={() =>
+                              comments(
+                                e.legacy_id
+                                  ? `legacy-entry:${e.legacy_id}`
+                                  : `entry:${e.id}`,
+                              )
+                            }
                           >
                             <MessageCircle className="size-4" />
                             {plural(
                               data.messages.filter(
-                                (m) => m.thread === `entry:${e.id}`,
+                                (m) =>
+                                  m.thread ===
+                                  (e.legacy_id
+                                    ? `legacy-entry:${e.legacy_id}`
+                                    : `entry:${e.id}`),
                               ).length,
                               "comment",
                             )}
                           </button>
                         )}
-                        {e.user_id === uid && (
+                        {e.user_id === uid && !e.id.startsWith("moment:") && (
                           <>
                             <button
                               className={action}
@@ -984,7 +1093,12 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
               </section>
             </div>
           ) : (
-            <section id="pursuit-chat" aria-labelledby="pursuit-tab-chat" role="tabpanel" className="space-y-4">
+            <section
+              id="pursuit-chat"
+              aria-labelledby="pursuit-tab-chat"
+              role="tabpanel"
+              className="space-y-4"
+            >
               <p className="text-small text-muted-foreground">
                 Make plans, ask questions, or mention a friend.
               </p>
@@ -1017,7 +1131,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                 {project.title}
               </p>
               {w.tracking === "total" && (
-                <Field label={w.unit}>
+                <Field label={w.unit || "Amount"}>
                   <input
                     className={fieldClass}
                     inputMode="decimal"
@@ -1051,6 +1165,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                 <input
                   className={fieldClass}
                   type="date"
+                  disabled={!!entry?.legacy_id}
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
                 />
@@ -1067,6 +1182,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                 <select
                   className={fieldClass}
                   value={postId}
+                  disabled={!!entry?.legacy_id}
                   onChange={(e) => setPostId(e.target.value)}
                 >
                   <option value="">None</option>
@@ -1088,7 +1204,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                 busy={busy}
                 onClick={() => void run(saveProgress)}
               >
-                Add progress
+                {entry ? "Save changes" : "Add progress"}
               </Button>
             </>
           )}
@@ -1144,6 +1260,11 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
           )}
           {sheet === "edit" && (
             <>
+              {w.legacy && (
+                <Link to={`/pursuit/${project.id}?legacy=1`} className={action}>
+                  More options
+                </Link>
+              )}
               {host && (
                 <>
                   <Field label="Name">
@@ -1157,7 +1278,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                   <GoalFields
                     value={draft}
                     onChange={setDraft}
-                    locked={data.contributions.length > 0}
+                    locked={!!w.legacy || data.contributions.length > 0}
                   />
                   <Button
                     variant="coral"
@@ -1191,32 +1312,36 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                   Invite people
                 </Button>
               )}
-              {user && <><Field label="Personal reminder">
-                <select
-                  className={fieldClass}
-                  value={personal?.reminder_minutes ?? ""}
-                  disabled={busy}
-                  onChange={(e) =>
-                    void run(async () => {
-                      await put("goals", [
-                        goalRow({
-                          reminder_minutes:
-                            e.target.value === ""
-                              ? null
-                              : Number(e.target.value),
-                        }),
-                      ]);
-                    })
-                  }
-                >
-                  <option value="">None</option>
-                  <option value="30">30 minutes before</option>
-                  <option value="1440">1 day before</option>
-                </select>
-              </Field>
-              <p className="text-caption text-muted-foreground">
-                Reminders appear in Inbox for sessions you’re going to.
-              </p></>}
+              {user && (
+                <>
+                  <Field label="Personal reminder">
+                    <select
+                      className={fieldClass}
+                      value={personal?.reminder_minutes ?? ""}
+                      disabled={busy}
+                      onChange={(e) =>
+                        void run(async () => {
+                          await put("goals", [
+                            goalRow({
+                              reminder_minutes:
+                                e.target.value === ""
+                                  ? null
+                                  : Number(e.target.value),
+                            }),
+                          ]);
+                        })
+                      }
+                    >
+                      <option value="">None</option>
+                      <option value="30">30 minutes before</option>
+                      <option value="1440">1 day before</option>
+                    </select>
+                  </Field>
+                  <p className="text-caption text-muted-foreground">
+                    Reminders appear in Inbox for sessions you’re going to.
+                  </p>
+                </>
+              )}
               {shared && (
                 <label className="flex min-h-11 items-center gap-3 text-small">
                   <input
@@ -1286,6 +1411,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                   className={fieldClass}
                   maxLength={80}
                   value={sessionTitle}
+                  disabled={meeting?.legacy_id != null}
                   onChange={(e) => setSessionTitle(e.target.value)}
                 />
               </Field>
@@ -1300,7 +1426,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
               <Field label="Place · Optional">
                 <input
                   className={fieldClass}
-                  maxLength={140}
+                  maxLength={meeting?.legacy_id != null ? 120 : 140}
                   value={place}
                   onChange={(e) => setPlace(e.target.value)}
                 />
@@ -1308,7 +1434,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
               <Field label="What’s the plan? · Optional">
                 <textarea
                   className={fieldClass}
-                  maxLength={1000}
+                  maxLength={meeting?.legacy_id != null ? 140 : 1000}
                   value={sessionNote}
                   onChange={(e) => setSessionNote(e.target.value)}
                 />
@@ -1342,7 +1468,9 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                     onChange={(e) => setScope(e.target.value)}
                   >
                     <option value="one">This session</option>
-                    <option value="future">This and future sessions</option>
+                    {meeting?.legacy_id == null && (
+                      <option value="future">This and future sessions</option>
+                    )}
                   </select>
                 </Field>
               )}
@@ -1353,7 +1481,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
               >
                 Save changes
               </Button>
-              {meeting && (
+              {meeting && meeting.legacy_id == null && (
                 <Button
                   variant="outline"
                   disabled={busy}

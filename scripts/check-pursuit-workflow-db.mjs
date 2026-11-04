@@ -13,6 +13,7 @@ create table public.profiles(id uuid primary key,access text default 'pending',o
 create table public.profile_private(user_id uuid primary key,birthdate date);
 create function public.fixture_profile() returns trigger language plpgsql as $$begin insert into public.profiles(id) values(new.id);return new;end$$;
 create trigger fixture_profile after insert on auth.users for each row execute function public.fixture_profile();
+create table private.access_allowlist(kind text,name text,reason text,primary key(kind,name));
 create table public.blocks(blocker_id uuid,blocked_id uuid);
 create function private.is_active(uid uuid) returns boolean language sql stable security definer as $$select exists(select 1 from public.profiles p where p.id=uid and p.access='active' and (p.onboarding_completed is distinct from false or exists(select 1 from public.profile_private pp where pp.user_id=p.id and pp.birthdate is not null)))$$;
 create function private.is_member() returns boolean language sql stable security definer as $$select private.is_active(auth.uid()) and exists(select 1 from auth.users u where u.id=auth.uid() and not coalesce(u.is_anonymous,false))$$;
@@ -26,6 +27,13 @@ end$$;
 create table public.posts(id bigint primary key,user_id uuid,pursuit_id text);
 create table public.pursuits(id text primary key,user_id uuid references auth.users(id),title text,hobby_slug text,sub_hobby text,inspired_by_post_id bigint,shared boolean default false,mode text,measure jsonb,visibility text,started_at timestamptz,finished_at timestamptz,paused_at timestamptz,updated_at timestamptz);
 create table public.pursuit_members(pursuit_id text references public.pursuits(id),user_id uuid references auth.users(id),role text,status text,invited_by uuid,primary key(pursuit_id,user_id));
+
+alter table public.pursuits add column goal_shape text,add column goal_unit text,add column goal_label text,add column goal_target_number numeric,add column goal_current numeric,add column goal_target_date timestamptz,add column target_moments integer,add column archived_at timestamptz;
+alter table public.posts add column created_at timestamptz default now();
+create table public.pursuit_progress(id text primary key,pursuit_id text references public.pursuits(id),user_id uuid,amount numeric check(amount>=0),note text,image_url text,post_id bigint,created_at timestamptz default now());
+create table public.pursuit_sessions(id bigint generated always as identity primary key,pursuit_id text references public.pursuits(id),created_by uuid,starts_at timestamptz,place text check(length(place)<=120),note text check(length(note)<=140));
+create table public.pursuit_session_rsvps(session_id bigint references public.pursuit_sessions(id),user_id uuid,primary key(session_id,user_id));
+create function public.get_profile_pursuits(p_profile uuid) returns jsonb language sql stable security definer as $$select coalesce(jsonb_agg(jsonb_build_object('id',p.id,'goal',p.title,'target',p.target_moments,'momentCount',(select count(*) from public.posts e where e.pursuit_id=p.id and e.user_id=p_profile),'finished',p.finished_at is not null,'archived',p.archived_at is not null)), '[]'::jsonb) from public.pursuits p where p.user_id=p_profile and (p_profile=auth.uid() or p.shared)$$;
 grant select on public.pursuits,public.pursuit_members,public.posts to authenticated;
 grant usage on schema public,private,auth to authenticated;grant execute on function auth.uid(),private.is_member(),private.is_blocked_between(uuid,uuid),public.write_blocked() to authenticated;`);
 await db.exec(
@@ -46,27 +54,38 @@ await db.exec(
     "utf8",
   ),
 );
-console.log("Migration applied to isolated PostgreSQL");
-try {
-  await db.exec(
-    fs.readFileSync(
-      new URL(
-        "../supabase/verification/pursuit_workflow_check.sql",
-        import.meta.url,
-      ),
-      "utf8",
+await db.exec(
+  fs.readFileSync(
+    new URL(
+      "../supabase/migrations/20261115000000_pursuit_compatibility.sql",
+      import.meta.url,
     ),
-  );
-  throw Error("Verification did not roll back");
-} catch (e) {
-  if (!e.message.startsWith("RESULTS:")) throw e;
-  console.log(e.message);
-  if (/FAIL|ERROR|NOT APPLIED/.test(e.message)) process.exitCode = 1;
-}
-await db.exec("rollback");
-const counts = await db.query(
-  "select count(*)::int as n from public.pursuits where id like 'workflow-check-%'",
+    "utf8",
+  ),
 );
-if (counts.rows[0].n !== 0) throw Error("Fixture rows left behind");
-console.log("PASS: no fixture rows remain");
+console.log("Migration applied to isolated PostgreSQL");
+for (const script of [
+  "pursuit_workflow_check.sql",
+  "pursuit_compatibility_check.sql",
+]) {
+  try {
+    await db.exec(
+      fs.readFileSync(
+        new URL("../supabase/verification/" + script, import.meta.url),
+        "utf8",
+      ),
+    );
+    throw Error("Verification did not roll back");
+  } catch (e) {
+    if (!e.message.startsWith("RESULTS:")) throw e;
+    console.log(e.message);
+    if (/FAIL|ERROR|NOT APPLIED/.test(e.message)) process.exitCode = 1;
+  }
+  await db.exec("rollback");
+  const counts = await db.query(
+    "select count(*)::int as n from public.pursuits p where p.id like 'workflow-check-%' or p.id like 'compatibility-check-%'",
+  );
+  if (counts.rows[0].n !== 0) throw Error("Fixture rows left behind");
+  console.log("PASS: no fixture rows remain");
+}
 await db.close();
