@@ -36,4 +36,14 @@ describe("index.html crawler copy", () => {
     expect(root.indexOf('<main class="crawler-copy"')).toBeGreaterThan(0);
     expect(root.indexOf("</main>")).toBeLessThan(root.indexOf("</div>\n    <script"));
   });
+
+  it("uses the same positioning in metadata without claiming free admission, pass coverage or automatic bookings",()=>{
+    const title="Soosh: find something you’d like to do";
+    expect(html).toContain(`<title>${title}</title>`);
+    for(const name of ["description","og:description","twitter:description"]){
+      expect(html).toMatch(new RegExp(`(?:name|property)="${name}" content="${LANDING_COPY.heroSub}"`));
+    }
+    expect(html).not.toMatch(/Free tonight|gym or museum membership|"offers"|You get a Stub each time/);
+    expect(html).toContain("Stubby, Soosh’s ticket-shaped activity helper.");
+  });
 });

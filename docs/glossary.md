@@ -260,7 +260,10 @@ Replaces the Stub types in the row above (silver, ticket, with someone, session,
 | Waitlist / You're on the list | Retired (Oct 30, 2026). Sign-up is open. The waitlist table and its data stay, unused |
 | Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
-## Landing page copy (website only)
+## Landing page copy (website only, archived)
+
+Superseded by the interactive landing page below. This older narrative is kept as history;
+its promises and action labels are not used on the current landing page.
 
 These lines are for the signed-out landing page (`src/app/landing`). They are
 marketing wording, not app terms: never use them in the app UI. The page follows
@@ -892,18 +895,29 @@ What Start on a suggestion opens: `/start/:space/:corner`. It is the activity it
 
 The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
 
-## Landing page (Nov 1, 2026)
+## Interactive landing page (PDF v2, Nov 4, 2026)
 
-The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms where they exist: "I’m going" (the RSVP), "Count me in", "Bring someone", "Undo", Home, Shelf, Stub, Moment, "Admit one". Stubby only reacts here too: the lines beside him are captions, not speech. **Every row below is a new string, approved by the founder on Nov 1, 2026.**
+Implements the reviewed PDF v2 and the request to build it. The signed-out page's
+copy is in `src/app/landing/copy.ts`; editorial activity examples are in `examples.ts`.
+This supersedes the Nov 1 ticket demo. Soosh remains the product; Stubby remains its helper.
+Examples do not save answers, create a plan, prepare an invitation or use recommendation asks.
 
 | Term | Meaning |
 |---|---|
-| Free tonight? Stubby has a pick. | The landing hero line. "Stubby" is the character's name, so it is not a product noun |
-| Get your first pick | The hero button and the last card's button. They open Stubby (`/calendar`) as a guest, with no sign-up first: the one exception to "every landing button goes to /onboarding" (founder, Nov 2, 2026, guest Stubby). The nav button stays "Sign up" and still goes to sign-up |
-| Good solo | Small badge on an example pick that works well on your own. Also used in the Questions answers ("marked Good solo") |
-| Nah | The button on an example pick that moves to another pick. Landing examples only |
-| Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
-| Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
+| Find something you’d like to do | Hero headline |
+| Try Soosh | Nav, hero and final entry to `/calendar`. The configured guest/account gates still apply. A chosen example can seed an editable draft; it never sends automatically |
+| Log in | Existing accounts go to `/login?mode=signin` |
+| How it works | Moves focus and scrolls to the guide without changing the hash route |
+| Example activity | Always visible over the interactive example; never a personalized or scheduled result |
+| At home / Outside | Local example choices; they do not write preferences |
+| Another example | Cycles only within the selected setting |
+| What you’ll need | Expands the activity details |
+| Choose either option / Optional | Distinguishes whole required bundles from optional supplies |
+| Suggested time / Cost / Activity guide | Example facts. Practice time is suggested; missing price or unconfirmed ownership never means free |
+| Ask Stubby | Opens the real request field with this example as an editable draft |
+| Make a plan you can return to | Describes created calendar plans. Does not promise account-wide saving of the browser's kept selection |
+| Tell us what you like | Shown only when the actual human preference flow is enabled. Links to real onboarding, with no mock form on the landing page |
+| Sign up | Keeps its existing meaning and `/onboarding` destination |
 
 ## Guest Stubby and birthdays (founder, Nov 3, 2026)
 

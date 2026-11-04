@@ -17,13 +17,13 @@ describe("open sign-up copy", () => {
     expect(landing).not.toMatch(GATE);
   });
 
-  it("sends the landing buttons to sign-up, except Get your first pick, which opens Stubby", () => {
+  it("uses the approved Try Soosh entry without changing Sign up or implying a completed action", () => {
     expect(LANDING_COPY.signUp).toBe("Sign up");
-    // Sign up buttons default to sign-up (SignUpButton's to = "/onboarding").
-    expect(landing).toMatch(/to( = |=)"\/onboarding"/);
+    expect(LANDING_COPY.heroCta).toBe("Try Soosh");
+    expect(landing).toContain('to="/onboarding"');
     expect(landing).not.toContain("WaitlistForm");
-    // The one exception (glossary, Nov 2, 2026): both Get your first pick buttons open Stubby as a guest.
-    expect(landing.match(/to="\/calendar"/g)?.length).toBe(2);
+    expect(landing).toContain('to="/calendar"');
+    expect(landing).not.toContain("You’re going");
   });
 
   it("has no invite-only or waitlist language on the other invite-era screens", () => {

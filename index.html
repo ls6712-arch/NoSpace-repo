@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Soosh: free tonight? Stubby has a pick.</title>
-    <meta name="description" content="Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits. Go on your own or bring a friend." />
+    <title>Soosh: find something you’d like to do</title>
+    <meta name="description" content="Soosh suggests activities to try at home or outside. Choose one and make a plan, on your own or with someone." />
     <link rel="canonical" href="https://www.onsoosh.com/" />
     <meta name="theme-color" content="#F7F5F2" />
     <meta name="application-name" content="Soosh" />
@@ -17,16 +17,16 @@
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:url" content="https://www.onsoosh.com/" />
-    <meta property="og:title" content="Soosh: free tonight? Stubby has a pick." />
-    <meta property="og:description" content="Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits." />
-    <meta property="og:image" content="https://www.onsoosh.com/og-image.png" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Stubby, the Soosh ticket, next to the words: Free tonight? Stubby has a pick." />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Soosh: free tonight? Stubby has a pick." />
-    <meta name="twitter:description" content="Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits." />
-    <meta name="twitter:image" content="https://www.onsoosh.com/og-image.png" />
+    <meta property="og:title" content="Soosh: find something you’d like to do" />
+    <meta property="og:description" content="Soosh suggests activities to try at home or outside. Choose one and make a plan, on your own or with someone." />
+    <meta property="og:image" content="https://www.onsoosh.com/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="Stubby, Soosh’s ticket-shaped activity helper." />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Soosh: find something you’d like to do" />
+    <meta name="twitter:description" content="Soosh suggests activities to try at home or outside. Choose one and make a plan, on your own or with someone." />
+    <meta name="twitter:image" content="https://www.onsoosh.com/icon-512.png" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -37,7 +37,9 @@
             "name": "Soosh",
             "alternateName": "onsoosh.com",
             "url": "https://www.onsoosh.com/",
-            "publisher": { "@id": "https://www.onsoosh.com/#organization" }
+            "publisher": {
+              "@id": "https://www.onsoosh.com/#organization"
+            }
           },
           {
             "@type": "Organization",
@@ -50,13 +52,54 @@
             "@type": "FAQPage",
             "@id": "https://www.onsoosh.com/#faq",
             "mainEntity": [
-              { "@type": "Question", "name": "Can I use Soosh on my own?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Many picks are marked Good solo, like drop-in classes, counter dinners and run clubs. You can always add a friend later." } },
-              { "@type": "Question", "name": "Where is Soosh available?", "acceptedAnswer": { "@type": "Answer", "text": "New York first. More cities after that." } },
-              { "@type": "Question", "name": "What does Stubby do?", "acceptedAnswer": { "@type": "Answer", "text": "Stubby brings your picks and cheers when you go. You choose everything with a tap." } },
-              { "@type": "Question", "name": "Will Soosh book, buy or message anyone for me?", "acceptedAnswer": { "@type": "Answer", "text": "Not without your tap. Stubby can get an invite ready, and you decide whether to send it." } },
-              { "@type": "Question", "name": "Is this for meeting strangers?", "acceptedAnswer": { "@type": "Answer", "text": "No. Soosh helps you get out more, alone or with friends you already have." } },
-              { "@type": "Question", "name": "Who sees my Moments?", "acceptedAnswer": { "@type": "Answer", "text": "You choose for each Moment: only you, followers or public. Nothing about your account has to be public." } },
-              { "@type": "Question", "name": "What are Stubs?", "acceptedAnswer": { "@type": "Answer", "text": "You get a Stub each time you do something. Your Shelf of Stubs is a record of what you’ve done." } }
+              {
+                "@type": "Question",
+                "name": "Can I use Soosh on my own?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Yes. You can make a plan for yourself or invite someone after completing account setup."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Do I need an account?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "An account is needed to make plans and return to them."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "How do at-home suggestions work?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Start with an interest you’ve chosen. Stubby can suggest a step from its activity guide."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What do the activities cost?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Some have a fee or need supplies. A missing price means the cost is unknown."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Where are local suggestions available?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Local suggestions start in New York."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Does Soosh book tickets?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Bookings and payments happen with the provider. Check their price and availability before booking."
+                }
+              }
             ]
           },
           {
@@ -65,15 +108,17 @@
             "url": "https://www.onsoosh.com/",
             "applicationCategory": "LifestyleApplication",
             "operatingSystem": "Any",
-            "description": "Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits. Go on your own or bring a friend.",
-            "areaServed": { "@type": "City", "name": "New York" },
+            "description": "Soosh suggests activities to try at home or outside. Choose one and make a plan, on your own or with someone.",
+            "areaServed": {
+              "@type": "City",
+              "name": "New York"
+            },
             "featureList": [
-              "One pick for your free time, with the time, place and cost",
-              "Fits your budget and anything you already pay for, like a gym or museum membership",
-              "Marks picks that work well solo",
-              "Bring someone with a ready-to-send invite"
-            ],
-            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+              "Activity guides at home and outside",
+              "Plans on your calendar",
+              "Optional invitations",
+              "Moments with audience controls"
+            ]
           }
         ]
       }
@@ -123,38 +168,33 @@
         src/app/landing/copy.ts (index.html.test.ts checks the FAQ).
       -->
       <main class="crawler-copy" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">
-        <h1>Soosh: free tonight? Stubby has a pick.</h1>
-        <p>Now in New York. Tell Soosh when you’re free and what you want to spend. You get one thing to do that fits. Go on your own or bring a friend.</p>
-        <h2>How Soosh works</h2>
+        <h1>Find something you’d like to do</h1>
+        <p>Soosh suggests activities to try at home or outside. Choose one and make a plan, on your own or with someone.</p>
+        <p>Local suggestions start in New York</p>
+        <h2>How to use Soosh</h2>
         <ol>
-          <li><strong>Tell us your week.</strong> Which evenings are free, what you want to spend in a month, and anything you already pay for, like a gym or a museum membership.</li>
-          <li><strong>Get a pick.</strong> Stubby suggests one thing with the time, the place, the cost and whether it works solo.</li>
-          <li><strong>Say I’m going.</strong> Go alone or tap Bring someone. The pick shows up on your Home with everything you need.</li>
-          <li><strong>Go, then tear your Stub.</strong> Do the thing. Post a Moment if you want. A new Stub goes on your Shelf.</li>
+          <li><strong>Ask Stubby for ideas.</strong> Stubby is Soosh’s activity helper. Tell it what you’d like to do, or ask for ideas.</li>
+          <li><strong>Check the details.</strong> Read what the activity needs. Check its time, price and location before deciding.</li>
+          <li><strong>Make a plan.</strong> Choose a time and add the activity to your calendar. Complete your account setup to invite someone.</li>
         </ol>
-        <h2>Lots of good nights are solo</h2>
-        <p>Soosh marks picks that work well on your own: drop-ins, beginner classes where nobody knows anyone, counter seats, things you can leave whenever you want.</p>
-        <p>Example picks in New York: a drop-in wheel class in Greenpoint ($35, clay included), a silent book club in Fort Greene (free, buy a coffee), a late jazz set in the West Village ($15 cover), a Saturday run club, a bouldering session in Gowanus, a museum free hour, and biking the Hudson River Greenway.</p>
-        <h2>This is Stubby</h2>
-        <p>Stubby is the friend who always knows what’s on. Tell Soosh when you’re free. Stubby brings one pick, and cheers when you go. Stubby never books, pays or messages anyone until you tap.</p>
+        <h2>Make a plan you can return to</h2>
+        <p>Add an activity to your calendar. After you try it, log a Moment if you want. You choose who sees each Moment.</p>
         <h2>Questions</h2>
         <dl>
           <dt>Can I use Soosh on my own?</dt>
-          <dd>Yes. Many picks are marked Good solo, like drop-in classes, counter dinners and run clubs. You can always add a friend later.</dd>
-          <dt>Where is Soosh available?</dt>
-          <dd>New York first. More cities after that.</dd>
-          <dt>What does Stubby do?</dt>
-          <dd>Stubby brings your picks and cheers when you go. You choose everything with a tap.</dd>
-          <dt>Will Soosh book, buy or message anyone for me?</dt>
-          <dd>Not without your tap. Stubby can get an invite ready, and you decide whether to send it.</dd>
-          <dt>Is this for meeting strangers?</dt>
-          <dd>No. Soosh helps you get out more, alone or with friends you already have.</dd>
-          <dt>Who sees my Moments?</dt>
-          <dd>You choose for each Moment: only you, followers or public. Nothing about your account has to be public.</dd>
-          <dt>What are Stubs?</dt>
-          <dd>You get a Stub each time you do something. Your Shelf of Stubs is a record of what you’ve done.</dd>
+          <dd>Yes. You can make a plan for yourself or invite someone after completing account setup.</dd>
+          <dt>Do I need an account?</dt>
+          <dd>An account is needed to make plans and return to them.</dd>
+          <dt>How do at-home suggestions work?</dt>
+          <dd>Start with an interest you’ve chosen. Stubby can suggest a step from its activity guide.</dd>
+          <dt>What do the activities cost?</dt>
+          <dd>Some have a fee or need supplies. A missing price means the cost is unknown.</dd>
+          <dt>Where are local suggestions available?</dt>
+          <dd>Local suggestions start in New York.</dd>
+          <dt>Does Soosh book tickets?</dt>
+          <dd>Bookings and payments happen with the provider. Check their price and availability before booking.</dd>
         </dl>
-        <p><a href="https://www.onsoosh.com/">Get your first pick on Soosh</a></p>
+        <p><a href="https://www.onsoosh.com/#/calendar">Try Soosh</a></p>
       </main>
     </div>
     <script type="module" src="/src/main.tsx"></script>
