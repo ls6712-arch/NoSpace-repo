@@ -1,3 +1,4 @@
+import { localClock } from "../../../supabase/functions/_shared/preferenceTime";
 import { formatWeekday } from "./dates";
 import { HOME_TZ, nyParts, nyTimeToMs } from "./homeWeek";
 import { shortTime, timeRange } from "./calendarView";
@@ -19,15 +20,15 @@ import { isJustYou, type WeekDay, type WeekPlanDetail } from "./weekView";
  */
 export type PlanKind = "own" | "shared" | "pursuit" | "listing";
 
-export function planKind(plan: Pick<WeekPlanDetail, "kind" | "session" | "mine" | "going">): PlanKind {
+export function planKind(plan: Pick<WeekPlanDetail, "kind" | "session" | "mine" | "going" | "pursuitSession" | "sharedSession">): PlanKind {
   if (plan.kind === "event") return "listing";
-  if (plan.session && plan.session.total > 1) return "pursuit";
-  return plan.mine && isJustYou(plan.going) ? "own" : "shared";
+  if (plan.pursuitSession ?? (plan.session && plan.session.total > 1)) return "pursuit";
+  return plan.mine && !plan.sharedSession && isJustYou(plan.going) ? "own" : "shared";
 }
 
 export type PlanAction = "change" | "bring" | "cancel" | "leave" | "move" | "skip";
 
-export function planActions(plan: Pick<WeekPlanDetail, "kind" | "session" | "mine" | "going">): PlanAction[] {
+export function planActions(plan: Pick<WeekPlanDetail, "kind" | "session" | "mine" | "going" | "pursuitSession" | "sharedSession">): PlanAction[] {
   switch (planKind(plan)) {
     case "own":
       return ["change", "bring", "cancel"];
@@ -41,7 +42,7 @@ export function planActions(plan: Pick<WeekPlanDetail, "kind" | "session" | "min
 }
 
 /** Whether dragging moves it: only a plan only you are in. Listings and Pursuit sessions go through the sheet. */
-export const isDraggable = (plan: Pick<WeekPlanDetail, "kind" | "session" | "mine" | "going">): boolean => planKind(plan) === "own";
+export const isDraggable = (plan: Pick<WeekPlanDetail, "kind" | "session" | "mine" | "going" | "pursuitSession" | "sharedSession">): boolean => planKind(plan) === "own";
 
 // ---------- a tap or a drag on empty hours ----------
 
@@ -52,9 +53,16 @@ export const MIN_RANGE_MIN = 30;
 export const snapMs = (ms: number, stepMin = SNAP_MIN): number => Math.round(ms / (stepMin * MIN)) * stepMin * MIN;
 
 /** The moment a pixel row of a day's time grid stands for, snapped to 15 minutes. */
-export function timeAtRow(day: Pick<WeekDay, "startMs">, y: number, hourPx: number, startHour: number): number {
-  const mins = startHour * 60 + (y / hourPx) * 60;
-  return snapMs(day.startMs + mins * MIN);
+export function timeAtRow(
+  day: Pick<WeekDay, "startMs">,
+  y: number,
+  hourPx: number,
+  startHour: number,
+): number {
+  const p = nyParts(day.startMs);
+  const mins =
+    Math.round((startHour * 60 + (y / hourPx) * 60) / SNAP_MIN) * SNAP_MIN;
+  return nyTimeToMs(p.y, p.m, p.d, Math.floor(mins / 60)) + (mins % 60) * MIN;
 }
 
 /**
@@ -117,4 +125,31 @@ export function clockOf(ms: number): string {
   const p = nyParts(ms);
   const min = Math.round((ms - nyTimeToMs(p.y, p.m, p.d, p.hour)) / MIN);
   return `${String(p.hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
+}
+
+/** Wall-clock positions, rather than elapsed hours since midnight, survive DST days. */
+export function clockMinutes(
+  day: Pick<WeekDay, "startMs">,
+  ms: number,
+): number {
+  const origin = localClock(day.startMs, HOME_TZ);
+  const p = localClock(ms, HOME_TZ);
+  return (
+    (Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute) -
+      Date.UTC(origin.year, origin.month - 1, origin.day, 0)) /
+    MIN
+  );
+}
+export function moveToDay(
+  ms: number,
+  day: Pick<WeekDay, "startMs">,
+  shiftMs = 0,
+): number {
+  const original = localClock(ms, HOME_TZ);
+  const target = nyParts(day.startMs);
+  const mins = original.hour * 60 + original.minute + Math.round(shiftMs / MIN);
+  return (
+    nyTimeToMs(target.y, target.m, target.d, Math.floor(mins / 60)) +
+    (mins % 60) * MIN
+  );
 }

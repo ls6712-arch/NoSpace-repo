@@ -6,8 +6,9 @@ process.on("uncaughtException", (error) => {
   process.exit(1);
 });
 const db = new PGlite();
-await db.exec(`create role anon; create role authenticated; create schema auth; create schema private;
+await db.exec(`create role anon; create role authenticated; create role service_role; create schema auth; create schema private;
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+create function auth.role() returns text language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claim.role',true),''),'authenticated')$$;
 create table auth.users(id uuid primary key,instance_id uuid,aud text,role text,email text,encrypted_password text,email_confirmed_at timestamptz,created_at timestamptz,updated_at timestamptz,raw_app_meta_data jsonb,raw_user_meta_data jsonb,is_super_admin boolean,is_anonymous boolean);
 create table public.profiles(id uuid primary key,access text default 'pending',onboarding_completed boolean default false,paused_at timestamptz,deletion_requested_at timestamptz);
 create table public.profile_private(user_id uuid primary key,birthdate date);
@@ -28,13 +29,13 @@ create table public.posts(id bigint primary key,user_id uuid,pursuit_id text);
 create table public.pursuits(id text primary key,user_id uuid references auth.users(id),title text,hobby_slug text,sub_hobby text,inspired_by_post_id bigint,shared boolean default false,mode text,measure jsonb,visibility text,started_at timestamptz,finished_at timestamptz,paused_at timestamptz,updated_at timestamptz);
 create table public.pursuit_members(pursuit_id text references public.pursuits(id),user_id uuid references auth.users(id),role text,status text,invited_by uuid,primary key(pursuit_id,user_id));
 
-alter table public.pursuits add column goal_shape text,add column goal_unit text,add column goal_label text,add column goal_target_number numeric,add column goal_current numeric,add column goal_target_date timestamptz,add column target_moments integer,add column archived_at timestamptz;
+alter table public.pursuits add column goal_shape text,add column goal_unit text,add column goal_label text,add column goal_target_number numeric,add column goal_current numeric,add column goal_target_date timestamptz,add column target_moments integer,add column archived_at timestamptz,add column let_go_at timestamptz,add column is_plan boolean not null default false;
 alter table public.posts add column created_at timestamptz default now();
 create table public.pursuit_progress(id text primary key,pursuit_id text references public.pursuits(id),user_id uuid,amount numeric check(amount>=0),note text,image_url text,post_id bigint,created_at timestamptz default now());
 create table public.pursuit_sessions(id bigint generated always as identity primary key,pursuit_id text references public.pursuits(id),created_by uuid,starts_at timestamptz,place text check(length(place)<=120),note text check(length(note)<=140));
 create table public.pursuit_session_rsvps(session_id bigint references public.pursuit_sessions(id),user_id uuid,primary key(session_id,user_id));
 create function public.get_profile_pursuits(p_profile uuid) returns jsonb language sql stable security definer as $$select coalesce(jsonb_agg(jsonb_build_object('id',p.id,'goal',p.title,'target',p.target_moments,'momentCount',(select count(*) from public.posts e where e.pursuit_id=p.id and e.user_id=p_profile),'finished',p.finished_at is not null,'archived',p.archived_at is not null)), '[]'::jsonb) from public.pursuits p where p.user_id=p_profile and (p_profile=auth.uid() or p.shared)$$;
-grant select on public.pursuits,public.pursuit_members,public.posts to authenticated;
+grant select on public.pursuits,public.pursuit_members,public.posts,public.pursuit_sessions,public.pursuit_session_rsvps to authenticated;
 grant usage on schema public,private,auth to authenticated;grant execute on function auth.uid(),private.is_member(),private.is_blocked_between(uuid,uuid),public.write_blocked() to authenticated;`);
 await db.exec(
   fs.readFileSync(
@@ -63,10 +64,20 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(
+  fs.readFileSync(
+    new URL(
+      "../supabase/migrations/20261116000000_calendar_pursuit_sessions.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+);
 console.log("Migration applied to isolated PostgreSQL");
 for (const script of [
   "pursuit_workflow_check.sql",
   "pursuit_compatibility_check.sql",
+  "calendar_pursuit_sessions_check.sql",
 ]) {
   try {
     await db.exec(
@@ -83,7 +94,7 @@ for (const script of [
   }
   await db.exec("rollback");
   const counts = await db.query(
-    "select count(*)::int as n from public.pursuits p where p.id like 'workflow-check-%' or p.id like 'compatibility-check-%'",
+    "select count(*)::int as n from public.pursuits p where p.id like 'workflow-check-%' or p.id like 'compatibility-check-%' or p.id like 'calendar-check-%'",
   );
   if (counts.rows[0].n !== 0) throw Error("Fixture rows left behind");
   console.log("PASS: no fixture rows remain");

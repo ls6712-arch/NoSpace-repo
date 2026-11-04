@@ -847,7 +847,7 @@ Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026
 | Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (the period is approved, Nov 1, 2026), then Just this once · Every week |
 | Your block | What a block without a note says |
 | Cancel this plan | A plan only you are in. Also: Change the time · Bring someone. Cancelling also removes the one-session Pursuit it is stored under when no one else is in it. A one-off plan is never in Your Pursuits or any list of your own Pursuits: it lives on the calendar and in Your week only |
-| Leave this plan | A plan with others, or a host's listing. A host's listing cannot be moved: "The host sets this time." (approved). A plan with others that is yours also: Change my time |
+| Leave this plan | A plan with others, or a host's listing. A host's listing cannot be moved: "The host sets this time." (approved). A plan with others that is yours also: Change the time |
 | Move this session · Skip this session | A session of a longer Pursuit. Skip removes only that session if it is your Pursuit, else it takes only you out. Open Pursuit (approved) links to it |
 | Change the times · Not free this {Tuesday} · Remove from my usual week | Free time. Change the times opens the usual week screen for the usual week, or two time fields for a stretch you added. Remove free time (approved) takes away a stretch you added |
 | Change · Remove block | A block |
@@ -1198,3 +1198,5 @@ Shown in place of picks when an ask reads as clear distress. No ask is used and 
 
 The human onboarding questions and editable summary are approved in the clean personalization build brief.
 Use “What would you like to make more room for?”, “What do you already love, or keep meaning to try?” and “What does a little free time look like for you?”. One interest, Help me explore and Skip for now are valid paths. “Suggested time” identifies a flexible suggestion, not an event booking. Cost unknown means check cost; it never means Free. Private preferences, goals and feedback are never public profile copy.
+
+| This changes the time for everyone. | Explanation before rescheduling a shared Calendar session |

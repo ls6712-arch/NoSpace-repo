@@ -12,9 +12,15 @@ export interface CalendarExtra {
   stubs: StubCard[];
   /** The range's plans could not be read. The Stubs are best effort and never cause this. */
   failed: boolean;
+  loaded: boolean;
 }
 
-const EMPTY: CalendarExtra = { plans: [], stubs: [], failed: false };
+const EMPTY: CalendarExtra = {
+  plans: [],
+  stubs: [],
+  failed: false,
+  loaded: false,
+};
 
 const formatDay = (ms: number) => formatDate(ms, { timeZone: HOME_TZ });
 
@@ -24,15 +30,28 @@ const formatDay = (ms: number) => formatDate(ms, { timeZone: HOME_TZ });
  * months ahead) and their Stubs. The last answer stays on screen while the next
  * one loads, so paging does not flash empty.
  */
-export function useCalendarData(userId: string | undefined, fromMs: number, toMs: number, attempt = 0): CalendarExtra {
+export function useCalendarData(
+  userId: string | undefined,
+  fromMs: number,
+  toMs: number,
+  attempt = 0,
+): CalendarExtra {
   const [stubs, setStubs] = useState<StubCard[]>([]);
+  const [stubUser, setStubUser] = useState("");
   const [plans, setPlans] = useState<WeekPlanDetail[]>([]);
+  const [loadedRange, setLoadedRange] = useState("");
+  const rangeKey = `${userId}:${fromMs}:${toMs}`;
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
     let live = true;
-    void fetchMyStubs(userId, formatDay).then((s) => live && setStubs(s));
+    void fetchMyStubs(userId, formatDay).then((s) => {
+      if (live) {
+        setStubs(s);
+        setStubUser(userId);
+      }
+    });
     return () => {
       live = false;
     };
@@ -41,17 +60,38 @@ export function useCalendarData(userId: string | undefined, fromMs: number, toMs
   useEffect(() => {
     if (!userId) return;
     let live = true;
-    fetchWeekDetail(userId, fromMs, toMs)
-      .then((p) => {
-        if (!live) return;
-        setPlans(p);
-        setFailed(false);
-      })
-      .catch(() => live && setFailed(true));
+    let request = 0;
+    const load = async () => {
+      if (document.hidden) return;
+      const version = ++request;
+      try {
+        const p = await fetchWeekDetail(userId, fromMs, toMs);
+        if (live && version === request) {
+          setPlans(p);
+          setLoadedRange(rangeKey);
+          setFailed(false);
+        }
+      } catch {
+        if (live && version === request) setFailed(true);
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 15000);
+    const focus = () => void load();
+    window.addEventListener("focus", focus);
     return () => {
       live = false;
+      clearInterval(timer);
+      window.removeEventListener("focus", focus);
     };
   }, [userId, fromMs, toMs, attempt]);
 
-  return userId ? { plans, stubs, failed } : EMPTY;
+  return userId
+    ? {
+        plans: loadedRange.startsWith(`${userId}:`) ? plans : [],
+        stubs: stubUser === userId ? stubs : [],
+        failed,
+        loaded: loadedRange === rangeKey,
+      }
+    : EMPTY;
 }

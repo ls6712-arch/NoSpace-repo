@@ -1,12 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { clockOf, dragRange, isDraggable, parseClock, partOf, planActions, planKind, planStartsAt, rangeText, slotTitle, snapMs, tapRange, timeAtRow } from "./calendarActions";
+import {
+  clockMinutes,
+  moveToDay,
+  clockOf,
+  dragRange,
+  isDraggable,
+  parseClock,
+  partOf,
+  planActions,
+  planKind,
+  planStartsAt,
+  rangeText,
+  slotTitle,
+  snapMs,
+  tapRange,
+  timeAtRow,
+} from "./calendarActions";
 import { nyTimeToMs } from "./homeWeek";
 import { weekDays, type WeekPlanDetail } from "./weekView";
 
 const ny = (m: number, d: number, h: number, min = 0) => nyTimeToMs(2026, m, d, h) + min * 60_000;
 const day = (m: number, d: number) => weekDays(ny(m, d, 12), 1)[0];
 const alone = { friends: [], total: 1 };
-const plan = (over: Partial<WeekPlanDetail>): WeekPlanDetail => ({ id: "session-1", kind: "session", title: "x", startsAt: 0, color: "blue", going: alone, ...over });
+const plan = (over: Partial<WeekPlanDetail>): WeekPlanDetail => ({
+  id: "session-1",
+  kind: "session",
+  title: "x",
+  startsAt: 0,
+  color: "blue",
+  going: alone,
+  ...over,
+});
 
 describe("what a plan offers", () => {
   it("offers change, bring and cancel for a plan only you are in", () => {
@@ -18,14 +42,22 @@ describe("what a plan offers", () => {
 
   it("offers change my time and leave for a plan with others that is yours, and only leave when it is not", () => {
     const withOthers = { friends: [{ id: "a", name: "Sam" }], total: 2 };
-    expect(planActions(plan({ mine: true, going: withOthers }))).toEqual(["change", "leave"]);
-    expect(planActions(plan({ mine: false, going: withOthers }))).toEqual(["leave"]);
+    expect(planActions(plan({ mine: true, going: withOthers }))).toEqual([
+      "change",
+      "leave",
+    ]);
+    expect(planActions(plan({ mine: false, going: withOthers }))).toEqual([
+      "leave",
+    ]);
     expect(isDraggable(plan({ mine: true, going: withOthers }))).toBe(false);
   });
 
   it("offers move and skip for a session of a longer Pursuit, skip only when it is not yours", () => {
     const s = { n: 4, total: 5 };
-    expect(planActions(plan({ mine: true, session: s }))).toEqual(["move", "skip"]);
+    expect(planActions(plan({ mine: true, session: s }))).toEqual([
+      "move",
+      "skip",
+    ]);
     expect(planActions(plan({ mine: false, session: s }))).toEqual(["skip"]);
     expect(planKind(plan({ mine: true, session: s }))).toBe("pursuit");
     expect(isDraggable(plan({ mine: true, session: s }))).toBe(false);
@@ -51,9 +83,18 @@ describe("a tap or a drag on empty hours", () => {
   });
 
   it("makes a tap into the rest of its part of the day", () => {
-    expect(tapRange(day(11, 3), ny(11, 3, 14, 20))).toEqual({ startMs: ny(11, 3, 14), endMs: ny(11, 3, 18) });
-    expect(tapRange(day(11, 3), ny(11, 3, 22, 10))).toEqual({ startMs: ny(11, 3, 22), endMs: ny(11, 4, 0) });
-    expect(tapRange(day(11, 3), ny(11, 3, 18, 0))).toEqual({ startMs: ny(11, 3, 18), endMs: ny(11, 4, 0) });
+    expect(tapRange(day(11, 3), ny(11, 3, 14, 20))).toEqual({
+      startMs: ny(11, 3, 14),
+      endMs: ny(11, 3, 18),
+    });
+    expect(tapRange(day(11, 3), ny(11, 3, 22, 10))).toEqual({
+      startMs: ny(11, 3, 22),
+      endMs: ny(11, 4, 0),
+    });
+    expect(tapRange(day(11, 3), ny(11, 3, 18, 0))).toEqual({
+      startMs: ny(11, 3, 18),
+      endMs: ny(11, 4, 0),
+    });
   });
 
   it("keeps at least 30 minutes after a tap at the end of the part", () => {
@@ -62,9 +103,18 @@ describe("a tap or a drag on empty hours", () => {
   });
 
   it("makes a drag into a snapped range, either direction, at least 30 minutes", () => {
-    expect(dragRange(ny(11, 3, 9, 2), ny(11, 3, 11, 14))).toEqual({ startMs: ny(11, 3, 9), endMs: ny(11, 3, 11, 15) });
-    expect(dragRange(ny(11, 3, 11), ny(11, 3, 9))).toEqual({ startMs: ny(11, 3, 9), endMs: ny(11, 3, 11) });
-    expect(dragRange(ny(11, 3, 9), ny(11, 3, 9, 5))).toEqual({ startMs: ny(11, 3, 9), endMs: ny(11, 3, 9, 30) });
+    expect(dragRange(ny(11, 3, 9, 2), ny(11, 3, 11, 14))).toEqual({
+      startMs: ny(11, 3, 9),
+      endMs: ny(11, 3, 11, 15),
+    });
+    expect(dragRange(ny(11, 3, 11), ny(11, 3, 9))).toEqual({
+      startMs: ny(11, 3, 9),
+      endMs: ny(11, 3, 11),
+    });
+    expect(dragRange(ny(11, 3, 9), ny(11, 3, 9, 5))).toEqual({
+      startMs: ny(11, 3, 9),
+      endMs: ny(11, 3, 9, 30),
+    });
   });
 });
 
@@ -105,4 +155,42 @@ describe("the plan sheet's time", () => {
     expect(partOf(ny(11, 3, 17, 59))).toBe("day");
     expect(partOf(ny(11, 3, 18))).toBe("eve");
   });
+});
+
+describe("Calendar clock changes", () => {
+  it.each([
+    [3, 8],
+    [11, 1],
+  ])("selects the displayed 9 AM on %s/%s", (m, d) => {
+    expect(timeAtRow(day(m, d), 96, 48, 7)).toBe(ny(m, d, 9));
+    expect(clockMinutes(day(m, d), ny(m, d, 9))).toBe(540);
+    expect(clockMinutes(day(m, d), ny(m, d + 1, 0))).toBe(1440);
+  });
+  it.each([
+    [3, 7],
+    [10, 31],
+  ])(
+    "keeps wall time when moving across the clock change after %s/%s",
+    (m, d) => {
+      const next = m === 3 ? day(3, 8) : day(11, 1);
+      expect(moveToDay(ny(m, d, 19), next)).toBe(
+        m === 3 ? ny(3, 8, 19) : ny(11, 1, 19),
+      );
+    },
+  );
+  it("treats one explicitly scheduled Pursuit session as a Pursuit, not a disposable one-off plan", () => {
+    const p = plan({
+      mine: true,
+      pursuitSession: true,
+      session: { n: 1, total: 1 },
+    });
+    expect(planKind(p)).toBe("pursuit");
+    expect(isDraggable(p)).toBe(false);
+    expect(planActions(p)).toEqual(["move", "skip"]);
+  });
+});
+
+it('keeps an explicitly shared one-off plan out of drag editing before invitees respond',()=>{
+  const p=plan({mine:true,pursuitSession:false,sharedSession:true,going:alone});
+  expect(planKind(p)).toBe('shared');expect(isDraggable(p)).toBe(false);expect(planActions(p)).toEqual(['change','leave']);
 });

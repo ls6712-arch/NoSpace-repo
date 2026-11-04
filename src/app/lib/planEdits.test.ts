@@ -1,9 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type Row = Record<string, unknown>;
-const db = vi.hoisted(() => ({ tables: {} as Record<string, Row[]>, deleted: [] as { table: string; id: unknown }[], failDelete: "" }));
+const db = vi.hoisted(() => ({
+  tables: {} as Record<string, Row[]>,
+  deleted: [] as { table: string; id: unknown }[],
+  rpcs: [] as unknown[],
+  failDelete: "",
+}));
 const journal = vi.hoisted(() => ({ dropped: [] as string[] }));
-vi.mock("./journal", async (orig) => ({ ...(await orig<typeof import("./journal")>()), dropProject: (id: string) => void journal.dropped.push(id) }));
+vi.mock("./journal", async (orig) => ({
+  ...(await orig<typeof import("./journal")>()),
+  dropProject: (id: string) => void journal.dropped.push(id),
+}));
 
 /** A stand-in for the query builder: eq, neq, head counts and delete. */
 vi.mock("../../lib/supabase", () => {
@@ -14,43 +22,74 @@ vi.mock("../../lib/supabase", () => {
     const b: Record<string, unknown> = {
       select: (_c?: string, o?: { head?: boolean }) => ((head = !!o?.head), b),
       delete: () => ((del = true), b),
-      eq: (c: string, v: unknown) => ((rows = rows.filter((r) => r[c] === v)), b),
-      neq: (c: string, v: unknown) => ((rows = rows.filter((r) => r[c] !== v)), b),
+      eq: (c: string, v: unknown) => (
+        (rows = rows.filter((r) => r[c] === v)),
+        b
+      ),
+      neq: (c: string, v: unknown) => (
+        (rows = rows.filter((r) => r[c] !== v)),
+        b
+      ),
       then: (ok: (v: unknown) => unknown) => {
         if (del) {
           if (db.failDelete === table) return Promise.resolve({ error: { message: "no" } }).then(ok);
           for (const r of rows) db.deleted.push({ table, id: r.id });
-          db.tables[table] = (db.tables[table] ?? []).filter((r) => !rows.includes(r));
+          db.tables[table] = (db.tables[table] ?? []).filter(
+            (r) => !rows.includes(r),
+          );
           return Promise.resolve({ error: null }).then(ok);
         }
-        return Promise.resolve(head ? { count: rows.length, error: null } : { data: rows, error: null }).then(ok);
+        return Promise.resolve(
+          head
+            ? { count: rows.length, error: null }
+            : { data: rows, error: null },
+        ).then(ok);
       },
     };
     return b;
   };
-  return { supabase: { from: builder } };
+  return {
+    supabase: {
+      from: builder,
+      rpc: async (name: string, args: unknown) => {
+        db.rpcs.push([name, args]);
+        return { data: null, error: null };
+      },
+    },
+  };
 });
 
-import { cancelOwnPlan } from "./planEdits";
+import {
+  cancelOwnPlan,
+  leavePlan,
+  changeWorkflowSession,
+  workflowSessionId,
+} from "./planEdits";
 
 beforeEach(() => {
+  db.rpcs = [];
   db.deleted = [];
   db.failDelete = "";
   journal.dropped = [];
   db.tables = {
     pursuit_sessions: [{ id: 5, pursuit_id: "p1" }],
-    pursuit_members: [{ pursuit_id: "p1", user_id: "me", role: "owner", status: "joined" }],
+    pursuit_members: [
+      { pursuit_id: "p1", user_id: "me", role: "owner", status: "joined" },
+    ],
     pursuit_progress: [],
     stubs: [],
     posts: [],
-    pursuits: [{ id: "p1" }],
+    pursuits: [{ id: "p1", is_plan: true }],
   };
 });
 
 describe("cancelOwnPlan", () => {
   it("removes the session and the one-session Pursuit when nobody else is in it", async () => {
     expect(await cancelOwnPlan(5, "p1")).toBeNull();
-    expect(db.deleted).toEqual([{ table: "pursuit_sessions", id: 5 }, { table: "pursuits", id: "p1" }]);
+    expect(db.deleted).toEqual([
+      { table: "pursuit_sessions", id: 5 },
+      { table: "pursuits", id: "p1" },
+    ]);
     expect(journal.dropped).toEqual(["p1"]);
   });
 
@@ -65,20 +104,38 @@ describe("cancelOwnPlan", () => {
     for (const status of ["joined", "invited", "requested"]) {
       db.deleted = [];
       db.tables.pursuit_sessions = [{ id: 5, pursuit_id: "p1" }];
-      db.tables.pursuit_members = [{ pursuit_id: "p1", user_id: "me", role: "owner", status: "joined" }, { pursuit_id: "p1", user_id: "f", role: "member", status }];
+      db.tables.pursuit_members = [
+        { pursuit_id: "p1", user_id: "me", role: "owner", status: "joined" },
+        { pursuit_id: "p1", user_id: "f", role: "member", status },
+      ];
       await cancelOwnPlan(5, "p1");
       expect(db.deleted.map((d) => d.table)).toEqual(["pursuit_sessions"]);
     }
   });
 
   it("still removes it when the only other member declined", async () => {
-    db.tables.pursuit_members.push({ pursuit_id: "p1", user_id: "f", role: "member", status: "declined" });
+    db.tables.pursuit_members.push({
+      pursuit_id: "p1",
+      user_id: "f",
+      role: "member",
+      status: "declined",
+    });
     await cancelOwnPlan(5, "p1");
-    expect(db.deleted.map((d) => d.table)).toEqual(["pursuit_sessions", "pursuits"]);
+    expect(db.deleted.map((d) => d.table)).toEqual([
+      "pursuit_sessions",
+      "pursuits",
+    ]);
   });
 
   it("keeps the Pursuit when something was logged to it or a Stub was issued", async () => {
-    for (const table of ["pursuit_progress", "stubs", "posts"]) {
+    for (const table of [
+      "pursuit_progress",
+      "stubs",
+      "posts",
+      "pursuit_meetings",
+      "pursuit_contributions",
+      "pursuit_discussion",
+    ]) {
       db.deleted = [];
       db.tables.pursuit_sessions = [{ id: 5, pursuit_id: "p1" }];
       db.tables[table] = [{ id: 1, pursuit_id: "p1" }];
@@ -104,5 +161,52 @@ describe("cancelOwnPlan", () => {
     db.failDelete = "pursuits";
     expect(await cancelOwnPlan(5, "p1")).toBeNull();
     expect(journal.dropped).toEqual([]);
+  });
+});
+
+it("never deletes an ongoing Pursuit shell when cancelling an old queued one-off action", async () => {
+  db.tables.pursuits = [{ id: "p1", is_plan: false }];
+  await cancelOwnPlan(5, "p1");
+  expect(db.deleted).toEqual([{ table: "pursuit_sessions", id: 5 }]);
+});
+
+describe("workflow Calendar mutations", () => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  it("declines the viewer instead of deleting a group session", async () => {
+    expect(
+      await leavePlan({ id: "meeting-" + id, kind: "session" }, "me"),
+    ).toBeNull();
+    expect(db.rpcs).toEqual([
+      ["set_calendar_workflow_attendance", { p_session: id, p_going: false, p_user:"me" }],
+    ]);
+    expect(db.deleted).toEqual([]);
+  });
+  it("changes only the requested time through the locking RPC", async () => {
+    const at = Date.now();
+    await changeWorkflowSession(id, at);
+    expect(db.rpcs).toEqual([
+      [
+        "change_calendar_workflow_session",
+        {
+          p_session: id,
+          p_starts_at: new Date(at).toISOString(),
+          p_cancel: false,
+        },
+      ],
+    ]);
+  });
+  it("cancels without deleting the session identity", async () => {
+    await changeWorkflowSession(id, undefined, true);
+    expect(db.rpcs).toEqual([
+      [
+        "change_calendar_workflow_session",
+        { p_session: id, p_starts_at: null, p_cancel: true },
+      ],
+    ]);
+    expect(db.deleted).toEqual([]);
+  });
+  it("does not parse a legacy id as a workflow UUID", () => {
+    expect(workflowSessionId("session-123")).toBeNull();
+    expect(workflowSessionId("meeting-invalid")).toBeNull();
   });
 });

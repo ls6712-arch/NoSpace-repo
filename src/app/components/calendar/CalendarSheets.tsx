@@ -338,7 +338,7 @@ function PlanSheet({ plan, actions, passes, onBring, onClose }: { plan: WeekPlan
   const [planSpace = "", planCorner = ""] = (plan.cornerKey ?? "").split("/");
   const startLink = plan.kind === "session" && plan.mine && plan.pursuitId && !isPursuitSession(plan) && isAtHomeCorner(planSpace, planCorner) ? startPath(planSpace, planCorner, { plan: plan.pursuitId }) : null;
   const label: Record<PlanAction, string> = {
-    change: plan.going.total > 1 ? SHEET.changeMyTime : SHEET.changeTime,
+    change: SHEET.changeTime,
     move: SHEET.moveSession,
     bring: SHEET.bringSomeone,
     cancel: SHEET.cancelPlan,
@@ -362,6 +362,8 @@ function PlanSheet({ plan, actions, passes, onBring, onClose }: { plan: WeekPlan
         {who && <span className="text-small">{who}</span>}
       </div>
       {editing ? (
+        <div className="space-y-3">
+          {(plan.sharedSession || plan.going.total > 1) && <p className="text-small text-muted-foreground">{SHEET.sharedTime}</p>}
         <WhenFields
           startMs={plan.startsAt}
           saveLabel={SHEET.save}
@@ -370,6 +372,7 @@ function PlanSheet({ plan, actions, passes, onBring, onClose }: { plan: WeekPlan
             onClose();
           }}
         />
+        </div>
       ) : (
         <div className="flex flex-col gap-2">
           {plan.pursuitId && isPursuitSession(plan) && (

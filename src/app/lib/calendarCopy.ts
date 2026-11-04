@@ -29,7 +29,7 @@ export const SHEET = {
   nobody: "Just me",
   makeIt: "Make the plan",
   changeTime: "Change the time",
-  changeMyTime: "Change my time",
+  sharedTime: "This changes the time for everyone.",
   moveSession: "Move this session",
   bringSomeone: "Bring someone",
   cancelPlan: "Cancel this plan",

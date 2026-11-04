@@ -1,5 +1,5 @@
 import { removeEntry } from "./calendarEntries";
-import { cancelOwnPlan, deleteSession, leavePlan } from "./planEdits";
+import { cancelOwnPlan, deleteSession, leavePlan, changeWorkflowSession } from "./planEdits";
 import { ERROR_LINE } from "./stateCopy";
 import { resumePendingChanges, type PersistedChange } from "./undo";
 
@@ -13,6 +13,8 @@ export async function sendPending(change: PersistedChange): Promise<string | nul
   switch (change.type) {
     case "cancelPlan":
       return cancelOwnPlan(Number(p.sessionId), typeof p.pursuitId === "string" ? p.pursuitId : undefined);
+    case "cancelWorkflowSession":
+      return changeWorkflowSession(String(p.sessionId), undefined, true, change.userId);
     case "deleteSession":
       return deleteSession(Number(p.sessionId));
     case "leavePlan":
