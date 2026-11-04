@@ -328,7 +328,7 @@ try {
   await page.goto(`${ORIGIN}/#/account`);
   await page.locator("summary:visible").filter({ hasText: "What Stubby knows" }).click();
   const editor = page.locator("details:visible").filter({ has: page.getByText("What Stubby knows", { exact: true }) });
-  await editor.getByLabel("Use my saved information", { exact: true }).check();
+  await editor.getByLabel("Learn from my feedback", { exact: true }).check();
   await editor.getByLabel("Equipment and resources", { exact: true }).fill("guitar");
   await editor.getByRole("button", { name: "Save changes", exact: true }).click();
   await editor.getByText("Your changes are saved.", { exact: true }).waitFor();
