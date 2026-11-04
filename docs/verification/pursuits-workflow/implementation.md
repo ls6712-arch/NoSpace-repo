@@ -32,8 +32,8 @@ Progress and personal lifecycle are projected into existing Shelf cards and rest
 
 ## Migrations for review
 
-- `20261112000000_pursuit_workflow.sql`: additive tables, policies, validations, rate limits, typed RPC boundaries, private in-app notices, and membership operations. Notices are included in the existing bell badge and its Mark all read action. No existing rows are converted.
-- `20261112000100_pursuit_workflow_reminders.sql`: private reminder dispatcher and registration with existing pg_cron where available.
+- `20261114000000_pursuit_workflow.sql`: additive tables, policies, validations, rate limits, typed RPC boundaries, private in-app notices, and membership operations. Notices are included in the existing bell badge and its Mark all read action. No existing rows are converted.
+- `20261114000100_pursuit_workflow_reminders.sql`: private reminder dispatcher and registration with existing pg_cron where available.
 
 New tables use explicit restrictive member policies and joined-participant checks. Pending invitations are not membership. Blocked/removed users cannot read the new private collections. If a blocking relationship exists within a group, access to its new private collections is denied for the affected person rather than leaking partial conversations. Contributions stay attributed after a person leaves.
 

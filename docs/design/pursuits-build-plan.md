@@ -1,6 +1,6 @@
 # Pursuits: Codex build handoff
 
-Status: proposed implementation plan. The user approved the terminology below and requested this handoff, not implementation yet.
+Status: implemented locally following user authorization. Release requires schema review, PR merge by the owner, and approved migrations.
 
 ## Outcome
 

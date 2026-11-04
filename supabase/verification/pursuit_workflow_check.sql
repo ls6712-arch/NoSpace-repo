@@ -1,4 +1,4 @@
--- Run after both 20261112000000_pursuit_workflow.sql and 20261112000100_pursuit_workflow_reminders.sql in an authorized test environment.
+-- Run after both 20261114000000_pursuit_workflow.sql and 20261114000100_pursuit_workflow_reminders.sql in an authorized test environment.
 -- One transaction; RESULTS exception guarantees rollback. No SELECT/RETURNING INTO, no DELETE.
 begin;
 do $$

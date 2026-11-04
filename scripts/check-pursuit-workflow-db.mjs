@@ -31,7 +31,7 @@ grant usage on schema public,private,auth to authenticated;grant execute on func
 await db.exec(
   fs.readFileSync(
     new URL(
-      "../supabase/migrations/20261112000000_pursuit_workflow.sql",
+      "../supabase/migrations/20261114000000_pursuit_workflow.sql",
       import.meta.url,
     ),
     "utf8",
@@ -40,7 +40,7 @@ await db.exec(
 await db.exec(
   fs.readFileSync(
     new URL(
-      "../supabase/migrations/20261112000100_pursuit_workflow_reminders.sql",
+      "../supabase/migrations/20261114000100_pursuit_workflow_reminders.sql",
       import.meta.url,
     ),
     "utf8",
