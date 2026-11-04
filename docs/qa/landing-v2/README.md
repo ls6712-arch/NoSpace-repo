@@ -1,5 +1,9 @@
 # Interactive landing page
 
+This records the initial PDF v2 implementation and its original browser evidence.
+The later photo/motion follow-up adds photographs, stronger visual interactions
+and a pause control; its evidence is recorded under `docs/qa/landing-motion/`.
+
 Implements the reviewed PDF v2: plain copy, Soosh as the product and Stubby as its
 activity helper. A signed-out visitor can switch At home / Outside, cycle through
 6 editorial examples and open their details before entering the actual app.
