@@ -50,8 +50,8 @@ export const CALENDAR: Destination = {
 };
 export const YOU: Destination = { to: "/you", label: "You", icon: UserRound, match: (p) => p.startsWith("/you") };
 
-/** The bottom bar's order. Calendar is not a tab: on a phone it opens from Home's Your week card. */
-export const TAB_DESTINATIONS: readonly Destination[] = [HOME, DISCOVER, LOG, YOU];
+/** The bottom bar's order, with Stubby directly reachable on phones too. */
+export const TAB_DESTINATIONS: readonly Destination[] = [HOME, DISCOVER, LOG, CALENDAR, YOU];
 
 /** Pages where the member navigation (and so the rail) is not offered: they keep the top header as before. */
 export const NO_RAIL_PATHS = (pathname: string) => pathname === "/welcome" || pathname.startsWith("/i/");
