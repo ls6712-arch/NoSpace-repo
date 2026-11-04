@@ -44,9 +44,49 @@
 .lp-hero-hint { color: var(--muted-foreground); max-width: 37ch; margin-top: 28px !important; font-size: var(--text-small); }
 .lp-city { margin-top: 32px !important; font-size: var(--text-caption); color: var(--muted-foreground); }
 .lp-example-wrap { position: relative; padding-top: 16px; min-width: 0; }
-.lp-example-stubby { position: absolute; z-index: 1; right: 12px; top: -34px; pointer-events: none; }
+.lp-example-stubby { position: relative; pointer-events: auto; }
 .lp-example { position: relative; padding: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: 8px 10px 0 color-mix(in srgb, var(--foreground) 7%, var(--background)); }
-.lp-example > .lp-tag { max-width: calc(100% - 130px); min-height: 20px; }
+.lp-example-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lp-motion-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--background); color: var(--foreground); font: inherit; font-size: var(--text-caption); white-space: nowrap; cursor: pointer; }
+.lp-motion-toggle:disabled { cursor: default; }
+.lp-interaction-hint { color: var(--muted-foreground); font-size: var(--text-caption); margin-bottom: 16px !important; }
+.lp-photo-stage { position: relative; touch-action: pan-y; border-radius: var(--radius-card); transform: perspective(900px) rotateX(var(--lp-tilt-x, 0deg)) rotateY(var(--lp-tilt-y, 0deg)); transition: transform var(--duration-fast) var(--ease-standard); }
+.lp-activity-photo { width: 100%; overflow: hidden; border-radius: var(--radius-card); }
+.lp-activity-photo > .lp-art { position: absolute; inset: 0; }
+.lp-activity-photo > .lp-art svg { width: 100%; height: 100%; }
+.lp-photo-swap { position: relative; animation: lp-photo-arrive var(--duration-base) var(--ease-standard); }
+@keyframes lp-photo-arrive { from { opacity: 0.65; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+.lp-example-doodle { position: absolute; left: 12px; bottom: 12px; width: 82px; height: 82px; border: 2px solid var(--card); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-card); pointer-events: none; }
+.lp-example-doodle .lp-art, .lp-example-doodle .lp-art svg { width: 100%; height: 100%; }
+.lp-stubby-dock { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.lp-play-stubby { display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; padding: 0; border: 0; border-radius: var(--radius-control); background: none; color: var(--foreground); font: inherit; cursor: pointer; }
+.lp-stubby-dock .lp-example-stubby { transform-origin: 50% 100%; }
+/* design-token-ignore: gentle character float, paused by the page control and reduced motion */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-stubby-dock .lp-example-stubby { animation: lp-character-float 4s ease-in-out infinite; }
+@keyframes lp-character-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+.lp-stubby-hint { padding: 3px 9px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); color: var(--foreground); font-size: var(--text-caption); font-weight: 600; }
+.lp-photo-credit { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted-foreground); font-size: var(--text-caption); text-underline-offset: 3px; }
+.lp-swipe-hint { display: none; color: var(--muted-foreground); font-size: var(--text-caption); }
+@media (pointer: coarse) { .lp-swipe-hint { display: block; margin-bottom: 12px !important; } }
+/* design-token-ignore: an activity's drawing trace, paused with all other decorative motion */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-art-animated .lp-draw-line { stroke-dasharray: 1; animation: lp-drawing-trace 3.6s ease-in-out infinite; }
+@keyframes lp-drawing-trace { 0%, 10% { stroke-dashoffset: 1; } 70%, 100% { stroke-dashoffset: 0; } }
+/* design-token-ignore: pencil movement illustrates the selected activity, without changing the photo */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-art-animated .lp-moving-pencil { animation: lp-pencil-motion 2s ease-in-out infinite; }
+@keyframes lp-pencil-motion { 0%, 100% { translate: 0 0; } 50% { translate: -7px 4px; } }
+/* design-token-ignore: short guitar-string motion, paused by the page control */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-art-animated .lp-art-strings { animation: lp-strum 1.2s ease-in-out infinite; }
+@keyframes lp-strum { 0%, 100% { translate: 0 0; } 35% { translate: 2px 0; } 65% { translate: -2px 0; } }
+/* design-token-ignore: movement within the activity graphic, with a static reduced-motion version */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-art-animated .lp-walking-figure { animation: lp-step 1.4s ease-in-out infinite; }
+@keyframes lp-step { 0%, 100% { translate: 0 0; } 50% { translate: 3px -3px; } }
+/* design-token-ignore: cooking steam is decorative, never an automatic carousel or saved result */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-art-animated .lp-steam { animation: lp-steam-rise 2.6s ease-in-out infinite; }
+@keyframes lp-steam-rise { 0% { opacity: 0; translate: 0 8px; } 45% { opacity: 1; } 100% { opacity: 0; translate: 0 -8px; } }
+/* design-token-ignore: bird movement is confined to the small activity badge */
+.lp[data-motion="on"] .lp-example-wrap[data-active="true"] .lp-art-animated .lp-moving-bird { animation: lp-character-float 2.6s ease-in-out infinite; }
+.lp[data-motion="off"] *, .lp[data-motion="off"] *::before, .lp[data-motion="off"] *::after { animation: none !important; transition: none !important; }
+.lp[data-motion="off"] .lp-photo-stage, .lp[data-motion="off"] :is(button,a):hover { transform: none; }
 .lp-choices { display: flex; gap: 10px; padding: 0; border: 0; margin: 16px 0 20px; }
 .lp-choices button { flex: 1; min-height: 44px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--background); color: var(--foreground); font: inherit; font-size: var(--text-small); font-weight: 600; cursor: pointer; }
 .lp-choices button[aria-pressed="true"] { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
@@ -85,6 +125,8 @@
 .lp-activity:hover { transform: translateY(-4px); border-color: var(--foreground); }
 .lp-activity[aria-pressed="true"] { border-color: var(--foreground); }
 .lp-activity .lp-art { width: 100%; }
+.lp-activity .lp-activity-photo img { transition: transform var(--duration-base) var(--ease-standard), opacity var(--duration-base) var(--ease-standard); }
+@media (hover: hover) { .lp[data-motion="on"] .lp-activity:hover .lp-activity-photo img { transform: scale(1.06); } }
 .lp-activity-title { font-family: var(--font-display); font-size: var(--text-lead); font-weight: 800; line-height: 1.2; }
 .lp-activity-meta { font-size: var(--text-caption); color: var(--muted-foreground); }
 .lp-activity-open { display: inline-flex; align-items: center; gap: 4px; margin-top: auto; padding-top: 8px; font-size: var(--text-small); font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }

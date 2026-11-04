@@ -1,9 +1,13 @@
-import { useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
+import { Pause, Play } from "lucide-react";
 import { formatDuration } from "../lib/dates";
 import { startPath } from "../lib/startContent";
 import { ACTIVITY_EXAMPLES, type ActivityExample } from "./examples";
 import { ActivityArt } from "./ActivityArt";
+import { ActivityPhoto, activityPhoto } from "./ActivityPhoto";
+import { useLandingMotion } from "./LandingMotion";
+import { usePhotoInteraction } from "./usePhotoInteraction";
 import { LANDING_COPY as COPY } from "./copy";
 import { LandingStubby, type StubbyHandle } from "./LandingStubby";
 
@@ -13,18 +17,34 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
   headingRef: RefObject<HTMLHeadingElement>;
 }) {
   const stubby = useRef<StubbyHandle>(null);
+  const { enabled, reduced, toggle } = useLandingMotion();
+  const wrap = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    if (!wrap.current || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.05 });
+    observer.observe(wrap.current);
+    return () => observer.disconnect();
+  }, []);
   const choose = (id: string) => {
     onChoose(id);
     stubby.current?.think();
   };
-  const another = () => {
+  const cycle = (direction: 1 | -1 = 1) => {
     const options = ACTIVITY_EXAMPLES.filter(e => e.setting === example.setting);
-    choose(options[(options.findIndex(e => e.id === example.id) + 1) % options.length].id);
+    choose(options[(options.findIndex(e => e.id === example.id) + direction + options.length) % options.length].id);
   };
-  return <div className="lp-example-wrap" role="group" aria-label={COPY.exampleLabel}>
-    <LandingStubby ref={stubby} size={140} followPointer className="lp-example-stubby"/>
+  const interaction = usePhotoInteraction(cycle);
+  const photo = activityPhoto(example);
+  return <div ref={wrap} className="lp-example-wrap" role="group" aria-label={COPY.exampleLabel} data-active={visible}>
     <div className="lp-example" data-example-id={example.id}>
-      <p className="lp-tag">{COPY.example}</p>
+      <div className="lp-example-header"><p className="lp-tag">{COPY.example}</p>
+        <button type="button" className="lp-motion-toggle" disabled={reduced} onClick={toggle}
+          aria-label={reduced ? COPY.motionDevice : enabled ? COPY.pauseMotion : COPY.playMotion}>
+          {enabled ? <Pause size={15} aria-hidden="true"/> : <Play size={15} aria-hidden="true"/>}
+          {reduced ? COPY.motionOff : enabled ? COPY.pauseMotion : COPY.playMotion}
+        </button>
+      </div>
       <fieldset className="lp-choices">
         <legend className="sr-only">{COPY.setting}</legend>
         {(["home", "outside"] as const).map(setting => <button type="button" key={setting}
@@ -35,7 +55,21 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
           {setting === "home" ? COPY.atHome : COPY.outside}
         </button>)}
       </fieldset>
-      <ActivityArt art={example.art} tone={example.tone}/>
+      <p className="lp-interaction-hint">{COPY.exampleHint}</p>
+      <div className="lp-photo-stage" {...interaction}>
+        <div key={example.id} className="lp-photo-swap">
+          <ActivityPhoto example={example} priority/>
+          <div className="lp-example-doodle"><ActivityArt art={example.art} tone={example.tone} animated/></div>
+        </div>
+        <div className="lp-stubby-dock">
+          {enabled ? <button type="button" className="lp-play-stubby" aria-label={COPY.playStubby} onClick={() => stubby.current?.happy(0)}>
+            <LandingStubby ref={stubby} size={100} followPointer className="lp-example-stubby"/>
+            <span className="lp-stubby-hint" aria-hidden="true">{COPY.tapStubby}</span>
+          </button> : <LandingStubby ref={stubby} size={100} className="lp-example-stubby"/>}
+        </div>
+      </div>
+      <a className="lp-photo-credit" href={photo.source} target="_blank" rel="noopener noreferrer">{COPY.photo}: {photo.credit}</a>
+      <p className="lp-swipe-hint">{COPY.swipeHint}</p>
       <div className="lp-example-copy">
         <p className="lp-tag">{example.setting === "home" ? COPY.atHome : COPY.outside} · {example.social}</p>
         <h2 ref={headingRef} tabIndex={-1}>{example.title}</h2>
@@ -58,7 +92,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
         </div>
       </details>
       <div className="lp-example-actions">
-        <button type="button" className="lp-btn lp-btn-ghost" onClick={another}>{COPY.another}</button>
+        <button type="button" className="lp-btn lp-btn-ghost" onClick={() => cycle()}>{COPY.another}</button>
         <Link className="lp-text-link" to="/calendar" state={{ landingExample: example.id }}>Ask Stubby</Link>
       </div>
     </div>

@@ -6,10 +6,11 @@ import { humanOnboardingEnabled } from "../lib/personalization";
 import { QUESTION_TITLES } from "../components/settings/PreferenceFields";
 import { LANDING_COPY as COPY } from "./copy";
 import { ACTIVITY_EXAMPLES, FEATURED_EXAMPLES } from "./examples";
-import { ActivityArt } from "./ActivityArt";
+import { ActivityPhoto } from "./ActivityPhoto";
 import { ExamplePreview } from "./ExamplePreview";
 import { LandingStubby } from "./LandingStubby";
 import { reducedMotion } from "./motion";
+import { LandingMotionProvider, useLandingMotion } from "./LandingMotion";
 import "./landing.css";
 
 function scrollToHow() {
@@ -20,6 +21,11 @@ function scrollToHow() {
 
 /** Rendered inside Root's main landmark. Example choices stay local and never save personal answers. */
 export function Landing() {
+  return <LandingMotionProvider><LandingPage/></LandingMotionProvider>;
+}
+
+function LandingPage() {
+  const { enabled } = useLandingMotion();
   const [example, setExample] = useState(ACTIVITY_EXAMPLES[0]);
   const [chosen, setChosen] = useState(false);
   const [focusRequest, setFocusRequest] = useState(0);
@@ -42,7 +48,7 @@ export function Landing() {
     { label: "Privacy Policy", to: "/privacy-policy" },
     { label: "Terms", to: "/terms" },
   ];
-  return <div className="lp">
+  return <div className="lp" data-motion={enabled ? "on" : "off"}>
     <button type="button" className="lp-skip" onClick={() => document.getElementById("landing-heading")?.focus()}>Skip to content</button>
     <header className="lp-nav">
       <div className="lp-wide lp-nav-inner">
@@ -80,7 +86,7 @@ export function Landing() {
           {FEATURED_EXAMPLES.map(item => <button type="button" key={item.id} className="lp-activity"
             aria-pressed={example.id === item.id} aria-controls="activity-example"
             onClick={() => { choose(item.id); setFocusRequest(n => n + 1); }}>
-            <ActivityArt art={item.art} tone={item.tone}/>
+            <ActivityPhoto example={item}/>
             <span className="lp-tag">{item.interest}</span>
             <span className="lp-activity-title">{item.title}</span>
             <span className="lp-activity-meta">{item.setting === "home" ? COPY.atHome : COPY.outside} · {item.social}</span>
