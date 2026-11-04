@@ -198,11 +198,11 @@ function serve(req: Request): Promise<Response> {
         return readTaste(data);
       },
       async signals(id) {
-        let query = caller.from("stubby_feedback").select("signal, title, kind").eq("user_id", id);
-        // V3 learns only from the last 60 days (and only with consent, handler.ts); legacy as before.
-      if (settings.askEngine === "v3" || (settings.v3Testers ?? []).length > 0) query = query.gte("created_at", iso(Date.now() - 60 * 86400000));
-        const { data } = await query.order("created_at", { ascending: false }).limit(20);
-        return readSignals(data);
+        const recent=iso(Date.now()-60*86400000);
+        let response=await caller.from("stubby_feedback").select("signal, title, kind, reason, scope").eq("user_id",id).gte("created_at",recent).order("created_at",{ascending:false}).limit(20);
+        // Compatible reader can be deployed before additive columns exist.
+        if(response.error && ["42703","PGRST204"].includes(response.error.code)) response=await caller.from("stubby_feedback").select("signal, title, kind").eq("user_id",id).gte("created_at",recent).order("created_at",{ascending:false}).limit(20) as typeof response;
+        return readSignals(response.data);
       },
     },
     server: {

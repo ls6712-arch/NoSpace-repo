@@ -625,7 +625,7 @@ async function ask(
 
   // Read as them, from their own rows only. Best effort: without it, he still searches. The
   // onboarding answers are used by default (Nov 3, 2026); learning from feedback is the only opt-in.
-  const capability = v3 && !who.guest && deps.db.capability ? await deps.db.capability(userId).catch(() => emptyCapability()) : emptyCapability();
+  const capability = !who.guest && deps.db.capability ? await deps.db.capability(userId).catch(() => emptyCapability()) : emptyCapability();
   const profile = await deps.db.profile(userId).catch(() => EMPTY_PROFILE);
   const zone = validTimeZone(capability.timeZone) ? capability.timeZone : "America/New_York";
 
@@ -644,7 +644,7 @@ async function ask(
 
   const taste = (!v3 || who.guest) && deps.db.taste ? await deps.db.taste(userId).catch(() => EMPTY_TASTE) : EMPTY_TASTE;
   // Legacy reads feedback as it always has (it runs alongside V3 for testers); V3 only with consent.
-  const signals = (engine !== "v3" || learnsFromFeedback(capability)) && deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
+  const signals = learnsFromFeedback(capability) && deps.db.signals ? await deps.db.signals(userId).catch(() => [] as Signal[]) : [];
   const corners = await deps.server.corners();
   const byKey = new Map(corners.filter((c) => c.spaceSlug && c.slug).map((c) => [`${c.spaceSlug}/${c.slug}`, c]));
   const picked = profile.picks.flatMap((k) => (byKey.has(k) ? [byKey.get(k)!] : []));

@@ -1,3 +1,4 @@
+import type { FeedbackDetails } from "../../lib/stubbyAsk";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import { Button } from "../ui/button";
@@ -128,7 +129,7 @@ export interface AskState {
   accountPerDay: number;
   /** Thumbs on picks, this session. */
   rated: Record<number, "up" | "down">;
-  rate: (id: number, s: "up" | "down") => void;
+  rate: (id: number, s: "up" | "down", details?:FeedbackDetails) => Promise<boolean>;
   /** The quick-context card: shown before the first ask while the taste profile is empty. */
   showContext: boolean;
   saveContext: (t: Taste) => Promise<void>;
@@ -535,9 +536,11 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
     void sendFeedback(id, "save", client);
   }, [deck, setDeck, client]);
   const rate = useCallback(
-    (id: number, signal: "up" | "down") => {
+    async (id: number, signal: "up" | "down", details?:FeedbackDetails) => {
+      const saved=await sendFeedback(id, signal, client, details);
+      if(!saved)return false;
       setRated((r) => ({ ...r, [id]: signal }));
-      void sendFeedback(id, signal, client);
+      return true;
     },
     [client],
   );

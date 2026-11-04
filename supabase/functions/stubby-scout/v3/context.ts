@@ -1,3 +1,4 @@
+import { lastingFeedback } from "../../_shared/feedback.ts";
 import type { Answers } from "../intent.ts";
 import { parseRequest, topicChoices, safeTopics } from "./request.ts";
 import { emptyPersonalization, normalizePersonalization } from "../../_shared/personalization.ts";
@@ -48,7 +49,7 @@ export function buildContext(input: RequestInput): Context {
     adult21: input.adult21, adultsRequested: intent.adults, family: intent.who === "family",
     requestedTopics, topicsHard: !/\bor (something|anything)\b/i.test(text), topicCatalog: safeTopics(input.knownTopics ?? []), equipment, interests: p.picks,
     goals: c.goals, preferences: c.preferences,
-    learned: learnsFromFeedback(c) ? input.learned : [],
+    learned: learnsFromFeedback(c) ? lastingFeedback(input.learned) : [],
     memberships: [...c.memberships, ...p.passes.filter(m => passCapabilityKind(m.kind ?? "other") !== "equipment").map(m => ({ name: m.place ? `${m.label} (${m.place})` : m.label, expiresOn: null, status: "self_reported" as const }))].slice(0, 20),
     usualWindows: normalized.usualWindows, personalization: normalized,
     busy: [], weather: "unknown", gentle: input.gentle === true,
