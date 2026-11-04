@@ -1,5 +1,7 @@
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { useLocation } from "react-router";
+import { exampleFromEntry } from "../../landing/examples";
 import { ASK_COPY } from "../../lib/calendarCopy";
 import { page } from "../../lib/motionTokens";
 import { STUBBY_LINES, greetingLine, type GreetingInput } from "../../lib/stubbyLines";
@@ -89,8 +91,14 @@ export const StubbyStage = forwardRef<
   }, []);
   useImperativeHandle(ref, () => ({ react }), [react]);
 
-  const ask = useAskStubby({ onReact: react, userId });
+  const location = useLocation();
+  // The landing passes only a known example id. Seed an editable field, never an automatic ask.
+  // The existing signup-resume effect runs after initialization and keeps precedence over this draft.
+  const ask = useAskStubby({ onReact: react, userId, initialDraft: exampleFromEntry(location.state)?.prompt });
   const access = useStubbyAccess();
+  useEffect(() => {
+    if (access.guest) access.draft.current = ask.text;
+  }, [access.guest, access.draft, ask.text]);
   const capped = access.prompt?.kind === "limit" && (access.prompt.limit.code === "GUEST_GLOBAL_CAP" || access.prompt.limit.code === "GLOBAL_CAP");
   // Guests aren't open: his line says how to use him instead of greeting a field that isn't there.
   const line = access.guest && access.closed ? GUEST_COPY.closed : stageLine({ ...ask, capped }, greetingLine({ ...greeting, asksLeft: ask.left }));

@@ -196,7 +196,7 @@ const WHO_VALUES: readonly Who[] = ["solo", "partner", "friends", "family"];
  * steps, how many asks are left today, and his picks as a deck with Your selection. The form
  * (AskStubby) and the results (StubbyResults) both read it, so the results can sit anywhere.
  */
-export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction) => void; userId?: string } = {}): AskState {
+export function useAskStubby({ onReact, userId, initialDraft = "" }: { onReact?: (r: BuddyReaction) => void; userId?: string; initialDraft?: string } = {}): AskState {
   const access = useStubbyAccess();
   const client = access.client;
   const guest = access.guest;
@@ -206,7 +206,7 @@ export function useAskStubby({ onReact, userId }: { onReact?: (r: BuddyReaction)
   const [taste, setTaste] = useState<Taste | null | undefined>(undefined);
   const [contextSkipped, setContextSkipped] = useState(() => readLocal(CONTEXT_SKIPPED_KEY) === "1");
   const sent = useRef(0);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => initialDraft.slice(0, ASK_MAX_LENGTH));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [found, setFound] = useState<number | null>(null);

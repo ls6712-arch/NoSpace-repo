@@ -1,0 +1,91 @@
+{
+  "scope": "Local production build with real CSP and mocked Supabase. External fonts are blocked; system fallbacks are inspected. No live provider validation.",
+  "humanOnboarding": false,
+  "checks": [
+    "mobile: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects",
+    "mobile: chosen example enters the real editable field without an ask",
+    "desktop: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects",
+    "desktop: chosen example enters the real editable field without an ask",
+    "mobile-dark: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects",
+    "mobile-dark: chosen example enters the real editable field without an ask",
+    "small-phone: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects",
+    "small-phone: chosen example enters the real editable field without an ask",
+    "tablet: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects",
+    "tablet: chosen example enters the real editable field without an ask",
+    "Explicit real request: failed result keeps the draft, offers retry and never claims a saved plan",
+    "Existing-account login and closed-guest entry use the real auth gates"
+  ],
+  "views": [
+    {
+      "name": "mobile",
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 4646,
+      "imageRequests": 0,
+      "controls": [],
+      "contrast": {
+        "checked": 68,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 31
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 3370,
+      "imageRequests": 0,
+      "controls": [],
+      "contrast": {
+        "checked": 69,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 30
+      }
+    },
+    {
+      "name": "mobile-dark",
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 4646,
+      "imageRequests": 0,
+      "controls": [],
+      "contrast": {
+        "checked": 68,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 31
+      }
+    },
+    {
+      "name": "small-phone",
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 5562,
+      "imageRequests": 0,
+      "controls": [],
+      "contrast": {
+        "checked": 68,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 31
+      }
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 4259,
+      "imageRequests": 0,
+      "controls": [],
+      "contrast": {
+        "checked": 69,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 30
+      }
+    }
+  ],
+  "errors": []
+}
