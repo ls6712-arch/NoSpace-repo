@@ -166,6 +166,22 @@ describe("AskStubby", () => {
     expect(api.askStubbyStream).not.toHaveBeenCalled();
   });
 
+  it("outside a verified country, the care card says to call the local emergency number, with nothing to tap", async () => {
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: null, care: { line: "That sounds really hard. You don’t have to handle it alone.", resources: [], emergency: { label: "Call your local emergency number", detail: "If you’re in danger right now", href: null }, friend: { label: "Message a friend", href: "/messages" } } });
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery tonight" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    expect(await screen.findByText("Call your local emergency number")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Call your local emergency number" })).toBeNull();
+    expect(screen.queryByRole("list", { name: "Someone to talk to" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Message a friend" }).getAttribute("href")).toBe("/messages");
+  });
+
   it("shows the care card in place of picks, with someone to talk to and a way to message a friend", async () => {
     api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: null, care: { line: "That sounds really hard. You don’t have to handle it alone.", resources: [{ label: "Call 988", detail: "988 Suicide and Crisis Lifeline, any time", href: "tel:988" }], emergency: { label: "Call 911", detail: "If you’re in danger right now", href: "tel:911" }, friend: { label: "Message a friend", href: "/messages" } } });
     render(

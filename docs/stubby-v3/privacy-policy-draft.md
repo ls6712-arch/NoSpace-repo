@@ -1,9 +1,10 @@
 # Privacy Policy: draft for Stubby V3 (Nov 3, 2026, for approval)
 
 **Not live.** The live policy (`src/app/pages/PrivacyPolicy.tsx`) stays as it is while V3 reaches
-only `STUBBY_V3_TESTERS`, because it describes the engine everyone else still uses. Apply this when
-the founder switches V3 on for everyone, in the same PR that removes the legacy ask engine, and bump
-`TERMS_VERSION` if the change needs everyone to accept it again.
+only `STUBBY_V3_TESTERS`, because it describes the engine everyone else still uses. Apply this
+before or with the switch to V3 for everyone (`STUBBY_ASK_ENGINE=v3`), not later with the PR that
+removes the legacy ask engine, and bump `TERMS_VERSION` if the change needs everyone to accept it
+again.
 
 ## Replaces the paragraph that starts "When you ask Stubby to find something"
 
@@ -23,8 +24,8 @@ the founder switches V3 on for everyone, in the same PR that removes the legacy 
 
 ## New paragraph, after it
 
-> If what you ask sounds like you’re going through something really hard, Stubby shows ways to reach
-> someone to talk to instead of picks. To decide, what you typed may be checked once by Anthropic.
+> If what you ask sounds like you’re going through something really hard, Stubby shows ways to get
+> help instead of picks. To decide, what you typed may be checked once by Anthropic.
 > We don’t keep what you typed, that Stubby showed this, or anything about how you feel, and it
 > doesn’t use up an ask.
 
@@ -34,5 +35,5 @@ the founder switches V3 on for everyone, in the same PR that removes the legacy 
 |---|---|---|
 | Stubby's picks can be added to the picks everyone sees | V3 never adds anything to the shared picks | V3 saves only your own picks |
 | Thumbs up or down are used to fit picks | Only with Learn from my feedback on, last 60 days | Learning is the only opt-in (founder, Nov 3, 2026) |
-| (not mentioned) | The care check on what you typed, never kept | Step 1 of every V3 ask (stubby-agent C1) |
+| (not mentioned) | The care check on what you typed, never kept | Step 1 of every V3 ask (stubby-agent C1). "Ways to get help", not "someone to talk to": outside the US the card only says to call the local emergency number (Nov 4, 2026) |
 | (not mentioned) | What Stubby knows: saved timezone, budget, equipment, goals, preferences, memberships | V3's saved information (migration `20261112000000_stubby_capabilities.sql`) |

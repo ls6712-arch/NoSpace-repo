@@ -163,7 +163,7 @@ function Care({ card }: { card: CareCard }) {
       {card.resources.length > 0 && (
         <ul aria-label={CARE_COPY.resourcesLabel} className="flex flex-col gap-2">
           {card.resources.map((r) => (
-            <li key={r.href} className="flex flex-col gap-0.5">
+            <li key={r.label} className="flex flex-col gap-0.5">
               <Button asChild variant="coral" className="self-start">
                 <a href={r.href}>{r.label}</a>
               </Button>
@@ -178,12 +178,13 @@ function Care({ card }: { card: CareCard }) {
             <Link to={card.friend.href}>{card.friend.label}</Link>
           </Button>
         )}
-        {card.emergency && (
+        {card.emergency?.href && (
           <Button asChild variant="outline">
             <a href={card.emergency.href}>{card.emergency.label}</a>
           </Button>
         )}
       </div>
+      {card.emergency && !card.emergency.href && <p className="text-body font-semibold">{card.emergency.label}</p>}
       {card.emergency && <p className="text-small text-muted-foreground">{card.emergency.detail}</p>}
     </section>
   );

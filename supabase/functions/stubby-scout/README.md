@@ -78,7 +78,8 @@ away with a bare 400). Two things keep them together:
 
 `STUBBY_V3_TESTERS` (user ids) sends those accounts' asks through V3 (`v3/`), with the legacy engine
 run on the same ask and its deck saved beside V3's in the decision trace (shadow compare); everyone
-else stays on legacy. `STUBBY_ASK_ENGINE=v3` is V3 for everyone, only when the founder says so.
+else stays on legacy. `STUBBY_ASK_ENGINE=v3` is V3 for everyone, only when the founder says so;
+testers keep the shadow compare after that.
 Every V3 ask starts with the care step (`v3/care.ts`). Deploy the whole import graph, `_shared`
 included (`_shared/cornerHome.ts` is generated from the app's Corner data: `npx tsx
 scripts/gen-corner-home.ts`). See `docs/stubby-v3/README.md`.

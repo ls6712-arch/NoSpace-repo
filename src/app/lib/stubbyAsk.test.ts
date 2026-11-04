@@ -150,6 +150,12 @@ describe("the care card (stubby-agent C1)", () => {
     expect(readCare({ ...card, friend: { label: "x", href: "https://evil.example" } })!.friend).toBeNull();
     expect(readCare({ nope: true })).toBeNull();
   });
+  it("an emergency line with no number is kept as words, with nothing to tap", () => {
+    const c = readCare({ ...card, resources: [], emergency: { label: "Call your local emergency number", detail: "If you’re in danger right now", href: null } })!;
+    expect(c.resources).toEqual([]);
+    expect(c.emergency).toEqual({ label: "Call your local emergency number", detail: "If you’re in danger right now", href: null });
+    expect(readCare({ ...card, emergency: { label: "x", detail: "y", href: "javascript:alert(1)" } })!.emergency).toBeNull();
+  });
   it("comes back as a care answer, with no picks and no ask used", async () => {
     vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ care: card }), { status: 200, headers: { "content-type": "application/json" } }));
     const r = await askStubbyStream("i want to die", { onStep: () => undefined });

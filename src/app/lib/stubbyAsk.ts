@@ -319,7 +319,8 @@ export interface CareLink {
 export interface CareCard {
   line: string;
   resources: CareLink[];
-  emergency: CareLink | null;
+  /** href null: no number is known for their country ("Call your local emergency number"), shown as text. */
+  emergency: (Omit<CareLink, "href"> & { href: string | null }) | null;
   friend: { label: string; href: string } | null;
 }
 const SAFE_CARE_HREF = /^(tel:\+?\d{2,15}|sms:\d{2,15}|https:\/\/[a-z0-9.-]+\.[a-z]{2,}(\/[^\s"'<>]*)?)$/i;
@@ -330,6 +331,14 @@ const careLink = (v: unknown): CareLink | null => {
     ? { label: o.label.slice(0, 60), detail: o.detail.slice(0, 120), href: o.href }
     : null;
 };
+/** The emergency line: a safe link, or words with nothing to tap when the function sends no number. */
+const careEmergency = (v: unknown): CareCard["emergency"] => {
+  if (v && typeof v === "object" && (v as { href?: unknown }).href === null) {
+    const o = v as Record<string, unknown>;
+    return typeof o.label === "string" && typeof o.detail === "string" ? { label: o.label.slice(0, 60), detail: o.detail.slice(0, 120), href: null } : null;
+  }
+  return careLink(v);
+};
 /** The care card from the function's answer, or null. Only safe links; nothing else is read. */
 export function readCare(v: unknown): CareCard | null {
   if (!v || typeof v !== "object") return null;
@@ -338,7 +347,7 @@ export function readCare(v: unknown): CareCard | null {
   const friend = o.friend && typeof o.friend === "object" && (o.friend as { href?: unknown }).href === "/messages" && typeof (o.friend as { label?: unknown }).label === "string"
     ? { label: (o.friend as { label: string }).label.slice(0, 40), href: "/messages" }
     : null;
-  return { line: o.line.slice(0, 160), resources: o.resources.map(careLink).filter((x): x is CareLink => !!x).slice(0, 4), emergency: careLink(o.emergency), friend };
+  return { line: o.line.slice(0, 160), resources: o.resources.map(careLink).filter((x): x is CareLink => !!x).slice(0, 4), emergency: careEmergency(o.emergency), friend };
 }
 
 export interface AskResult {
