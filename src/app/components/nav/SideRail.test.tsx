@@ -183,9 +183,9 @@ describe("the rail item for /calendar is Stubby: his mark and his name", () => {
     for (const v of ["--stubby-body: inherit", "--stubby-tab: inherit", "--stubby-ink: inherit"]) expect(on).toContain(v);
   });
 
-  it("is not a phone tab: the bottom bar is unchanged", async () => {
+  it("shares the Stubby destination with the phone bar", async () => {
     const { TAB_DESTINATIONS, CALENDAR } = await import("./navItems");
-    expect(TAB_DESTINATIONS.map((d) => d.label)).toEqual(["Home", "Discover", "Log", "You"]);
-    expect(TAB_DESTINATIONS).not.toContain(CALENDAR);
+    expect(TAB_DESTINATIONS.map((d) => d.label)).toEqual(["Home", "Discover", "Log", "Stubby", "You"]);
+    expect(TAB_DESTINATIONS).toContain(CALENDAR);
   });
 });
