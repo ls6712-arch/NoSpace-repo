@@ -127,6 +127,7 @@ export interface SearchRequest {
 
 /** What the edge function reads about the person who asks, as them (their own rows only). */
 export interface PersonProfile {
+  personalization?: import("../_shared/personalization.ts").Personalization;
   /** Corner keys, "space-slug/corner-slug". */
   picks: string[];
   /** The usual week: "sat-eve" and the like. */

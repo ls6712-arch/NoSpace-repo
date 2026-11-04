@@ -1,5 +1,6 @@
 import type { Answers } from "../intent.ts";
 import { parseRequest, topicChoices, safeTopics } from "./request.ts";
+import { emptyPersonalization, normalizePersonalization } from "../../_shared/personalization.ts";
 import { passCapabilityKind } from "../../_shared/onboardingCapability.ts";
 import { validTimeZone, type CapabilityProfile } from "../../_shared/capabilityProfile.ts";
 import { cleanCity } from "../taste.ts";
@@ -20,13 +21,14 @@ export function buildContext(input: RequestInput): Context {
   const timeZone = validTimeZone(c.timeZone) ? c.timeZone : "America/New_York";
   const parsed = parseRequest(text, now, timeZone, input.answers, input.knownTopics);
   const intent = parsed.intent;
-  const soft = c.perActivityBudget ?? (p.monthlyBudget !== null ? Math.floor(p.monthlyBudget / 4) : null);
+  const normalized = normalizePersonalization(p, p.personalization ?? emptyPersonalization(), c.equipment, c.perActivityBudget);
+  const soft = normalized.activityBudget;
   const travel = /\b(?:within|under|max(?:imum)?)\s*(\d{1,3})\s*(?:minutes?|mins?)\b/i.exec(text);
   const window = parsed.window;
   if (input.notBefore !== undefined && Number.isFinite(input.notBefore)) window.startMs = Math.max(window.startMs, input.notBefore);
   const requestedTopics = parsed.topics.positive;
   const storedExclusions = c.preferences.flatMap(p => topicChoices(p).negative).filter(t => !requestedTopics.includes(t));
-  const equipment = [...new Set([...c.equipment, ...parsed.resources.add])].filter(x => !parsed.resources.remove.includes(x.toLowerCase()));
+  const equipment = [...new Set([...normalized.equipment, ...parsed.resources.add])].filter(x => !parsed.resources.remove.includes(x.toLowerCase()));
   const asked = parsed.city === null ? null : parsed.city ? cleanCity(parsed.city) : null;
   const session = cleanCity(input.sessionCity);
   const saved = cleanCity(p.city);
@@ -35,7 +37,7 @@ export function buildContext(input: RequestInput): Context {
   return {
     version: V3_VERSION, now, timeZone, city, cityFrom,
     window,
-    hardBudget: input.budgetOverride ?? (intent.budget?.from === "ask" ? intent.budget.max : null),
+    hardBudget: input.budgetOverride ?? (intent.budget?.from === "ask" ? intent.budget.max : normalized.freeOnly ? 0 : null),
     softBudget: soft,
     setting: parsed.setting, awayFromHome: parsed.awayFromHome,
     excludedTopics: [...new Set([...parsed.topics.negative, ...storedExclusions])],
@@ -46,7 +48,7 @@ export function buildContext(input: RequestInput): Context {
     goals: c.goals, preferences: c.preferences,
     learned: learnsFromFeedback(c) ? input.learned : [],
     memberships: [...c.memberships, ...p.passes.filter(m => passCapabilityKind(m.kind ?? "other") !== "equipment").map(m => ({ name: m.place ? `${m.label} (${m.place})` : m.label, expiresOn: null, status: "self_reported" as const }))].slice(0, 20),
-    usualWindows: p.windows,
+    usualWindows: normalized.usualWindows, personalization: normalized,
     busy: [], weather: "unknown", gentle: input.gentle === true,
   };
 }

@@ -53,6 +53,7 @@ export interface RequestInput {
   gentle?: boolean;
 }
 export interface Context {
+  personalization: import("../../_shared/personalization.ts").Personalization;
   version: string;
   now: number;
   timeZone: string;
