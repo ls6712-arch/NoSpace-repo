@@ -32,3 +32,7 @@ The repository's Calendar tests can exceed their existing five-second timeout un
 No live migration, production write, or PR merge was performed. Live function definitions were reviewed from the owner's supplied SQL results. The remaining live columns/policies and actual PostgREST/cron integration still need staging review. In-app reminders are not push notifications or email. Profile reporting is reused; reporting a specific new message by its UUID is not a new report type.
 
 Implementation and schema mapping: [verification notes](../../verification/pursuits-workflow/implementation.md).
+
+## Current-main PR validation
+
+Rebased onto `2db3bed` (main). Full suite: 233 files / 2244 tests passed. Type check, lint, production build, migration ordering against origin/main, 25 PostgreSQL checks, and 24 browser checks passed after rebasing. Screenshots refreshed against this base.
