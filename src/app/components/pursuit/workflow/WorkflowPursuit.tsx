@@ -83,7 +83,7 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
   const uid = user?.id ?? "local";
   const [project, setProject] = useState(initial);
   const w = workflowOf(project)!;
-  const shared = project.mode !== "solo";
+  const shared = project.mode === "together" || project.mode === "group";
   const collective = project.mode === "group";
   const host =
     !user ||
@@ -117,6 +117,14 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
           role: "owner" as const,
         },
       ];
+  const sessionIsShared =
+    shared &&
+    people.some(
+      (p) =>
+        !!p.userId &&
+        p.userId !== uid &&
+        (p.status === "joined" || p.status === "invited"),
+    );
   const name = (id: string) =>
     id === uid
       ? "You"
@@ -443,16 +451,132 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
       : `${formatAmount(current)} ${unit}`;
   }
   const sortedSessions = data.sessions
-    .filter((s) => !s.cancelled)
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const now = new Date().toISOString();
-  const upcoming = [
-    ...sortedSessions.filter((s) => s.starts_at >= now).slice(0, 3),
-    ...sortedSessions
-      .filter((s) => s.starts_at < now)
-      .slice(-2)
-      .reverse(),
-  ];
+    .filter((s) => !s.cancelled && Number.isFinite(Date.parse(s.starts_at)))
+    .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at));
+  const now = Date.now();
+  const upcoming = sortedSessions.filter((s) => Date.parse(s.starts_at) >= now);
+  const pastSessions = sortedSessions
+    .filter((s) => Date.parse(s.starts_at) < now)
+    .reverse();
+  function renderSession(s: Meeting, past = false) {
+    return (
+      <div key={s.id} className="mt-4 border-t border-border pt-4">
+        <h3 className="text-small font-semibold">{s.title}</h3>
+        <p className="mt-1 text-small">{formatDateTime(s.starts_at)}</p>
+        {s.place && (
+          <p className="text-caption text-muted-foreground">{s.place}</p>
+        )}
+        {s.note && <p className="mt-2 text-small">{s.note}</p>}
+        {sessionIsShared && (
+          <div className="mt-2 text-caption">
+            {!data.attendance.some((a) => a.session_id === s.id) && (
+              <p>No one has responded yet.</p>
+            )}
+            {data.attendance.some((a) => a.session_id === s.id && a.going) && (
+              <p>
+                {data.attendance
+                  .filter((a) => a.session_id === s.id && a.going)
+                  .map((a) => name(a.user_id))
+                  .join(", ")}
+              </p>
+            )}
+            {data.attendance.some((a) => a.session_id === s.id && !a.going) && (
+              <p>
+                Can’t make it:{" "}
+                {data.attendance
+                  .filter((a) => a.session_id === s.id && !a.going)
+                  .map((a) => name(a.user_id))
+                  .join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {sessionIsShared &&
+            !past &&
+            [true, false].map((going) => (
+              <Button
+                key={String(going)}
+                variant={
+                  data.attendance.some(
+                    (a) =>
+                      a.session_id === s.id &&
+                      a.user_id === uid &&
+                      a.going === going,
+                  )
+                    ? "secondary"
+                    : "outline"
+                }
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await put("attendance", [
+                      {
+                        session_id: s.id,
+                        user_id: uid,
+                        going,
+                        pursuit_id: project.id,
+                      } as (typeof data.attendance)[number],
+                    ]);
+                  })
+                }
+              >
+                {going ? "I’m in" : "Can’t make it"}
+              </Button>
+            ))}
+          {sessionIsShared && (
+            <button
+              className={action}
+              onClick={() =>
+                comments(
+                  s.legacy_id != null
+                    ? `legacy-session:${s.legacy_id}`
+                    : `session:${s.id}`,
+                )
+              }
+            >
+              Discuss
+            </button>
+          )}
+          {(host || s.user_id === uid) &&
+            !data.contributions.some((e) => e.session_id === s.id) && (
+              <button className={action} onClick={() => openSession(s)}>
+                Edit
+              </button>
+            )}
+          {!shared &&
+            (host || s.user_id === uid) &&
+            s.legacy_id == null &&
+            !data.contributions.some((e) => e.session_id === s.id) && (
+              <button
+                className={action}
+                disabled={busy}
+                onClick={() =>
+                  void run(async () => {
+                    await put("sessions", [{ ...s, cancelled: true }]);
+                  })
+                }
+              >
+                Remove
+              </button>
+            )}
+          {w.tracking === "sessions" && status === "active" && (
+            <button
+              className={action}
+              onClick={() => openProgress(undefined, s)}
+            >
+              Log my session
+            </button>
+          )}
+        </div>
+        {sessionIsShared && w.tracking !== "updates" && (
+          <p className="mt-2 text-caption text-muted-foreground">
+            Attendance does not log progress automatically.
+          </p>
+        )}
+      </div>
+    );
+  }
   const conversation = data.messages
     .filter((m) => m.thread === (thread ?? "chat"))
     .sort((a, b) => a.created_at.localeCompare(b.created_at));
@@ -802,105 +926,23 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                     ]}
                   />
                 )}
-              <section className={panel}>
-                <div className="flex items-center justify-between">
-                  <h2 className="text-lead">Next session</h2>
-                  <button className={action} onClick={() => openSession()}>
-                    Plan a session
-                  </button>
-                </div>
-                {!upcoming.length && (
-                  <p className="mt-3 text-small text-muted-foreground">
-                    No sessions planned.
-                  </p>
-                )}
-                {upcoming.slice(0, 5).map((s) => (
-                  <div key={s.id} className="mt-4 border-t border-border pt-4">
-                    <h3 className="text-small font-semibold">{s.title}</h3>
-                    <p className="mt-1 text-small">
-                      {formatDateTime(s.starts_at)}
-                    </p>
-                    {s.place && (
-                      <p className="text-caption text-muted-foreground">
-                        {s.place}
-                      </p>
-                    )}
-                    {s.note && <p className="mt-2 text-small">{s.note}</p>}
-                    <p className="mt-2 text-caption">
-                      {data.attendance
-                        .filter((a) => a.session_id === s.id && a.going)
-                        .map((a) => name(a.user_id))
-                        .join(", ") || "No one has responded yet."}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {[true, false].map((going) => (
-                        <Button
-                          key={String(going)}
-                          variant={
-                            data.attendance.some(
-                              (a) =>
-                                a.session_id === s.id &&
-                                a.user_id === uid &&
-                                a.going === going,
-                            )
-                              ? "secondary"
-                              : "outline"
-                          }
-                          disabled={busy}
-                          onClick={() =>
-                            void run(async () => {
-                              await put("attendance", [
-                                {
-                                  session_id: s.id,
-                                  user_id: uid,
-                                  going,
-                                  pursuit_id: project.id,
-                                } as (typeof data.attendance)[number],
-                              ]);
-                            })
-                          }
-                        >
-                          {going ? "I’m in" : "Can’t make it"}
-                        </Button>
-                      ))}
+              {!shared && (
+                <section className={panel}>
+                  <h2 className="text-small font-medium">Who with?</h2>
+                  <div className="mt-2 flex items-center justify-between gap-3">
+                    <p className="text-small">Just me</p>
+                    {host && user && (
                       <button
                         className={action}
-                        onClick={() =>
-                          comments(
-                            s.legacy_id != null
-                              ? `legacy-session:${s.legacy_id}`
-                              : `session:${s.id}`,
-                          )
-                        }
+                        onClick={() => setSheet("people")}
                       >
-                        Discuss
+                        <Users className="size-4" />
+                        Invite people
                       </button>
-                      {(host || s.user_id === uid) &&
-                        !data.contributions.some(
-                          (e) => e.session_id === s.id,
-                        ) && (
-                          <button
-                            className={action}
-                            onClick={() => openSession(s)}
-                          >
-                            Edit
-                          </button>
-                        )}
-                      {w.tracking === "sessions" && status === "active" && (
-                        <button
-                          className={action}
-                          onClick={() => openProgress(undefined, s)}
-                        >
-                          Log my session
-                        </button>
-                      )}
-                    </div>
-                    <p className="mt-2 text-caption text-muted-foreground">
-                      Attendance does not log progress automatically.
-                    </p>
+                    )}
                   </div>
-                ))}
-              </section>
+                </section>
+              )}
               {shared && (
                 <section className={panel}>
                   <div className="flex items-center justify-between">
@@ -959,13 +1001,56 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                   </ul>
                 </section>
               )}
+              <section className={panel} aria-labelledby="pursuit-next-session">
+                <div className="flex items-center justify-between">
+                  <h2 id="pursuit-next-session" className="text-lead">
+                    Next session
+                  </h2>
+                  {!shared || sessionIsShared ? (
+                    <button className={action} onClick={() => openSession()}>
+                      Plan a session
+                    </button>
+                  ) : host && user ? (
+                    <button
+                      className={action}
+                      onClick={() => setSheet("people")}
+                    >
+                      Invite people
+                    </button>
+                  ) : null}
+                </div>
+                {!upcoming.length && (
+                  <p className="mt-3 text-small text-muted-foreground">
+                    No sessions planned.
+                  </p>
+                )}
+                {upcoming.slice(0, 1).map((s) => renderSession(s))}
+                {upcoming.length > 1 && (
+                  <details className="mt-4 border-t border-border pt-4">
+                    <summary className="min-h-11 cursor-pointer text-small font-semibold">
+                      Upcoming sessions
+                    </summary>
+                    {upcoming.slice(1).map((s) => renderSession(s))}
+                  </details>
+                )}
+                {pastSessions.length > 0 && (
+                  <details className="mt-4 border-t border-border pt-4">
+                    <summary className="min-h-11 cursor-pointer text-small font-semibold">
+                      Past sessions
+                    </summary>
+                    {pastSessions.map((s) => renderSession(s, true))}
+                  </details>
+                )}
+              </section>
               <section>
                 <h2 className="mb-3 text-lead">Recent activity</h2>
                 {!data.contributions.length &&
                   !moments.length &&
                   !privateMoments.length && (
                     <p className="text-small text-muted-foreground">
-                      No progress yet. Add your first update.
+                      {w.tracking === "updates"
+                        ? "No Moments yet"
+                        : "No progress yet. Add your first update."}
                     </p>
                   )}
                 {[...data.contributions]
@@ -1406,6 +1491,17 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
           )}
           {sheet === "session" && (
             <>
+              <div className="text-small">
+                <p className="font-medium">Who with?</p>
+                <p>{shared ? "Friends" : "Just me"}</p>
+                {shared && (
+                  <p className="text-caption text-muted-foreground">
+                    {people
+                      .map((p) => (p.userId ? name(p.userId) : p.displayName))
+                      .join(", ")}
+                  </p>
+                )}
+              </div>
               <Field label="Name">
                 <input
                   className={fieldClass}
@@ -1597,7 +1693,12 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
                             project.id,
                           );
                           if (updated) {
-                            setProject(updated);
+                            setProject(
+                              compatibleProject({
+                                ...updated,
+                                role: project.role,
+                              }),
+                            );
                             addJoinedProject(updated);
                           }
                           setQuery("");
