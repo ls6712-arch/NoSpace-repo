@@ -4,8 +4,16 @@
 recommendation quickly, then ask for more information when it can change the
 next recommendation. Every question needs a defined consumer in the engine.
 
-This is a source-code review and proposed design for `feature/stubby-context-v3`.
-It does not change onboarding screens, database policy or the deployed product.
+**Product direction:** start with what someone wants more room for in everyday
+life. Soosh includes staying home, small personal projects, regular practice,
+quiet breaks and doing things with others. Going out is one possibility. The
+initial questions should feel like getting to know someone; prices, location
+and exact scheduling belong where they become relevant to a suggestion.
+
+This is a proposed design for `feature/stubby-context-v3`, informed by the earlier
+source-code review below. Subsequent branch work has changed V3 consent and
+routing; refresh those technical findings before using them as an implementation
+plan. This proposal does not change onboarding screens, database policy or the deployed product.
 New fields and behavior below are proposals unless explicitly described as
 current. The V3 release still has the live-validation gaps in the
 [Stubby guide](guide.md).
@@ -15,7 +23,7 @@ taste screens, first-plan matcher and V3 reasoning. These checks confirm the
 existing behavior; they do not demonstrate a conversion or recommendation-quality
 improvement for the proposed flow. No fresh browser usability study was run.
 
-## What exists today
+## What the reviewed onboarding collects
 
 The main route has twelve named steps:
 
@@ -45,7 +53,7 @@ and birthday, optional location permission, and a concrete first-plan payoff.
 ### 1. The first plan and V3 disagree about the same answers
 
 `PlanScreen` calls `loadPlanInput` and `buildPlans`, rather than the V3 pipeline.
-The older matcher accepts an outing price up to the monthly budget; V3 uses
+The older matcher accepts an activity price up to the monthly budget; V3 uses
 monthly budget divided by four as a soft preference. The old matcher treats a
 skipped budget as free-only unless a pass is present; V3 treats absence of a
 saved budget as unknown. A pass can bypass the old affordability check even
@@ -90,12 +98,14 @@ of a lasting preference.
 
 ### 4. Actionable constraints are missing or too indirect
 
-Monthly spending is a poor proxy for the next outing. There is no normal
+Monthly spending is a poor proxy for what someone would enjoy doing. There is no normal
 onboarding choice for session duration, travel tolerance, travel mode, experience
 level or social format. Timezone is a raw text field in the optional editor.
 
-**Priority:** ask a usual per-person activity budget and an initial time window.
-Use progressive questions for duration, travel, level and format. A new question
+**Priority:** start with interests, motivation and the person's usual rhythm.
+Ask about spending, exact timing, duration, travel, level and format when a
+suggestion needs them. Keep technical cost units in the data contract rather
+than making them the language of onboarding. A new question
 must ship with candidate facts and matching rules; adding a field to a prompt
 alone does not establish that a recommendation meets it.
 
@@ -134,9 +144,9 @@ not be forced to restart a generic taste questionnaire.
 
 ```mermaid
 flowchart LR
-    A[Existing signup and required account checks] --> B[1. Where should picks be?]
-    B --> C[2. What would you say yes to?]
-    C --> D[3. What fits your next outing?]
+    A[Existing signup and required account checks] --> B[1. What would you like more room for?]
+    B --> C[2. What do you love or want to try?]
+    C --> D[3. What does a little free time look like?]
     D --> E[Review answers and choose memory use]
     E --> F[First recommendations]
     F --> G[Optional refinement, photo or invitation]
@@ -149,53 +159,78 @@ This is a design target to test, not a measured completion time. Questions remai
 skippable where the product can honestly work with unknown information. Ask a
 clarification at recommendation time if an omitted fact is essential.
 
-### Card 1: “Where should your picks be?”
+### Card 1: “What would you like to make more room for?”
 
-- Confirm city and optional neighborhood. Offer typed entry before location
-  permission; no home address is needed.
-- Suggest the device timezone for confirmation, with a searchable alternative.
-  Do not treat device location or timezone as a verified home location.
-- Optionally ask travel willingness: stay local, up to 15/30/60 minutes, or no
-  preference. Ask mode only when travel is relevant.
+- Offer warm, concrete choices: a little calm, making something, learning
+  something, moving more, good company, or something new.
+- Allow a couple of choices, an optional answer in their own words, or a skip.
+  Do not frame the question as a productivity target or a life assessment.
+- Treat the answer as an explicit preference. Wanting calm does not establish
+  anxiety, wanting company does not establish loneliness, and curiosity does
+  not establish beginner status.
 
-**Benefit:** fewer wrong-city results and clearer local timing. Travel choices
-are preferences until a real routing source can check them; hard travel limits
-must abstain when travel cannot be established. Show coverage limits honestly.
+**Benefit:** understand what a suggestion is for. Someone looking for calm might
+enjoy drawing at the kitchen table; someone looking for company might enjoy
+making something with others. Neither choice requires leaving home.
 
-### Card 2: “What would you say yes to?”
+### Card 2: “What do you already love, or keep meaning to try?”
 
-- Let someone choose one to five activities, with search and “I'm exploring.”
+- Let someone choose one to five interests, with search and “I'm exploring.”
+  Mix examples across home, local and shared experiences: reading, cooking,
+  guitar, painting, walking, gardening and board games.
 - Make “Already enjoy” and “Want to try” available as lightweight refinements,
   rather than making everyone complete a second interest inventory.
-- Offer one optional outcome: make something, move more, meet people, unwind,
-  build a skill, or explore. These are proposed choices, not current engine tags.
-- For a relevant selection, allow one optional follow-up such as “New to
-  climbing?” or “Do you have a bike?” Avoid branching for every selected hobby.
+- Preserve existing Corners and invite context without forcing people to pick
+  extra interests just to advance. Goal choices from the first card stay
+  separate from these interests.
+- For a relevant selection, allow one optional follow-up such as “Picking up
+  guitar for the first time?” Avoid branching for every selected interest.
 
 **Benefit:** distinguish established interests from curiosity and understand why
 the activity matters. Level should be per activity; a person can be an expert
 runner and a first-time potter.
 
-### Card 3: “What fits your next outing?”
+### Card 3: “What does a little free time look like for you?”
 
-- Ask **per-person, per-activity** spending: free, up to $15/$30/$60, custom,
-  or not sure. Include known required fees in what “cost” means.
-- Distinguish a usual preference from a firm ceiling. “Free only” and “Never
-  above this amount” are hard requirements; “Usually around this” is soft.
-- Ask a first window: tonight, this weekend, choose a time, or flexible. Keep
-  exact start/end optional until necessary; do not guess that weekly availability
-  proves someone is free on a particular date.
-- Offer session length as an optional refinement, such as under an hour or
-  one to two hours. Move monthly spending and detailed weekly grids to later.
+- Offer small pockets of time, mornings, evenings, weekends, or “It changes.”
+  Allow several choices or a skip. Do not assume a work schedule or that someone
+  has whole evenings free.
+- Make this about usual rhythm. A ten-minute practice, a quiet hour at home and
+  a shared afternoon should all feel possible.
+- Ask for an exact date/time only when needed for the current request. Usual
+  rhythm is a soft preference, not proof of availability on a particular date.
+- Keep detailed weekly grids, spending questions and travel planning out of the
+  initial cards. Make them available when the person wants to refine a suggestion.
 
-**Benefit:** improve the next recommendation directly. A skipped budget means
-unknown, and a saved monthly budget stays a separate concept. When the first
-window has passed, expire it rather than making it a permanent preference.
+**Benefit:** learn how an idea could fit into everyday life without turning
+onboarding into an appointment form. New rhythm choices still need an explicit
+engine representation; they cannot be treated as implemented filters today.
+
+### Practical details, when they help
+
+Before searching nearby, ask “Where should I look?” and confirm city and
+timezone. Keep typed entry available before location permission; no home address
+is needed. A home-based idea need not prompt for a neighborhood. Travel limits
+need routing evidence before they can be described as checked.
+
+When cost matters, ask “Would you rather keep this free?” or “Anything you'd
+like to stay under?” alongside the relevant suggestion or request. Keep skip and
+custom amounts available. A skipped answer means unknown, not free-only.
+Distinguish an explicit hard ceiling from a usual soft preference in the engine,
+include known required fees, and clarify group cost only when necessary. Keep
+monthly spending separate. These are contextual refinements, not core questions.
+
+When resources matter, “Anything you already have that you'd like to use more?”
+can surface a guitar, paints or a bike. Reuse confirmed information and ask
+before remembering it; do not collect a complete inventory up front.
 
 ### Review: “Your starting preferences”
 
-Show a compact editable summary: city/timezone, activities, primary outcome,
-the first window and budget. Explain uncertainty in ordinary language.
+Show a compact editable summary of their interests, what they want more room
+for, and their usual rhythm. Include practical details only if provided. For
+example: “More time to make things. Curious about guitar. Little bits of time
+in the evenings.” This is proposed summary copy, not an inference about their
+personality or a claim that an exact time slot is free.
 
 Offer separate, clearly explained choices to remember preferences, use existing
 onboarding, and learn from explicit feedback. Preserve the current consent
@@ -245,6 +280,7 @@ completing a profile percentage.
 | Primary outcome/social format | Candidate retrieval and ranking | Structured goal/format tags and sourced candidate metadata; current free-text goal matching is limited |
 | Activity budget | Hard filtering or soft ranking according to the person's choice | Explicit budget mode; shared price logic for all recommendation paths |
 | First date/time and usual week | First-request hard window versus recurring soft availability | Distinct fields/lifetimes and shared timezone-aware interpretation |
+| Usual rhythm and small pockets of time | Prefer ideas that fit the person's available time | New rhythm/duration representation; never interpret a broad pattern as an exact free slot |
 | Duration | End-time/duration checks | New constraint and explicit unknown-end handling |
 | Travel mode/limit | Ranking or hard travel test | Structured preferences plus routing evidence; current model candidates have unknown travel |
 | Experience level | Suitability ranking/filtering | Per-activity field and verified/unknown candidate suitability |
