@@ -1,3 +1,4 @@
+import { plural } from "../../lib/plural";
 import { useId, useState } from "react";
 import { allSubHobbies } from "../../data/hobbies";
 import { CURATED_CORNERS } from "../../data/curatedCorners";
@@ -22,8 +23,8 @@ export function PreferenceFields({question,draft}:{question:PreferenceQuestion;d
   <div className="grid grid-cols-1 gap-2 tab:grid-cols-2">{RHYTHMS.map(k=><ChoiceChip key={k} pressed={value.rhythm.includes(k)} onToggle={()=>patch({rhythm:multi(value.rhythm,k)})}>{RHYTHM_LABELS[k]}</ChoiceChip>)}</div>
   <label htmlFor={`${id}-duration`}>A comfortable amount of time, if you know</label>
   <select className="min-h-11 rounded-control border border-border bg-background p-3" id={`${id}-duration`} value={value.durationMax ?? ""} onChange={e=>patch({durationMax:e.target.value?Number(e.target.value):null})}>
-   <option value="">It depends</option>{[15,30,60,120].map(n=><option key={n} value={n}>{n} minutes</option>)}
-   {value.durationMax && ![15,30,60,120].includes(value.durationMax) && <option value={value.durationMax}>{value.durationMax} minutes</option>}
+   <option value="">It depends</option>{[15,30,60,120].map(n=><option key={n} value={n}>{plural(n,"minute")}</option>)}
+   {value.durationMax && ![15,30,60,120].includes(value.durationMax) && <option value={value.durationMax}>{plural(value.durationMax,"minute")}</option>}
   </select><p className="text-small text-muted-foreground">A usual preference. You can ask for something different any day.</p>
  </div>;
  const choices=query.trim()?allSubHobbies.filter(c=>c.label.toLowerCase().includes(query.trim().toLowerCase())).slice(0,24).map(c=>({key:`${c.hobbySlug}/${c.slug}`,name:c.label})):CURATED_CORNERS.slice(0,12).map(c=>({key:`${c.spaceSlug}/${c.slug}`,name:c.name}));

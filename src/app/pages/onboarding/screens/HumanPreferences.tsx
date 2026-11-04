@@ -1,3 +1,4 @@
+import { plural } from "../../../lib/plural";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../../../context/AuthContext";
 import { usePreferenceDraft, type PreferenceQuestion } from "../../../lib/usePreferenceDraft";
@@ -38,7 +39,7 @@ function ReviewForm({userId}:{userId?:string}){
  {draft.status==="ready" && <dl className="flex flex-col gap-4">{[
   ["Make room for",draft.value.motivations.map(k=>MOTIVATION_LABELS[k]).join(", "),"yours"],
   ["Interests",draft.value.interests.map(i=>`${preferenceName(i.key)}${i.relationship==="try"?" (want to try)":i.relationship==="returning"?" (returning)":""}${i.experience==="beginner"?" (beginner)":""}`).join(", "),"picks"],
-  ["Free time",[...draft.value.rhythm.map(k=>RHYTHM_LABELS[k]),...(draft.value.durationMax?[`About ${draft.value.durationMax} minutes`]:[])].join(", "),"free"],
+  ["Free time",[...draft.value.rhythm.map(k=>RHYTHM_LABELS[k]),...(draft.value.durationMax?[`About ${plural(draft.value.durationMax,"minute")}`]:[])].join(", "),"free"],
  ].map(([label,text,step])=><div key={step} className="rounded-control border border-border p-4"><dt className="font-semibold">{label}</dt><dd className="mt-2">{text || "Open to exploring"}</dd><Link className="ob-link inline-flex min-h-11 items-center" to={href(step)}>Edit {label.toLowerCase()}</Link></div>)}</dl>}
  <p className="text-small text-muted-foreground">We’ll ask about cost, resources or an area when a suggestion needs them.</p>
  </ScreenFrame>;

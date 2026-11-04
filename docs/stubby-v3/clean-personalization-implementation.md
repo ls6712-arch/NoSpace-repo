@@ -102,3 +102,20 @@ No approved isolated Supabase project or live Claude/provider credentials were a
 Prefer an application rollback: disable `VITE_HUMAN_ONBOARDING`, restore the approved previous Edge/frontend build, and keep additive data intact. If a database rollback is required, export the new private JSON and feedback details first, then run the supplied `rollback_...` files in reverse order. Editor rollback retains compatible metadata validation; the base-column and feedback-detail rollbacks remove new data and are destructive. They must not be used casually. Existing accounts and original onboarding rows remain.
 
 Future catalog changes need a new SQL catalog-update migration alongside regeneration; never edit a migration that has already run. No production deployment record was modified for this implementation.
+
+## PR delivery
+
+The implementation branch was pushed successfully. Creating the PR with GitHub CLI failed with:
+
+```text
+Post "https://api.github.com/graphql": Forbidden
+```
+
+The active cloud network policy permits GitHub Git traffic but does not allow `api.github.com`. PR creation requires allowing that host in the active environment configuration. No PR number or live deployment is claimed. The prepared PR body is [clean-personalization-pr.md](clean-personalization-pr.md). From this repository, after API access is available:
+
+```sh
+gh pr create --repo ls6712-arch/NoSpace-repo \
+  --base main --head feature/clean-personalization \
+  --title "Implement human onboarding and consistent private recommendations" \
+  --body-file docs/stubby-v3/clean-personalization-pr.md
+```
