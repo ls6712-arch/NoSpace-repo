@@ -18,6 +18,7 @@ const arg = (name: string) => args.includes(name) ? args[args.indexOf(name) + 1]
 const out = path.resolve(arg("--out") ?? path.join(os.tmpdir(), "soosh-landing-e2e"));
 const dist = path.resolve(ROOT, arg("--dist") ?? fs.mkdtempSync(path.join(os.tmpdir(), "soosh-landing-build-")));
 const human = args.includes("--human");
+const record = args.includes("--record");
 const SUPA = "https://fixture.supabase.co";
 fs.mkdirSync(out, { recursive: true });
 if (!arg("--dist")) {
@@ -48,7 +49,7 @@ const browser = await chromium.launch({ ...(executablePath ? { executablePath } 
   server.close();
   throw error;
 });
-const report = { scope: "Local production build with real CSP and mocked Supabase. External fonts are blocked; system fallbacks are inspected. No live provider validation.", humanOnboarding: human, checks: [] as string[], views: [] as unknown[], errors: [] as string[] };
+const report = { scope: "Local production build with real CSP and mocked Supabase. External fonts/photos are blocked: system font and graphic fallbacks are inspected. The actual local pier photo is loaded and verified. No live provider validation.", humanOnboarding: human, checks: [] as string[], views: [] as unknown[], errors: [] as string[] };
 const passed = (name: string) => { report.checks.push(name); console.log("PASS", name); };
 let guestsOpen = true;
 const counts = { anonymousSignups: 0, asks: 0, writes: 0 };
@@ -109,7 +110,8 @@ try {
       const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.right > 0 && r.top > -100 && (r.height < 44 || r.width < 44);
     }).map(e => ({ text: e.textContent?.trim(), height: e.getBoundingClientRect().height, width: e.getBoundingClientRect().width })) }));
     assert(initial.scrollWidth <= initial.width, `${view.name}: horizontal overflow`);
-    assert.equal(initial.imageRequests, 0);
+    assert.equal(await page.getByText("Where are local suggestions available?", { exact: true }).count(), 0);
+    assert(await preview.getByRole("button", { name: "Motion is off for your device" }).isDisabled());
     assert.deepEqual(initial.controls, [], `${view.name}: undersized touch targets`);
     const wrappedNavLabels = await page.locator(".lp-nav-actions a").evaluateAll(links => links.filter(link => {
       const r=document.createRange();r.selectNodeContents(link);return r.getClientRects().length > 1;
@@ -123,6 +125,12 @@ try {
     const outside = preview.getByRole("button", { name: "Outside", exact: true });
     if (view.touch) await outside.tap(); else { await outside.focus(); await page.keyboard.press("Enter"); }
     await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
+    await page.waitForFunction(() => {
+      const image = document.querySelector<HTMLImageElement>(".lp-photo-stage img");
+      return image?.complete && image.naturalWidth > 0;
+    });
+    assert.match(await preview.locator(".lp-photo-stage img").getAttribute("src") ?? "", /shelf-pier-800.webp/);
+    await preview.screenshot({ path: path.join(out, `${view.name}-photo.png`) });
     assert.equal(await outside.getAttribute("aria-pressed"), "true");
     await preview.getByRole("button", { name: "Another example" }).click();
     await preview.getByRole("heading", { name: "Listen for birds" }).waitFor();
@@ -164,6 +172,77 @@ try {
     assert.equal(await field.inputValue(), "pottery this weekend");
     passed(`${view.name}: chosen example enters the real editable field without an ask`);
     await context.close();
+  }
+
+  // Exercise visible motion, its pause control and real touch gestures, rather than only static screenshots.
+  for (const touch of [false, true]) {
+    const context = await browser.newContext({ viewport: touch ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: touch,
+      reducedMotion: "no-preference", ...(touch || !record ? {} : { recordVideo: { dir: path.join(out, "recording"), size: { width: 1280, height: 900 } } }) });
+    await context.route("**/*", route => {
+      const url = new URL(route.request().url());
+      return url.origin === SUPA ? fixture(route) : url.origin === origin ? route.continue() : route.abort();
+    });
+    const page = await context.newPage();
+    page.on("pageerror", error => report.errors.push(error.message));
+    // Dwell time is for the human review recording only, not for waiting on assertions.
+    const show = () => record && !touch ? page.waitForTimeout(1200) : Promise.resolve();
+    await page.goto(origin, { waitUntil: "networkidle" });
+    const preview = page.getByRole("group", { name: "Try an activity example" });
+    await preview.scrollIntoViewIfNeeded();
+    await page.waitForFunction(() => document.querySelector(".lp")?.getAttribute("data-motion") === "on" && document.querySelector(".lp")!.getAnimations({ subtree: true }).some(a => a.playState === "running"));
+    await show();
+    await preview.getByRole("button", { name: "Play with Stubby" }).click();
+    // Check the rendered grin rather than a controller state or a test-only attribute.
+    await page.waitForFunction(() => document.querySelector('.lp-stubby-dock path[d="M80 84 Q94 102 108 84 Z"]'));
+    await show();
+    await preview.getByRole("button", { name: "Pause motion", exact: true }).click();
+    await page.waitForFunction(() => document.querySelector(".lp")?.getAttribute("data-motion") === "off" && !document.querySelector(".lp")!.getAnimations({ subtree: true }).some(a => a.playState === "running"));
+    await show();
+    assert.equal(await page.locator(".lp").evaluate(e => e.getAnimations({ subtree: true }).some(a => a.playState === "running")), false);
+    await preview.getByRole("button", { name: "Another example" }).click();
+    await preview.getByRole("heading", { name: "Play a song you know" }).waitFor();
+    await show();
+    assert.equal(await page.locator(".lp").getAttribute("data-motion"), "off");
+    await preview.getByRole("button", { name: "Play motion", exact: true }).click();
+    await preview.getByRole("button", { name: "Outside", exact: true }).click();
+    await page.waitForFunction(() => { const image = document.querySelector<HTMLImageElement>(".lp-photo-stage img"); return image?.complete && image.naturalWidth > 0; });
+    await show();
+    const stage = preview.locator(".lp-photo-stage");
+    await stage.scrollIntoViewIfNeeded();
+    if (!touch) {
+      const rect = await stage.boundingBox(); assert(rect);
+      await page.mouse.move(rect.x + rect.width - 10, rect.y + 12);
+      await page.waitForFunction(() => Math.abs(parseFloat(document.querySelector<HTMLElement>(".lp-photo-stage")!.style.getPropertyValue("--lp-tilt-y"))) > 1);
+      await show();
+      await page.mouse.move(rect.x - 10, rect.y - 10);
+      await page.waitForFunction(() => document.querySelector<HTMLElement>(".lp-photo-stage")!.style.getPropertyValue("--lp-tilt-y") === "0deg");
+      await show();
+    } else {
+      const session = await context.newCDPSession(page);
+      const swipe = async (dx: number, dy: number) => {
+        await stage.scrollIntoViewIfNeeded();
+        const rect = await stage.boundingBox(); assert(rect);
+        const x = rect.x + rect.width / 2, y = rect.y + rect.height * 0.3;
+        await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y, id: 1 }] });
+        for (let i = 1; i <= 6; i++) await session.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + dx * i / 6, y: y + dy * i / 6, id: 1 }] });
+        await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+      };
+      await swipe(-110, 3);
+      await preview.getByRole("heading", { name: "Listen for birds" }).waitFor();
+      await swipe(110, 3);
+      await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
+      const before = await page.evaluate(() => scrollY);
+      await swipe(2, -110);
+      await page.waitForFunction(start => scrollY > start + 20, before);
+      assert.equal(await page.locator(".lp-example").getAttribute("data-example-id"), "photo-walk", "Vertical scrolling changed the example");
+      await session.detach();
+    }
+    assert.deepEqual(counts, { anonymousSignups: 0, asks: 0, writes: 0 });
+    passed(`${touch ? "touch" : "desktop"}: real photo, animated graphics, tappable Stubby, pause/resume and ${touch ? "horizontal swipe with normal vertical scrolling" : "pointer tilt"}`);
+    await preview.screenshot({ path: path.join(out, `motion-${touch ? "touch" : "desktop"}.png`) });
+    const video = page.video();
+    await context.close();
+    if (video) { await video.saveAs(path.join(out, "landing-motion-demo.webm")); await video.delete(); }
   }
 
   // Real request error/retry behavior, behind a mocked provider response.
