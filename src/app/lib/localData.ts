@@ -11,6 +11,7 @@
  * the next thing that leaks between accounts.
  */
 export const LOCAL_KEYS = [
+  "sushii.pursuitWorkflow.v2",
   // Private logs used to live in here (`privateLogs`), for every account —
   // that field is unused now that a signed-in owner's Private Logs are
   // Supabase-backed (context/PrivateLogsContext.tsx). Still cleared on

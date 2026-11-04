@@ -7,7 +7,7 @@ import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { pursuitStatus, useJournalSlice, type Project } from "../lib/journal";
 import { collectPursuitMoments } from "../lib/pursuitTrail";
-import { formatAmount, pursuitCorner, unitFor } from "../lib/pursuitProgress";
+import { formatAmount, pursuitCorner, summarize, unitFor } from "../lib/pursuitProgress";
 import { usePursuitMembers, usePursuitProgress } from "../lib/usePursuitProgress";
 import { daysBetween } from "../lib/pursuitGoal";
 import { withLine } from "../lib/withLine";
@@ -95,15 +95,16 @@ export function PursuitRecap() {
 
   const measure = project.measure;
   const target = measure?.target ?? project.goal?.targetNumber ?? 0;
-  const unit = measure ? unitFor(measure, target) : "";
+  const unit = measure ? unitFor(measure, target) : project.goal?.unit ?? "";
   const finished = project.finishedAt ?? Date.now();
   const days = daysBetween(project.startedAt, finished);
   const corner = pursuitCorner(project) ?? project.title;
   const others = members.filter((m) => m.status === "joined" && m.userId !== user?.id).map((m) => m.displayName);
-  const done = Math.min(measure ? Math.max(tiles.length, 0) : 0, target) || tiles.length;
-  const stubCount = { done: Math.min(target || done, target || done), total: target || done };
+  const counted = project.mode === "group" ? entries : entries.filter(e => !e.userId || e.userId === user?.id);
+  const done = measure ? summarize(measure, counted).current : project.goal?.shape === "number" ? project.goal.current ?? 0 : moments.length;
+  const stubCount = { done, total: target || done };
   const meta = [withLine(others), formatDateRange(project.startedAt, finished)].filter(Boolean).join(" · ");
-  const headline = target > 0 ? `You finished ${formatAmount(target)} ${unit}`.trim() : `You finished ${project.title}`;
+  const headline = target > 0 ? `${formatAmount(done)} of ${formatAmount(target)} ${unit}`.trim() : `You finished ${project.title}`;
 
   const share = async () => {
     if (sharing) return;
@@ -112,7 +113,7 @@ export function PursuitRecap() {
     const blob = await renderRecap({
       kicker: `Pursuit complete · ${plural(days, "day")}`,
       title: headline,
-      stubTitle: target > 0 ? `${formatAmount(stubCount.total)}/${formatAmount(stubCount.total)} ${unit}` : corner,
+      stubTitle: target > 0 ? `${formatAmount(stubCount.done)}/${formatAmount(stubCount.total)} ${unit}` : corner,
       stubCount: target > 0 ? `${formatAmount(stubCount.done)}/${formatAmount(stubCount.total)}` : "",
       stubMeta: meta,
       photoUrls: tiles.map((t) => t.image).filter((u): u is string => !!u),

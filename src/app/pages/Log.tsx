@@ -37,6 +37,8 @@ import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
+import { recordWorkflowMoment, removeWorkflowMoment } from "../lib/pursuitWorkflowStore";
+import { notifyError } from "../components/ui/toaster";
 import { addProgress, removeProgress, startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { attachPostToPursuit, deleteRemoteProgress, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
@@ -329,7 +331,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // A Pursuit with a measure (10 loaves, 5 paintings) can take an amount from
   // the same form: how much this Moment moved it forward.
   const selectedProject = journal.projects.find((p) => p.id === projectId);
-  const selectedMeasure = selectedProject && hasMeasure(selectedProject) ? selectedProject.measure : undefined;
+  const workflowTracking = selectedProject?.measure?.workflow?.tracking;
+  const selectedMeasure = selectedProject && (workflowTracking ? workflowTracking === "sessions" || workflowTracking === "total" : hasMeasure(selectedProject)) ? selectedProject.measure : undefined;
   const groupPursuit = !!selectedProject && (selectedProject.mode ?? "solo") !== "solo" && !!user;
   const [amount, setAmount] = useState<number>(1);
   const [counts, setCounts] = useState(true);
@@ -890,7 +893,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     }
     setPrivateSaveError(null);
     lastProgressId.current = undefined;
-    setSavedProgressLine(recordProgress(undefined, result.data.id, note));
+    setSavedProgressLine(await recordProgress(undefined, result.data.id, note));
     setUndoTarget({ logId: result.data.id, progressId: lastProgressId.current });
     setUndoError(null);
 
@@ -912,8 +915,19 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   /** Logs the amount toward the chosen Pursuit's measure and returns the line
    * the saved screen shows ("+1 painting · 3 of 5 paintings"). */
   const lastProgressId = useRef<string | undefined>(undefined);
-  const recordProgress = (postId?: number, logId?: number, note?: string): string | null => {
+  const recordProgress = async (postId?: number, logId?: number, note?: string): Promise<string | null> => {
     if (!selectedProject || !selectedMeasure || loggedAmount <= 0) return null;
+    if (selectedProject.measure?.workflow) {
+      try {
+        const row = await recordWorkflowMoment(selectedProject, loggedAmount, user?.id, postId, logId, note);
+        if (!row) return null;
+        lastProgressId.current = row.id;
+        return `+${formatAmount(row.amount)} ${unitFor(selectedMeasure, row.amount)}`;
+      } catch {
+        notifyError("Moment saved. Progress couldn’t be saved. Add progress from the Pursuit.");
+        return null;
+      }
+    }
     const entry = addProgress({
       projectId: selectedProject.id,
       amount: loggedAmount,
@@ -1104,7 +1118,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         void supabase.from("space_moments").insert({ space_id: initialSpaceId, post_id: entry.id });
       }
       lastProgressId.current = undefined;
-      setSavedProgressLine(recordProgress(entry.id, undefined, typedCaption));
+      setSavedProgressLine(await recordProgress(entry.id, undefined, typedCaption));
       setUndoTarget({ postId: entry.id, progressId: lastProgressId.current });
       setUndoError(null);
       if (!pursuitScoped) clearDraft();
@@ -1143,8 +1157,11 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       if (undoTarget.postId !== undefined) await deletePost(undoTarget.postId);
       else if (undoTarget.logId !== undefined) await removePrivateLog(undoTarget.logId);
       if (undoTarget.progressId) {
-        removeProgress(undoTarget.progressId);
-        if (user) void deleteRemoteProgress(undoTarget.progressId);
+        if (selectedProject?.measure?.workflow) await removeWorkflowMoment(selectedProject.id, undoTarget.progressId, !!user);
+        else {
+          removeProgress(undoTarget.progressId);
+          if (user) void deleteRemoteProgress(undoTarget.progressId);
+        }
       }
       setUndoTarget(null);
       setSavedPostId(null);

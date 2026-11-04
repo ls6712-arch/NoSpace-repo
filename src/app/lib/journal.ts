@@ -79,6 +79,8 @@ export interface Goal {
 export type MeasureKind = "count" | "quantity" | "time" | "milestones" | "custom";
 
 export interface Measure {
+  /** Versioned workflow; absent on legacy Pursuits. */
+  workflow?: import("./pursuitWorkflow").Workflow;
   kind: MeasureKind;
   /** The target amount, e.g. 20000. For "milestones" it's the number of milestones. */
   target: number;
@@ -128,6 +130,7 @@ export interface ProgressEntry {
 }
 
 export interface Project {
+  workflowPersonal?: import("./pursuitWorkflow").PersonalGoal;
   id: string;
   title: string;
   /**
@@ -220,7 +223,9 @@ export const CHECK_IN_OPTIONS: { days: number; label: string }[] = [
  * disagree with finishedAt/pausedAt. */
 export type PursuitStatus = "active" | "resting" | "complete" | "let_go";
 
-export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt" | "letGoAt">): PursuitStatus {
+export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt" | "letGoAt" | "workflowPersonal">): PursuitStatus {
+  if (p.workflowPersonal?.status === "finished") return "complete";
+  if (p.workflowPersonal?.status === "paused") return "resting";
   if (p.finishedAt) return "complete";
   if (p.letGoAt) return "let_go";
   if (p.pausedAt) return "resting";
@@ -847,4 +852,15 @@ export function setProjectMode(projectId: string, mode: PursuitMode): Project | 
 
 export function setProjectMeasure(projectId: string, measure: Measure): Project | undefined {
   return patchProject(projectId, () => ({ measure }));
+}
+
+/** Derived compatibility cache for existing Shelf cards. The workflow tables remain authoritative. */
+export function projectWorkflowProgress(projectId: string, entries: ProgressEntry[], personal?: import('./pursuitWorkflow').PersonalGoal) {
+  const project = state.projects.find(p => p.id === projectId);
+  if (!project?.measure?.workflow) return;
+  const progress = [...state.progress.filter(e => e.projectId !== projectId), ...entries];
+  const target = project.measure.workflow.tracking === 'checklist' ? project.measure.workflow.items.filter(i => !i.archived).length : personal ? personal.target ?? 0 : project.measure.workflow.target ?? 0;
+  const updated = { ...project, measure: { ...project.measure, target }, workflowPersonal: personal };
+  if (JSON.stringify(progress) === JSON.stringify(state.progress) && JSON.stringify(updated) === JSON.stringify(project)) return;
+  commit({ ...state, progress, projects: state.projects.map(p => p.id === projectId ? updated : p) });
 }

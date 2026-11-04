@@ -20,6 +20,10 @@ import {
   X,
   Ticket,
 } from "lucide-react";
+import { markPursuitNoticesRead } from "../lib/usePursuitNoticeCount";
+import { plural } from "../lib/plural";
+import { notifyError } from "./ui/toaster";
+import { ERROR_LINE } from "../lib/stateCopy";
 import { useSocial } from "../context/SocialContext";
 import { useAuth } from "../context/AuthContext";
 import { respondToFollow } from "../lib/profileFollows";
@@ -149,7 +153,7 @@ export function NotificationsMenu({
   const location = useLocation();
   const [followRefreshKey, setFollowRefreshKey] = useState(0);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
-  const { groups, groupedUnread, incoming, incomingFollows, badgeCount } = useNotificationBadge(followRefreshKey);
+  const { groups, groupedUnread, incoming, incomingFollows, badgeCount, pursuitUnread } = useNotificationBadge(followRefreshKey);
 
   // Only while this panel is the open one. On the rail, `setOpen(false)` tells
   // the rail "close the panel", so listening while closed shut the More menu
@@ -242,10 +246,10 @@ export function NotificationsMenu({
         >
           <div className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3 text-small">
             Notifications
-            {groupedUnread > 0 && (
+            {(groupedUnread > 0 || pursuitUnread > 0) && (
               <button
                 type="button"
-                onClick={() => void social.markAllRead()}
+                onClick={() => { void (async () => { try { await social.markAllRead(); if (user && pursuitUnread > 0) await markPursuitNoticesRead(user.id); } catch { notifyError(ERROR_LINE); } })(); }}
                 className="text-caption text-muted-foreground transition-colors hover:text-foreground hover:underline"
               >
                 Mark all read
@@ -253,6 +257,7 @@ export function NotificationsMenu({
             )}
           </div>
 
+          {pursuitUnread > 0 && <Link to="/inbox" onClick={() => setOpen(false)} className="block border-b border-border px-4 py-3 text-small">{plural(pursuitUnread, "Pursuit update")} · See all</Link>}
           {incoming.length > 0 && (
             <ul className="border-b border-[var(--hairline)]">
               {incoming.map((p) => (
@@ -323,7 +328,7 @@ export function NotificationsMenu({
             </ul>
           )}
 
-          {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 ? (
+          {groups.length === 0 && incoming.length === 0 && incomingFollows.length === 0 && !pursuitUnread ? (
             <EmptyState
               size="rail"
               className="mt-0 px-4 py-4"

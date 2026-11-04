@@ -206,6 +206,21 @@ Replaces the Stub types in the row above (silver, ticket, with someone, session,
 
 ## Pursuits
 
+### Simplified workflow (approved by the owner, November 4, 2026)
+
+| Term | Meaning |
+|---|---|
+| Sessions | Count each time you do it |
+| Total | Add up pages, hours, distance, or another amount |
+| Checklist | Check things off as you go |
+| Moments only | Share how it’s going without counting progress |
+| Individual goals / Shared goal | Each participant chooses a target / contributions count toward one goal |
+| Progress / Chat | Tracking and recent Moments / discussion within the Pursuit |
+| Add progress | Record a session, amount, or completed checklist item |
+| Finish by | Optional goal date |
+
+These replace the older measurement and mode labels in the simplified workflow. Legacy Pursuits retain their existing labels for compatibility. Existing action, reminder, invitation, session, comment, and notification terminology continues to apply.
+
 | Term | Meaning |
 |---|---|
 | Pursuit / Start a Pursuit | Named ongoing goal / the only create wording |
