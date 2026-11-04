@@ -1,3 +1,4 @@
+import { localClock, localTimeMs } from "../../../supabase/functions/_shared/preferenceTime";
 import { formatTime, formatWeekday } from "./dates";
 import { plural } from "./plural";
 import { SLOTS, windowKey, type DayKey, type SlotKey } from "./tasteModel";
@@ -40,7 +41,8 @@ const partsFmt = new Intl.DateTimeFormat("en-US", {
 });
 
 /** The year, month, day, hour and weekday of a moment in New York. */
-export function nyParts(ms: number): Parts {
+export function nyParts(ms: number,timeZone=HOME_TZ): Parts {
+  if(timeZone!==HOME_TZ){const c=localClock(ms,timeZone);return {y:c.year,m:c.month,d:c.day,hour:c.hour,dow:c.dow};}
   const p: Record<string, string> = {};
   for (const part of partsFmt.formatToParts(new Date(ms))) p[part.type] = part.value;
   return {
@@ -53,12 +55,13 @@ export function nyParts(ms: number): Parts {
 }
 
 /** The moment a New York wall clock time happens, in milliseconds. */
-export function nyTimeToMs(y: number, m: number, d: number, hour: number): number {
+export function nyTimeToMs(y: number, m: number, d: number, hour: number,timeZone=HOME_TZ): number {
+  if(timeZone!==HOME_TZ)return localTimeMs(y,m,d,hour,timeZone);
   const guess = Date.UTC(y, m - 1, d, hour, 0, 0);
   // Two passes settle the offset across a daylight saving change.
   let ms = guess;
   for (let i = 0; i < 2; i++) {
-    const p = nyParts(ms);
+    const p = nyParts(ms,timeZone);
     const shown = Date.UTC(p.y, p.m - 1, p.d, p.hour, 0, 0);
     ms += guess - shown;
   }
@@ -78,20 +81,21 @@ export interface WeekWindow {
 }
 
 /** The person's free windows over the next 7 days (today included) that have not ended yet, soonest first. */
-export function windowsLeft(windows: readonly string[], now: number): WeekWindow[] {
+export function windowsLeft(windows: readonly string[], now: number,timeZone=HOME_TZ): WeekWindow[] {
   if (windows.length === 0) return [];
-  const today = nyParts(now);
+  const today = nyParts(now,timeZone);
   const out: WeekWindow[] = [];
   for (let offset = 0; offset < 7; offset++) {
     // Noon avoids any edge of a daylight saving change when stepping days.
-    const day = nyParts(Date.UTC(today.y, today.m - 1, today.d + offset, 12));
+    const date=new Date(Date.UTC(today.y,today.m-1,today.d+offset,12));
+    const day={y:date.getUTCFullYear(),m:date.getUTCMonth()+1,d:date.getUTCDate(),dow:date.getUTCDay()};
     const dayKey = DAY_KEY_BY_DOW[day.dow];
     for (const slot of SLOTS) {
       const key = windowKey(dayKey, slot.key);
       if (!windows.includes(key)) continue;
       const [from, to] = SLOT_HOURS[slot.key];
-      const startMs = nyTimeToMs(day.y, day.m, day.d, from);
-      const endMs = to === 24 ? nyTimeToMs(day.y, day.m, day.d + 1, 0) : nyTimeToMs(day.y, day.m, day.d, to);
+      const startMs = nyTimeToMs(day.y, day.m, day.d, from,timeZone);
+      const endMs = to === 24 ? nyTimeToMs(day.y, day.m, day.d + 1, 0,timeZone) : nyTimeToMs(day.y, day.m, day.d, to,timeZone);
       if (endMs > now) out.push({ key, day: dayKey, slot: slot.key, offset, startMs, endMs });
     }
   }

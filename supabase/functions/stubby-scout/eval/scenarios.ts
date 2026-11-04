@@ -95,7 +95,7 @@ export const SCENARIOS: Scenario[] = [
     sooshLinks: ["/start/crafts/pottery"],
     candidates: [ev("Comedy night", "/comedy/tonight"), idea("Throw a pinch pot at the kitchen table", "/start/crafts/pottery")],
     // V3 offers the same Corner start page from Soosh's own data, named from the Corner (keptV3).
-    expect: { question: null, kept: ["Throw a pinch pot at the kitchen table"], keptV3: ["Pottery at home"], excludes: ["Comedy night"], contract: { setting: { from: "ask", strength: "hard" } } },
+    expect: { question: null, kept: ["Throw a pinch pot at the kitchen table"], keptV3: [], excludes: ["Comedy night"], contract: { setting: { from: "ask", strength: "hard" } } },
   },
   {
     id: "head-out-answered",
@@ -137,7 +137,7 @@ export const SCENARIOS: Scenario[] = [
     ask: "pottery tonight",
     profile: { monthlyBudget: 0 },
     candidates: [ev("Unpriced wheel night", "/studio/unpriced", { price: null }), ev("Free open studio", "/studio/free-open", { price: "Free" })],
-    expect: { kept: ["Free open studio", "Unpriced wheel night"], contract: { budget: { from: "profile", strength: "soft" } } },
+    expect: { kept: ["Free open studio"], contract: { budget: { from: "profile", strength: "hard" } } },
   },
   {
     id: "budget-soft-fifty",
@@ -145,7 +145,7 @@ export const SCENARIOS: Scenario[] = [
     ask: "pottery tonight",
     profile: { monthlyBudget: 50 },
     candidates: [ev("Wheel throwing intro", "/classes/wheel-intro", { price: "$35" }), ev("Open studio hour", "/studio/open-hour", { price: "Free" })],
-    expect: { kept: ["Open studio hour", "Wheel throwing intro"] },
+    expect: { kept: ["Wheel throwing intro", "Open studio hour"] },
   },
   {
     id: "budget-typed-limit",
@@ -237,7 +237,7 @@ export const SCENARIOS: Scenario[] = [
       idea("Slow Sunday walk to Gapstow Bridge in Central Park", page("/parks/central-park/gapstow-bridge"), { starts: "2026-11-07T10:00", place: "Central Park" }),
     ],
     // V3 offers the same Pursuit from Soosh's own data, under its own title (keptV3).
-    expect: { outcome: "found", kept: ["Free Thursday afternoon at Museum of the Moving Image", "Pottery session on your Pursuit", "Slow Sunday walk to Gapstow Bridge in Central Park"], keptV3: ["Free Thursday afternoon at Museum of the Moving Image", "Pottery", "Slow Sunday walk to Gapstow Bridge in Central Park"] },
+    expect: { outcome: "nothing", kept: [],keptV3: [] },
   },
   {
     id: "ask-12",
@@ -255,7 +255,7 @@ export const SCENARIOS: Scenario[] = [
   { id: "care-ordinary-sadness", group: "care", engines: ["v3"], ask: "feeling low, pottery tonight", candidates: [ev("Glaze class", "/studio/glaze", { price: "Free" })], expect: { care: false, gentle: true, kept: ["Glaze class"] } },
   { id: "care-false-alarm", group: "care", engines: ["v3"], ask: "this traffic is killing me, pottery tonight", candidates: [ev("Glaze class", "/studio/glaze", { price: "Free" })], expect: { care: false, gentle: false, kept: ["Glaze class"] } },
   // Stay in, from their own Pursuits and Corners: no web source needed.
-  { id: "stay-in-own-ideas", group: "stay in", engines: ["v3"], ask: "something fun", answers: { setting: "in" }, sooshLinks: ["/pursuit/p1"], candidates: [ev("Comedy night", "/comedy/tonight")], expect: { kept: ["Pottery"], excludes: ["Comedy night"] } },
+  { id: "stay-in-own-ideas", group: "stay in", engines: ["v3"], ask: "something fun", answers: { setting: "in" }, sooshLinks: ["/pursuit/p1"], candidates: [ev("Comedy night", "/comedy/tonight")], expect: { kept: [], excludes: ["Comedy night"] } },
   // A walking route's own page is a place, never an event listing.
   { id: "place-walking-route", group: "deck", engines: ["v3"], ask: "a walk this week", candidates: [idea("Brooklyn Bridge Park walking route", page("/things-to-do/walking-route"), { starts: "2026-11-03T10:00" })], expect: { kept: ["Brooklyn Bridge Park walking route"] } },
   // Not all their own Pursuits when good alternatives exist.

@@ -44,16 +44,16 @@ describe("money", () => {
     expect(parsePrice("pay what you can")).toBeNull();
     expect(parsePrice(null)).toBeNull();
   });
-  it("a skipped or free-only budget allows only free things and what a pass covers", () => {
+  it("a skipped budget stays unknown; an explicit free-only answer requires zero cost", () => {
     expect(affordable(null, 0, false)).toBe(true);
-    expect(affordable(null, null, false)).toBe(false);
+    expect(affordable(null, null, false)).toBe(true);
     expect(affordable(0, 12, false)).toBe(false);
     expect(affordable(null, 30, true)).toBe(true);
   });
-  it("a set budget allows an unknown price or one inside it", () => {
+  it("a monthly amount never becomes a per-activity ceiling", () => {
     expect(affordable(50, null, false)).toBe(true);
     expect(affordable(50, 30, false)).toBe(true);
-    expect(affordable(50, 80, false)).toBe(false);
+    expect(affordable(50, 80, false)).toBe(true);
   });
 });
 
@@ -67,9 +67,9 @@ describe("buildPlans", () => {
     expect(p.reason).toBe("You said Thursday evenings work, and you picked Climbing.");
     expect(p.cost).toBe("Free");
   });
-  it("leaves out a listing outside every free window, past a week, or in an unpicked Corner", () => {
+  it("keeps usual windows soft, but excludes listings past a week or in an unpicked Corner", () => {
     const plans = buildPlans({ ...base, events: [event(1, at(29, 12)), event(2, at(29 + 7, 19)), event(3, at(29, 19), { cornerKey: "x/y" })] });
-    expect(plans.some((p) => p.kind === "event")).toBe(false);
+    expect(plans.filter((p) => p.kind === "event").map(p=>p.eventId)).toEqual([1]);
   });
   it("puts the next 72 hours before later this week, and a friend's Pursuit first of all", () => {
     const plans = buildPlans({
@@ -86,9 +86,9 @@ describe("buildPlans", () => {
     expect(p.reason).toContain("You have a climbing pass.");
     expect(JSON.stringify(p)).not.toMatch(/\$0|with your pass/i);
   });
-  it("with a skipped budget, drops a priced listing and one with no price", () => {
+  it("with a skipped budget, retains listings and discloses known costs", () => {
     const plans = buildPlans({ ...base, budget: null, events: [event(1, at(29, 19), { price: "$30" }), event(2, at(29, 20), { price: null })] });
-    expect(plans.some((p) => p.kind === "event")).toBe(false);
+    expect(plans.filter((p) => p.kind === "event")).toHaveLength(2);
   });
   it("finishes with at-home plans on real times from the free windows", () => {
     const plans = buildPlans({ ...base, picks: [SOUR, COFFEE], windows: ["sat-day", "thu-eve"] });
@@ -98,11 +98,13 @@ describe("buildPlans", () => {
     expect(home[1].when).toBe("Saturday afternoon");
     expect(home[0].step).toBeTruthy();
     // No price is known for a plan at home, so there is no cost line.
-    expect(home.every((h) => h.cost === undefined)).toBe(true);
+    expect(home.every((h) => h.cost === "Materials cost unknown")).toBe(true);
+    expect(home.every(h=>h.needs && h.timing==="suggested")).toBe(true);
   });
-  it("with a skipped budget only offers things that need nothing bought; with no windows it is the next Saturday afternoon", () => {
+  it("skipping budget preserves unknown costs; no usual windows produces an editable suggested time", () => {
     const plans = buildPlans({ ...base, budget: null, picks: [SOUR], windows: [] });
-    expect(plans).toEqual([]);
+    expect(plans).toHaveLength(1);
+    expect(plans[0].cost).toBe("Materials cost unknown");
     const free = buildPlans({ ...base, budget: null, picks: [pick("sports-fitness", "run-clubs", "Run clubs"), pick("food-cooking", "supper-clubs", "Supper clubs")], windows: [] });
     // Guides for these are outdoors or need other people, so they are not at-home plans.
     expect(free).toEqual([]);

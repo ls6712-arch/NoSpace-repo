@@ -1,3 +1,5 @@
+import { personalizationInputs } from "./personalizationInputs";
+import { humanOnboardingEnabled } from "./personalization";
 import { supabase } from "../../lib/supabase";
 import { DEFAULT_CHECK_IN_DAYS, addJoinedProject, newProject, startProject, type PursuitMember } from "./journal";
 import { fetchCornersLive } from "./cornersLive";
@@ -73,7 +75,8 @@ async function friendsPlan(token: string): Promise<InviteInput | null> {
 
 export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise<LoadedPlanInput> {
   const [taste, passes, place] = await Promise.all([fetchTaste(ctx.userId), fetchPasses(ctx.userId), privatePlace(ctx.userId)]);
-  const picks = taste.picks.flatMap((key) => {
+  const personal=await personalizationInputs(ctx.userId,taste,passes);
+  const picks = personal.value.interests.map(i=>i.key).flatMap((key) => {
     const name = ctx.names.get(key);
     const [spaceSlug, slug] = key.split("/");
     return name && spaceSlug && slug ? [{ key, name, spaceSlug, slug }] : [];
@@ -122,7 +125,7 @@ export async function loadPlanInput(ctx: PlanContext, now = Date.now()): Promise
     }
   }
 
-  return { now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
+  return { personalization:personal.value,equipment:personal.equipment,activityBudget:personal.perActivityBudget,timeZone:personal.timeZone,allowDiscovery:humanOnboardingEnabled,now, picks, windows: taste.windows, budget: taste.budget, passes, events, pursuits, invite, city: place.city, area: place.area };
 }
 
 // ── "I'm going" ───────────────────────────────────────────────────────────

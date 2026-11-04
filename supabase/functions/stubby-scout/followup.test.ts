@@ -95,7 +95,7 @@ describe("follow-ups", () => {
   it("Cheaper halves the ceiling (or sets a cheap one); Later starts two hours on", () => {
     const intent = readIntent("pottery tonight", { now: NOW, monthlyBudget: 80 });
     const window = searchWindow(intent, NOW);
-    expect(applyFollowUp(intent, window, "cheaper", NOW).intent.budget).toEqual({ max: 10, free: false, from: "ask" });
+    expect(applyFollowUp(intent, window, "cheaper", NOW).intent.budget).toEqual({ max: 20, free: false, from: "ask" });
     const noBudget = readIntent("pottery tonight", { now: NOW });
     expect(applyFollowUp(noBudget, window, "cheaper", NOW).intent.budget).toEqual({ max: 20, free: false, from: "ask" });
     expect(applyFollowUp(intent, window, "later", NOW).window.startMs).toBe(NOW + 2 * 3_600_000);

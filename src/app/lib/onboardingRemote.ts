@@ -41,12 +41,14 @@ export const UNDER_AGE_MESSAGE = "under_minimum_age";
 export async function savePrivate(userId: string, fields: PrivateFields): Promise<{ error: string | null; underAge?: boolean }> {
   if (!supabase) return { error: null };
   try {
+    const auth=await supabase.auth.getUser();
+    if(auth.error || !auth.data.user || auth.data.user.id!==userId || auth.data.user.is_anonymous) return {error:"Your account changed. Reload before saving."};
     const { error } = await supabase
       .from("profile_private")
       .upsert({ user_id: userId, ...fields, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (!error) return { error: null };
     if (error.message === UNDER_AGE_MESSAGE) return { error: null, underAge: true };
-    if (notDeployed(error.code)) return { error: null };
+    if (notDeployed(error.code)) return { error: "Your changes weren’t saved. Try again later." };
     return { error: friendlyError(error) };
   } catch (e) {
     return { error: friendlyError(e) };

@@ -106,9 +106,9 @@ describe("precedence and the contract", () => {
     expect(c.exclusions).toMatchObject({ from: "default", strength: "inferred" });
   });
 
-  it("a monthly budget is soft, a typed one hard", () => {
+  it("a monthly amount stays separate from an explicit activity ceiling", () => {
     const soft = readIntent("pottery tonight", { now: NOW, monthlyBudget: 50 });
-    expect(buildContract(soft, searchWindow(soft, NOW)).budget).toEqual({ value: { max: 12, free: false }, from: "profile", strength: "soft" });
+    expect(buildContract(soft, searchWindow(soft, NOW)).budget).toEqual({ value:null,from:null,strength:"unknown" });
     const hard = readIntent("pottery tonight under $20", { now: NOW, monthlyBudget: 50 });
     expect(buildContract(hard, searchWindow(hard, NOW)).budget).toEqual({ value: { max: 20, free: false }, from: "ask", strength: "hard" });
   });

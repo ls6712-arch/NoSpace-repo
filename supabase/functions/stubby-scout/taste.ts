@@ -1,3 +1,4 @@
+import { lastingFeedback, REJECTION_REASONS, type FeedbackDetails } from "../_shared/feedback.ts";
 // The taste profile (stubby_profiles) and recent feedback (stubby_feedback), turned into prompt
 // lines. Everything here is data about the person, never instructions: interests are mapped from a
 // fixed list of ids to fixed words (nothing typed reaches the prompt), the city is reduced to plain
@@ -32,6 +33,8 @@ export interface Taste {
 
 export interface Signal {
   signal: "up" | "down" | "save";
+  reason?:FeedbackDetails["reason"];
+  scope?:FeedbackDetails["scope"];
   title: string;
   kind: "event" | "idea" | null;
 }
@@ -82,7 +85,7 @@ export function readSignals(rows: unknown): Signal[] {
     if (o.signal !== "up" && o.signal !== "down" && o.signal !== "save") continue;
     const title = safeTitle(o.title);
     if (!title) continue;
-    out.push({ signal: o.signal, title, kind: o.kind === "event" || o.kind === "idea" ? o.kind : null });
+    out.push({ ...(REJECTION_REASONS.includes(o.reason as never) ? {reason:o.reason as FeedbackDetails["reason"]}: {}), ...(["request","usual"].includes(o.scope as string)?{scope:o.scope as FeedbackDetails["scope"]}:{}), signal: o.signal, title, kind: o.kind === "event" || o.kind === "idea" ? o.kind : null });
     if (out.length >= 20) break;
   }
   return out;
@@ -104,7 +107,7 @@ export function tasteLines(t: Taste, signals: readonly Signal[]): string[] {
   if (t.timing) lines.push(`- Usually looking for something ${TIMING_WORDS[t.timing]}.`);
   if (t.budget) lines.push(`- Budget they gave: ${BUDGET_WORDS[t.budget]}.`);
   const list = (s: Signal["signal"]) =>
-    signals
+    lastingFeedback(signals)
       .filter((x) => x.signal === s)
       .slice(0, 8)
       .map((x) => `'${x.title}'`)

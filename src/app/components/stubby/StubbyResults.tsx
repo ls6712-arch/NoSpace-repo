@@ -1,3 +1,6 @@
+import { humanOnboardingEnabled } from "../../lib/personalization";
+import type { FeedbackDetails } from "../../lib/stubbyAsk";
+import { RejectionDetails } from "./RejectionDetails";
 import { useId, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useReducedMotion } from "motion/react";
 import { Check, ChevronDown, ExternalLink, LoaderCircle, ThumbsDown, ThumbsUp, X } from "lucide-react";
@@ -306,7 +309,7 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
             className={cn("relative touch-pan-y select-none rounded-card border-[1.5px] border-dashed border-accent-text bg-card p-4", !reduce && dx === 0 && "transition-transform")}
             style={dx && !reduce ? { transform: `translateX(${dx}px) rotate(${dx / 24}deg)` } : undefined}
           >
-            <Card pick={front} count={count} onRemove={() => void remove(front)} rated={state.rated[front.id] ?? null} onRate={(s) => state.rate(front.id, s)} />
+            <Card pick={front} count={count} onRemove={() => void remove(front)} rated={state.rated[front.id] ?? null} onRate={(s,d) => state.rate(front.id, s,d)} />
             {nudgeId === front.id && onBring && (
               <Button type="button" variant="outline" className="mt-3" onClick={() => onBring(front)}>
                 {SHEET.bringSomeone}
@@ -368,8 +371,9 @@ function Card({
   count: { n: number; total: number } | null;
   onRemove: () => void;
   rated?: "up" | "down" | null;
-  onRate?: (s: "up" | "down") => void;
+  onRate?: (s: "up" | "down",details?:FeedbackDetails) => Promise<boolean>|void;
 }) {
+  const [whyOpen,setWhyOpen]=useState(false);
   const idea = p.kind === "idea";
   const meta = idea ? [p.place, p.price?.trim() || null] : [pickPill(p), p.place];
   const linkClass = "mt-1 inline-flex min-h-8 items-center gap-1 text-small font-semibold underline underline-offset-2";
@@ -394,6 +398,7 @@ function Card({
             <ExternalLink className="size-3.5" aria-hidden="true" />
           </a>
         ) : null}
+        {onRate && whyOpen && <RejectionDetails onDone={()=>setWhyOpen(false)} onSubmit={d=>onRate("down",d)}/>}
         {onRate && (
           <div className="mt-2 flex gap-1">
             <button
@@ -409,7 +414,7 @@ function Card({
               type="button"
               aria-label={GUEST_COPY.notForMe}
               aria-pressed={rated === "down"}
-              onClick={() => onRate("down")}
+              onClick={() => humanOnboardingEnabled ? setWhyOpen(true) : void onRate("down")}
               className={cn("inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground", rated === "down" && "text-accent-text")}
             >
               <ThumbsDown className="size-5" aria-hidden="true" />

@@ -38,6 +38,7 @@
     "my_access",
     "pursuit_invite_preview",
     "pursuit_person_name",
+    "record_stubby_feedback",
     "resolve_profile_handle",
     "space_host_count",
     "space_moment_count_30d"
@@ -50,7 +51,9 @@
     "get_my_planning",
     "my_member_no",
     "my_profile_private",
+    "read_personalization",
     "remove_underage_account",
+    "save_personalization",
     "set_calendar_feed_token",
     "set_my_birthdate",
     "set_username_during_onboarding",

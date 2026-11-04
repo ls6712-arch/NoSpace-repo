@@ -31,7 +31,7 @@ const args = process.argv.slice(2);
 const distArg = args.includes("--dist") ? args[args.indexOf("--dist") + 1] : null;
 const dist = path.resolve(ROOT, distArg ?? "dist-e2e");
 if (!distArg) {
-  const r = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_STUBBY_V3: "true", VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: ANON_KEY } });
+  const r = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_STUBBY_V3: "true", VITE_HUMAN_ONBOARDING:"true", VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: ANON_KEY } });
   if (r.status !== 0) throw new Error("build failed");
 }
 
@@ -110,6 +110,13 @@ const json = (route: Route, status: number, body: unknown, extra: Record<string,
 const bearer = (route: Route) => (route.request().headers()["authorization"] ?? "").replace(/^Bearer\s+/i, "");
 
 let capability: Record<string, unknown> | null = null;
+const emptyCapability=()=>({version:1,consent:{memory:false,onboarding:false,feedback:false},timeZone:"America/New_York",perActivityBudget:null,equipment:[],goals:[],preferences:[],memberships:[]});
+let personal:Record<string,unknown>={version:1,motivations:[],interests:[],rhythm:[],durationMax:null,confirmedAt:null};
+let revision=0;
+let privateInfo:Record<string,unknown>={picks:[],free_windows:[],monthly_budget:null,city:null,area:null,birthdate:"1990-01-01",onboarding_step:null};
+const feedback:Record<string,unknown>[]=[];
+let preferenceReadsFail=false;
+
 
 async function supabase(route: Route) {
   const req = route.request();
@@ -168,7 +175,7 @@ async function supabase(route: Route) {
     const table = p.slice("/rest/v1/".length);
     const one = (req.headers()["accept"] ?? "").includes("vnd.pgrst.object");
     if (table === "stubby_capabilities") {
-      if (req.method() === "GET") return json(route, 200, one ? (capability ? { profile: capability } : null) : capability ? [{ profile: capability }] : []);
+      if (req.method() === "GET") return json(route, 200, one ? (capability ? { profile: capability,personalization:personal,revision } : null) : capability ? [{ profile: capability,personalization:personal,revision }] : []);
       if (req.method() === "POST") {
         const row = req.postDataJSON();
         if (row.user_id !== GUEST_ID) throw new Error("Capability write used another user");
@@ -176,7 +183,28 @@ async function supabase(route: Route) {
         return json(route, 201, []);
       }
     }
-    if (table === "rpc/forget_stubby_memory") { if (req.postDataJSON().expected_user !== GUEST_ID) return json(route, 403, {}); capability = null; return json(route, 200, null); }
+    if(table==="rpc/read_personalization"){
+      if(preferenceReadsFail)return json(route,503,{message:"Offline"});
+      return json(route,200,{value:personal,revision,capability:capability ?? emptyCapability(),taste:{picks:privateInfo.picks,windows:privateInfo.free_windows,budget:privateInfo.monthly_budget},passes:[]});
+    }
+    if(table==="rpc/save_personalization"){
+      const body=req.postDataJSON();
+      if(anonymous || body.expected_user!==GUEST_ID)return json(route,403,{code:"42501"});
+      if(body.expected_revision!==revision)return json(route,409,{code:"40001"});
+      const {capability:newCap,windows,...changes}=body.changes;
+      if(newCap)capability=newCap;
+      personal={...personal,...changes,confirmedAt:new Date().toISOString()};
+      if(changes.interests)privateInfo.picks=changes.interests.map((i:{key:string})=>i.key);
+      if(windows)privateInfo.free_windows=windows;
+      revision++;
+      return json(route,200,{value:personal,revision});
+    }
+    if(table==="profile_private"){
+      if(req.method()==="GET")return json(route,200,one?privateInfo:[privateInfo]);
+      if(req.method()==="POST"){privateInfo={...privateInfo,...req.postDataJSON()};return json(route,201,[]);}
+    }
+    if(table==="rpc/record_stubby_feedback"){feedback.push(req.postDataJSON());return json(route,200,null);}
+    if (table === "rpc/forget_stubby_memory") { if (req.postDataJSON().expected_user !== GUEST_ID) return json(route, 403, {}); capability = null;personal={version:1,motivations:[],interests:[],rhythm:[],durationMax:null,confirmedAt:null};revision=0; return json(route, 200, null); }
     if (table === "personal_picks" && req.method() === "GET") return json(route, 200, state.picks);
     if (table === "stubby_asks") return json(route, 200, [], { "content-range": `0-0/${anonymous ? state.guestAsks : state.guestAsks + state.accountAsks.length}` });
     if (table === "profiles" && req.method() === "GET" && !anonymous && token) {
@@ -342,6 +370,67 @@ try {
   await editor.getByText(/saved information and feedback are deleted/).waitFor();
   if (capability !== null) fail("Memory was not deleted");
   if (problems.length) fail(problems.join("\n"));
+  step("optional rejection reason is temporary and does not alter interests");
+  await page.goto(`${ORIGIN}/#/calendar`);
+  const front=page.locator("[data-stubby-deck-front]");
+  await front.getByRole("button",{name:"Not for me",exact:true}).click();
+  await page.getByRole("button",{name:"Just today",exact:true}).click();
+  await page.waitForFunction(()=>!document.body.innerText.includes("What didn’t fit? Optional"));
+  if(feedback.at(-1)?.reason!=="today" || feedback.at(-1)?.scope!=="request")fail("temporary rejection reason was not scoped to request");
+
+  step("three human questions: one interest, Back, resume and editable summary");
+  privateInfo.onboarding_step="birthday";
+  await page.goto(`${ORIGIN}/#/onboarding?step=yours`);
+  await page.getByRole("heading",{name:"What would you like to make more room for?"}).waitFor();
+  await page.getByRole("button",{name:"Learning and getting better",exact:true}).click();
+  await page.getByRole("button",{name:"Next",exact:true}).last().click();
+  await page.getByRole("heading",{name:"What do you already love, or keep meaning to try?"}).waitFor();
+  await page.getByLabel("Find an interest",{exact:true}).fill("guitar");
+  await page.getByRole("button",{name:"Guitar",exact:true}).click();
+  await page.getByLabel("How does this fit you?",{exact:true}).selectOption("try");
+  await page.getByLabel("I’m new to this",{exact:true}).check();
+  await page.getByRole("button",{name:"Next",exact:true}).last().click();
+  await page.getByRole("heading",{name:"What does a little free time look like for you?"}).waitFor();
+  await page.getByRole("button",{name:"A few small moments",exact:true}).click();
+  await page.getByLabel("A comfortable amount of time, if you know",{exact:true}).selectOption("30");
+  await page.getByRole("button",{name:"Next",exact:true}).last().click();
+  await page.getByRole("heading",{name:"Does this feel like you?"}).waitFor();
+  await page.reload();
+  await page.getByRole("heading",{name:"Does this feel like you?"}).waitFor();
+  await page.getByRole("link",{name:"Edit interests",exact:true}).click();
+  if(await page.getByRole("button",{name:"Guitar",exact:true}).getAttribute("aria-pressed")!=="true")fail("resume lost the interest");
+  await page.getByRole("button",{name:"Skip for now",exact:true}).click();
+  await page.getByRole("heading",{name:"What does a little free time look like for you?"}).waitFor();
+  if(await page.getByRole("button",{name:"A few small moments",exact:true}).getAttribute("aria-pressed")!=="true")fail("Back lost rhythm");
+  await page.getByRole("button",{name:"Next",exact:true}).last().click();
+  await page.getByRole("heading",{name:"Does this feel like you?"}).waitFor();
+  const summaries=[{width:390,height:844,name:"mobile"},{width:1440,height:1000,name:"desktop"}];
+  for(const viewport of summaries){
+    await page.waitForFunction(()=>document.querySelectorAll(".ob-column section").length===1);
+    await page.setViewportSize(viewport);
+    if(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth))fail(`${viewport.name} onboarding overflows`);
+    await page.screenshot({path:`/tmp/clean-personalization-${viewport.name}.png`,fullPage:true});
+  }
+  await page.getByRole("button",{name:"Find something for me",exact:true}).click();
+  await page.getByRole("heading",{name:"Guitar at home",exact:true}).waitFor();
+  await page.getByText("Materials cost unknown",{exact:true}).waitFor();
+  await page.getByText("Make this fit you better",{exact:true}).click();
+  await page.getByLabel("Usual budget for one activity in dollars",{exact:true}).fill("0");
+  await page.getByLabel("What do you already have for this?",{exact:true}).fill("guitar");
+  await page.getByRole("button",{name:"Update suggestions",exact:true}).click();
+  await page.getByText("Free with the resources listed",{exact:true}).waitFor();
+  if(JSON.stringify(privateInfo.picks)!==JSON.stringify(["music/guitar"]))fail("Skip changed prior interests");
+  if(JSON.stringify(personal.motivations)!==JSON.stringify(["learn"]))fail("goal was not persisted");
+  if(problems.length)fail(problems.join("\n"));
+  console.log("PASS human onboarding, one interest, skip preservation, resume, editable summary, cost/resource reranking; 390px and 1440px");
+
+  step("failed preference reads disable edits without overwriting information");
+  preferenceReadsFail=true;
+  await page.goto(`${ORIGIN}/#/onboarding?step=picks`);
+  await page.getByRole("alert").waitFor();
+  if(!await page.getByRole("button",{name:"Next",exact:true}).isDisabled())fail("failed preference read allowed saving");
+  if(JSON.stringify(privateInfo.picks)!==JSON.stringify(["music/guitar"]))fail("failed read overwrote preferences");
+  preferenceReadsFail=false;
   console.log("PASS authenticated memory edit, reload, delete");
   console.log("PASS guest → 3 asks → card → limit → Google sign-up → same chat, draft sent");
 } catch (e) {

@@ -1,10 +1,11 @@
+import { humanOnboardingEnabled } from "../../lib/personalization";
 import type { StubbyState } from "../../components/stubby/Stubby";
 
 /**
  * The twelve onboarding screens, in order (Soosh onboarding brief, section 2).
  * The key is what the URL carries (`?step=name`) and what progress saves.
  */
-export const ONBOARDING_STEPS = [
+export const LEGACY_STEPS = [
   "welcome",
   "signup",
   "code",
@@ -18,12 +19,14 @@ export const ONBOARDING_STEPS = [
   "plan",
   "invite",
 ] as const;
-export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+export const HUMAN_STEPS = ["welcome","signup","code","name","birthday","yours","picks","free","review","plan","card","invite"] as const;
+export type OnboardingStep = typeof LEGACY_STEPS[number] | typeof HUMAN_STEPS[number];
+export const ONBOARDING_STEPS:readonly OnboardingStep[] = humanOnboardingEnabled ? HUMAN_STEPS : LEGACY_STEPS;
 
 export const isStep = (value: string | null | undefined): value is OnboardingStep =>
-  !!value && (ONBOARDING_STEPS as readonly string[]).includes(value);
+  !!value && ([...LEGACY_STEPS,"review"] as readonly string[]).includes(value);
 
-export const stepIndex = (step: OnboardingStep) => ONBOARDING_STEPS.indexOf(step);
+export const stepIndex = (step: OnboardingStep) => ONBOARDING_STEPS.indexOf(humanOnboardingEnabled && step === "where" ? "birthday" : !humanOnboardingEnabled && step === "review" ? "yours" : step);
 
 /** Before there is an account. A signed-in person never sees these. */
 const PRE_AUTH: readonly OnboardingStep[] = ["welcome", "signup", "code"];
@@ -31,7 +34,7 @@ const LAST_PRE_AUTH: OnboardingStep = "code";
 export const isPreAuth = (step: OnboardingStep) => PRE_AUTH.includes(step);
 
 /** The three taste questions that carry the "1 of 3" header and share one Stubby. */
-export const COUNTED_STEPS: readonly OnboardingStep[] = ["picks", "free", "yours"];
+export const COUNTED_STEPS: readonly OnboardingStep[] = humanOnboardingEnabled ? ["yours", "picks", "free"] : ["picks", "free", "yours"];
 export const isCounted = (step: OnboardingStep) => COUNTED_STEPS.includes(step);
 
 /** Stubby's resting state when a screen opens. Screens react from there. */
@@ -48,6 +51,7 @@ export const STEP_STUBBY: Record<OnboardingStep, StubbyState> = {
   card: "cool",
   plan: "thinking",
   invite: "idle",
+  review: "idle",
 };
 
 export const nextStep = (step: OnboardingStep): OnboardingStep | null => ONBOARDING_STEPS[stepIndex(step) + 1] ?? null;
@@ -79,6 +83,8 @@ export function resolveStep(
   signedIn: boolean,
   open = false,
 ): OnboardingStep {
+  if (humanOnboardingEnabled && requested === "where") requested = "yours";
+  if (!humanOnboardingEnabled && requested === "review") requested = "yours";
   if (open) return isStep(requested) ? requested : "welcome";
   const floor: OnboardingStep = signedIn ? "name" : "welcome";
   const resume = lastFinished ? (nextStep(lastFinished) ?? lastFinished) : floor;

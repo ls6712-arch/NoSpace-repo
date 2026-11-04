@@ -227,3 +227,9 @@ export function formatWait(seconds: number): string {
   if (s < 3600) return plural(Math.ceil(s / 60), "minute");
   return plural(Math.ceil(s / 3600), "hour");
 }
+
+/** A short explicit time-zone label for a dated suggestion, including DST. */
+export function formatTimeZone(input:DateInput,timeZone:string):string {
+ const date=toDate(input);if(Number.isNaN(date.getTime()))return "";
+ return fmt({timeZone,timeZoneName:"short"}).formatToParts(date).find(p=>p.type==="timeZoneName")?.value ?? timeZone;
+}

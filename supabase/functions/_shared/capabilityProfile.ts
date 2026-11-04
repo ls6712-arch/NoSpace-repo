@@ -8,6 +8,8 @@ export interface Membership {
 }
 export interface LearnedPreference {
   source: "feedback";
+  reason?: "price"|"time"|"distance"|"activity"|"today"|null;
+  scope?: "request"|"usual";
   title: string;
   signal: "up" | "down" | "save";
 }

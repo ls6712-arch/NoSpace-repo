@@ -18,8 +18,11 @@ export const sooshEvidence = (e: Pick<Evidence, "url" | "source" | "level">) => 
 export const isSoosh = (c: Pick<Candidate, "evidence">) => c.evidence.length > 0 && c.evidence.every(sooshEvidence);
 export function assessEvidence(c: Candidate, now: number): { verified: boolean; warnings: string[] } | null {
   if (!c.evidence.length || c.evidence.some(e => !(safeSourceUrl(e.url) || sooshEvidence(e)) || !Number.isFinite(e.checkedAt) || e.checkedAt > now || now - e.checkedAt > 24 * 3600000)) return null;
-  // Their own Pursuit or Corner: nothing to confirm with a source. What it needs is said instead (needs).
-  if (isSoosh(c)) return { verified: true, warnings: [] };
+  // Internal origin is known; material cost and duration still need separate evidence.
+  if (isSoosh(c)) return { verified: c.cost !== null, warnings: [
+    ...(c.cost === null ? ["Material cost is unknown."] : []),
+    ...(c.traits?.durationMinutes ? ["Duration is an estimate."] : ["Duration is unknown."]),
+  ] };
   const place = c.kind === "place";
   const verified = c.evidence.every(e => e.level === "provider") && c.status === "scheduled" && c.availability === "available" && (place || c.endsAt !== null) && c.cost !== null;
   const warnings: string[] = [];

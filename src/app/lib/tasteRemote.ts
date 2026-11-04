@@ -41,14 +41,16 @@ export function cleanPicks(raw: unknown): string[] {
   return out;
 }
 
-export async function fetchTaste(userId: string): Promise<Taste> {
+export async function fetchTaste(userId: string, options: { strict?: boolean } = {}): Promise<Taste> {
   if (!supabase) return EMPTY_TASTE;
   try {
     const { data, error } = await supabase.from("profile_private").select("picks, free_windows, monthly_budget").eq("user_id", userId).maybeSingle();
+    if (error && options.strict) throw new Error("Your interests couldn’t load. Try again.");
     if (error || !data) return EMPTY_TASTE;
     const row = data as { picks: unknown; free_windows: unknown; monthly_budget: unknown };
     return { picks: cleanPicks(row.picks), windows: cleanWindows(row.free_windows), budget: isBudget(row.monthly_budget) ? row.monthly_budget : null };
-  } catch {
+  } catch (e) {
+    if (options.strict) throw e;
     return EMPTY_TASTE;
   }
 }
@@ -85,15 +87,17 @@ export async function fetchInviteCorner(token: string): Promise<string | null> {
   }
 }
 
-export async function fetchPasses(userId: string): Promise<Pass[]> {
+export async function fetchPasses(userId: string, options: { strict?: boolean } = {}): Promise<Pass[]> {
   if (!supabase) return [];
   try {
     const { data, error } = await supabase.from("user_passes").select("id, kind, label, place").eq("user_id", userId).order("created_at");
+    if (error && options.strict) throw new Error("Your saved resources couldn’t load. Try again.");
     if (error || !Array.isArray(data)) return [];
     return (data as { id: string; kind: string; label: string; place: string | null }[])
       .filter((r) => isPassKind(r.kind))
       .map((r) => ({ id: r.id, kind: r.kind as Pass["kind"], label: r.label, place: r.place ?? "" }));
-  } catch {
+  } catch(e) {
+    if (options.strict) throw e;
     return [];
   }
 }
@@ -115,12 +119,12 @@ export async function savePasses(userId: string, passes: readonly Pass[], savedI
         place: p.place.replace(/\s+/g, " ").trim().slice(0, PLACE_MAX) || null,
       }));
       const { error } = await supabase.from("user_passes").upsert(rows, { onConflict: "id" });
-      if (error) return notDeployed(error.code) ? { error: null } : { error: friendlyError(error) };
+      if (error) return { error: friendlyError(error) };
     }
     const gone = savedIds.filter((id) => !passes.some((p) => p.id === id));
     if (gone.length > 0) {
       const { error } = await supabase.from("user_passes").delete().eq("user_id", userId).in("id", gone);
-      if (error && !notDeployed(error.code)) return { error: friendlyError(error) };
+      if (error) return { error: friendlyError(error) };
     }
     return { error: null };
   } catch (e) {

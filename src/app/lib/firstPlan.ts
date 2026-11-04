@@ -1,3 +1,6 @@
+import { localClock, localTimeMs } from "../../../supabase/functions/_shared/preferenceTime";
+import { activityFor, activityCost, activityScore } from "../../../supabase/functions/_shared/activityFit";
+import { costFits, priceMaximum, type Personalization } from "./personalization";
 import { cornerGuide } from "../data/cornerGuides";
 import { formatTime, formatWeekday } from "./dates";
 import { DAYS, SLOTS, type DayKey, type Pass, type PassKind, type SlotKey, windowKey } from "./tasteModel";
@@ -34,6 +37,9 @@ export interface Plan {
   hostName?: string;
   /** At-home: the guide's first step. */
   step?: string;
+  timing?: "fixed" | "suggested";
+  timeZone?:string;
+  needs?: string;
 }
 
 export interface LiveEventInput {
@@ -50,6 +56,7 @@ export interface LiveEventInput {
 }
 
 export interface LivePursuitInput {
+  endsAt?: number | null;
   cornerKey: string;
   pursuitId: string;
   title: string;
@@ -71,6 +78,11 @@ export interface InviteInput {
 
 export interface PlanInput {
   now: number;
+  personalization?: Personalization;
+  equipment?: string[];
+  activityBudget?: number | null;
+  timeZone?:string;
+  allowDiscovery?: boolean;
   picks: { key: string; name: string; spaceSlug: string; slug: string }[];
   windows: readonly string[];
   /** Dollars a month, 0 for free only, null when skipped. */
@@ -97,8 +109,8 @@ const SLOT_START_HOUR: Record<SlotKey, number> = { day: 14, eve: 19 };
 const SLOT_PART: Record<SlotKey, string> = { day: "afternoon", eve: "evening" };
 const SLOT_PLURAL: Record<SlotKey, string> = { day: "daytimes", eve: "evenings" };
 /** A listing counts as in a window by its own start time: 6am to 5:59pm is daytime, 6pm to midnight is evening. */
-export function slotOf(startsAt: number): SlotKey | null {
-  const h = new Date(startsAt).getHours();
+export function slotOf(startsAt: number,timeZone?:string): SlotKey | null {
+  const h = timeZone ? localClock(startsAt,timeZone).hour : new Date(startsAt).getHours();
   if (h >= 6 && h < 18) return "day";
   if (h >= 18) return "eve";
   return null;
@@ -109,9 +121,9 @@ const DAY_INDEX: Record<DayKey, number> = { sun: 0, mon: 1, tue: 2, wed: 3, thu:
 const DAY_BY_INDEX = (i: number): DayKey => (Object.keys(DAY_INDEX) as DayKey[]).find((k) => DAY_INDEX[k] === i) ?? "sun";
 
 /** The window a time falls in, as "sat-day", or null (the small hours). */
-export function windowOfTime(startsAt: number): string | null {
-  const slot = slotOf(startsAt);
-  return slot ? windowKey(DAY_BY_INDEX(new Date(startsAt).getDay()), slot) : null;
+export function windowOfTime(startsAt: number,timeZone?:string): string | null {
+  const slot = slotOf(startsAt,timeZone);
+  return slot ? windowKey(DAY_BY_INDEX(timeZone ? localClock(startsAt,timeZone).dow : new Date(startsAt).getDay()), slot) : null;
 }
 
 export interface UpcomingWindow {
@@ -122,17 +134,19 @@ export interface UpcomingWindow {
 }
 
 /** The person's free windows as real times in the next week, soonest first. */
-export function upcomingWindows(windows: readonly string[], now: number): UpcomingWindow[] {
+export function upcomingWindows(windows: readonly string[], now: number,timeZone?:string,hours:Record<SlotKey,number>=SLOT_START_HOUR): UpcomingWindow[] {
   const out: UpcomingWindow[] = [];
-  const base = new Date(now);
+  const clock=timeZone?localClock(now,timeZone):null;
+  const base = clock ? new Date(clock.year,clock.month-1,clock.day,12) : new Date(now);
   for (const day of DAYS) {
     for (const slot of SLOTS) {
       const key = windowKey(day.key, slot.key);
       if (!windows.includes(key)) continue;
       for (let offset = 0; offset < 8; offset++) {
-        const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, SLOT_START_HOUR[slot.key], 0, 0, 0);
-        if (d.getDay() === DAY_INDEX[day.key] && d.getTime() >= now + MIN_LEAD_MS) {
-          out.push({ key, day: day.key, slot: slot.key, startsAt: d.getTime() });
+        const d = new Date(base.getFullYear(), base.getMonth(), base.getDate() + offset, hours[slot.key], 0, 0, 0);
+        const time=timeZone?localTimeMs(d.getFullYear(),d.getMonth()+1,d.getDate(),hours[slot.key],timeZone):d.getTime();
+        if (d.getDay() === DAY_INDEX[day.key] && time >= now + MIN_LEAD_MS) {
+          out.push({ key, day: day.key, slot: slot.key, startsAt: time });
           break;
         }
       }
@@ -142,9 +156,9 @@ export function upcomingWindows(windows: readonly string[], now: number): Upcomi
 }
 
 /** "Saturday afternoon". */
-export const windowWhen = (w: UpcomingWindow) => `${formatWeekday(w.startsAt, "long")} ${SLOT_PART[w.slot]}`;
+export const windowWhen = (w: UpcomingWindow,timeZone?:string) => `${formatWeekday(w.startsAt, "long",timeZone)} ${w.slot === "day" && (timeZone ? localClock(w.startsAt,timeZone).hour : new Date(w.startsAt).getHours())<12 ? "morning" : SLOT_PART[w.slot]}`;
 /** "Thursday, 7:00 PM". */
-export const listingWhen = (startsAt: number) => `${formatWeekday(startsAt, "long")}, ${formatTime(startsAt)}`;
+export const listingWhen = (startsAt: number,timeZone?:string) => `${formatWeekday(startsAt, "long",timeZone)}, ${formatTime(startsAt,timeZone)}`;
 
 /** The saturday you get with no free windows answered: the next Saturday afternoon. */
 export function defaultWindow(now: number): UpcomingWindow {
@@ -170,10 +184,7 @@ export function headlineFor(startsAt: number | null, now: number): string {
 
 /** "$12" or "Free" from a host's own words; null when it says nothing usable. */
 export function parsePrice(text: string | null | undefined): number | null {
-  if (!text) return null;
-  if (/\bfree\b/i.test(text)) return 0;
-  const m = /\$\s?(\d+(?:\.\d+)?)/.exec(text);
-  return m ? Number(m[1]) : null;
+  return priceMaximum(text);
 }
 
 /** Which kind of pass covers a Corner. Only the pairs that are plainly true. */
@@ -186,13 +197,10 @@ export function passFor(cornerSlug: string, passes: readonly Pass[]): Pass | nul
 
 /**
  * Can this be offered within what they said about money? A skipped budget or
- * Free only allows free things and things a pass of theirs is for. A set
- * budget allows a listing whose price is unknown or within the month.
+ * Free only needs a verified zero cost. A monthly amount does not become a per-activity ceiling.
  */
-export function affordable(budget: number | null, price: number | null, hasPass: boolean): boolean {
-  if (hasPass) return true;
-  if (budget === null || budget === 0) return price === 0;
-  return price === null || price <= budget;
+export function affordable(monthlyBudget: number | null, price: number | null, _hasPass: boolean): boolean {
+  return costFits(price, monthlyBudget === 0 ? 0 : null);
 }
 
 const firstOf = (name: string) => name.trim().split(/\s+/)[0] ?? "";
@@ -227,12 +235,12 @@ export function buildPlans(input: PlanInput): Plan[] {
     const slug = i.cornerKey?.split("/")[1] ?? "";
     const space = i.cornerKey?.split("/")[0] ?? "";
     plans.push({
-      id: `invite:${i.pursuitId}`,
+      timeZone:input.timeZone,id: `invite:${i.pursuitId}`,
       kind: "invite",
       title: i.title,
       corner: { key: i.cornerKey ?? "", name: pick?.name ?? i.title, spaceSlug: pick?.spaceSlug ?? space, slug: pick?.slug ?? slug },
       startsAt: i.startsAt ?? null,
-      when: i.startsAt ? listingWhen(i.startsAt) : null,
+      when: i.startsAt ? listingWhen(i.startsAt,input.timeZone) : null,
       reason: `${firstOf(i.hostName)} is already in.`,
       pursuitId: i.pursuitId,
       joinToken: i.token,
@@ -243,8 +251,8 @@ export function buildPlans(input: PlanInput): Plan[] {
   const inWindow = (t: number) => {
     if (t < now + MIN_LEAD_MS || t > now + WEEK_MS) return null;
     if (windows.length === 0) return { key: null as string | null };
-    const w = windowOfTime(t);
-    return w && windows.includes(w) ? { key: w } : null;
+    const w = windowOfTime(t,input.timeZone);
+    return {key:w && windows.includes(w) ? w : null};
   };
 
   const live: (Plan & { sort: number })[] = [];
@@ -254,14 +262,14 @@ export function buildPlans(input: PlanInput): Plan[] {
     if (!pick || !fit) continue;
     const price = parsePrice(e.price);
     const pass = passFor(pick.slug, passes);
-    if (!affordable(budget, price, !!pass)) continue;
+    if (!costFits(price, input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     live.push({
-      id: `event:${e.eventId}`,
+      timeZone:input.timeZone,id: `event:${e.eventId}`,
       kind: "event",
       title: e.title,
       corner: pick,
       startsAt: e.startsAt,
-      when: listingWhen(e.startsAt),
+      when: listingWhen(e.startsAt,input.timeZone),
       where: e.place || (e.online ? "Online" : undefined),
       cost: price === null ? undefined : price === 0 ? "Free" : `$${price}`,
       reason: reasonLine({ windowKey: fit.key, cornerName: pick.name, pass }),
@@ -271,15 +279,16 @@ export function buildPlans(input: PlanInput): Plan[] {
   }
   for (const p of input.pursuits) {
     const pick = pickByKey.get(p.cornerKey);
+    if (!costFits(null, input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     const fit = inWindow(p.startsAt);
     if (!pick || !fit) continue;
     live.push({
-      id: `pursuit:${p.pursuitId}`,
+      timeZone:input.timeZone,id: `pursuit:${p.pursuitId}`,
       kind: "open-pursuit",
       title: p.title,
       corner: pick,
       startsAt: p.startsAt,
-      when: listingWhen(p.startsAt),
+      when: listingWhen(p.startsAt,input.timeZone),
       reason: reasonLine({ windowKey: fit.key, cornerName: pick.name, pass: passFor(pick.slug, passes) }),
       pursuitId: p.pursuitId,
       hostName: firstOf(p.hostName),
@@ -294,30 +303,39 @@ export function buildPlans(input: PlanInput): Plan[] {
   }
 
   plans.push(...atHomePlans(input));
+  if(input.personalization) plans.sort((a,b) => Number(b.kind === "invite")-Number(a.kind === "invite") || activityScore(b.corner.key,input.personalization!,b.startsAt,input.timeZone)-activityScore(a.corner.key,input.personalization!,a.startsAt,input.timeZone));
   return plans;
 }
 
 /** One plan to do at home per picked Corner that has a guide, each in the next free window (a different one where there are several). */
 export function atHomePlans(input: PlanInput): Plan[] {
   const { now, windows, budget, passes } = input;
-  const slots = upcomingWindows(windows, now);
-  const fallback = defaultWindow(now);
+  const preferred = input.personalization?.rhythm;
+  const rhythmWindows=preferred?.flatMap(r=>r==="evening" ? DAYS.map(d=>`${d.key}-eve`) : r==="morning" ? DAYS.map(d=>`${d.key}-day`) : r==="weekend" ? ["sat-day","sun-day"] : []) ?? [];
+  const usual=preferred?.includes("variable") ? [] : windows.length ? windows : rhythmWindows;
+  const slots = upcomingWindows(usual, now,input.timeZone,{day:preferred?.includes("morning")?9:14,eve:19});
+  const fallback = upcomingWindows(["sat-day"],now,input.timeZone)[0];
   const out: Plan[] = [];
-  for (const pick of input.picks) {
+  const fallbackPicks = input.allowDiscovery && input.picks.length === 0 ? ["art-creative/drawing","books-writing/reading","books-writing/creative-writing"].flatMap(key=>{
+    const a=activityFor(key);if(!a)return [];const [spaceSlug,slug]=a.key.split("/");return [{key:a.key,name:a.name,spaceSlug,slug}];
+  }) : input.picks;
+  for (const pick of fallbackPicks) {
     const guide = cornerGuide(pick.spaceSlug, pick.slug);
-    if (!guide || guide.adultsOnly || guide.where === "outdoors" || guide.together === "together") continue;
-    // A skipped budget or Free only means nothing that has to be bought.
-    if ((budget === null || budget === 0) && !guide.haveIt) continue;
+    if (!guide || !activityFor(pick.key)?.atHome) continue;
+    // An explicit ceiling needs known cost; skipped money stays unknown.
+    if (!costFits(activityCost(pick.key,input.equipment ?? []),input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
     const w = slots.length > 0 ? slots[out.length % slots.length] : fallback;
     out.push({
-      id: `home:${pick.key}`,
+      id: `home:${pick.key}`,timing:"suggested",timeZone:input.timeZone,
       kind: "at-home",
       title: `${pick.name} at home`,
       corner: pick,
       startsAt: w.startsAt,
-      when: windowWhen(w),
-      reason: reasonLine({ windowKey: slots.length > 0 ? w.key : null, cornerName: pick.name, pass: passFor(pick.slug, passes) }),
+      when: windowWhen(w,input.timeZone),
+      reason: input.picks.length===0 ? "A starting point to explore." : reasonLine({ windowKey: windows.includes(w.key) ? w.key : null, cornerName: pick.name, pass: passFor(pick.slug, passes) }),
       step: guide.step,
+      cost: activityCost(pick.key,input.equipment ?? []) === 0 ? "Free with the resources listed" : "Materials cost unknown",
+      needs: (()=>{const r=activityFor(pick.key)!.facts.resources;return [r.required.map(g=>g.join(" or ")).join(", "), r.alternatives?.map(b=>b.join(" + ")).join(" or ")].filter(Boolean).join("; ") || "Check what you need before starting.";})(),
     });
   }
   return out;

@@ -1,3 +1,7 @@
+import { useRef } from "react";
+import { humanOnboardingEnabled, normalizePersonalization } from "../../lib/personalization";
+import { readPreferenceBundle, savePersonalization } from "../../lib/personalizationRemote";
+import { PersonalizationEditor } from "./PersonalizationEditor";
 import { useEffect, useId, useState } from "react";
 import { Link } from "react-router";
 import { useAuth } from "../../context/AuthContext";
@@ -15,12 +19,15 @@ import { Label } from "../ui/label";
  */
 export function CapabilityEditor() {
   const { user } = useAuth();
+  const [epoch,setEpoch]=useState(0);
   if (!user || user.is_anonymous) return null;
-  return <CapabilityForm key={user.id} userId={user.id} />;
+  return <div className="flex flex-col gap-4">{humanOnboardingEnabled && <PersonalizationEditor key={user.id+epoch}/>}<CapabilityForm key={user.id} userId={user.id} onDeleted={()=>setEpoch(n=>n+1)}/></div>;
 }
 
-function CapabilityForm({ userId }: { userId: string }) {
+function CapabilityForm({ userId,onDeleted }: { userId: string;onDeleted:()=>void }) {
   const id = useId();
+  const revision=useRef(0);
+  const [reloadKey,setReloadKey]=useState(0);
   const [profile, setProfile] = useState<CapabilityProfile>(emptyCapability);
   const [taste, setTaste] = useState<Taste | null>(null);
   const [passes, setPasses] = useState<Pass[]>([]);
@@ -32,22 +39,23 @@ function CapabilityForm({ userId }: { userId: string }) {
   useEffect(() => {
     let live = true;
     setLoaded(false); setLoading(true); setProfile(emptyCapability()); setTaste(null); setPasses([]); setMessage(null);
-    void Promise.all([fetchCapability(undefined, userId), fetchTaste(userId), fetchPasses(userId)]).then(([c, t, p]) => {
-      if (live) { setProfile(c); setTaste(t); setPasses(p); setLoaded(true); }
+    const load=humanOnboardingEnabled ? readPreferenceBundle(userId).then(b=>[b,b.taste,b.passes] as const) : Promise.all([fetchCapability(undefined,userId).then(capability=>({capability,revision:0,value:undefined})),fetchTaste(userId,{strict:true}),fetchPasses(userId,{strict:true})]);
+    void load.then(([bundle, t, p]) => {
+      if (live) { revision.current=bundle.revision;const c=bundle.capability;setProfile(humanOnboardingEnabled ? {...c,equipment:normalizePersonalization({picks:t.picks,windows:t.windows,monthlyBudget:t.budget,passes:p},bundle.value,c.equipment,c.perActivityBudget).equipment} : c); setTaste(t); setPasses(p); setLoaded(true); }
     }).catch(() => { if (live) setMessage("Stubby couldn’t load your saved information. Try again later."); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [userId]);
+  }, [userId,reloadKey]);
   const patch = (p: Partial<CapabilityProfile>) => { setProfile(c => ({ ...c, ...p })); setMessage(null); };
   const submit = async () => {
     setBusy(true); setMessage(null);
-    try { await saveCapability(profile, undefined, userId); setMessage("Your changes are saved."); }
+    try { if(humanOnboardingEnabled){const r=await savePersonalization(userId,revision.current,{capability:profile,resourceMode:"explicit"});revision.current=r.revision;}else await saveCapability(profile, undefined, userId); setMessage("Your changes are saved."); }
     catch (e) { setMessage(e instanceof Error ? e.message : "Your changes weren’t saved. Try again."); }
     finally { setBusy(false); }
   };
   const forget = async () => {
     setBusy(true); setMessage(null);
-    try { await deleteCapability(undefined, userId); setProfile(emptyCapability()); setConfirmDelete(false); setMessage("Stubby’s saved information and feedback are deleted. Your onboarding answers are unchanged."); }
+    try { await deleteCapability(undefined, userId); setProfile(emptyCapability());revision.current=0;onDeleted(); setConfirmDelete(false); setMessage("Stubby’s saved information and feedback are deleted. Your onboarding answers are unchanged."); }
     catch (e) { setMessage(e instanceof Error ? e.message : "Your saved information wasn’t deleted. Try again."); }
     finally { setBusy(false); }
   };
@@ -56,6 +64,7 @@ function CapabilityForm({ userId }: { userId: string }) {
     <p className="mb-3 text-small text-muted-foreground">Stubby uses your onboarding answers and anything you save here to fit picks to you. Learning from your feedback is off unless you turn it on. You can change or delete it here.</p>
     {loading && <p role="status">Loading…</p>}
     {message && <p role="status" className="mb-3 text-small">{message}</p>}
+    <Button variant="outline" disabled={busy || loading} onClick={()=>setReloadKey(k=>k+1)}>Reload saved information</Button>
     {!loading && loaded && <fieldset disabled={busy} className="flex flex-col gap-4">
       <Label className="flex min-h-11 items-center gap-3"><input type="checkbox" checked={profile.consent.feedback} onChange={e => patch({ consent: { memory: e.target.checked, onboarding: true, feedback: e.target.checked } })} />Learn from my feedback</Label>
       <p className="text-small text-muted-foreground">Your thumbs up and down on his picks, from the last 60 days. Off unless you turn it on.</p>

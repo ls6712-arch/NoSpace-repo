@@ -18,20 +18,21 @@ export function FreeScreen() {
   const { next } = useOnboarding();
   const { user } = useAuth();
   const [windows, setWindows] = useState<string[]>([]);
+  const [loaded,setLoaded]=useState(!user);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let live = true;
+    let live = true;setLoaded(!user);
     if (user) {
-      void fetchTaste(user.id).then((t) => {
-        if (live && t.windows.length > 0) setWindows((cur) => (cur.length > 0 ? cur : t.windows));
-      });
+      void fetchTaste(user.id,{strict:true}).then((t) => {
+        if (live) {setWindows(t.windows);setLoaded(true);}
+      }).catch(()=>{if(live)setError("Your free times couldn’t load. Try again later.");});
     }
     return () => {
       live = false;
     };
-  }, [user]);
+  }, [user?.id]);
 
   const toggle = (key: string) => {
     setError(null);
@@ -42,7 +43,7 @@ export function FreeScreen() {
   };
 
   const done = async (value: string[] | null, reaction?: "shrug") => {
-    if (saving) return;
+    if (saving || !loaded) return;
     setSaving(true);
     setError(null);
     const saved = user ? await savePrivate(user.id, { free_windows: value }) : { error: null };
@@ -64,16 +65,16 @@ export function FreeScreen() {
               {error}
             </p>
           )}
-          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void done(windows)} disabled={saving || windows.length === 0}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void done(windows)} disabled={saving || !loaded || windows.length === 0}>
             {windows.length === 0 ? "Pick a time" : "Next"}
           </PillButton>
-          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => void done(null, "shrug")} disabled={saving}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => next({ reaction: "shrug" })} disabled={saving}>
             Skip for now
           </PillButton>
         </>
       }
     >
-      <TimeGrid windows={windows} onToggle={toggle} />
+      <fieldset disabled={!loaded || saving}><TimeGrid windows={windows} onToggle={toggle} /></fieldset>
       <p aria-live="polite" className="ob-label text-body">
         {windowCountLine(windows.length)}
       </p>

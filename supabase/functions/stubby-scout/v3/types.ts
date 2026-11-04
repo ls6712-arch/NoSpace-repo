@@ -33,6 +33,9 @@ export interface Candidate {
   evidence: Evidence[];
   /** What it needs, in plain words, when known (a Corner's "What you'll need"). Shown instead of an uncertainty. */
   needs?: string[];
+  traits?: import("../../_shared/personalization.ts").ActivityTraits;
+  resources?: import("../../_shared/personalization.ts").ResourceRequirements;
+  timing?: "fixed" | "suggested";
 }
 export interface RequestInput {
   text: string;
@@ -53,6 +56,9 @@ export interface RequestInput {
   gentle?: boolean;
 }
 export interface Context {
+  ownedOnly: boolean;
+  durationMax: number | null;
+  personalization: import("../../_shared/personalization.ts").Personalization;
   version: string;
   now: number;
   timeZone: string;

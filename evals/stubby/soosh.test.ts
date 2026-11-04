@@ -26,17 +26,17 @@ describe("what a pick needs", () => {
 });
 
 describe("Stay in, from their own Pursuits and Corners", () => {
-  it("answers Stay in with no web source at all, and nothing is marked uncertain", async () => {
+  it("answers Stay in with no web source at all, and discloses unconfirmed material costs and duration", async () => {
     const r = await runV3(input({ text: "something at home tonight", profile: { ...input().profile, picks: ["art-creative/drawing"] } }),
       { discovery: [sooshAdapter({ pursuits: [{ id: "p1", title: "Bake a loaf every week", corner: BAKING }], picks: ["art-creative/drawing"] })] });
     // Drawing first: it's one of the Corners they picked (an interest match).
     expect(r.recommendations.map((x) => x.candidate.title)).toEqual(["Drawing at home", "Bake a loaf every week"]);
-    expect(r.recommendations.every((x) => x.verification === "verified" && x.uncertainties.length === 0)).toBe(true);
-    expect(r.outcome).toBe("verified");
+    expect(r.recommendations.every((x) => x.verification === "partial" && x.uncertainties.length > 0)).toBe(true);
+    expect(r.outcome).toBe("partial");
   });
-  it("a failed web source doesn't make their own ideas uncertain", async () => {
+  it("a failed web source retains conditional internal ideas", async () => {
     const r = await runV3(input({ text: "something at home tonight" }), { discovery: [own(), { id: "web", discover: async () => { throw new Error("down"); } }] });
-    expect(r.recommendations[0].verification).toBe("verified");
+    expect(r.recommendations[0].verification).toBe("partial");
     expect(r.warnings).toContain("A source couldn’t be reached.");
   });
   it("only at-home Corners, never outdoors or with other people", () => {

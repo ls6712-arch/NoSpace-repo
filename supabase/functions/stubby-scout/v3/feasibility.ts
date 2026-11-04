@@ -1,3 +1,4 @@
+import { costFits, hasResources, requirementsFit } from "../../_shared/personalization.ts";
 import { nyParts } from "../intent.ts";
 import { isListingPage } from "../ask.ts";
 import { matchesTopic, cityKey } from "./request.ts";
@@ -28,7 +29,8 @@ export function feasible(c: Candidate, ctx: Context): { ok: false; reason: strin
   if (c.status === "cancelled" || c.availability === "sold_out") return no("unavailable");
   if (!Number.isFinite(c.startsAt) || c.startsAt < Math.max(ctx.now, ctx.window.startMs) || c.startsAt >= ctx.window.endMs) return no("time");
   if (c.endsAt !== null && (!Number.isFinite(c.endsAt) || c.endsAt <= c.startsAt || c.endsAt > ctx.window.endMs || c.endsAt - c.startsAt > 12 * HOUR)) return no("end_time");
-  if (ctx.hardBudget !== null && (!c.cost || c.cost.currency !== "USD" || c.cost.max > ctx.hardBudget)) return no("budget");
+  if (ctx.durationMax !== null && (c.endsAt === null || (c.endsAt - c.startsAt) / 60000 > ctx.durationMax)) return no("duration");
+  if (!costFits(c.cost?.currency === "USD" ? c.cost.max : null,ctx.hardBudget)) return no("budget");
   if (ctx.setting && c.setting !== ctx.setting && !(ctx.setting === "indoor" && c.setting === "home")) return no("setting");
   if (ctx.awayFromHome && c.setting === "home") return no("setting");
   if (c.setting !== "home" && (!ctx.city || !c.city || cityKey(c.city) !== cityKey(ctx.city))) return no("location");
@@ -42,14 +44,15 @@ export function feasible(c: Candidate, ctx: Context): { ok: false; reason: strin
   if (ctx.excludedTopics.some(t => matchesTopic(activity, t))) return no("excluded_activity");
   if (ctx.topicsHard && ctx.requestedTopics.length && !ctx.requestedTopics.some(t => matchesTopic(activity, t))) return no("activity");
   if (c.membership !== null) return no("unverified_eligibility");
-  const owns = new Set(ctx.equipment.map(x => x.toLowerCase()));
-  if (c.equipment.some(x => !owns.has(x.toLowerCase()))) return no("equipment");
+  if (!hasResources(c.equipment.map(x => [x]), ctx.equipment)) return no("equipment");
+  if (ctx.ownedOnly && c.resources && !requirementsFit(c.resources, ctx.equipment)) return no("equipment");
   if (ctx.busy.some(b => c.startsAt < b.endsAt && (c.endsAt ?? c.startsAt + HOUR) > b.startsAt)) return no("calendar_conflict");
   if (ctx.family && nyParts(c.startsAt, ctx.timeZone).hour >= 20) return no("family_time");
   if (c.setting === "outdoor" && ctx.weather === "unsafe") return no("weather");
   const warnings = [...evidence.warnings];
+  if (c.resources && !requirementsFit(c.resources, ctx.equipment)) warnings.push("Required resources are not confirmed.");
   // Their own Pursuit or Corner: nothing to check outside. What it needs is said instead.
-  if (soosh) return { ok: true, verified: true, warnings };
+  if (soosh) return { ok: true, verified: evidence.verified && warnings.length === 0, warnings };
   // Unknown age policy and end time are disclosed, never a drop (the legacy engine kept these, Nov 2).
   if (c.minAge === null) warnings.push("Age restrictions could not be checked.");
   if (c.setting === "outdoor" && ctx.weather === "unknown") warnings.push("Weather could not be checked.");

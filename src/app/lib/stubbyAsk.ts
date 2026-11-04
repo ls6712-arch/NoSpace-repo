@@ -1,3 +1,5 @@
+import { validFeedbackDetails, type FeedbackDetails } from "../../../supabase/functions/_shared/feedback";
+export type { FeedbackDetails } from "../../../supabase/functions/_shared/feedback";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabase, supabaseAnonKey, supabaseUrl } from "../../lib/supabase";
 import { friendlyError } from "./friendlyError";
@@ -197,10 +199,10 @@ export async function removeMyPick(id: number, client: Client = supabase): Promi
 }
 
 /** A thumbs up or down on a pick, or a Keep. Only the pick and the signal are sent; the database fills the rest. */
-export async function sendFeedback(pickId: number, signal: "up" | "down" | "save", client: Client = supabase): Promise<boolean> {
-  if (!client) return false;
+export async function sendFeedback(pickId: number, signal: "up" | "down" | "save", client: Client = supabase, details?:FeedbackDetails): Promise<boolean> {
+  if (!client || (details && !validFeedbackDetails(details))) return false;
   try {
-    const { error } = await client.from("stubby_feedback").insert({ pick_id: pickId, signal });
+    const { error } = details ? await client.rpc("record_stubby_feedback",{pick:pickId,reaction:signal,reason:details.reason,scope:details.scope}) : await client.from("stubby_feedback").insert({ pick_id: pickId, signal });
     // Already given (the unique index): that's fine.
     return !error || error.code === "23505";
   } catch {

@@ -1,3 +1,4 @@
+import { priceMaximum } from "../_shared/personalization.ts";
 // Stubby plan §6: checking what the model found for one person's ask. Pure: no network, no
 // database, no Deno (tested in stubby-scout.test.ts). The model's answer is never trusted;
 // every rule here is a hard filter in code, and each dropped pick says why.
@@ -101,10 +102,7 @@ const ADULT_WORDS = /\b(brewery|breweries|brewing co|bars?|pubs?|21\+|21 and ove
 
 /** The lowest dollar amount a price names: "Free" is 0, "$15 to $30" is 15. Null when it names none. */
 export function lowestPrice(price: string | null): number | null {
-  if (!price) return null;
-  if (/\bfree\b/i.test(price)) return 0;
-  const nums = [...price.matchAll(/\$?\s*(\d{1,4}(?:\.\d{1,2})?)/g)].map((m) => Number(m[1]));
-  return nums.length ? Math.min(...nums) : null;
+  return priceMaximum(price);
 }
 
 /** The why line: one plain line, 15 words at most, no exclamation marks, ending in a period. */
@@ -235,13 +233,13 @@ export function checkAskPicks(raw: readonly RawPick[], ctx: AskCheckContext): { 
 
     // The budget, as the page states the price, or free by nature.
     const stated = lowestPrice(price.value);
-    const natural = stated === null && freeByNature(kind, title, place.value, soosh);
+    const natural = false; // Unknown price is never proof of zero cost.
     const low = natural ? 0 : stated;
     const budget = intent.budget;
-    const misses = !!budget && (budget.free ? low !== 0 : low !== null && low > budget.max);
+    const misses = !!budget && (budget.free ? low !== 0 : (low === null || low > budget.max));
     // Typed in the ask (or tightened by Cheaper): a hard limit. From the profile: a soft preference.
-    if (budget && misses && budget.from === "ask") {
-      if (low === null) drop("Price not listed, and only free things were asked for.", "noprice");
+    if (budget && misses && (budget.from === "ask" || budget.free)) {
+      if (low === null) drop("Price not listed, so the budget could not be checked.", "noprice");
       else if (budget.free) drop("Not free.", "budget");
       else drop(`Over the budget (about $${budget.max} an outing).`, "budget");
       continue;

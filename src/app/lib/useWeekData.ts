@@ -1,3 +1,4 @@
+import type { Personalization } from "./personalization";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { savePrivate } from "./onboardingRemote";
 import { loadPlanInput } from "./firstPlanRemote";
@@ -27,13 +28,14 @@ export interface WeekData {
   /** Hours of the person's free time that something they could go to covers. 0 hides the line. */
   goodHours: number;
   /** What Stubby's picks are made from. Left out when it could not be read. */
-  stubby?: { picks: PlanInput["picks"]; events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; area: string };
+  stubby?: { personalization?: Personalization; activityBudget?: number | null; timeZone?:string; picks: PlanInput["picks"]; events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; area: string };
   reload: () => void;
   /** Saves on its own; the screen keeps showing the new amount either way. Returns whether it saved. */
   saveBudget: (b: Budget) => Promise<boolean>;
 }
 
 interface Candidates {
+  personalization?: Personalization; activityBudget?: number | null; timeZone?:string;
   events: readonly LiveEventInput[];
   pursuits: readonly LivePursuitInput[];
   picks: PlanInput["picks"];
@@ -84,7 +86,7 @@ export function useWeekData(userId: string | undefined): WeekData {
         input = null;
       }
       if (!live) return;
-      setCandidates(input ? { events: input.events, pursuits: input.pursuits, picks: input.picks, area: input.area } : EMPTY);
+      setCandidates(input ? { personalization:input.personalization,activityBudget:input.activityBudget,timeZone:input.timeZone,events: input.events, pursuits: input.pursuits, picks: input.picks, area: input.area } : EMPTY);
       setState({ status: "ready", now, windows: taste.windows, budget: taste.budget, passes: input?.passes ?? [], plans, picks });
     })().catch(() => live && setState((s) => ({ ...s, status: "error" })));
     return () => {
@@ -92,7 +94,7 @@ export function useWeekData(userId: string | undefined): WeekData {
     };
   }, [userId, attempt]);
 
-  const left = useMemo(() => windowsLeft(state.windows, state.now), [state.windows, state.now]);
+  const left = useMemo(() => windowsLeft(state.windows, state.now,candidates.timeZone), [state.windows, state.now,candidates.timeZone]);
   const goodHours = useMemo(
     () => goodPlanHours(freeSpans(left, state.now), candidateSpans({ ...candidates, budget: state.budget, passes: state.passes })),
     [left, state.now, state.budget, state.passes, candidates],
@@ -108,7 +110,7 @@ export function useWeekData(userId: string | undefined): WeekData {
     [userId],
   );
 
-  const stubby = useMemo(() => (candidates === EMPTY ? undefined : { picks: candidates.picks, events: candidates.events, pursuits: candidates.pursuits, area: candidates.area }), [candidates]);
+  const stubby = useMemo(() => (candidates === EMPTY ? undefined : { personalization:candidates.personalization,activityBudget:candidates.activityBudget,timeZone:candidates.timeZone,picks: candidates.picks, events: candidates.events, pursuits: candidates.pursuits, area: candidates.area }), [candidates]);
 
   return { ...state, left, goodHours, stubby, reload, saveBudget };
 }

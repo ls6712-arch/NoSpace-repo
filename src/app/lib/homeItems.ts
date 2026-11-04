@@ -1,3 +1,5 @@
+import { activityFor, activityScore, activityCost } from "../../../supabase/functions/_shared/activityFit";
+import { costFits, type Personalization } from "./personalization";
 import { allSubHobbies, titleCaseSlug } from "../data/hobbies";
 import { cornerGuide } from "../data/cornerGuides";
 import { CURATED_CORNERS } from "../data/curatedCorners";
@@ -75,6 +77,10 @@ export function itemFromSuggestion(s: HomeSuggestion): HomeItem {
 export interface AtHomeInput {
   /** How many rows are still needed. */
   need: number;
+  personalization?: Personalization;
+  equipment?: string[];
+  activityBudget?: number | null;
+  timeZone?:string;
   /** Corner keys already on the list (a listing in the same Corner). */
   exclude: ReadonlySet<string>;
   picks: readonly string[];
@@ -87,7 +93,7 @@ export interface AtHomeInput {
 export const doableAtHome = (key: string) => {
   const [spaceSlug = "", slug = ""] = key.split("/");
   const g = cornerGuide(spaceSlug, slug);
-  return !!g && !g.adultsOnly && g.where !== "outdoors" && g.together !== "together" && g.step.trim().length > 0;
+  return !!g && activityFor(key)?.atHome === true;
 };
 
 /**
@@ -104,24 +110,25 @@ export function atHomeItems(input: AtHomeInput): HomeItem[] {
     : [];
   const curated = CURATED_CORNERS.map((c) => `${c.spaceSlug}/${c.slug}`);
 
-  const order: { key: string; picked: boolean }[] = [];
+  const order: { key: string; picked: boolean; learned: boolean }[] = [];
   const seen = new Set<string>(input.exclude);
   for (const [list, isPick] of [[picked, true], [byActivity, false], [curated, false]] as const) {
     for (const key of list) {
-      if (seen.has(key) || !doableAtHome(key)) continue;
+      if (seen.has(key) || !doableAtHome(key) || !costFits(activityCost(key,input.equipment ?? []),input.activityBudget ?? null)) continue;
       seen.add(key);
-      order.push({ key, picked: isPick });
+      order.push({ key, picked: isPick, learned: byActivity.includes(key) });
     }
   }
 
+  if(input.personalization) order.sort((a,b)=>activityScore(b.key,input.personalization!)-activityScore(a.key,input.personalization!));
   const out: HomeItem[] = [];
   let windowIndex = 0;
-  for (const { key, picked: isPick } of order.slice(0, input.need)) {
+  for (const { key, picked: isPick, learned } of order.slice(0, input.need)) {
     const corner = cornerParts(key);
     const guide = cornerGuide(corner.spaceSlug, corner.slug)!;
     const curatedEntry = CURATED_CORNERS.find((c) => c.slug === corner.slug && c.spaceSlug === corner.spaceSlug);
     const window = isPick && input.windows.length > 0 ? input.windows[windowIndex++ % input.windows.length] : null;
-    const reasons: ReasonCode[] = isPick ? (window ? ["picked", "fits_window"] : ["picked"]) : ["affinity"];
+    const reasons: ReasonCode[] = isPick ? (window ? ["picked", "fits_window"] : ["picked"]) : learned ? ["affinity"] : [];
     const minutes = curatedEntry ? formatDuration(curatedEntry.durationMinutes) : "";
     out.push({
       id: `at_home:${key}`,
@@ -148,6 +155,7 @@ export function buildHomeItems(
   minimum = 4,
 ): HomeItem[] {
   const listed = suggestions.map(itemFromSuggestion);
+  if(fill.personalization) listed.sort((a,b)=>activityScore(b.corner.key,fill.personalization!,b.startsAt,fill.timeZone)-activityScore(a.corner.key,fill.personalization!,a.startsAt,fill.timeZone));
   const exclude = new Set(listed.map((i) => i.corner.key));
   return [...listed, ...atHomeItems({ ...fill, need: minimum - listed.length, exclude })];
 }

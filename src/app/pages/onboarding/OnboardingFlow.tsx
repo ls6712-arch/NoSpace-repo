@@ -225,7 +225,7 @@ export function OnboardingFlow() {
   const Screen = screenFor(step) ?? PlaceholderScreen;
   return (
     <OnboardingContext.Provider value={api}>
-      <div className="min-h-viewport">
+      <div className="min-h-viewport overflow-x-clip">
         <div className="ob-column flex min-h-viewport flex-col px-4">
           {isCounted(step) && (
             <>

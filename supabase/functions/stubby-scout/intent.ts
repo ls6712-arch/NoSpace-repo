@@ -241,7 +241,7 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
     else if (!specific && content.length === 0 && who && when) missing = "what";
   }
 
-  const budget = readBudget(text, ctx.monthlyBudget);
+  const budget = readBudget(text, ctx.monthlyBudget === 0 ? 0 : null);
   return {
     when,
     who,

@@ -36,7 +36,7 @@ describe("stubbyPicks", () => {
   it("names a pass only when the person has one for that Corner", () => {
     const got = stubbyPicks(input({ events: [event(1)], passes: [{ id: "p", kind: "climbing", label: "Climbing", place: "" }] })).get(tueEve.key)!;
     expect(got.reason).toContain("You have a climbing pass.");
-    expect(got.cost).toBe("your climbing pass");
+    expect(got.cost).toBe("$25");
   });
 
   it("never picks a thing longer than the stretch, or one that starts before it or ends after it", () => {
@@ -55,10 +55,10 @@ describe("stubbyPicks", () => {
 
   it("honours the budget: free only, a skipped budget and a pass", () => {
     expect(stubbyPicks(input({ budget: 0, events: [event(1)] })).size).toBe(0);
-    expect(stubbyPicks(input({ budget: null, events: [event(1)] })).size).toBe(0);
+    expect(stubbyPicks(input({ budget: null, events: [event(1)] })).size).toBe(1);
     expect(stubbyPicks(input({ budget: 0, events: [event(1, { price: "Free" })] })).size).toBe(1);
-    expect(stubbyPicks(input({ budget: 0, events: [event(1)], passes: [{ id: "p", kind: "climbing", label: "Climbing", place: "" }] })).size).toBe(1);
-    expect(stubbyPicks(input({ budget: 20, events: [event(1)] })).size).toBe(0);
+    expect(stubbyPicks(input({ budget: 0, events: [event(1)], passes: [{ id: "p", kind: "climbing", label: "Climbing", place: "" }] })).size).toBe(0);
+    expect(stubbyPicks(input({ budget: 20, activityBudget:20, events: [event(1)] })).size).toBe(0);
   });
 
   it("leaves out a thing that starts within 2 hours, one past the week, and one already on the calendar", () => {
@@ -107,13 +107,13 @@ describe("stubbyPicks", () => {
     expect(stubbyPicks(input({ events, declined: { [tueEve.key]: three } })).size).toBe(0);
   });
 
-  it("picks an open Pursuit's session, with 2 hours blocked out", () => {
-    const got = stubbyPicks(input({ pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(11, 3, 19), hostName: "Priya Shah" }] })).get(tueEve.key)!;
+  it("picks an open Pursuit session only with a stated end", () => {
+    const got = stubbyPicks(input({ pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(11, 3, 19), endsAt:ny(11,3,21), hostName: "Priya Shah" }] })).get(tueEve.key)!;
     expect(got).toMatchObject({ id: "pursuit:p9", kind: "open-pursuit", hostName: "Priya", pursuitId: "p9", endsAt: ny(11, 3, 21) });
   });
 
   it("carries whether the host must approve, so the button can say Ask to join", () => {
-    const pursuit = (needsApproval?: boolean) => ({ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta", startsAt: ny(11, 3, 19), hostName: "Priya", needsApproval });
+    const pursuit = (needsApproval?: boolean) => ({ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta", startsAt: ny(11, 3, 19), endsAt:ny(11,3,21), hostName: "Priya", needsApproval });
     expect(stubbyPicks(input({ pursuits: [pursuit(true)] })).get(tueEve.key)?.needsApproval).toBe(true);
     expect(stubbyPicks(input({ pursuits: [pursuit()] })).get(tueEve.key)?.needsApproval).toBeUndefined();
     expect(stubbyPicks(input({ events: [event(1)] })).get(tueEve.key)?.needsApproval).toBeUndefined();

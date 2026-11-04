@@ -1,3 +1,4 @@
+import { personalizationInputs } from "./personalizationInputs";
 import { useEffect, useState } from "react";
 import { fetchAffinity } from "./recommend";
 import { privatePlace } from "./firstPlanRemote";
@@ -38,8 +39,9 @@ export function useHomeData(userId: string | undefined): HomeData {
         fetchAffinity(),
         fetchWeekPlans(userId, now),
       ]);
-      const left = windowsLeft(taste.windows, now);
-      const items = buildHomeItems(suggestions, { picks: taste.picks, affinity, windows: left });
+      const personalization=await personalizationInputs(userId,taste);
+      const left = windowsLeft(taste.windows, now,personalization.timeZone);
+      const items = buildHomeItems(suggestions, { personalization:personalization.value,equipment:personalization.equipment,timeZone:personalization.timeZone,activityBudget:personalization.perActivityBudget ?? (taste.budget === 0 ? 0 : null),picks: personalization.value.interests.map(i=>i.key), affinity, windows: left });
       if (live) setData({ status: "ready", items, windows: taste.windows, left, plans, place });
     })().catch(() => live && setData({ ...EMPTY, status: "ready", items: buildHomeItems([], { picks: [], affinity: null, windows: [] }) }));
     return () => {

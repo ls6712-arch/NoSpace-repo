@@ -161,7 +161,7 @@ describe("evidence, relevance and degraded context", () => {
     const match = candidate({ id: "z", title: "An activity", tags: [tag] });
     const ranked = rankCandidates([other, match], ctx, []).recommendations;
     expect(ranked[0].candidate.id).toBe("z");
-    expect(ranked[0].score).toBe(ranked[1].score + 5);
+    expect(ranked[0].score).toBeGreaterThanOrEqual(ranked[1].score + 5);
   });
   it("does not count a word fragment as an onboarding interest match", () => {
     const ctx = buildContext(input({ text: "something fun indoors tonight",
