@@ -1,5 +1,10 @@
 # Stubby 3.0
 
+For the next implementation, follow **[the recommendation improvement plan](recommendation-improvement-plan.md)**:
+shared data meanings, reliable saves, accurate activity facts, consistent matching,
+human onboarding, feedback and measured rollout. This plan accounts for the newer
+branch changes described at the end of this page.
+
 Start with **[the complete Stubby guide](guide.md)** for what changed, the
 architecture and request flow, memory and consent, Claude credits, configuration,
 code map, testing and release gaps.
