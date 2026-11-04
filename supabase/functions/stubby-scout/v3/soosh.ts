@@ -6,6 +6,7 @@
  * time but a suggestion, and what each needs (cornerHome.ts) is said plainly instead of an
  * uncertainty ("You'll need flour and a loaf tin").
  */
+import { requirementsFit, type Motivation } from "../../_shared/personalization.ts";
 import { CORNER_HOME } from "../../_shared/cornerHome.ts";
 import { SOOSH_SOURCE } from "./evidence.ts";
 import type { Candidate, Context, DiscoveryAdapter } from "./types.ts";
@@ -49,6 +50,15 @@ export function sooshCandidates(input: SooshInput, ctx: Context): Candidate[] {
   if (startsAt === null) return [];
   const evidence = (url: string) => [{ url, level: "provider" as const, source: SOOSH_SOURCE, checkedAt: ctx.now }];
   const out: Candidate[] = [];
+  const factsFor = (corner: ReturnType<typeof cornerOf>) => {
+    const facts = corner?.facts;
+    const requirements = facts?.resources;
+    const owned = requirements && requirementsFit(requirements, ctx.equipment);
+    return { timing: "suggested" as const,
+      traits: facts ? { ...facts, motivations: facts.motivations as Motivation[], social: facts.social as "solo" | "together" | "either" } : undefined,
+      resources: requirements,
+      cost: facts?.costMode === "free" || (facts?.costMode === "owned_resources" && owned) ? { max: 0, currency: "USD" as const } : null };
+  };
   const used = new Set<string>();
   for (const p of input.pursuits.slice(0, 10)) {
     const title = p.title.trim().slice(0, 80);
@@ -59,7 +69,7 @@ export function sooshCandidates(input: SooshInput, ctx: Context): Candidate[] {
       id: `pursuit-${p.id}`, title, kind: "idea", startsAt, endsAt: null,
       city: ctx.city, place: null, setting: corner?.atHome ? "home" : "unknown",
       // Their own Pursuit costs nothing to work on; what it needs is said in needs, never as "free".
-      cost: { max: 0, currency: "USD" }, status: "scheduled", availability: "available",
+      ...factsFor(corner), status: "scheduled", availability: "available",
       equipment: [], membership: null, minAge: 0, travelMinutes: corner?.atHome ? 0 : null,
       tags: ["pursuit", ...(corner ? [corner.name.toLowerCase()] : [])],
       evidence: evidence(`/pursuit/${p.id}`), needs: corner?.needs ?? [],
@@ -73,7 +83,7 @@ export function sooshCandidates(input: SooshInput, ctx: Context): Candidate[] {
     used.add(corner.key);
     out.push({
       id: `corner-${space}-${slug}`, title: `${corner.name} at home`.slice(0, 80), kind: "idea", startsAt, endsAt: null,
-      city: ctx.city, place: null, setting: "home", cost: { max: 0, currency: "USD" }, status: "scheduled", availability: "available",
+      city: ctx.city, place: null, setting: "home", ...factsFor(corner), status: "scheduled", availability: "available",
       equipment: [], membership: null, minAge: 0, travelMinutes: 0,
       tags: ["corner", corner.name.toLowerCase()], evidence: evidence(`/start/${space}/${slug}`), needs: corner.needs,
     });

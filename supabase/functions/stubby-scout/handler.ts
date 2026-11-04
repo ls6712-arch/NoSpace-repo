@@ -761,7 +761,7 @@ async function ask(
         // Their own Pursuit or Corner: no price claimed; what it needs is the note instead of an uncertainty.
         price: own ? null : c.cost ? c.cost.max === 0 ? "Free" : `Up to $${c.cost.max}` : null,
         url: c.evidence[0].url, cornerId: null,
-        note: own ? needsLine(c.needs) : [r.verification === "partial" ? "Details need confirmation." : "Source verified.", ...r.uncertainties].join(" ").slice(0, 200),
+        note: own ? [needsLine(c.needs), ...r.uncertainties].filter(Boolean).join(" ").slice(0, 200) : [r.verification === "partial" ? "Details need confirmation." : "Source verified.", ...r.uncertainties].join(" ").slice(0, 200),
         why: r.explanation, after: r.after === true, betterWithFriend: false };
       if (await deps.server.insertPersonal(askRowFor(p, userId, askId, Math.min(20, rankFrom + rank)))) mine.push(p);
     }
@@ -769,7 +769,7 @@ async function ask(
     for (const d of report.dropped) rejected[d.reason] = (rejected[d.reason] ?? 0) + 1;
     const typed = change?.intent ?? intent;
     // The contract says what bound this ask: a typed budget is hard; the onboarding budget is soft (C3).
-    const softBudget = capability.perActivityBudget ?? (profile.monthlyBudget !== null ? Math.floor(profile.monthlyBudget / 4) : null);
+    const softBudget = capability.perActivityBudget;
     const asked: Intent = typed.budget || softBudget === null ? typed : { ...typed, budget: { max: softBudget, free: softBudget === 0, from: "profile" }, from: { ...typed.from, budget: "profile" } };
     const window = asked.when ?? searchWindow(asked, now, zone);
     const deckOf = (r: V3Report["recommendations"]): TraceDeckPick[] => r.slice(0, 5).map((x, rank) => ({ title: x.candidate.title.slice(0, 80), kind: x.candidate.kind,

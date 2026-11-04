@@ -57,7 +57,11 @@ export function resourceId(value: string): string {
   const v = value.trim().toLowerCase().replace(/\s+/g, " ");
   return ({ bike: "bicycle", paints: "painting supplies", "paint set": "painting supplies", "yoga mats": "yoga mat" } as Record<string, string>)[v] ?? v;
 }
-export interface ResourceRequirements { required: string[][]; optional: string[] }
+export interface ResourceRequirements { required: string[][]; optional: string[]; alternatives?: string[][] }
+export function requirementsFit(resources: ResourceRequirements, owned: readonly string[]): boolean {
+  const set = new Set(owned.map(resourceId));
+  return hasResources(resources.required, owned) && (!resources.alternatives?.length || resources.alternatives.some(bundle => bundle.every(r => set.has(resourceId(r)))));
+}
 /** Every required group must have one owned alternative. Optional resources never block. */
 export function hasResources(required: readonly (readonly string[])[], owned: readonly string[]): boolean {
   const set = new Set(owned.map(resourceId));

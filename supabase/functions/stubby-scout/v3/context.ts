@@ -36,6 +36,8 @@ export function buildContext(input: RequestInput): Context {
   const cityFrom: Context["cityFrom"] = parsed.city === null ? null : asked ? "ask" : session ? "session" : saved ? "profile" : "default";
   return {
     version: V3_VERSION, now, timeZone, city, cityFrom,
+    ownedOnly: /\b(?:use what I (?:already )?have|only what I (?:already )?have|no new (?:gear|equipment))\b/i.test(text),
+    durationMax: (() => { const m = /\b(?:I have|I[’']ve got|for)\s+(\d{1,3})\s*(?:minutes?|mins?)\b/i.exec(text); return m ? Number(m[1]) : null; })(),
     window,
     hardBudget: input.budgetOverride ?? (intent.budget?.from === "ask" ? intent.budget.max : normalized.freeOnly ? 0 : null),
     softBudget: soft,
