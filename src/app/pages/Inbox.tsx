@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { AnimatePresence, motion } from "motion/react";
+import { PursuitNotices } from "../components/pursuit/workflow/PursuitNotices";
 import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
@@ -146,6 +147,7 @@ export function Inbox() {
 
   return (
     <PageShell title="Notifications">
+      <PursuitNotices />
 
       <Loadable loading={followRequestsOrNull === null && !social.loaded} skeleton={<ListSkeleton count={4} />}>
         {needsCount > 0 && (

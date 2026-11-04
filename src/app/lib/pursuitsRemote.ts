@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { Goal, GoalShape, Project, attachEntry, mergeRemoteProgress, mergeRemoteProjects } from "./journal";
+import { Goal, GoalShape, Project, attachEntry, mergeRemoteProgress, mergeRemoteProjects, getJournal, projectWorkflowProgress } from "./journal";
 import type { Measure, PursuitMember, PursuitMode, ProgressEntry } from "./journal";
 import { friendlyError } from "./friendlyError";
 import { ERROR_LINE } from "./stateCopy";
@@ -313,6 +313,7 @@ export async function restoreOwnPursuits(userId: string) {
         ((joined as any[]) ?? []).map((row) => ({ ...withPlan(rowToProject(row)), ownerId: row.user_id, role: "member" as const })),
       );
     }
+    await restoreWorkflowProgress(userId);
   } catch {
     // Best effort — the local journal is unaffected either way.
   }
@@ -686,5 +687,27 @@ export async function markAsPlan(pursuitId: string): Promise<void> {
     await supabase.from("pursuits").update({ is_plan: true }).eq("id", pursuitId);
   } catch {
     // Without the column the plan is a plain Pursuit on this person's other devices until the migration is applied.
+  }
+}
+
+/** Restore versioned progress into the existing Shelf cache on a fresh device. */
+async function restoreWorkflowProgress(userId: string) {
+  if (!supabase) return;
+  const projects = getJournal().projects.filter(p => p.measure?.workflow);
+  if (!projects.length) return;
+  const ids = projects.map(p => p.id);
+  const [entries, goals] = await Promise.all([
+    supabase.from('pursuit_contributions').select('*').in('pursuit_id',ids),
+    supabase.from('pursuit_personal_goals').select('*').eq('user_id',userId).in('pursuit_id',ids),
+  ]);
+  if (entries.error || goals.error) return;
+  const session = await supabase.auth.getSession();
+  if (session.data.session?.user.id !== userId) return;
+  for (const p of projects) {
+    const w = p.measure!.workflow!;
+    const rows = (entries.data ?? []).filter(e => e.pursuit_id === p.id && (p.mode === 'group' || e.user_id === userId))
+      .filter(e => w.tracking !== 'checklist' || w.items.some(i => i.id === e.item_id && !i.archived))
+      .map(e => ({id:e.id,projectId:p.id,userId:e.user_id,amount:Number(e.amount),createdAt:Date.parse(e.occurred_at),postId:e.post_id ?? undefined,note:e.note}));
+    projectWorkflowProgress(p.id,rows,p.mode === 'group' ? undefined : (goals.data ?? []).find(g => g.pursuit_id === p.id));
   }
 }

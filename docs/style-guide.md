@@ -10,7 +10,7 @@ and by `npm test`. Terms live in `docs/glossary.md`.
 |---|---|
 | **Moment** | Anything you post: photo, video, text, or a link. Tagged with a Corner. Can stand alone or belong to a Pursuit. |
 | **Shelf** | Your profile and portfolio. Public link anyone can view; only members can follow and react. |
-| **Pursuit** | Something you are working toward, with countable progress. Shown on the Shelf. |
+| **Pursuit** | Something you are working toward, tracked with progress or Moments. Shown on the Shelf. |
 | **Corner** | A category for discovery (Pottery, Coding, Running). |
 | **Space** | A host-created community. |
 | **Stub** | A keepsake for something you did: an event a host confirmed, a Moment that counted toward a Pursuit, or a finished Pursuit. Issued by a host or by the server, never by the client. Never ranked. |
