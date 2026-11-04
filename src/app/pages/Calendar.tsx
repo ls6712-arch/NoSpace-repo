@@ -17,7 +17,10 @@ import { PickCard } from "../components/calendar/PickCard";
 import { BlockRows, StubRows } from "../components/calendar/StubRows";
 import { TimeGrid } from "../components/calendar/TimeGrid";
 import { WeekExtras } from "../components/calendar/WeekExtras";
-import { CalendarSheets, type SheetState } from "../components/calendar/CalendarSheets";
+import {
+  CalendarSheets,
+  type SheetState,
+} from "../components/calendar/CalendarSheets";
 import type { Openers } from "../components/calendar/openers";
 import type { GridHandlers } from "../components/calendar/TimeGrid";
 import { DaySection } from "../components/week/DaySection";
@@ -57,7 +60,10 @@ import { ERROR_LINE } from "../lib/stateCopy";
 import type { Budget } from "../lib/tasteModel";
 import { useCalendarActions } from "../lib/useCalendarActions";
 import { keepPick, undoKeep } from "../lib/pickActions";
-import { StubbyStage, type StubbyStageHandle } from "../components/calendar/StubbyStage";
+import {
+  StubbyStage,
+  type StubbyStageHandle,
+} from "../components/calendar/StubbyStage";
 import { createPlan } from "../lib/planEdits";
 import type { MyPick } from "../lib/stubbyAsk";
 import { usePickDeclines } from "../lib/pickDeclines";
@@ -85,23 +91,37 @@ export function Calendar() {
   const panel = useMediaQuery("(min-width: 1128px)");
   const data = useWeekData(user?.id);
   const [attempt, setAttempt] = useState(0);
-  const [filtersByView, setFiltersByView] = useState<Partial<Record<CalendarView, Filters>>>({});
+  const [filtersByView, setFiltersByView] = useState<
+    Partial<Record<CalendarView, Filters>>
+  >({});
   const [showOpen, setShowOpen] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
   const [sheet, setSheet] = useState<SheetState | null>(null);
   const [kept, setKept] = useState<ReadonlySet<string>>(new Set());
   // A Stubby account (signed up from Stubby, onboarding not finished): inviting someone is for members.
-  const stubbyAccount = !!profile && !profile.onboarding_completed && profile.signed_up_from === "stubby";
+  const stubbyAccount =
+    !!profile &&
+    !profile.onboarding_completed &&
+    profile.signed_up_from === "stubby";
   const [finishOpen, setFinishOpen] = useState(false);
   // Stubby, on the stage at the top, reacts to everything you do here.
   const stage = useRef<StubbyStageHandle>(null);
-  const stubby = useMemo(() => ({ react: (r: Parameters<StubbyStageHandle["react"]>[0]) => stage.current?.react(r) }), []);
+  const stubby = useMemo(
+    () => ({
+      react: (r: Parameters<StubbyStageHandle["react"]>[0]) =>
+        stage.current?.react(r),
+    }),
+    [],
+  );
 
   const now = data.now;
   const view = parseView(params.get("view"));
   const signedUp = user?.created_at ? Date.parse(user.created_at) : null;
   const range = useMemo(() => calendarRange(now, signedUp), [now, signedUp]);
-  const anchor = clampAnchor(parseDateParam(params.get("date")) ?? noonOf(now), range);
+  const anchor = clampAnchor(
+    parseDateParam(params.get("date")) ?? noonOf(now),
+    range,
+  );
 
   const userId = user?.id;
   useEffect(() => {
@@ -119,18 +139,57 @@ export function Calendar() {
   const fetchTo = days[days.length - 1].endMs;
   const extra = useCalendarData(userId, fetchFrom, fetchTo, attempt);
   const owner: Owner | null = user
-    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
+    ? {
+        id: user.id,
+        username: profile?.username ?? null,
+        displayName: profile?.display_name?.trim() || "",
+        avatarUrl: profile?.avatar_url ?? undefined,
+      }
     : null;
   // A change reloads the range's plans only, never the whole screen.
   const reloadPlans = useCallback(() => setAttempt((n) => n + 1), []);
-  const actions = useCalendarActions({ owner, usualWindows: data.windows, reloadPlans });
+  const actions = useCalendarActions({
+    owner,
+    usualWindows: data.windows,
+    reloadPlans,
+    remotePlans: extra.loaded ? extra.plans : data.plans,
+  });
 
   const plans = useMemo(() => {
+    if (extra.loaded)
+      return actions
+        .applyToPlans(extra.plans)
+        .sort((a, b) => a.startsAt - b.startsAt);
     const byId = new Map<string, WeekPlanDetail>();
     for (const p of [...data.plans, ...extra.plans]) byId.set(p.id, p);
-    return actions.applyToPlans([...byId.values()]).sort((a, b) => a.startsAt - b.startsAt);
-  }, [data.plans, extra.plans, actions.applyToPlans]); // eslint-disable-line react-hooks/exhaustive-deps
-  const baseDays = useMemo(() => calendarDays(days, plans, extra.stubs, actions.windows, now, actions.entries), [days, plans, extra.stubs, actions.windows, now, actions.entries]);
+    return actions
+      .applyToPlans([...byId.values()])
+      .sort((a, b) => a.startsAt - b.startsAt);
+  }, [data.plans, extra.plans, extra.loaded, actions.applyToPlans]); // eslint-disable-line react-hooks/exhaustive-deps
+  const safeAvailability =
+    actions.availabilityReady && !extra.failed && extra.loaded !== false;
+  const baseDays = useMemo(
+    () =>
+      calendarDays(
+        days,
+        plans,
+        extra.stubs,
+        safeAvailability ? actions.windows : [],
+        now,
+        safeAvailability
+          ? actions.entries
+          : actions.entries.filter((e) => e.kind !== "free"),
+      ),
+    [
+      days,
+      plans,
+      extra.stubs,
+      actions.windows,
+      now,
+      actions.entries,
+      safeAvailability,
+    ],
+  );
   // Stubby's picks: made here from what is on screen, and run again whenever anything changes. Nothing about them leaves the browser.
   const { declines, notThis } = usePickDeclines(dateParam(now));
   const pickMap = useMemo(
@@ -140,7 +199,9 @@ export function Calendar() {
             now,
             slots: pickSlots(baseDays),
             picks: data.stubby.picks,
-            personalization:data.stubby.personalization,activityBudget:data.stubby.activityBudget,timeZone:data.stubby.timeZone,
+            personalization: data.stubby.personalization,
+            activityBudget: data.stubby.activityBudget,
+            timeZone: data.stubby.timeZone,
             events: data.stubby.events,
             pursuits: data.stubby.pursuits,
             area: data.stubby.area,
@@ -151,14 +212,51 @@ export function Calendar() {
             taken: new Set([...takenIds(plans), ...kept]),
           })
         : new Map(),
-    [data.stubby, data.budget, data.passes, baseDays, now, actions.windows, declines, plans, kept],
+    [
+      data.stubby,
+      data.budget,
+      data.passes,
+      baseDays,
+      now,
+      actions.windows,
+      declines,
+      plans,
+      kept,
+    ],
   );
-  const calDays = useMemo(() => withPicks(baseDays, pickMap), [baseDays, pickMap]);
+  const calDays = useMemo(
+    () => withPicks(baseDays, pickMap),
+    [baseDays, pickMap],
+  );
   const stripDays = useMemo(
-    () => (view === "day" ? calendarDays(weekDays(addDays(anchor, -3), 7), plans, extra.stubs, actions.windows, now, actions.entries) : []),
-    [view, anchor, plans, extra.stubs, actions.windows, now, actions.entries],
+    () =>
+      view === "day"
+        ? calendarDays(
+            weekDays(addDays(anchor, -3), 7),
+            plans,
+            extra.stubs,
+            safeAvailability ? actions.windows : [],
+            now,
+            safeAvailability
+              ? actions.entries
+              : actions.entries.filter((e) => e.kind !== "free"),
+          )
+        : [],
+    [
+      view,
+      anchor,
+      plans,
+      extra.stubs,
+      actions.windows,
+      now,
+      actions.entries,
+      safeAvailability,
+    ],
   );
-  const spend = useMemo(() => monthSpend(data.plans, data.passes, now), [data.plans, data.passes, now]);
+  const spend = useMemo(
+    () => monthSpend(data.plans, data.passes, now),
+    [data.plans, data.passes, now],
+  );
 
   const filters = filtersByView[view] ?? loadFilters(view);
 
@@ -203,7 +301,14 @@ export function Calendar() {
   const makePlansFromPicks = async (picks: MyPick[]): Promise<number[]> => {
     const made: number[] = [];
     for (const p of picks) {
-      if (await actions.makePlan({ title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt })) made.push(p.id);
+      if (
+        await actions.makePlan({
+          title: p.title,
+          cornerKey: p.cornerKey ?? "",
+          startsAt: p.startsAt,
+        })
+      )
+        made.push(p.id);
     }
     if (made.length) stubby.react("stamped");
     return made;
@@ -211,17 +316,31 @@ export function Calendar() {
   // The bring-a-friend nudge: the pick becomes a one-off plan, then the half ticket opens.
   const bringFromPick = async (p: MyPick) => {
     if (!owner) return;
-    const r = await createPlan({ title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt }, owner);
+    const r = await createPlan(
+      { title: p.title, cornerKey: p.cornerKey ?? "", startsAt: p.startsAt },
+      owner,
+    );
     if (r.sessionId === undefined || !r.pursuitId) {
       stubby.react("tilt");
       notifyError(r.error ?? ERROR_LINE);
       return;
     }
     reloadPlans();
-    await onBring({ id: `session-${r.sessionId}`, kind: "session", title: p.title, startsAt: p.startsAt, color: "orange", mine: true, pursuitId: r.pursuitId, going: { friends: [], total: 1 }, cornerKey: p.cornerKey ?? undefined });
+    await onBring({
+      id: `session-${r.sessionId}`,
+      kind: "session",
+      title: p.title,
+      startsAt: p.startsAt,
+      color: "orange",
+      mine: true,
+      pursuitId: r.pursuitId,
+      going: { friends: [], total: 1 },
+      cornerKey: p.cornerKey ?? undefined,
+    });
   };
   const retry = () => {
     data.reload();
+    actions.retryEntries();
     setAttempt((n) => n + 1);
   };
 
@@ -283,7 +402,10 @@ export function Calendar() {
     onMovePlan: (plan, startsAt) => void actions.changePlanTime(plan, startsAt),
     onChangeBlock: (b, startMs, endMs) => {
       const startsAt = b.entry.startsAt + (startMs - b.startMs);
-      void actions.changeEntry(b.entry, { startsAt, endsAt: startsAt + (endMs - startMs) });
+      void actions.changeEntry(b.entry, {
+        startsAt,
+        endsAt: startsAt + (endMs - startMs),
+      });
     },
     onDeletePlan: actions.cancelPlan,
     onDeleteBlock: (b) => actions.removeBlock(b.entry),
@@ -293,7 +415,13 @@ export function Calendar() {
   const inSpan = (ms: number) => ms >= span.startMs && ms < span.endMs;
   const subline = viewSubline(view, {
     stubs: extra.stubs.filter((s) => inSpan(s.issuedAt)).length,
-    plans: view === "month" ? plansToGo(plans.filter((p) => inSpan(p.startsAt)), now) : plans.filter((p) => inSpan(p.startsAt)).length,
+    plans:
+      view === "month"
+        ? plansToGo(
+            plans.filter((p) => inSpan(p.startsAt)),
+            now,
+          )
+        : plans.filter((p) => inSpan(p.startsAt)).length,
     startsToday: sameDay(days[0], now),
   });
 
@@ -307,7 +435,12 @@ export function Calendar() {
           now={now}
           wide={wide}
           filters={filters}
-          selected={picked ?? (sameDay(days[0], now) || calDays.some((c) => sameDay(c.day, now)) ? noonOf(now) : anchor)}
+          selected={
+            picked ??
+            (sameDay(days[0], now) || calDays.some((c) => sameDay(c.day, now))
+              ? noonOf(now)
+              : anchor)
+          }
           passes={data.passes}
           onSelect={setPicked}
           onOpenDay={(ms) => go({ view: "day", anchor: ms })}
@@ -316,23 +449,55 @@ export function Calendar() {
         />
       );
     }
-    if (view === "list") return <ListView days={calDays} now={now} filters={filters} passes={data.passes} onBring={(p) => void onBring(p)} open={open} />;
+    if (view === "list")
+      return (
+        <ListView
+          days={calDays}
+          now={now}
+          filters={filters}
+          passes={data.passes}
+          onBring={(p) => void onBring(p)}
+          open={open}
+        />
+      );
     if (view === "day" || wide) {
       return (
         <div className="flex flex-col gap-4">
           {view === "day" && (
-            <DayStrip days={stripDays.map((c) => ({ ...c, plans: visiblePlans(c, filters), free: filters.free ? c.free : [] }))} selected={3} now={now} onSelect={(i) => go({ anchor: addDays(anchor, i - 3) })} />
+            <DayStrip
+              days={stripDays.map((c) => ({
+                ...c,
+                plans: visiblePlans(c, filters),
+                free: filters.free ? c.free : [],
+              }))}
+              selected={3}
+              now={now}
+              onSelect={(i) => go({ anchor: addDays(anchor, i - 3) })}
+            />
           )}
-          <TimeGrid days={calDays} now={now} filters={filters} passes={data.passes} handlers={handlers} />
+          <TimeGrid
+            days={calDays}
+            now={now}
+            filters={filters}
+            passes={data.passes}
+            handlers={handlers}
+          />
         </div>
       );
     }
     // Week on a phone: the seven days as a strip and a list, as the Week view always was.
-    const contents = calDays.map((c) => ({ ...c, plans: visiblePlans(c, filters), free: filters.free ? c.free : [] }));
+    const contents = calDays.map((c) => ({
+      ...c,
+      plans: visiblePlans(c, filters),
+      free: filters.free ? c.free : [],
+    }));
     const hasPlans = contents.some((c) => c.plans.length > 0);
     if (noWindows && !hasPlans && sameDay(days[0], now)) {
       return (
-        <Link to="/discover" className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline">
+        <Link
+          to="/discover"
+          className="inline-flex min-h-11 items-center self-start text-small font-semibold text-accent-text underline-offset-4 hover:underline"
+        >
           {WEEK_VIEW.findSomething}
         </Link>
       );
@@ -341,20 +506,44 @@ export function Calendar() {
       <div className="flex flex-col gap-6">
         <DayStrip
           days={contents}
-          selected={contents.find((c) => sameDay(c.day, picked ?? now))?.day.offset ?? -1}
+          selected={
+            contents.find((c) => sameDay(c.day, picked ?? now))?.day.offset ??
+            -1
+          }
           now={now}
           onSelect={(offset) => {
             setPicked(contents[offset].day.noonMs);
             track({ name: "week_day_tapped", offset });
-            document.getElementById(`week-day-${offset}`)?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+            document
+              .getElementById(`week-day-${offset}`)
+              ?.scrollIntoView?.({ behavior: "smooth", block: "start" });
           }}
         />
         {/* Days stay in one column, in date order: a second column would read across, out of order. */}
         <div className="flex flex-col gap-6">
           {contents.map((c) => (
             <div key={c.day.offset} className="flex flex-col gap-3">
-              <DaySection content={c} now={now} passes={data.passes} onBring={(p) => void onBring(p)} onOpenPlan={open.plan} onOpenFree={(f) => open.free(f as CalendarFreeSlot)} renderPick={(f) => (filters.picks && (f as CalendarFreeSlot).pick ? <PickCard slot={f as CalendarFreeSlot} onOpen={open.pick} onKeep={open.keep} className="w-full" /> : null)} />
-              {filters.blocks && <BlockRows blocks={c.blocks} onOpen={open.block} />}
+              <DaySection
+                content={c}
+                now={now}
+                passes={data.passes}
+                onBring={(p) => void onBring(p)}
+                onOpenPlan={open.plan}
+                onOpenFree={(f) => open.free(f as CalendarFreeSlot)}
+                renderPick={(f) =>
+                  filters.picks && (f as CalendarFreeSlot).pick ? (
+                    <PickCard
+                      slot={f as CalendarFreeSlot}
+                      onOpen={open.pick}
+                      onKeep={open.keep}
+                      className="w-full"
+                    />
+                  ) : null
+                }
+              />
+              {filters.blocks && (
+                <BlockRows blocks={c.blocks} onOpen={open.block} />
+              )}
               {filters.stubs && <StubRows stubs={c.stubs} onOpen={open.stub} />}
             </div>
           ))}
@@ -365,19 +554,20 @@ export function Calendar() {
 
   const showWeekExtras = view === "week" && sameDay(days[0], now);
   return (
-    <PageShell
-      title={viewTitle(view, anchor, now)}
-      subtitle={subline}
-    >
+    <PageShell title={viewTitle(view, anchor, now)} subtitle={subline}>
       <StubbyStage
         ref={stage}
         greeting={{ now, windows: actions.windows, plans }}
         loading={data.status === "loading"}
-        failed={data.status === "error" || (data.status === "ready" && extra.failed)}
+        failed={
+          data.status === "error" || (data.status === "ready" && extra.failed)
+        }
         sheetOpen={!!sheet || showOpen}
         userId={userId}
         onMakePlans={makePlansFromPicks}
-        onBring={(p) => (stubbyAccount ? setFinishOpen(true) : void bringFromPick(p))}
+        onBring={(p) =>
+          stubbyAccount ? setFinishOpen(true) : void bringFromPick(p)
+        }
       />
       <FinishSettingUpSheet open={finishOpen} onOpenChange={setFinishOpen} />
       <CalendarToolbar
@@ -392,8 +582,12 @@ export function Calendar() {
         onMakePlan={() => open.makePlan()}
       />
       {data.status === "loading" && <CalendarSkeleton />}
-      {data.status === "error" && <ErrorNotice onRetry={retry} />}
-      {data.status === "ready" && extra.failed && <ErrorNotice onRetry={retry} />}
+      {(data.status === "error" || actions.entriesFailed) && (
+        <ErrorNotice onRetry={retry} />
+      )}
+      {data.status === "ready" && extra.failed && (
+        <ErrorNotice onRetry={retry} />
+      )}
       {data.status === "ready" && !extra.failed && (
         <div className="flex flex-col gap-6 desk:flex-row desk:items-start">
           {panel && (
@@ -405,15 +599,38 @@ export function Calendar() {
           <div className="min-w-0 flex-1">
             {body()}
             {showWeekExtras && (
-              <WeekExtras goodHours={data.goodHours} windows={data.windows} budget={data.budget} spend={spend} picks={data.picks} noWindows={noWindows} onBudget={(b) => void onBudget(b)} />
+              <WeekExtras
+                goodHours={data.goodHours}
+                windows={data.windows}
+                budget={data.budget}
+                spend={spend}
+                picks={data.picks}
+                noWindows={noWindows}
+                onBudget={(b) => void onBudget(b)}
+              />
             )}
           </div>
         </div>
       )}
-      {sheet && <CalendarSheets sheet={sheet} onClose={() => setSheet(null)} now={now} actions={actions} passes={data.passes} onBring={(p) => void onBring(p)} onKeep={(slot) => void keep(slot)} onNotThis={declinePick} />}
+      {sheet && (
+        <CalendarSheets
+          sheet={sheet}
+          onClose={() => setSheet(null)}
+          now={now}
+          actions={actions}
+          passes={data.passes}
+          onBring={(p) => void onBring(p)}
+          onKeep={(slot) => void keep(slot)}
+          onNotThis={declinePick}
+        />
+      )}
       {!panel && (
         <BottomSheet open={showOpen} onOpenChange={setShowOpen} title="Show">
-          <ShowPanel filters={filters} onChange={onFilter} className="border-0 p-0" />
+          <ShowPanel
+            filters={filters}
+            onChange={onFilter}
+            className="border-0 p-0"
+          />
           <SubscribeCard className="mt-4" />
         </BottomSheet>
       )}

@@ -133,9 +133,7 @@ export async function fetchNextSession(pursuitId: string): Promise<PursuitSessio
 export async function setImIn(sessionId: number, userId: string, going: boolean): Promise<string | null> {
   if (!supabase) return ERROR_LINE;
   try {
-    const { error } = going
-      ? await supabase.from("pursuit_session_rsvps").insert({ session_id: sessionId, user_id: userId })
-      : await supabase.from("pursuit_session_rsvps").delete().eq("session_id", sessionId).eq("user_id", userId);
+    const { error } = await supabase.rpc("set_calendar_session_attendance", { p_session: sessionId, p_going: going, p_user:userId });
     return error ? friendlyError(error) : null;
   } catch {
     return ERROR_LINE;

@@ -1,6 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { catStyle } from "../../lib/categoryStyle";
-import { dragRange, isDraggable, snapMs, tapRange, timeAtRow } from "../../lib/calendarActions";
+import { dragRange, isDraggable, snapMs, tapRange, timeAtRow, clockMinutes, moveToDay } from "../../lib/calendarActions";
 import { SHEET } from "../../lib/calendarCopy";
 import type { Occurrence } from "../../lib/calendarEntries";
 import {
@@ -44,8 +44,7 @@ const hourLabel = (h: number) => shortTime(nyTimeToMs(2026, 1, 15, h));
 
 /** Where a span sits in the column, in px, clipped to the grid. */
 export function blockBox(day: { startMs: number; endMs: number }, startMs: number, endMs: number): { top: number; height: number } {
-  const gridStart = day.startMs + GRID_START_HOUR * HOUR_MS;
-  const px = (ms: number) => ((ms - gridStart) / HOUR_MS) * HOUR_PX;
+  const px = (ms: number) => ((clockMinutes(day, ms) - GRID_START_HOUR * 60) / 60) * HOUR_PX;
   const top = Math.min(Math.max(px(startMs), 0), HEIGHT - MIN_BLOCK_PX);
   const bottom = Math.min(Math.max(px(endMs), top + MIN_BLOCK_PX), HEIGHT);
   return { top, height: Math.max(bottom - top, MIN_BLOCK_PX) };
@@ -227,7 +226,7 @@ function DayColumn({
   const blocks = filters.blocks ? content.blocks : [];
   const placed = lanes(plans.map((p) => planSpan(p.startsAt, p.endsAt)));
   const today = sameDay(day, now);
-  const nowTop = ((now - (day.startMs + GRID_START_HOUR * HOUR_MS)) / HOUR_MS) * HOUR_PX;
+  const nowTop = ((clockMinutes(day, now) - GRID_START_HOUR * 60) / 60) * HOUR_PX;
   const rowOf = (clientY: number) => clientY - (ref.current?.getBoundingClientRect().top ?? 0);
   const onItem = (e: { target: EventTarget }) => !!(e.target as HTMLElement).closest("[data-hit]");
 
@@ -288,7 +287,7 @@ function DayColumn({
     setDrag(null);
     suppress.current = true;
     const t = target(s.cols);
-    handlers.onMovePlan(plan, t.day.startMs + (plan.startsAt - day.startMs) + s.ms);
+    handlers.onMovePlan(plan, moveToDay(plan.startsAt, t.day, s.ms));
   };
   const finishBlock = (b: Occurrence) => {
     if (!drag || !drag.moved) return setDrag(null);
@@ -297,7 +296,7 @@ function DayColumn({
     suppress.current = true;
     if (drag.kind === "resize") return handlers.onChangeBlock(b, b.startMs, Math.max(b.startMs + 15 * 60_000, snapMs(b.endMs + s.ms)));
     const t = target(s.cols);
-    const start = t.day.startMs + (b.startMs - day.startMs) + s.ms;
+    const start = moveToDay(b.startMs, t.day, s.ms);
     handlers.onChangeBlock(b, start, start + (b.endMs - b.startMs));
   };
   const offsetStyle = (id: string) => (drag && drag.id === id && drag.moved && drag.kind === "move" ? { transform: `translate(${drag.dx}px, ${drag.dy}px)`, zIndex: 20 } : undefined);

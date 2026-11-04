@@ -172,20 +172,18 @@ export async function readLegacyData(
     cancelled: false,
   }));
   if (sessions.data?.length) {
-    const attendance = await supabase
-      .from("pursuit_session_rsvps")
-      .select("*")
-      .in(
-        "session_id",
-        sessions.data.map((s) => s.id),
-      );
-    if (attendance.error)
-      throw new Error("Sessions couldn’t be loaded. Try again.");
+    const ids=sessions.data.map(s=>s.id);
+    const [attendance,declines]=await Promise.all([
+      supabase.from('pursuit_session_rsvps').select('*').in('session_id',ids),
+      supabase.from('pursuit_session_declines').select('session_id,user_id').in('session_id',ids),
+    ]);
+    if(attendance.error || declines.error) throw new Error('Sessions couldn’t be loaded. Try again.');
     merged.attendance = (attendance.data ?? []).map((a) => ({
       session_id: `legacy-session:${a.session_id}`,
       user_id: a.user_id,
       going: true,
     }));
+    merged.attendance.push(...(declines.data??[]).map(a=>({session_id:`legacy-session:${a.session_id}`,user_id:a.user_id,going:false})));
   }
   return merged;
 }

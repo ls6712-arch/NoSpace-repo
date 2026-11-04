@@ -41,6 +41,8 @@ export interface WeekPlanDetail extends WeekPlan {
   /** A Pursuit's session: "4 of 5". Left out for a one-session plan. */
   session?: { n: number; total: number };
   pursuitId?: string;
+  pursuitSession?: boolean;
+  sharedSession?: boolean;
   /** Whether the viewer owns the Pursuit, so "Bring someone" can make its link. */
   mine?: boolean;
   going: WeekGoing;

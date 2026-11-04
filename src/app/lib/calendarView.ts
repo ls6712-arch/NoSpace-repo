@@ -348,7 +348,7 @@ function safeStore(): Storage | null {
 }
 
 /** A session of a longer Pursuit. A plan someone made for one day is a small Pursuit with one session, but it is a plan. */
-export const isPursuitSession = (p: Pick<WeekPlanDetail, "kind" | "session">): boolean => p.kind === "session" && !!p.session && p.session.total > 1;
+export const isPursuitSession = (p: Pick<WeekPlanDetail, "kind" | "session" | "pursuitSession">): boolean => p.kind === "session" && (p.pursuitSession ?? (!!p.session && p.session.total > 1));
 
 /** A day's plans after the Plans and Pursuit sessions filters. */
 export const visiblePlans = (c: Pick<DayContent, "plans">, filters: Filters): WeekPlanDetail[] =>

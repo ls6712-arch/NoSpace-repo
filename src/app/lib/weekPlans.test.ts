@@ -2,7 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { nyTimeToMs } from "./homeWeek";
 
 type Row = Record<string, unknown>;
-const db = vi.hoisted(() => ({ tables: {} as Record<string, Row[]> }));
+const db = vi.hoisted(() => ({
+  tables: {} as Record<string, Row[]>,
+  sessions: [] as Row[],
+  fail: false,
+  calls: [] as unknown[],
+}));
 
 /** A tiny stand-in for the query builder: filters by eq, in, is, gte, lt and awaits to { data, error }. */
 vi.mock("../../lib/supabase", () => {
@@ -20,7 +25,22 @@ vi.mock("../../lib/supabase", () => {
     };
     return b;
   };
-  return { supabase: { from: builder } };
+  return {
+    supabase: {
+      from: builder,
+      rpc: async (name: string, args: Record<string, string>) => {
+        db.calls.push([name, args]);
+        return {
+          data: db.sessions.filter(
+            (s) =>
+              String(s.starts_at) >= args.p_from &&
+              String(s.starts_at) < args.p_to,
+          ),
+          error: db.fail ? { message: "Failed" } : null,
+        };
+      },
+    },
+  };
 });
 
 import { fetchWeekDetail } from "./weekPlans";
@@ -31,6 +51,55 @@ const FROM = ny(10, 30, 12);
 const TO = ny(11, 6, 0);
 
 beforeEach(() => {
+  db.fail = false;
+  db.calls = [];
+  db.sessions = [
+    {
+      id: "session-10",
+      pursuit_id: "p1",
+      owner_id: "me",
+      creator_id: "me",
+      title: "Pottery",
+      starts_at: iso(ny(10, 28, 18)),
+      place: "Studio",
+      hobby_slug: "crafts-diy",
+      sub_hobby: "pottery",
+      is_plan: false,
+      shared_session: false,
+      n: 1,
+      total: 3,
+    },
+    {
+      id: "session-11",
+      pursuit_id: "p1",
+      owner_id: "me",
+      creator_id: "me",
+      title: "Pottery",
+      starts_at: iso(ny(10, 31, 11)),
+      place: "Studio",
+      hobby_slug: "crafts-diy",
+      sub_hobby: "pottery",
+      is_plan: false,
+      shared_session: false,
+      n: 2,
+      total: 3,
+    },
+    {
+      id: "session-12",
+      pursuit_id: "p1",
+      owner_id: "me",
+      creator_id: "me",
+      title: "Pottery",
+      starts_at: iso(ny(11, 7, 11)),
+      place: "Studio",
+      hobby_slug: "crafts-diy",
+      sub_hobby: "pottery",
+      is_plan: false,
+      shared_session: false,
+      n: 3,
+      total: 3,
+    },
+  ];
   db.tables = {
     event_rsvps: [
       { event_id: 1, user_id: "me" },
@@ -43,8 +112,28 @@ beforeEach(() => {
       { event_id: 2, user_id: "me" },
     ],
     space_events: [
-      { id: 1, title: "Bouldering night", starts_at: iso(ny(10, 31, 19)), ends_at: null, status: "scheduled", space_id: "s1", neighborhood: "Gowanus", city: "New York", price: "$25" },
-      { id: 2, title: "Cancelled thing", starts_at: iso(ny(10, 31, 20)), ends_at: null, status: "cancelled", space_id: "s1", neighborhood: null, city: null, price: null },
+      {
+        id: 1,
+        title: "Bouldering night",
+        starts_at: iso(ny(10, 31, 19)),
+        ends_at: null,
+        status: "scheduled",
+        space_id: "s1",
+        neighborhood: "Gowanus",
+        city: "New York",
+        price: "$25",
+      },
+      {
+        id: 2,
+        title: "Cancelled thing",
+        starts_at: iso(ny(10, 31, 20)),
+        ends_at: null,
+        status: "cancelled",
+        space_id: "s1",
+        neighborhood: null,
+        city: null,
+        price: null,
+      },
     ],
     spaces: [{ id: "s1", name: "Brooklyn Boulders" }],
     space_corners: [{ space_id: "s1", corner_id: 7, is_primary: true }],
@@ -70,11 +159,37 @@ beforeEach(() => {
       { id: "stranger2", display_name: "Nope Two", avatar_url: null },
     ],
     pursuit_members: [],
-    pursuits: [{ id: "p1", title: "Pottery", user_id: "me", hobby_slug: "crafts-diy", sub_hobby: "pottery", measure: { target: 5 }, finished_at: null, let_go_at: null }],
+    pursuits: [
+      {
+        id: "p1",
+        title: "Pottery",
+        user_id: "me",
+        hobby_slug: "crafts-diy",
+        sub_hobby: "pottery",
+        measure: { target: 5 },
+        finished_at: null,
+        let_go_at: null,
+      },
+    ],
     pursuit_sessions: [
-      { id: 10, pursuit_id: "p1", starts_at: iso(ny(10, 28, 18)), place: "Studio" },
-      { id: 11, pursuit_id: "p1", starts_at: iso(ny(10, 31, 11)), place: "Studio" },
-      { id: 12, pursuit_id: "p1", starts_at: iso(ny(11, 7, 11)), place: "Studio" },
+      {
+        id: 10,
+        pursuit_id: "p1",
+        starts_at: iso(ny(10, 28, 18)),
+        place: "Studio",
+      },
+      {
+        id: 11,
+        pursuit_id: "p1",
+        starts_at: iso(ny(10, 31, 11)),
+        place: "Studio",
+      },
+      {
+        id: 12,
+        pursuit_id: "p1",
+        starts_at: iso(ny(11, 7, 11)),
+        place: "Studio",
+      },
     ],
     pursuit_session_rsvps: [{ session_id: 11, user_id: "me" }],
   };
@@ -93,7 +208,10 @@ describe("fetchWeekDetail", () => {
 
   it("names only mutual connections and counts everyone", async () => {
     const [, event] = await fetchWeekDetail("me", FROM, TO);
-    expect(event.going.friends.map((f) => f.name).sort()).toEqual(["Priya Shah", "Sam Lee"]);
+    expect(event.going.friends.map((f) => f.name).sort()).toEqual([
+      "Priya Shah",
+      "Sam Lee",
+    ]);
     expect(event.going.total).toBe(7);
     expect(JSON.stringify(event)).not.toContain("Nope");
   });
@@ -109,7 +227,7 @@ describe("fetchWeekDetail", () => {
 
   it("numbers a Pursuit's sessions among all of them, not just the ones in range", async () => {
     const [session] = await fetchWeekDetail("me", FROM, TO);
-    expect(session.session).toEqual({ n: 2, total: 5 });
+    expect(session.session).toEqual({ n: 2, total: 3 });
     expect(session.mine).toBe(true);
     expect(session.pursuitId).toBe("p1");
     expect(session.going).toEqual({ friends: [], total: 1 });
@@ -117,8 +235,51 @@ describe("fetchWeekDetail", () => {
 
   it("takes the range as a parameter", async () => {
     const month = await fetchWeekDetail("me", ny(10, 1, 0), ny(11, 1, 0));
-    expect(month.map((p) => p.id)).toEqual(["session-10", "session-11", "event-1"]);
+    expect(month.map((p) => p.id)).toEqual([
+      "session-10",
+      "session-11",
+      "event-1",
+    ]);
     const none = await fetchWeekDetail("me", ny(12, 1, 0), ny(12, 8, 0));
     expect(none).toEqual([]);
+  });
+});
+
+describe("Calendar session RPC contract", () => {
+  it("uses workflow session titles and UUID identity without treating goal amounts as sessions", async () => {
+    const id = "00000000-0000-4000-8000-000000000001";
+    db.sessions.push({
+      id: "meeting-" + id,
+      pursuit_id: "p1",
+      owner_id: "other",
+      creator_id: "me",
+      title: "Sunday practice",
+      starts_at: iso(ny(11, 1, 12)),
+      place: "Home",
+      hobby_slug: null,
+      sub_hobby: null,
+      is_plan: false,
+      shared_session: true,
+      n: 1,
+      total: 1,
+    });
+    const got = (await fetchWeekDetail("me", FROM, TO)).find(
+      (p) => p.id === "meeting-" + id,
+    );
+    expect(got).toMatchObject({
+      title: "Sunday practice",
+      pursuitSession: true,
+      sharedSession: true,
+      mine: true,
+      session: { n: 1, total: 1 },
+    });
+    expect(db.calls).toContainEqual([
+      "get_calendar_pursuit_sessions",
+      { p_user: "me", p_from: iso(FROM), p_to: iso(TO) },
+    ]);
+  });
+  it("fails rather than suggesting free time when scheduled sessions cannot load", async () => {
+    db.fail = true;
+    await expect(fetchWeekDetail("me", FROM, TO)).rejects.toThrow();
   });
 });

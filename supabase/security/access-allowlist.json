@@ -46,6 +46,7 @@
     "space_moment_count_30d"
   ],
   "rpc_account": [
+    "get_calendar_pursuit_sessions",
     "accept_terms",
     "claim_invite",
     "finish_onboarding",
@@ -118,11 +119,7 @@
     "thoughts"
   ],
   "invoker_exempt_views": [],
-  "buckets": [
-    "message-media",
-    "moment-media",
-    "post-media"
-  ],
+  "buckets": ["message-media", "moment-media", "post-media"],
   "edgeFunctions": {
     "calendar-feed": {
       "auth": "token",
