@@ -67,7 +67,7 @@ export function FreeScreen() {
           <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => void done(windows)} disabled={saving || windows.length === 0}>
             {windows.length === 0 ? "Pick a time" : "Next"}
           </PillButton>
-          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => void done(null, "shrug")} disabled={saving}>
+          <PillButton data-variant="plain" className="ob-button w-full min-h-14" variant="outline" onClick={() => next({ reaction: "shrug" })} disabled={saving}>
             Skip for now
           </PillButton>
         </>

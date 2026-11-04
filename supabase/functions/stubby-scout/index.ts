@@ -25,6 +25,7 @@ import { readSignals, readTaste } from "./taste.ts";
 import { accessOf, allowedOrigins, clientIp, corsFor, ipHash, originAllowed, type Access } from "../_shared/access.ts";
 import { claimTurn, readAccess } from "./claim.ts";
 import { pickKey } from "./picks.ts";
+import { emptyPersonalization, parsePersonalization } from "../_shared/personalization.ts";
 import { runV3 } from "./v3/orchestrator.ts";
 import { createV3Provider } from "./v3/provider.ts";
 import { sooshAdapter } from "./v3/soosh.ts";
@@ -59,7 +60,7 @@ async function corners(client: typeof server) {
 
 /** The caller's own profile, passes and Pursuits, read as them: the database's rules keep it to their own rows. */
 async function profileOf(client: typeof server, userId: string): Promise<PersonProfile> {
-  const [priv, passes, pursuits] = await Promise.all([
+  const [priv, passes, pursuits, personalization] = await Promise.all([
     client.from("profile_private").select("picks, free_windows, monthly_budget, city, area").eq("user_id", userId).maybeSingle(),
     client.from("user_passes").select("kind, label, place").eq("user_id", userId).limit(20),
     client
@@ -72,11 +73,13 @@ async function profileOf(client: typeof server, userId: string): Promise<PersonP
       .is("archived_at", null)
       .eq("is_plan", false)
       .limit(10),
+    client.from("stubby_capabilities").select("personalization").eq("user_id", userId).maybeSingle(),
   ]);
   const p = (priv.data ?? {}) as Record<string, unknown>;
   const strings = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
   return {
     ...EMPTY_PROFILE,
+    personalization: (() => { try { return personalization.data ? parsePersonalization(personalization.data.personalization) : emptyPersonalization(); } catch { return emptyPersonalization(); } })(),
     picks: strings(p.picks),
     windows: strings(p.free_windows),
     monthlyBudget: typeof p.monthly_budget === "number" ? p.monthly_budget : null,

@@ -46,7 +46,7 @@ export async function savePrivate(userId: string, fields: PrivateFields): Promis
       .upsert({ user_id: userId, ...fields, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (!error) return { error: null };
     if (error.message === UNDER_AGE_MESSAGE) return { error: null, underAge: true };
-    if (notDeployed(error.code)) return { error: null };
+    if (notDeployed(error.code)) return { error: "Your changes weren’t saved. Try again later." };
     return { error: friendlyError(error) };
   } catch (e) {
     return { error: friendlyError(e) };

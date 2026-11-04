@@ -51,6 +51,7 @@
     "my_member_no",
     "my_profile_private",
     "remove_underage_account",
+    "save_personalization",
     "set_calendar_feed_token",
     "set_my_birthdate",
     "set_username_during_onboarding",
