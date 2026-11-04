@@ -229,6 +229,7 @@ These replace the older measurement and mode labels in the simplified workflow. 
 | Aim for | Optional target date (no urgency language) |
 | Check in with me | Gentle Pursuit reminders. "Check in" means only this |
 | Just started / In progress / Paused / Finished | Statuses. Buttons: "Pause", "Resume", "Finish", "Reopen". Filter: "Paused" |
+| Upcoming sessions / Past sessions | Scheduled sessions after the next one / previous sessions, shown separately in a Pursuit |
 | Next session | Card at the top of an active Pursuit: when, plus an optional note |
 | Times a week / [N] of [M] this week | Your own weekly aim for a Pursuit, and the count toward it (days with a Moment, Mon–Sun) |
 | One shared goal / Side by side | Shared Pursuit modes |
