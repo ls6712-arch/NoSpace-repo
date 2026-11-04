@@ -3,10 +3,10 @@ import { Link } from "react-router";
 import { allSubHobbies, isBrowsableCorner, subHobbyLabel, titleCaseSlug } from "../../data/hobbies";
 import { useAuth } from "../../context/AuthContext";
 import { SHEET } from "../../lib/calendarCopy";
-import { clockOf, DEFAULT_HOUR, parseClock, partOf, planActions, planStartsAt, rangeText, slotTitle, weekdayName, type DayPart, type PlanAction } from "../../lib/calendarActions";
+import { clockOf, parseClock, planActions, rangeText, slotTitle, weekdayName, type PlanAction } from "../../lib/calendarActions";
 import type { CalendarEntry, EntryRepeat, Occurrence } from "../../lib/calendarEntries";
 import { NOTE_MAX } from "../../lib/calendarEntries";
-import { dateParam, dayListDate, dayListHeading, isPursuitSession, parseDateParam, shortTime, stubColor, type CalendarFreeSlot } from "../../lib/calendarView";
+import { dateParam, isPursuitSession, parseDateParam, shortTime, stubColor, type CalendarFreeSlot } from "../../lib/calendarView";
 import { formatWeekday } from "../../lib/dates";
 import { isAtHomeCorner, startPath } from "../../lib/startContent";
 import { HOME_TZ, nyTimeToMs } from "../../lib/homeWeek";
@@ -69,7 +69,7 @@ export function CalendarSheets({
   const close = onClose;
   switch (sheet.type) {
     case "slot":
-      return <TimeSheet startMs={sheet.startMs} endMs={sheet.endMs} actions={actions} onClose={close} />;
+      return <TimeSheet startMs={sheet.startMs} endMs={sheet.endMs} now={now} actions={actions} onClose={close} />;
     case "plan-form":
       return <PlanForm startMs={sheet.startMs} dayMs={sheet.dayMs} now={now} actions={actions} onClose={close} />;
     case "plan":
@@ -89,21 +89,21 @@ export function CalendarSheets({
 
 type Step = "menu" | "free" | "block";
 
-function TimeSheet({ startMs, endMs, actions, onClose }: { startMs: number; endMs: number; actions: CalendarActions; onClose: () => void }) {
+function TimeSheet({ startMs, endMs, now, actions, onClose }: { startMs: number; endMs: number; now: number; actions: CalendarActions; onClose: () => void }) {
   const [step, setStep] = useState<Step>("menu");
   const [note, setNote] = useState("");
   const [open, setOpen] = useState<"plan" | null>(null);
   const day = weekdayName(startMs);
   const range = { startMs, endMs };
   const done = () => onClose();
-  if (open === "plan") return <PlanForm startMs={startMs} now={Date.now()} actions={actions} onClose={onClose} />;
+  if (open === "plan") return <PlanForm startMs={startMs} now={now} actions={actions} onClose={onClose} />;
   return (
     <ResponsiveSheet open onOpenChange={(o) => !o && onClose()} title={step === "menu" ? slotTitle(startMs) : step === "free" ? SHEET.imFree : SHEET.blockThis}>
       <p className="mb-4 text-small text-muted-foreground">{rangeText(startMs, endMs)}</p>
       {step === "menu" && (
         <div className="flex flex-col gap-2">
           <button type="button" className={PRIMARY} onClick={() => setOpen("plan")}>
-            {SHEET.makePlanAt(shortTime(startMs))}
+            {SHEET.makePlan}
           </button>
           <button type="button" className={ROW} onClick={() => setStep("free")}>
             {SHEET.imFree}
@@ -149,8 +149,6 @@ function TimeSheet({ startMs, endMs, actions, onClose }: { startMs: number; endM
 
 // ---------- make a plan ----------
 
-const DAYS_OFFERED = 14;
-
 /** Corners to pick from: the person's picked ones first, then a search over all of them. */
 function useCornerChoices(userId: string | undefined, query: string) {
   const [picked, setPicked] = useState<string[]>([]);
@@ -169,7 +167,9 @@ function useCornerChoices(userId: string | undefined, query: string) {
   return useMemo(() => {
     const q = query.trim().toLowerCase();
     const yours = picked.map((key) => ({ key, name: name(key) }));
-    if (!q) return { yours, found: [] as { key: string; name: string }[] };
+    if (!q) return { yours, found: yours.length ? [] : allSubHobbies
+      .filter((s) => isBrowsableCorner(s.hobbySlug, s.slug))
+      .slice(0, 6).map((s) => ({ key: `${s.hobbySlug}/${s.slug}`, name: s.label })) };
     const seen = new Set<string>();
     const found = allSubHobbies
       .filter((s) => isBrowsableCorner(s.hobbySlug, s.slug) && s.label.toLowerCase().includes(q) && !seen.has(s.slug) && !!seen.add(s.slug))
@@ -182,15 +182,19 @@ function useCornerChoices(userId: string | undefined, query: string) {
 
 function PlanForm({ startMs, dayMs, now, actions, onClose }: { startMs?: number; dayMs?: number; now: number; actions: CalendarActions; onClose: () => void }) {
   const { user } = useAuth();
-  const days = useMemo(() => weekDays(now, DAYS_OFFERED), [now]);
-  const first = startMs ?? dayMs;
-  const [day, setDay] = useState(first ? dateParam(first) : dateParam(now));
-  const [part, setPart] = useState<DayPart>(startMs ? partOf(startMs) : "eve");
-  const [exact, setExact] = useState(startMs ? clockOf(startMs) : "");
+  // A slot owns its exact time. A general plan starts at a visible, editable
+  // future time instead of silently substituting an hour for an empty field.
+  const fallback = Math.ceil((now + 60_000) / (15 * 60_000)) * 15 * 60_000;
+  const targetDay = weekDays(dayMs ?? now, 1)[0];
+  const evening = nyTimeToMs(targetDay.y, targetDay.m, targetDay.d, 19);
+  const initial = startMs ?? (dayMs && evening > now ? evening : fallback);
+  const [day, setDay] = useState(dateParam(initial));
+  const [exact, setExact] = useState(clockOf(initial));
   const [query, setQuery] = useState("");
   const [corner, setCorner] = useState<{ key: string; name: string } | null>(null);
   const [friends, setFriends] = useState<Connection[]>([]);
   const [friendId, setFriendId] = useState("");
+  const [showFriends, setShowFriends] = useState(false);
   const [busy, setBusy] = useState(false);
   const choices = useCornerChoices(user?.id, query);
   useEffect(() => {
@@ -202,38 +206,38 @@ function PlanForm({ startMs, dayMs, now, actions, onClose }: { startMs?: number;
     };
   }, [user?.id]);
 
-  const dayMsValue = parseDateParam(day) ?? now;
-  const chosenDay = weekDays(dayMsValue, 1)[0];
-  const exactBad = exact !== "" && !parseClock(exact);
-  const at = planStartsAt(chosenDay, part, exact);
+  const selectedDay = parseDateParam(day);
+  const clock = parseClock(exact);
+  const chosenDay = selectedDay === null ? null : weekDays(selectedDay, 1)[0];
+  const at = chosenDay && clock ? nyTimeToMs(chosenDay.y, chosenDay.m, chosenDay.d, clock.h) + clock.min * 60_000 : NaN;
+  // A nonexistent DST wall time must not silently become a different hour.
+  const invalidTime = !Number.isFinite(at) || dateParam(at) !== day || clockOf(at) !== exact;
   const past = at <= now;
-  const dayOptions = days.some((d) => dateParam(d.noonMs) === day) ? days : [...weekDays(dayMsValue, 1), ...days];
-  const title = startMs ? SHEET.makePlanAt(shortTime(startMs)) : SHEET.makePlan;
 
   const submit = async () => {
-    if (!corner || busy || exactBad || past) return;
+    if (!corner || busy || invalidTime || past) return;
     setBusy(true);
     const ok = await actions.makePlan({ title: corner.name, cornerKey: corner.key, startsAt: at, friendId: friendId || undefined });
     setBusy(false);
     if (ok) onClose();
   };
 
-  const list = query.trim() ? [...choices.yours, ...choices.found.filter((f) => !choices.yours.some((y) => y.key === f.key))] : choices.yours;
+  const list = corner ? [] : [...choices.yours, ...choices.found.filter((f) => !choices.yours.some((y) => y.key === f.key))].slice(0, 8);
   return (
-    <ResponsiveSheet open onOpenChange={(o) => !o && onClose()} title={title}>
-      <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pb-2">
+    <ResponsiveSheet open onOpenChange={(o) => !o && onClose()} title={SHEET.makePlan}>
+      <form className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pb-2" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
         <fieldset className="flex flex-col gap-2">
           <legend className="mb-1 text-small font-semibold text-muted-foreground">{SHEET.corner}</legend>
-          <input aria-label={SHEET.findCorner} placeholder={SHEET.findCorner} className={FIELD} value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input aria-label={SHEET.findCorner} placeholder={SHEET.findCorner} className={FIELD} autoComplete="off" value={query} onChange={(e) => { setQuery(e.target.value); setCorner(null); }} />
           {!query.trim() && choices.yours.length > 0 && <p className="text-caption text-muted-foreground">{SHEET.yourCorners}</p>}
-          {query.trim() && list.length === 0 && <p className="text-small text-muted-foreground">{SHEET.noCorner}</p>}
+          {!corner && query.trim() && list.length === 0 && <p className="text-small text-muted-foreground">{SHEET.noCorner}</p>}
           <ul className="flex flex-wrap gap-2">
             {list.map((c) => (
               <li key={c.key}>
                 <button
                   type="button"
                   aria-pressed={corner?.key === c.key}
-                  onClick={() => setCorner(c)}
+                  onClick={() => { setCorner(c); setQuery(c.name); }}
                   className={cn("min-h-11 rounded-full border px-4 text-small font-semibold", corner?.key === c.key ? "border-foreground bg-foreground text-background" : "border-border bg-card text-foreground")}
                 >
                   {c.name}
@@ -242,38 +246,18 @@ function PlanForm({ startMs, dayMs, now, actions, onClose }: { startMs?: number;
             ))}
           </ul>
         </fieldset>
-        <div className="flex flex-col gap-1">
-          <Label htmlFor="plan-day">{SHEET.day}</Label>
-          <select id="plan-day" className={FIELD} value={day} onChange={(e) => setDay(e.target.value)}>
-            {dayOptions.map((d) => (
-              <option key={d.offset + dateParam(d.noonMs)} value={dateParam(d.noonMs)}>
-                {`${dayListHeading(d, now)} ${dayListDate(d, now)}`}
-              </option>
-            ))}
-          </select>
-        </div>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-small font-semibold text-muted-foreground">{SHEET.when}</legend>
-          <div className="flex gap-2">
-            {(["day", "eve"] as const).map((p) => (
-              <button
-                key={p}
-                type="button"
-                aria-pressed={part === p}
-                onClick={() => {
-                  setPart(p);
-                  setExact("");
-                }}
-                className={cn("min-h-11 flex-1 rounded-full border px-4 text-small font-semibold", part === p ? "border-foreground bg-foreground text-background" : "border-border bg-card text-foreground")}
-              >
-                {p === "day" ? SHEET.daytime : SHEET.evening}
-              </button>
-            ))}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <Label htmlFor="plan-day">{SHEET.day}</Label>
+            <input id="plan-day" type="date" required min={dateParam(now)} className={FIELD} value={day} onChange={(e) => setDay(e.target.value)} />
           </div>
-          <Label htmlFor="plan-exact">{SHEET.exactTime}</Label>
-          <input id="plan-exact" type="time" className={FIELD} value={exact} onChange={(e) => { setExact(e.target.value); const c = parseClock(e.target.value); if (c) setPart(c.h >= 18 ? "eve" : "day"); }} placeholder={`${DEFAULT_HOUR[part]}:00`} />
-        </fieldset>
+          <div className="flex min-w-0 flex-col gap-1">
+            <Label htmlFor="plan-exact">{SHEET.when}</Label>
+            <input id="plan-exact" type="time" required className={FIELD} value={exact} aria-invalid={invalidTime || past} onChange={(e) => setExact(e.target.value)} />
+          </div>
+        </div>
         {friends.length > 0 && (
+          !showFriends ? <button type="button" className="min-h-11 self-start text-small font-semibold underline underline-offset-4" onClick={() => setShowFriends(true)}>{SHEET.bringSomeone}</button> :
           <div className="flex flex-col gap-1">
             <Label htmlFor="plan-friend">{SHEET.friend}</Label>
             <select id="plan-friend" className={FIELD} value={friendId} onChange={(e) => setFriendId(e.target.value)}>
@@ -286,10 +270,10 @@ function PlanForm({ startMs, dayMs, now, actions, onClose }: { startMs?: number;
             </select>
           </div>
         )}
-        <button type="button" className={PRIMARY} disabled={!corner || busy || exactBad || past} onClick={() => void submit()}>
+        <button type="submit" className={PRIMARY} disabled={!corner || busy || invalidTime || past}>
           {SHEET.makeIt}
         </button>
-      </div>
+      </form>
     </ResponsiveSheet>
   );
 }

@@ -841,7 +841,7 @@ Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026
 
 | Term | Use |
 |---|---|
-| Make a plan | Opens the plan sheet: Corner (yours first, then a search), a day, Daytime or Evening with an optional exact time, an optional friend. Button: Make the plan (approved) |
+| Make a plan | Opens the plan sheet: Corner (yours first, then a search), Day and When fields with a visible exact time, and Bring someone to reveal the optional friend picker. A selected calendar time stays filled in; changing the day keeps that time. Button: Make the plan (approved) |
 | Make a plan at {time} | The first choice in the time sheet. Opens the plan sheet with the time filled in |
 | I'm free then | Adds free time. Choice: Just this {Tuesday} · Every {Tuesday} |
 | Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (the period is approved, Nov 1, 2026), then Just this once · Every week |
