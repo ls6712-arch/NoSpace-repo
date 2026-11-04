@@ -275,10 +275,14 @@ export interface CareAnswer {
 export const CARE_LINE = "That sounds really hard. You don’t have to handle it alone.";
 export const CARE_FRIEND = { label: "Message a friend", href: "/messages" };
 
-/** Which engine answers this caller: V3 for everyone only when switched on; testers get V3 with legacy alongside. Guests never test. */
+/**
+ * Which engine answers this caller. Testers get V3 with legacy run alongside (shadow), whether or not
+ * V3 is on for everyone, so the comparison keeps going after the switch (Nov 4, 2026). Everyone else:
+ * V3 only when switched on. Guests never test.
+ */
 export function engineFor(s: ScoutSettings, userId: string, who: CallerInfo): "legacy" | "v3" | "shadow" {
-  if (s.askEngine === "v3") return "v3";
   if (!who.guest && (s.v3Testers ?? []).includes(userId)) return "shadow";
+  if (s.askEngine === "v3") return "v3";
   return "legacy";
 }
 

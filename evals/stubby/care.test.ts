@@ -2,7 +2,7 @@
 // sadness gets gentle picks; everyday phrases never trigger it. Nothing is stored and no ask is used.
 import { describe, expect, it, vi } from "vitest";
 import { careCheck, careKeywords } from "../../supabase/functions/stubby-scout/v3/care.ts";
-import { careCountry, CARE_RESOURCES, CARE_ELSEWHERE, VERIFIED_ON, EXPERT_REVIEW } from "../../supabase/functions/stubby-scout/v3/careResources.ts";
+import { careCountry, CARE_RESOURCES, CARE_ELSEWHERE, UNVERIFIED_DRAFTS, EXPERT_REVIEW } from "../../supabase/functions/stubby-scout/v3/careResources.ts";
 import { claudeCareModel } from "../../supabase/functions/stubby-scout/v3/careModel.ts";
 import { handleScout, CARE_LINE, type ScoutDeps } from "../../supabase/functions/stubby-scout/handler.ts";
 import { runV3 } from "../../supabase/functions/stubby-scout/v3/orchestrator.ts";
@@ -65,20 +65,32 @@ describe("the model check", () => {
   });
 });
 
-describe("resources by country", () => {
-  it("the US gets 988 (call or text) and 911; New York is the default", () => {
+describe("resources by country: verified only", () => {
+  it("the US gets 988 (call, text, chat, Spanish) and 911; New York is the default", () => {
     expect(careCountry(null, null)).toBe(CARE_RESOURCES.US);
-    expect(careCountry("Brooklyn", "America/New_York").resources.map((r) => r.href)).toEqual(["tel:988", "sms:988"]);
-    expect(careCountry(null, null).emergency.href).toBe("tel:911");
+    const us = careCountry("Brooklyn", "America/New_York");
+    expect(us.resources.map((r) => [r.label, r.href])).toEqual([["Call 988", "tel:988"], ["Text 988", "sms:988"], ["Chat online", "https://988lifeline.org"], ["Text AYUDA to 988", "sms:988"]]);
+    expect(us.resources[3].detail).toMatch(/press 2/);
+    expect(us.emergency.href).toBe("tel:911");
+    expect(us.verifiedOn).toBe("2026-11-04");
+    expect(careCountry(null, "America/Chicago")).toBe(CARE_RESOURCES.US);
   });
-  it("other countries get their own line, and anywhere unlisted gets the helpline directory", () => {
-    expect(careCountry("London", null).country).toBe("GB");
-    expect(careCountry(null, "Australia/Sydney").country).toBe("AU");
-    expect(careCountry("Lisbon", "Europe/Lisbon")).toBe(CARE_ELSEWHERE);
+  it("every other country gets only \"Call your local emergency number\", with nothing to tap, until verified", () => {
+    for (const [city, zone] of [["London", null], [null, "Australia/Sydney"], ["Toronto", null], ["Mumbai", "Asia/Kolkata"], [null, "Pacific/Auckland"], ["Dublin", null], ["Lisbon", "Europe/Lisbon"]] as const) {
+      const c = careCountry(city, zone);
+      expect(c).toBe(CARE_ELSEWHERE);
+      expect(c.resources).toEqual([]);
+      expect(c.emergency).toEqual({ label: "Call your local emergency number", detail: "If you’re in danger right now", href: null });
+    }
   });
-  it("every link is tel:, sms: or https:, and the list says it isn't verified or expert reviewed yet", () => {
-    for (const c of [...Object.values(CARE_RESOURCES), CARE_ELSEWHERE]) for (const r of [...c.resources, c.emergency]) expect(r.href).toMatch(/^(tel:\+?\d+|sms:\d+|https:\/\/)/);
-    expect(VERIFIED_ON).toBeNull();
+  it("only verified countries are shown; drafts never are; links are tel:, sms: or https:; expert review is still pending", () => {
+    for (const c of Object.values(CARE_RESOURCES)) {
+      expect(c.verifiedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(c.verifiedAgainst).toBeTruthy();
+      for (const r of [...c.resources, c.emergency]) expect(r.href).toMatch(/^(tel:\+?\d+|sms:\d+|https:\/\/)/);
+    }
+    expect(Object.keys(CARE_RESOURCES)).toEqual(["US"]);
+    for (const cc of Object.keys(UNVERIFIED_DRAFTS)) expect(CARE_RESOURCES[cc]).toBeUndefined();
     expect(EXPERT_REVIEW).toBe("pending");
   });
 });

@@ -13,7 +13,7 @@ Keep credentials in its server-side secret settings; never send values in chat.
 | `ANTHROPIC_API_KEY` | The existing Claude key. V3 is Claude only (Nov 3, 2026): no other provider, no failover |
 | `ANTHROPIC_WORKSPACE_ID` | Reuse the existing optional workspace binding |
 | `STUBBY_CLAUDE_MODEL` | Optional V3 override; otherwise reuse STUBBY_SCOUT_MODEL, then claude-haiku-5-5 |
-| `STUBBY_V3_TESTERS` | User ids (comma separated) that get V3, with legacy run alongside on the same ask (shadow compare); everyone else stays on legacy; guests never test |
+| `STUBBY_V3_TESTERS` | User ids (comma separated) that get V3, with legacy run alongside on the same ask (shadow compare), also after V3 is on for everyone; everyone else follows `STUBBY_ASK_ENGINE`; guests never test |
 | `STUBBY_ASK_ENGINE=v3` | V3 for everyone. Only when the founder says so; then the legacy ask engine is removed in a separate PR |
 | `STUBBY_SCOUT_ENABLED=true` | Existing kill switch |
 | `STUBBY_IP_SALT` | Existing guest HMAC salt and readiness requirement |
@@ -35,9 +35,11 @@ everyone; V3 uses the onboarding answers without it.
 3. Add the founder's user id to `STUBBY_V3_TESTERS`. Their asks show the V3 deck; the legacy deck
    for the same ask is saved alongside in `stubby_asks.decision_trace.legacy` (titles, kinds and
    reason counts only, never the ask), so the two can be compared.
-4. V3 for everyone (`STUBBY_ASK_ENGINE=v3`) only when the founder says so. The care step needs its
-   expert review and the resources their check against each service's page first
-   (`v3/careResources.ts`).
+4. V3 for everyone (`STUBBY_ASK_ENGINE=v3`) only when the founder says so. Testers keep the shadow
+   compare after the switch. Rollback: `STUBBY_ASK_ENGINE=legacy`. The care step needs its expert
+   review first. Only verified resources are shown (`v3/careResources.ts`): the US, checked against
+   SAMHSA's 988 fact sheet (Nov 4, 2026); every other country gets "Call your local emergency number"
+   until its entry is checked against the service's own page.
 
 ## Approval gates and sequence
 

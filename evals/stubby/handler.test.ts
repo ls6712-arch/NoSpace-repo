@@ -107,6 +107,17 @@ it("V3 is per account: STUBBY_V3_TESTERS only, everyone else stays on legacy, gu
   expect(engineFor(readSettings((k) => ({ STUBBY_ASK_ENGINE: "v3" })[k]), "anyone", { guest: true, member: false })).toBe("v3");
   expect(readSettings(() => undefined)).toMatchObject({ askEngine: "legacy", v3Testers: [] });
 });
+it("V3 for everyone: testers still get legacy alongside (shadow), everyone else gets V3, guests never test", () => {
+  const id = "0b6e7f6a-1c2d-4e5f-8a9b-0c1d2e3f4a5b";
+  const on = readSettings((k) => ({ STUBBY_ASK_ENGINE: "v3", STUBBY_V3_TESTERS: id, ANTHROPIC_API_KEY: "k" })[k]);
+  expect(engineFor(on, id, { guest: false, member: true })).toBe("shadow");
+  expect(engineFor(on, "someone-else", { guest: false, member: true })).toBe("v3");
+  expect(engineFor(on, id, { guest: true, member: false })).toBe("v3");
+  // Rollback: STUBBY_ASK_ENGINE=legacy puts everyone but testers back on legacy.
+  const back = readSettings((k) => ({ STUBBY_ASK_ENGINE: "legacy", STUBBY_V3_TESTERS: id, ANTHROPIC_API_KEY: "k" })[k]);
+  expect(engineFor(back, "someone-else", { guest: false, member: true })).toBe("legacy");
+  expect(engineFor(back, id, { guest: false, member: true })).toBe("shadow");
+});
 it("shadow compare: a tester sees the V3 deck, and both decks are saved in the trace, never the ask", async () => {
   const d = deps(); d.settings = { ...d.settings, askEngine: "legacy", v3Testers: ["alice"] };
   const legacyPick = { kind: "event", title: "Legacy wheel night", place: "Brooklyn", starts: "2026-11-03T19:30", ends: "2026-11-03T21:00", price: "$15", url: "https://example.org/studio/legacy", corner: null, why: "Good.", unsure: null };

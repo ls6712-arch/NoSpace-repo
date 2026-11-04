@@ -7,7 +7,7 @@
  * How: a reviewed keyword list, then a model check for anything it can't settle, erring toward
  * showing the card (a failed or unsure check shows it). Never stored: the text, the result and any
  * inferred trait go nowhere, not the ask table, the trace, the logs or analytics; a care answer uses
- * no ask. The resources are a dated draft (careResources.ts): not yet verified, and expert review is still pending.
+ * no ask. Only verified resources are shown (careResources.ts: the US so far); expert review is still pending.
  */
 export type CareLevel = "distress" | "low" | "none";
 /** A model check for text the keyword list can't settle. Must not store or log the text. */

@@ -1109,18 +1109,17 @@ V3 reaches only the accounts in `STUBBY_V3_TESTERS` until the founder switches i
 
 ### The care card (stubby-agent C1)
 
-Shown in place of picks when an ask reads as clear distress. No ask is used and nothing about it is kept. The resources are a dated draft, not yet checked against each service's own page, and the care step still needs the brief's separate expert review (`supabase/functions/stubby-scout/v3/careResources.ts`).
+Shown in place of picks when an ask reads as clear distress. No ask is used and nothing about it is kept. Only a verified country's resources are shown: the US, checked by the founder against SAMHSA's 988 fact sheet on Nov 4, 2026. Everywhere else gets only "Call your local emergency number" until its entry is verified. The care step still needs the brief's separate expert review (`supabase/functions/stubby-scout/v3/careResources.ts`).
 
 | Term | Use |
 |---|---|
 | That sounds really hard. You don’t have to handle it alone. | The card's line (the brief's own wording) |
 | Someone to talk to | Accessible name of the list of resources; not shown as text |
-| Call 988 · Text 988 | US buttons, each with "988 Suicide and Crisis Lifeline, any time" or "…, by text" under it |
+| Call 988 · Text 988 | US buttons, each with "988 Suicide and Crisis Lifeline, any time" or "988 Suicide and Crisis Lifeline, by text" under it |
+| Chat online | US button to 988lifeline.org, with "988lifeline.org" under it |
+| Text AYUDA to 988 | US button, with "In Spanish, or call 988 and press 2" under it |
 | Call 911 | The US emergency button, with "If you’re in danger right now" |
-| Call 116 123 · Call 13 11 14 · Call or text 1737 · Call 14416 | The UK and Ireland (Samaritans), Australia (Lifeline), New Zealand (Need to talk?) and India (Tele MANAS) lines, each with who answers under it |
-| Call 999 · Call 112 · Call 000 · Call 111 | Those countries' emergency buttons |
-| Find a helpline · Free helplines in your country | Anywhere else: Throughline's directory |
-| Call your local emergency number | Anywhere else: the emergency line |
+| Call your local emergency number | Every country without a verified entry: shown as words, with nothing to tap, and "If you’re in danger right now" under it |
 | Message a friend | Opens Messages |
 
 ### Their own Pursuits and Corners in a deck
