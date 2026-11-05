@@ -1,7 +1,7 @@
 {
   "name": "Soosh",
   "short_name": "Soosh",
-  "description": "Find an activity to try, make a plan, and keep working toward a personal goal. On your own or with someone.",
+  "description": "Find something to try this week. Keep going if you love it. On your own or with someone.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

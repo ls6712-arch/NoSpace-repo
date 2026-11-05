@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { Check, ArrowUpRight } from "lucide-react";
-import { plural } from "../lib/plural";
 import { track } from "../lib/analytics";
 import { LANDING_COPY as COPY } from "./copy";
 import { useLandingTransition } from "./useLandingTransition";
@@ -33,7 +32,6 @@ export function PursuitPreview() {
       <p className="lp-goal-label">{COPY.pursuitSteps}</p>
       <div className="lp-goal-meter" aria-hidden="true"><span/></div>
       <ol>{example.steps.map((step, i) => <li key={step}><span className={i === 0 ? "lp-goal-done" : ""} aria-hidden="true">{i === 0 ? <Check size={14}/> : i + 1}</span>{step}</li>)}</ol>
-      <p className="lp-example-note">{plural(1, "step")} complete. {COPY.pursuitSample}</p>
       </div>
       <Link className="lp-btn lp-btn-ink" to={pursuitSignupHref(example)} onClick={() => track({ name: "landing_action_clicked", action: "pursuit", placement: "pursuit" })}>{COPY.pursuitCta}<ArrowUpRight size={17} aria-hidden="true"/></Link>
     </article>

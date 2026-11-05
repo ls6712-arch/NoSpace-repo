@@ -2,8 +2,11 @@
 
 The current landing page uses six real photographs supplied by the owner in
 `Archive.zip`. They are hosted under `public/landing/photos/`; displayed landing
-photos no longer depend on an external image server. The previous pier image and
-other older assets remain historical and are not substituted for these uploads.
+photos no longer depend on an external image server. The Photography card uses
+the existing locally hosted sunset pier photo by
+Richard Fox (https://unsplash.com/photos/Uujb21HwpBw), so it differs from the
+hero photograph. The solo/shared section uses the reading and cooking uploads
+with responsive size hints appropriate to their larger display widths.
 
 | Activity | Original upload | Credit from filename | Source |
 | --- | --- | --- | --- |
@@ -40,13 +43,16 @@ successfully loads. Old example ids remain valid for existing request drafts,
 without making them fetch unrelated or external photographs.
 
 Motion is already a dependency. `useLandingTransition` uses its native animation
-engine (`motion/mini`) with the shared page transition tokens; the device
-preference comes from `motion/react`. Photo swaps and the goal-preview content
+engine (`motion/mini`) with the shared page transition tokens. A media-query
+subscription follows device preference changes during the visit; Motion’s
+current reduced-motion hook only snapshots the initial setting. Photo swaps and the goal-preview content
 fade and move slightly, keeping the controls outside the moving content. Cleanup
-cancels animation and restores fully visible content on pause, reduced motion,
-selection change or unmount. Pointer tilt, touch swiping and tappable Stubby are
-preserved. There is no autoplay activity carousel or saved motion preference.
+cancels animation and restores fully visible content on reduced motion,
+selection change or unmount. Pointer tilt and touch swiping remain optional
+shortcuts to native controls. The logo is static. The streamlined hero has one
+“Another example” control, with no ongoing loop or pause control. There is no
+autoplay activity carousel or saved motion preference.
 
-[Current evidence and reproduction](qa/landing-local-photos/README.md) includes
+[Current evidence and reproduction](qa/landing-streamlined/README.md) includes
 actual browser photo loading, responsive variants, Motion frames and missing-file
 recovery. Earlier reports with blocked external photos remain historical.
