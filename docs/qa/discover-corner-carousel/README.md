@@ -40,6 +40,28 @@ fallbacks and system fonts. No replacement photograph or live result is implied.
 
 ![Existing Corner cards on a phone](mobile.png)
 
+## People and Moments preview correction
+
+Earlier captures returned no Discover Moments in the browser fixture. That also
+hid People near you, since it displays the authors of the Discover feed. Those
+captures did not accurately show the surrounding page. The fixture now supplies
+four example Moments and their authors and asserts that both sections render.
+This changes test data and review evidence only. No People/Moments production
+component, feed rule, styling or API call has been changed.
+
+The [desktop full-page preview](desktop-full.png) and
+[phone full-page preview](mobile-full.png) include both sections. Names, media
+and activity choices are fixtures, not a copy of a live account.
+
+A separate [comparison with main](outside-comparison.json) used the same clock
+and populated fixtures on main d06c795 and carousel branch 019c650. Ideas,
+People and Moments had matching text, links, buttons, widths and heights on
+mobile and desktop. Pixel counts are recorded honestly: Ideas matched exactly;
+People/Moments section captures have small raster differences after the shorter
+Corner row moves them vertically. Their source components are identical.
+The comparison does not claim identical absolute vertical positions or a live
+production result.
+
 ## Reproduce
 
 ```sh

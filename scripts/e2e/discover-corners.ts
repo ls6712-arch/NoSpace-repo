@@ -1,4 +1,4 @@
-// Production UI and CSP, local photographs, and fixture Supabase responses.
+// Production UI and CSP with fixture Supabase responses.
 // No live account, provider request or production data is used.
 import assert from "node:assert/strict";
 import fs from "node:fs";
@@ -50,9 +50,16 @@ try {
   ]) {
     const context = await browser.newContext({ viewport: { width: view.width, height: view.height }, hasTouch: view.touch, reducedMotion: "reduce", colorScheme: view.dark ? "dark" : "light", timezoneId: "America/New_York" });
     const fixtures = buildFixtures(new Date());
+    // Keep the sections outside Corners populated in review captures. Empty
+    // discover_moments responses hide People too, which made earlier previews
+    // misleading even though neither component changed in the application.
+    fixtures.profile_follows = [];
+    fixtures.space_members = [];
+    const publicMoments = (fixtures.posts ?? []).filter(post => [7, 8, 9, 10].includes(Number(post.id)));
     await installSupabaseMock(context, fixtures, path.join(root, "scripts/visual/database.types.ts"), { rpcReplies: {
       discover_corners: args => { assert.equal(args.p_limit, 6); return keys.map(corner_key => ({ corner_key, has_home: true, has_group: true, has_place: true })); },
-      discover_spaces: () => [], discover_moments: () => [],
+      discover_spaces: () => [],
+      discover_moments: () => publicMoments.map(post => ({ post_id: post.id, author_id: post.user_id, created_at: post.created_at, corner_key: `${post.hobby_slug}/${post.sub_hobby ?? ""}` })),
     } });
     await context.route("**/*", route => {
       const url = new URL(route.request().url());
@@ -69,12 +76,15 @@ try {
     const section = page.locator("#discover-corners");
     const row = section.getByRole("list", { name: "Corners new to you", exact: true });
     await row.waitFor();
+    await page.locator("#discover-people").waitFor();
+    await page.locator("#discover-moments").getByText("Dialled in the new grinder.", { exact: false }).first().waitFor();
     assert.equal(await row.evaluate(el => el.children.length), 3);
     assert.equal(await row.locator(".size-14").count(), 3);
     const layout = await page.evaluate(() => ({ corners: document.querySelector("#discover-corners")!.getBoundingClientRect().top, ideas: document.querySelector("#discover-ideas")!.getBoundingClientRect().top, overflow: document.documentElement.scrollWidth > innerWidth }));
     assert(layout.corners > layout.ideas, "Original section order must stay intact");
     assert.equal(layout.overflow, false);
     await page.screenshot({ path: path.join(out, `${view.name}-page.png`) });
+    await page.screenshot({ path: path.join(out, `${view.name}-full.png`), fullPage: true });
     await section.evaluate(el => el.scrollIntoView({ block: "center" }));
     await section.screenshot({ path: path.join(out, `${view.name}.png`) });
     const contrast = await page.evaluate(contrastInPage);
