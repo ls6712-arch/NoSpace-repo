@@ -17,7 +17,7 @@ describe("public Pursuit preview", () => {
     const destination = new URL(signup.searchParams.get("redirect")!, "https://example.test");
     expect(destination.pathname).toBe("/pursuits/new");
     expect(Object.fromEntries(destination.searchParams)).toEqual({ title: "Make a collection of drawings", hobby: "art-creative", sub: "drawing" });
-    expect(screen.getByText(COPY.pursuitSample, { exact: false })).toBeTruthy();
+    expect(screen.getByText(COPY.pursuitExample)).toBeTruthy();
   });
   it("does not create accounts, write progress or send personal information when exploring goals", () => {
     const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);

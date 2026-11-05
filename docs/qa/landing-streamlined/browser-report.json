@@ -1,0 +1,85 @@
+{
+  "scope": "Local production build with real CSP and mocked Supabase. External fonts are blocked. All six uploaded photographs are served locally and their decoded images are verified; broken-image recovery is checked separately. No live provider validation.",
+  "humanOnboarding": false,
+  "checks": [
+    "mobile: simpler hero, six-card grid, real photos, Stubs, solo/shared images, signup continuity, no automatic writes",
+    "All six hero photographs decode through the single example control",
+    "desktop: simpler hero, six-card grid, real photos, Stubs, solo/shared images, signup continuity, no automatic writes",
+    "mobile-dark: simpler hero, six-card grid, real photos, Stubs, solo/shared images, signup continuity, no automatic writes",
+    "small-phone: simpler hero, six-card grid, real photos, Stubs, solo/shared images, signup continuity, no automatic writes",
+    "tablet: simpler hero, six-card grid, real photos, Stubs, solo/shared images, signup continuity, no automatic writes",
+    "desktop: short Motion transitions, pointer/swipe and live reduced-motion changes without a pause control",
+    "touch: short Motion transitions, pointer/swipe and live reduced-motion changes without a pause control",
+    "Missing responsive photo recovers without a false credit",
+    "Explicit real request: failed result keeps the draft, offers retry and never claims a saved plan",
+    "Existing-account login and closed-guest entry use the real auth gates"
+  ],
+  "views": [
+    {
+      "name": "mobile",
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 7328,
+      "controls": [],
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 36
+      }
+    },
+    {
+      "name": "desktop",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "height": 5986,
+      "controls": [],
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 27
+      }
+    },
+    {
+      "name": "mobile-dark",
+      "width": 390,
+      "scrollWidth": 390,
+      "height": 7328,
+      "controls": [],
+      "contrast": {
+        "checked": 105,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 36
+      }
+    },
+    {
+      "name": "small-phone",
+      "width": 320,
+      "scrollWidth": 320,
+      "height": 9253,
+      "controls": [],
+      "contrast": {
+        "checked": 102,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 39
+      }
+    },
+    {
+      "name": "tablet",
+      "width": 768,
+      "scrollWidth": 768,
+      "height": 6416,
+      "controls": [],
+      "contrast": {
+        "checked": 114,
+        "failures": [],
+        "overMedia": [],
+        "skipped": 27
+      }
+    }
+  ],
+  "errors": []
+}

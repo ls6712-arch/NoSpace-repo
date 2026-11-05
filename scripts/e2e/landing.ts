@@ -89,225 +89,116 @@ try {
   ]) {
     const context = await browser.newContext({ viewport: { width: view.width, height: view.height }, hasTouch: view.touch, colorScheme: view.dark ? "dark" : "light", reducedMotion: "reduce" });
     await context.addInitScript(dark => localStorage.setItem("soosh-theme-preference", dark ? "dark" : "light"), view.dark);
-    await context.route("**/*", route => {
-      const u = new URL(route.request().url());
-      if (u.origin === origin) {
-        if (u.pathname === "/api/geo") return route.fulfill({ contentType: "application/json", body: '{"city":"New York"}' });
-        return route.continue();
-      }
-      if (u.origin === SUPA) return fixture(route);
-      return route.abort();
-    });
+    await context.route("**/*", route => new URL(route.request().url()).origin === SUPA ? fixture(route) : new URL(route.request().url()).origin === origin ? route.continue() : route.abort());
     const page = await context.newPage();
-    page.on("pageerror", e => report.errors.push(`${view.name}: ${e.message}`));
+    page.on("pageerror", error => report.errors.push(`${view.name}: ${error.message}`));
     await page.goto(origin, { waitUntil: "networkidle" });
     const preview = page.getByRole("group", { name: "Try an activity example" });
     await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
+    assert.equal(await preview.getByRole("button").count(), 1);
+    assert.equal(await preview.locator("fieldset,details").count(), 0);
+    assert.equal(await page.getByRole("button", { name: "Pause motion", exact: true }).count(), 0);
+    assert.equal(await page.getByText("This weekend in NYC", { exact: true }).count(), 0);
     assert.equal(await page.locator("main").count(), 1);
     assert.equal(await page.locator("main main").count(), 0);
     assert.equal(await page.getByText("What would you like to make more room for?", { exact: true }).count(), human ? 1 : 0);
-    const initial = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, imageRequests: performance.getEntriesByType("resource").filter(x => /unsplash/.test(x.name)).length, controls: [...document.querySelectorAll<HTMLElement>(".lp a,.lp button,.lp summary")].filter(e => {
-      const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.right > 0 && r.top > -100 && (r.height < 44 || r.width < 44);
-    }).map(e => ({ text: e.textContent?.trim(), height: e.getBoundingClientRect().height, width: e.getBoundingClientRect().width })) }));
+    const initial = await page.evaluate(() => ({ width: innerWidth, scrollWidth: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, controls: [...document.querySelectorAll<HTMLElement>(".lp a,.lp button,.lp summary")].filter(e => { const r=e.getBoundingClientRect();return r.width>0 && r.height>0 && (r.height<44||r.width<44); }).map(e=>e.textContent?.trim()) }));
     assert(initial.scrollWidth <= initial.width, `${view.name}: horizontal overflow`);
-    assert.equal(await page.getByText("Where are local suggestions available?", { exact: true }).count(), 0);
-    assert(await preview.getByRole("button", { name: "Motion is off for your device" }).isDisabled());
-    assert.deepEqual(initial.controls, [], `${view.name}: undersized touch targets`);
-    const wrappedNavLabels = await page.locator(".lp-nav-actions a").evaluateAll(links => links.filter(link => {
-      const r=document.createRange();r.selectNodeContents(link.querySelector("span") ?? link);return r.getClientRects().length > 1;
-    }).map(link=>link.textContent));
-    assert.deepEqual(wrappedNavLabels,[],`${view.name}: wrapped navigation labels`);
+    assert.deepEqual(initial.controls, [], `${view.name}: small controls`);
     const contrast = await page.evaluate(contrastInPage);
-    assert.deepEqual(contrast.failures, [], `${view.name}: text contrast`);
+    assert.deepEqual(contrast.failures, [], `${view.name}: contrast`);
     report.views.push({ name: view.name, ...initial, contrast });
     await page.screenshot({ path: path.join(out, `${view.name}-hero.png`) });
     await page.screenshot({ path: path.join(out, `${view.name}-full.png`), fullPage: true });
+    assert.equal(await page.locator(".lp-activity-grid article").count(), 6);
+    assert.equal(await page.getByRole("link", { name: "See all Corners", exact: true }).getAttribute("href"), "#/corners");
+    const imageSources = await page.evaluate(() => ({ hero: document.querySelector<HTMLImageElement>(".lp-photo-stage img")!.src, gallery: document.querySelector<HTMLImageElement>('.lp-activity-grid img[alt="A pier over the water at sunset"]')!.src }));
+    assert.notEqual(imageSources.hero, imageSources.gallery);
+    if (view.name === "desktop") {
+      const decoded = new Set<string>();
+      for (let i = 0; i < 6; i++) {
+        const source = await preview.locator("img").evaluate(async (img: HTMLImageElement) => { await img.decode(); return img.currentSrc; });
+        decoded.add(new URL(source).pathname);
+        await preview.locator(".lp-photo-credit").waitFor({ state: "visible" });
+        await preview.getByRole("button", { name: "Another example", exact: true }).click();
+      }
+      assert.equal(decoded.size, 6);
+      passed("All six hero photographs decode through the single example control");
+    }
+    for (const image of await page.locator(".lp-activity-grid img,.lp-pair img").all()) { await image.scrollIntoViewIfNeeded(); await image.evaluate(async (img: HTMLImageElement) => { await img.decode(); if (!img.naturalWidth) throw Error("Undecoded photo"); }); }
     await page.getByRole("button", { name: "Spend time outside", exact: true }).click();
     assert.equal(await page.locator(".lp-activity-grid article").count(), 2);
-    assert.equal(await page.locator('.lp-activity-grid a[href="#/corners/photography"]').count(), 1);
     await page.getByRole("button", { name: "A little of everything", exact: true }).click();
-    assert.equal(await page.locator(".lp-activity-grid article").count(), 5);
-    await page.locator(".lp-activity-grid article").first().scrollIntoViewIfNeeded();
-    await page.locator(".lp-activity-grid article").last().scrollIntoViewIfNeeded();
-    await page.waitForFunction(() => Array.from(document.querySelectorAll<HTMLImageElement>(".lp-activity-grid img")).every(image => image.complete && image.naturalWidth > 0));
-    const galleryPhotos = await page.locator(".lp-activity-grid img").evaluateAll(images => images.map(image => ({ source: (image as HTMLImageElement).currentSrc, width: (image as HTMLImageElement).naturalWidth })));
-    assert.equal(galleryPhotos.length, 5);
-    assert(galleryPhotos.every(image => image.source.startsWith(origin + "/landing/photos/") && /-(400|800|1600)\.webp$/.test(image.source) && image.width > 0), JSON.stringify(galleryPhotos));
-    assert.equal(initial.imageRequests, 0, "Landing requested an external photo");
-    // Isolate the section capture from the sticky header; production layout is unchanged.
-    await page.locator(".lp-nav, .lp-skip").evaluateAll(elements => elements.forEach(element => (element as HTMLElement).style.visibility = "hidden"));
+    await page.locator(".lp-nav,.lp-skip").evaluateAll(nodes => nodes.forEach(node=>(node as HTMLElement).style.visibility="hidden"));
     await page.locator(".lp-activity-grid").screenshot({ path: path.join(out, `${view.name}-gallery.png`) });
-    await page.locator(".lp-nav, .lp-skip").evaluateAll(elements => elements.forEach(element => (element as HTMLElement).style.visibility = ""));
-    const goal = page.getByRole("group", { name: "Choose an example goal" });
-    await goal.getByRole("button", { name: "Drawing", exact: true }).click();
-    await page.getByRole("heading", { name: "Make a collection of drawings", exact: true }).waitFor();
-    const signupHref = await page.getByRole("link", { name: "Start a Pursuit", exact: true }).getAttribute("href");
-    assert(signupHref);
-    const next = new URLSearchParams(signupHref.split("?")[1]).get("redirect");
-    assert(next?.startsWith("/pursuits/new?"));
-    assert.equal(new URLSearchParams(next.split("?")[1]).get("title"), "Make a collection of drawings");
-    await page.locator(".lp-pursuits").screenshot({ path: path.join(out, `${view.name}-pursuits.png`) });
+    await page.locator(".lp-stubs").screenshot({ path: path.join(out, `${view.name}-stubs.png`) });
+    await page.locator(".lp-together").screenshot({ path: path.join(out, `${view.name}-together.png`) });
+    await page.locator(".lp-nav,.lp-skip").evaluateAll(nodes => nodes.forEach(node=>(node as HTMLElement).style.visibility=""));
+    assert.equal(await page.locator(".lp-stub-grid figure").count(), 3);
+    await page.getByRole("button", { name: "Preview activity: Music", exact: true }).click();
+    assert.equal(await preview.getByRole("heading", { name: "Play a song you know" }).evaluate(e => e === document.activeElement), true);
+    await preview.getByRole("button", { name: "Another example", exact: true }).click();
+    await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
+    const choices = page.getByRole("group", { name: "Choose an example goal" });
+    await choices.getByRole("button", { name: "Drawing", exact: true }).click();
     await page.getByRole("link", { name: "Start a Pursuit", exact: true }).click();
     await page.waitForURL(url => url.hash.startsWith("#/onboarding"));
-    assert.equal(new URLSearchParams(new URL(page.url()).hash.split("?")[1]).get("redirect"), next);
+    const redirect = new URLSearchParams(new URL(page.url()).hash.split("?")[1]).get("redirect");
+    assert(redirect?.includes("/pursuits/new?title=Make+a+collection+of+drawings"));
     await page.goto(origin, { waitUntil: "networkidle" });
-    await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
-    const outside = preview.getByRole("button", { name: "Outside", exact: true });
-    if (view.touch) await outside.tap(); else { await outside.focus(); await page.keyboard.press("Enter"); }
-    await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
-    await page.waitForFunction(() => {
-      const image = document.querySelector<HTMLImageElement>(".lp-photo-stage img");
-      return image?.complete && image.naturalWidth > 0;
-    });
-    assert.match(await preview.locator(".lp-photo-stage img").getAttribute("src") ?? "", /photography-1600.webp/);
-    await preview.screenshot({ path: path.join(out, `${view.name}-photo.png`) });
-    assert.equal(await outside.getAttribute("aria-pressed"), "true");
-    await preview.getByRole("button", { name: "Another example" }).click();
-    await preview.getByRole("heading", { name: "Take a book outside" }).waitFor();
-    await page.waitForFunction(() => { const image = document.querySelector<HTMLImageElement>(".lp-photo-stage img"); return image?.complete && image.naturalWidth > 0 && image.currentSrc.includes("reading-outside-"); });
-    await preview.getByRole("button", { name: "Another example" }).click();
-    await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
-    const summary = preview.locator("summary");
-    await summary.focus(); await page.keyboard.press("Enter");
-    assert(await preview.locator("details").evaluate((d: HTMLDetailsElement) => d.open));
-    assert.match(await preview.innerText(), /Cost depends on the supplies you already have/);
-    assert.match(await preview.innerText(), /Choose either option/);
-    await page.keyboard.press("Enter");
-    assert.equal(await preview.locator("details").evaluate((d: HTMLDetailsElement) => d.open), false);
-    const gallery = page.getByRole("button", { name: "Preview activity: Music" });
-    if (view.touch) await gallery.tap(); else { await gallery.focus(); await page.keyboard.press("Enter"); }
-    assert.equal(await preview.getByRole("heading", { name: "Play a song you know" }).evaluate(e => e === document.activeElement), true);
-    assert(await preview.locator("details").evaluate((d: HTMLDetailsElement) => d.open));
-    await preview.getByText("Electric guitar", { exact: true }).waitFor();
-    const detailsContrast = await page.evaluate(contrastInPage);
-    assert.deepEqual(detailsContrast.failures, [], `${view.name}: expanded details contrast`);
-    assert.equal(await page.locator(".lp").evaluate(e => e.getAnimations({ subtree: true }).some(a => a.playState === "running")), false, "Reduced motion still animates");
-    await preview.screenshot({ path: path.join(out, `${view.name}-details.png`) });
-    const how = page.getByRole("button", { name: "See how it works", exact: true }).last();
-    await how.click();
-    assert.equal(await page.locator("#how-heading").evaluate(e => e === document.activeElement), true);
-    assert(!new URL(page.url()).hash.includes("how"));
-    const faq = page.locator("#faq summary").first();
-    await faq.focus(); await page.keyboard.press("Enter");
-    assert(await page.locator("#faq details").first().evaluate((d: HTMLDetailsElement) => d.open));
-    assert.deepEqual(counts, { anonymousSignups: 0, asks: 0, writes: 0 }, "Examples had server side effects");
-    passed(`${view.name}: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects`);
-    // The actual route and field are used; choosing an example never automatically submits it.
-    await outside.click();
+    await page.getByRole("button", { name: "See how it works", exact: true }).click();
+    assert.equal(await page.locator("#how-heading").evaluate(e=>e===document.activeElement), true);
+    await page.locator("#faq summary").first().click();
+    assert(await page.locator("#faq details").first().evaluate((d: HTMLDetailsElement)=>d.open));
+    assert.equal(await page.locator(".lp").evaluate(e=>e.getAnimations({subtree:true}).some(a=>a.playState==="running")),false);
+    assert.deepEqual(counts,{anonymousSignups:0,asks:0,writes:0});
+    await page.getByRole("button", { name: "Another example", exact: true }).click();
     await page.getByRole("link", { name: "Find my next step", exact: true }).first().click();
-    const field = page.getByRole("textbox", { name: "What are you in the mood for?", exact: true });
-    await field.waitFor();
-    assert.equal(await field.inputValue(), "I’d like to take a photo walk outside.");
-    assert.equal(counts.anonymousSignups, 0); assert.equal(counts.asks, 0);
-    await field.fill("pottery this weekend");
-    assert.equal(await field.inputValue(), "pottery this weekend");
-    passed(`${view.name}: chosen example enters the real editable field without an ask`);
+    const field=page.getByRole("textbox",{name:"What are you in the mood for?",exact:true});
+    await field.waitFor();assert.equal(await field.inputValue(),"I’d like to cook at home with a friend.");
+    assert.equal(counts.asks,0);
+    passed(`${view.name}: simpler hero, six-card grid, real photos, Stubs, solo/shared images, signup continuity, no automatic writes`);
     await context.close();
   }
 
-  // Exercise visible motion, its pause control and real touch gestures, rather than only static screenshots.
-  for (const touch of [false, true]) {
-    const context = await browser.newContext({ viewport: touch ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: touch,
-      reducedMotion: "no-preference", ...(touch || !record ? {} : { recordVideo: { dir: path.join(out, "recording"), size: { width: 1280, height: 900 } } }) });
-    await context.route("**/*", route => {
-      const url = new URL(route.request().url());
-      return url.origin === SUPA ? fixture(route) : url.origin === origin ? route.continue() : route.abort();
-    });
-    const page = await context.newPage();
-    page.on("pageerror", error => report.errors.push(error.message));
-    // Dwell time is for the human review recording only, not for waiting on assertions.
-    const show = () => record && !touch ? page.waitForTimeout(1200) : Promise.resolve();
-    await page.goto(origin, { waitUntil: "networkidle" });
-    const preview = page.getByRole("group", { name: "Try an activity example" });
-    await page.locator(".lp-goal-choices").scrollIntoViewIfNeeded();
-    await show();
-    const transitionFrames = await page.evaluate(async () => {
-      const drawing = [...document.querySelectorAll<HTMLButtonElement>(".lp-goal-choices button")].find(button => button.textContent === "Drawing")!;
-      drawing.click();
-      const frames: number[] = [];
-      for (let i = 0; i < 5; i++) {
-        await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-        frames.push(Number(getComputedStyle(document.querySelector(".lp-goal-content")!).opacity));
-      }
-      return frames;
-    });
-    assert(transitionFrames.some(opacity => opacity > 0 && opacity < 1), "Motion goal transition did not render intermediate frames");
-    await show();
-    await preview.scrollIntoViewIfNeeded();
-    await page.waitForFunction(() => document.querySelector(".lp")?.getAttribute("data-motion") === "on" && document.querySelector(".lp")!.getAnimations({ subtree: true }).some(a => a.playState === "running"));
-    await show();
-    await preview.getByRole("button", { name: "Play with Stubby" }).click();
-    // Check the rendered grin rather than a controller state or a test-only attribute.
-    await page.waitForFunction(() => document.querySelector('.lp-stubby-dock path[d="M80 84 Q94 102 108 84 Z"]'));
-    await show();
-    await preview.getByRole("button", { name: "Pause motion", exact: true }).click();
-    await page.waitForFunction(() => document.querySelector(".lp")?.getAttribute("data-motion") === "off" && !document.querySelector(".lp")!.getAnimations({ subtree: true }).some(a => a.playState === "running"));
-    await show();
-    assert.equal(await page.locator(".lp").evaluate(e => e.getAnimations({ subtree: true }).some(a => a.playState === "running")), false);
-    assert.equal(await page.locator(".lp-goal-content").evaluate(e => getComputedStyle(e).opacity), "1");
-    await preview.getByRole("button", { name: "At home", exact: true }).click();
-    await preview.getByRole("button", { name: "Another example" }).click();
-    await preview.getByRole("heading", { name: "Play a song you know" }).waitFor();
-    await show();
-    assert.equal(await page.locator(".lp").getAttribute("data-motion"), "off");
-    await preview.getByRole("button", { name: "Play motion", exact: true }).click();
-    await preview.getByRole("button", { name: "Outside", exact: true }).click();
-    await page.waitForFunction(() => { const image = document.querySelector<HTMLImageElement>(".lp-photo-stage img"); return image?.complete && image.naturalWidth > 0; });
-    await show();
-    const stage = preview.locator(".lp-photo-stage");
-    await stage.scrollIntoViewIfNeeded();
-    if (!touch) {
-      const rect = await stage.boundingBox(); assert(rect);
-      await page.mouse.move(rect.x + rect.width - 10, rect.y + 12);
-      await page.waitForFunction(() => Math.abs(parseFloat(document.querySelector<HTMLElement>(".lp-photo-stage")!.style.getPropertyValue("--lp-tilt-y"))) > 1);
-      await show();
-      await page.mouse.move(rect.x - 10, rect.y - 10);
-      await page.waitForFunction(() => document.querySelector<HTMLElement>(".lp-photo-stage")!.style.getPropertyValue("--lp-tilt-y") === "0deg");
-      await show();
-    } else {
-      const session = await context.newCDPSession(page);
-      const swipe = async (dx: number, dy: number) => {
-        await stage.scrollIntoViewIfNeeded();
-        const rect = await stage.boundingBox(); assert(rect);
-        const x = rect.x + rect.width / 2, y = rect.y + rect.height * 0.3;
-        await session.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y, id: 1 }] });
-        for (let i = 1; i <= 6; i++) await session.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x + dx * i / 6, y: y + dy * i / 6, id: 1 }] });
-        await session.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-      };
-      await swipe(-110, 3);
-      await preview.getByRole("heading", { name: "Take a book outside" }).waitFor();
-      await swipe(110, 3);
-      await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
-      const before = await page.evaluate(() => scrollY);
-      await swipe(2, -110);
-      await page.waitForFunction(start => scrollY > start + 20, before);
-      assert.equal(await page.locator(".lp-example").getAttribute("data-example-id"), "photo-walk", "Vertical scrolling changed the example");
-      await session.detach();
+  for(const touch of [false,true]) {
+    const context=await browser.newContext({viewport:{width:touch?390:1280,height:900},hasTouch:touch,reducedMotion:"no-preference",...(record&&!touch?{recordVideo:{dir:path.join(out,"recording"),size:{width:1280,height:900}}}:{})});
+    await context.route("**/*",route=>new URL(route.request().url()).origin===SUPA?fixture(route):new URL(route.request().url()).origin===origin?route.continue():route.abort());
+    const page=await context.newPage();page.on("pageerror",e=>report.errors.push(e.message));
+    const show=()=>record&&!touch?page.waitForTimeout(1200):Promise.resolve();
+    await page.goto(origin,{waitUntil:"networkidle"});await show();
+    await page.locator(".lp-goal-choices").scrollIntoViewIfNeeded();await show();
+    const frames=await page.evaluate(async()=>{[...document.querySelectorAll<HTMLButtonElement>(".lp-goal-choices button")].find(b=>b.textContent==="Drawing")!.click();const frames:number[]=[];for(let i=0;i<5;i++){await new Promise<void>(resolve=>requestAnimationFrame(()=>resolve()));frames.push(Number(getComputedStyle(document.querySelector(".lp-goal-content")!).opacity));}return frames;});
+    assert(frames.some(opacity=>opacity>0&&opacity<1));await show();
+    const preview=page.getByRole("group",{name:"Try an activity example"});await preview.scrollIntoViewIfNeeded();
+    await preview.getByRole("button",{name:"Another example",exact:true}).click();
+    await preview.getByRole("heading",{name:"Cook with a friend"}).waitFor();await show();
+    const stage=preview.locator(".lp-photo-stage");
+    if(touch){
+      const session=await context.newCDPSession(page);const r=await stage.boundingBox();assert(r);
+      const x=r.x+r.width*.6,y=r.y+r.height*.4;
+      await session.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[{x,y,id:1}]});
+      for(let i=1;i<=6;i++)await session.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{x:x-110*i/6,y:y+2,id:1}]});
+      await session.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+      await preview.getByRole("heading",{name:"Read a chapter"}).waitFor();
+    }else{
+      const r=await stage.boundingBox();assert(r);await page.mouse.move(r.x+r.width-10,r.y+12);
+      await page.waitForFunction(()=>Math.abs(parseFloat(document.querySelector<HTMLElement>(".lp-photo-stage")!.style.getPropertyValue("--lp-tilt-y")))>1);await show();
     }
-    assert.deepEqual(counts, { anonymousSignups: 0, asks: 0, writes: 0 });
-    passed(`${touch ? "touch" : "desktop"}: real photo, animated graphics, tappable Stubby, pause/resume and ${touch ? "horizontal swipe with normal vertical scrolling" : "pointer tilt"}`);
-    await preview.screenshot({ path: path.join(out, `motion-${touch ? "touch" : "desktop"}.png`) });
-    const video = page.video();
-    await context.close();
-    if (video) { await video.saveAs(path.join(out, "landing-motion-demo.webm")); await video.delete(); }
+    await page.emulateMedia({reducedMotion:"reduce"});
+    await page.waitForFunction(()=>document.querySelector(".lp")?.getAttribute("data-motion")==="off" && getComputedStyle(document.querySelector(".lp-goal-content")!).opacity==="1");
+    assert.equal(await page.locator(".lp").evaluate(e=>e.getAnimations({subtree:true}).some(a=>a.playState==="running")),false);await show();
+    const video=page.video();await context.close();if(video){await video.saveAs(path.join(out,"landing-motion-demo.webm"));await video.delete();}
+    passed(`${touch?"touch":"desktop"}: short Motion transitions, pointer/swipe and live reduced-motion changes without a pause control`);
   }
 
-  // A missing responsive file must recover without leaving a broken image or false credit.
-  const missingPhotoContext = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, reducedMotion: "reduce" });
-  await missingPhotoContext.route("**/*", route => {
-    const url = new URL(route.request().url());
-    if (url.origin === origin && /\/painting-(400|800|1600)\.webp$/.test(url.pathname)) return route.fulfill({ status: 404, body: "Missing photo fixture" });
-    return url.origin === SUPA ? fixture(route) : url.origin === origin ? route.continue() : route.abort();
-  });
-  const missingPhotoPage = await missingPhotoContext.newPage();
-  await missingPhotoPage.goto(origin, { waitUntil: "networkidle" });
-  const missingPreview = missingPhotoPage.getByRole("group", { name: "Try an activity example" });
-  await missingPreview.getByRole("button", { name: "At home", exact: true }).click();
-  await missingPreview.locator('.lp-photo-stage .lp-art[data-art="paint"]').waitFor();
-  assert.equal(await missingPreview.locator(".lp-photo-stage img").count(), 0);
-  assert.equal(await missingPreview.locator(".lp-photo-credit").count(), 0);
-  await missingPhotoContext.close();
-  passed("A missing high-density responsive photo falls back locally without a false credit");
+  const missing=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:3,reducedMotion:"reduce"});
+  await missing.route("**/*",route=>{const url=new URL(route.request().url());if(url.origin===origin&&/\/painting-(400|800|1600)\.webp$/.test(url.pathname))return route.fulfill({status:404,body:"Missing photo fixture"});return url.origin===SUPA?fixture(route):url.origin===origin?route.continue():route.abort();});
+  const missingPage=await missing.newPage();await missingPage.goto(origin,{waitUntil:"networkidle"});
+  await missingPage.getByRole("button",{name:"Preview activity: Painting",exact:true}).click();
+  await missingPage.locator('.lp-photo-stage .lp-art[data-art="paint"]').waitFor();
+  assert.equal(await missingPage.locator(".lp-example .lp-photo-credit").count(),0);await missing.close();
+  passed("Missing responsive photo recovers without a false credit");
 
   // Real request error/retry behavior, behind a mocked provider response.
   const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });

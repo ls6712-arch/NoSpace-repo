@@ -1237,10 +1237,10 @@ No 3D world, multiplayer or mobile-store availability is promised on this page.
 | Hobbies, activities & personal goals | Literal product description and SEO vocabulary |
 | Find my next step | Header, hero and final entry into the real calendar/Stubby flow; existing guest gates apply |
 | Start with Stubby, Soosh’s activity helper. | Explains the entry destination |
-| You may need to sign up to ask. An account is needed to make a plan. | Account requirement beside the primary action |
+| Find something to try this week. Keep going if you love it. On your own or with someone. | Revised hero invitation; account requirements remain in the FAQ |
 | See how it works | Focuses and scrolls to the explanation without modifying the hash route |
 | Explore Corners / Explore this Corner | Actual public Corner destinations, never a fixed catalog count |
-| Preview activity | Opens a selected editorial example and its requirements, without making an ask |
+| Preview activity | Shows the selected editorial photo and title without making an ask |
 | Ask about this activity | Carries the selected example into an editable Stubby request |
 | A little of everything / Make something / Spend time outside / Try something at home | Local filters for the representative Corner cards, never saved preferences |
 | That thing you’d like to keep going with. | Introduces personal goals called Pursuits |
@@ -1274,5 +1274,29 @@ the all-interests gallery. Earlier Drawing and Birdwatching example ids remain
 valid for old editable requests, without exposing unrelated photos. Photograph
 credits use the provided filenames and recorded source ids, and appear only
 when that photograph actually loads. All displayed landing photos are local.
-Motion transitions obey Pause motion and the device reduced-motion preference;
+Motion transitions follow the device reduced-motion preference, including changes
+during a visit. The streamlined hero has no ongoing animation or pause control;
 controls remain outside the animated content.
+
+
+### Streamlined landing revision (Nov 5, 2026)
+
+The owner requested less planner language, fewer disclaimers, a full six-card
+Corner grid, visual Stubs and solo/shared photography on the same review branch.
+The NYC weekend strip was explicitly skipped. No coverage claim or live picks
+are introduced. The complete revised wording remains in `copy.ts`.
+
+| Term | Use |
+| --- | --- |
+| Grab the Stub / Pick a time, bring someone if you like. | Owner-requested second step; marketing invitation, not a new early Stub-awarding action |
+| See all Corners | Sixth card links to the existing public Corner directory |
+| Things you did. Stubs you keep. | Introduces three visual examples using the actual Stub artwork |
+| Example Stubs | Explicit editorial label; never private account progress or confirmed available events |
+| Finish a Pursuit or attend a host-confirmed event to earn a Stub. | Accurate earning examples; does not claim every activity creates a Stub |
+| Photo walk / Pizza night / Learn a song | Illustrative event and finish Stubs, with weekday/social context |
+| Spaces are pages for hosts and local spots that run things you can join. | Owner-requested one-line explanation of Spaces |
+
+The five repeated disclaimer lines are removed from the hero/gallery/preview.
+Account, cost and booking requirements stay in the FAQ. Event/finish samples
+change no actual Stub issuance rules. The photo, title and “Another example”
+remain in the hero, with photographer attribution after a successful load.
