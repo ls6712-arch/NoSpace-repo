@@ -4,6 +4,12 @@ import type { ActivityExample } from "./examples";
 export function ActivityArt({ art, tone, animated = false }: Pick<ActivityExample, "art" | "tone"> & { animated?: boolean }) {
   return <div className={`lp-art lp-art-${tone}${animated ? " lp-art-animated" : ""}`} aria-hidden="true" data-art={art}>
     <svg viewBox="0 0 240 150" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" focusable="false">
+      {art === "paint" && <>
+        <rect x="42" y="30" width="105" height="95" rx="4" className="lp-art-paper"/>
+        <path d="m55 110 30-35 22 18 25-38" className="lp-art-accent" strokeWidth="5"/>
+        <circle cx="68" cy="52" r="9" className="lp-art-food"/>
+        <path d="m162 98 26-70 8 3-26 70-11 17Z" className="lp-art-accent"/>
+      </>}
       {art === "sketch" && <>
         <g transform="rotate(8 105 75)"><rect x="60" y="29" width="88" height="95" rx="4" className="lp-art-paper"/><path className="lp-draw-line" pathLength="1" d="M82 89c-11-14-1-36 17-36s31 23 17 36c-9 9-27 8-34 0ZM100 53l4-12M72 109h65"/></g>
         <g className="lp-moving-pencil" transform="rotate(25 167 76)"><rect x="162" y="33" width="10" height="74" rx="2" className="lp-art-accent"/><path d="m162 107 5 13 5-13Z" className="lp-art-ink"/></g>

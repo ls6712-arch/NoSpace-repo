@@ -1256,3 +1256,23 @@ activity photography, never AI-generated member evidence. Failed photo loading
 retains the activity graphic; photographer credits appear only after photo load.
 No geographic coverage claim is made until independently verified. Guest asks,
 quotas, privacy controls, age/access checks and onboarding flags are unchanged.
+
+
+### Uploaded landing photography and Motion (Nov 5, 2026)
+
+The owner supplied six real photographs for the landing page and requested
+Framer Motion. The existing Motion dependency provides the transitions. There
+is no new public product name, plugin requirement or automatic saving behavior.
+
+| Term | Use |
+| --- | --- |
+| Paint a small scene | Photographed Painting activity; requirements and request describe watercolor painting, not pencil drawing |
+| Take a book outside | Photographed Reading activity used for the outside selection |
+
+Both Reading photos are used in matching contexts. Each Corner appears once in
+the all-interests gallery. Earlier Drawing and Birdwatching example ids remain
+valid for old editable requests, without exposing unrelated photos. Photograph
+credits use the provided filenames and recorded source ids, and appear only
+when that photograph actually loads. All displayed landing photos are local.
+Motion transitions obey Pause motion and the device reduced-motion preference;
+controls remain outside the animated content.

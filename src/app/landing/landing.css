@@ -54,8 +54,7 @@
 .lp-activity-photo { width: 100%; overflow: hidden; border-radius: var(--radius-card); }
 .lp-activity-photo > .lp-art { position: absolute; inset: 0; }
 .lp-activity-photo > .lp-art svg { width: 100%; height: 100%; }
-.lp-photo-swap { position: relative; animation: lp-photo-arrive var(--duration-base) var(--ease-standard); }
-@keyframes lp-photo-arrive { from { opacity: 0.65; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+.lp-photo-swap { position: relative; }
 .lp-example-doodle { position: absolute; left: 12px; bottom: 12px; width: 82px; height: 82px; border: 2px solid var(--card); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-card); pointer-events: none; }
 .lp-example-doodle .lp-art, .lp-example-doodle .lp-art svg { width: 100%; height: 100%; }
 .lp-stubby-dock { position: absolute; right: 12px; bottom: 12px; display: flex; flex-direction: column; align-items: center; gap: 4px; }

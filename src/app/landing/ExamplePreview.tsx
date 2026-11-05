@@ -4,11 +4,12 @@ import { Pause, Play } from "lucide-react";
 import { track } from "../lib/analytics";
 import { formatDuration } from "../lib/dates";
 import { startPath } from "../lib/startContent";
-import { ACTIVITY_EXAMPLES, type ActivityExample } from "./examples";
+import { LANDING_EXAMPLES, type ActivityExample } from "./examples";
 import { ActivityPhoto, activityPhoto } from "./ActivityPhoto";
 import { useLandingMotion } from "./LandingMotion";
 import { usePhotoInteraction } from "./usePhotoInteraction";
 import { LANDING_COPY as COPY } from "./copy";
+import { useLandingTransition } from "./useLandingTransition";
 import { LandingStubby, type StubbyHandle } from "./LandingStubby";
 
 export function ExamplePreview({ example, onChoose, headingRef }: {
@@ -17,6 +18,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
   headingRef: RefObject<HTMLHeadingElement>;
 }) {
   const [loadedPhoto, setLoadedPhoto] = useState<string | null>(null);
+  const transitionRef = useLandingTransition(example.id);
   const stubby = useRef<StubbyHandle>(null);
   const { enabled, reduced, toggle } = useLandingMotion();
   const wrap = useRef<HTMLDivElement>(null);
@@ -32,7 +34,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
     stubby.current?.think();
   };
   const cycle = (direction: 1 | -1 = 1) => {
-    const options = ACTIVITY_EXAMPLES.filter(e => e.setting === example.setting);
+    const options = LANDING_EXAMPLES.filter(e => e.setting === example.setting);
     choose(options[(options.findIndex(e => e.id === example.id) + direction + options.length) % options.length].id);
   };
   const interaction = usePhotoInteraction(cycle);
@@ -51,14 +53,14 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
         {(["home", "outside"] as const).map(setting => <button type="button" key={setting}
           aria-pressed={example.setting === setting}
           onClick={() => {
-            choose(setting === example.setting ? example.id : ACTIVITY_EXAMPLES.find(e => e.setting === setting)!.id);
+            choose(setting === example.setting ? example.id : LANDING_EXAMPLES.find(e => e.setting === setting)!.id);
           }}>
           {setting === "home" ? COPY.atHome : COPY.outside}
         </button>)}
       </fieldset>
       <p className="lp-interaction-hint">{COPY.exampleHint}</p>
       <div className="lp-photo-stage" {...interaction}>
-        <div key={example.id} className="lp-photo-swap">
+        <div ref={transitionRef} key={example.id} className="lp-photo-swap">
           <ActivityPhoto example={example} priority onLoad={() => setLoadedPhoto(example.id)} onFail={() => setLoadedPhoto(null)}/>
         </div>
         <div className="lp-stubby-dock">

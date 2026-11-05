@@ -7,7 +7,7 @@ import { QUESTION_TITLES } from "../components/settings/PreferenceFields";
 import { cornerPath } from "../lib/cornerPath";
 import { track } from "../lib/analytics";
 import { LANDING_COPY as COPY } from "./copy";
-import { ACTIVITY_EXAMPLES } from "./examples";
+import { ACTIVITY_EXAMPLES, LANDING_EXAMPLES } from "./examples";
 import { ActivityPhoto } from "./ActivityPhoto";
 import { ExamplePreview } from "./ExamplePreview";
 import { PursuitPreview } from "./PursuitPreview";
@@ -48,7 +48,8 @@ function LandingPage() {
   }, [focusRequest]);
   const tryLink = (placement: "header" | "hero" | "footer", className = "lp-btn") => <Link to="/calendar" state={entry} className={className}
     onClick={() => track({ name: "landing_action_clicked", action: "ask", placement, hasExample: chosen })}><span>{COPY.heroCta}</span><ArrowUpRight size={17} aria-hidden="true"/></Link>;
-  const visible = ACTIVITY_EXAMPLES.filter(item => filter === "all" || (filter === "creative" ? ["sketch", "guitar", "photo-walk", "cook"].includes(item.id) : item.setting === filter));
+  const filtered = LANDING_EXAMPLES.filter(item => filter === "all" || (filter === "creative" ? ["paint", "guitar", "photo-walk", "cook"].includes(item.id) : item.setting === filter));
+  const visible = filtered.filter((item, i) => filtered.findIndex(other => other.corner[1] === item.corner[1]) === i);
   const icons = [Camera, Layers, BookOpen];
   return <div className="lp" data-motion={enabled ? "on" : "off"}>
     <button type="button" className="lp-skip" onClick={() => document.getElementById("landing-heading")?.focus()}>Skip to content</button>

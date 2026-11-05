@@ -9,6 +9,7 @@ import { startContent } from "../lib/startContent";
 
 const motion = vi.hoisted(() => ({ reduced: true }));
 vi.mock("motion/react", () => ({ useReducedMotion: () => motion.reduced }));
+vi.mock("motion/mini", () => ({ animate: vi.fn(() => ({ cancel: vi.fn() })) }));
 
 beforeEach(() => {
   motion.reduced = true;
@@ -32,14 +33,14 @@ describe("landing page", () => {
   it("filters real Corner links without saving answers or changing the request draft", () => {
     render(<MemoryRouter><Landing/></MemoryRouter>);
     const gallery = document.querySelector(".lp-activity-grid")!;
-    expect(gallery.querySelectorAll("article")).toHaveLength(6);
+    expect(gallery.querySelectorAll("article")).toHaveLength(5);
     fireEvent.click(screen.getByRole("button", { name: "Spend time outside" }));
     expect(gallery.querySelectorAll("article")).toHaveLength(2);
     expect(gallery.querySelector('a[href="/corners/photography"]')).toBeTruthy();
-    expect(gallery.querySelector('a[href="/corners/birdwatching"]')).toBeTruthy();
+    expect(gallery.querySelector('a[href="/corners/books"]')).toBeTruthy();
     expect(gallery.querySelector('a[href="/corners/drawing"]')).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "A little of everything" }));
-    expect(gallery.querySelectorAll("article")).toHaveLength(6);
+    expect(gallery.querySelectorAll("article")).toHaveLength(5);
     expect(document.querySelector(".lp")?.textContent).not.toMatch(/New York|Local suggestions start/);
     expect(screen.getByText(COPY.solo)).toBeTruthy();
     expect(screen.getByText(COPY.shared)).toBeTruthy();
@@ -51,7 +52,8 @@ describe("landing page", () => {
     const image = preview.querySelector("img")!;
     expect(preview.querySelector(".lp-photo-credit")).toBeNull();
     fireEvent.load(image);
-    expect(preview.querySelector(".lp-photo-credit")?.textContent).toContain("Richard Fox");
+    expect(preview.querySelector(".lp-photo-credit")?.textContent).toContain("Alex Gorin");
+    fireEvent.error(image);
     fireEvent.error(image);
     expect(preview.querySelector(".lp-photo-credit")).toBeNull();
   });
@@ -109,7 +111,7 @@ describe("landing page", () => {
     expect(preview.getByRole("heading",{name:"Take a photo walk"})).toBeTruthy();
     expect(preview.getByRole("button",{name:COPY.outside}).getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(preview.getByRole("button",{name:COPY.another}));
-    expect(preview.getByRole("heading",{name:"Listen for birds"})).toBeTruthy();
+    expect(preview.getByRole("heading",{name:"Take a book outside"})).toBeTruthy();
     fireEvent.click(preview.getByRole("button",{name:COPY.another}));
     expect(preview.getByRole("heading",{name:"Take a photo walk"})).toBeTruthy();
     expect(preview.getByRole("status").textContent).toContain("Take a photo walk");

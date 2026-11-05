@@ -1,30 +1,52 @@
-# Landing page assets
+# Landing page photography and Motion
 
-The interactive landing page combines real activity photography with the app's
-Stubby. Small illustration overlays were removed for the v3 design. It does not show example members
-or depend on the older screenshot assets to render a section.
+The current landing page uses six real photographs supplied by the owner in
+`Archive.zip`. They are hosted under `public/landing/photos/`; displayed landing
+photos no longer depend on an external image server. The previous pier image and
+other older assets remain historical and are not substituted for these uploads.
 
-`src/app/landing/ActivityPhoto.tsx` reuses `data/hobbyPhotos.ts` for drawing,
-guitar, cooking, reading and birdwatching. The photo-walk example uses the existing
-local pier photograph by Richard Fox (`public/landing/photos/shelf-pier-*`), with
-its recorded Unsplash source. Other old screenshot assets remain historical.
+| Activity | Original upload | Credit from filename | Source |
+| --- | --- | --- | --- |
+| Painting | sincerely-media-s3tPywNsLSo-unsplash.jpg | Sincerely Media | https://unsplash.com/photos/s3tPywNsLSo |
+| Guitar | parker-coffman-GgsG8aNLgjQ-unsplash.jpg | Parker Coffman | https://unsplash.com/photos/GgsG8aNLgjQ |
+| Photography | alex-gorin-31KvOn6d818-unsplash.jpg | Alex Gorin | https://unsplash.com/photos/31KvOn6d818 |
+| Cooking together | maarten-van-den-heuvel-EzH46XCDQRY-unsplash.jpg | Maarten van den Heuvel | https://unsplash.com/photos/EzH46XCDQRY |
+| Reading at home | sergei-nikulin-tglfT2WsX8E-unsplash.jpg | Sergei Nikulin | https://unsplash.com/photos/tglfT2WsX8E |
+| Reading outside | paniz-gm-XGZ72Knysyg-unsplash.jpg | Paniz GM | https://unsplash.com/photos/XGZ72Knysyg |
 
-Photographs use `ImageWithFallback`: the hero loads eagerly, gallery photographs
-load lazily, and fixed aspect ratios prevent layout shifts. If a request fails,
-the corresponding local activity illustration is shown. Recorded credits appear
-under the hero photograph only after successful loading. Old library entries without a photographer credit use
-the Unsplash license link, without inventing a name.
+Credits and source ids are recorded from the uploaded filenames, not a new
+external search or independently fetched source page. The photos were visually
+inspected. They illustrate activities, not example members or bookable venues.
+The watercolor photograph is used for Painting, not Drawing. Both reading photos
+are used in their matching settings. The all-interests gallery lists each Corner
+once; the outside filter can show the outdoor reading alternative.
 
-The pointer tilt, photo transitions and tappable Stubby are
-presentation only. The motion control pauses them locally; the device's reduced
-motion preference always wins. Touch swiping has native button equivalents and
-does not prevent vertical scrolling. There is no automatic activity carousel.
+`public/landing/photos/uploaded-photos.json` records original hashes, dimensions,
+source/license URLs, crop rectangles and output sizes. The original archive is
+retained outside the repository; only optimized assets ship. Rebuild from an
+extracted copy with:
 
-The cloud environment blocks `images.unsplash.com`. Browser tests verify the
-actual local photograph and intentional remote-image failure paths. Loading and
-visual review of the external library photographs remain a preview release check;
-the tests do not substitute an unrelated photo and call it a successful download.
+```sh
+node scripts/landing-photos.mjs /path/to/originals
+```
 
-Social previews use the existing 512 px app icon with an accurate image description.
-Page metadata, the crawler fallback and FAQ structured data use the new landing
-copy. `src/indexHtml.test.ts` checks that they stay in sync.
+The 18 WebP variants total 1,610,190 bytes. Each photo has 400, 800 and 1600 px
+versions. Subject-preserving crops are 16:10; the hero displays them at 16:9.
+Sharp strips embedded EXIF from the exports. Responsive `srcSet` and `sizes`
+select an appropriate file; the hero loads eagerly and gallery images lazily.
+A failed responsive candidate retries the source without `srcSet` before using
+its local activity graphic. A photographer credit appears only after a photo
+successfully loads. Old example ids remain valid for existing request drafts,
+without making them fetch unrelated or external photographs.
+
+Motion is already a dependency. `useLandingTransition` uses its native animation
+engine (`motion/mini`) with the shared page transition tokens; the device
+preference comes from `motion/react`. Photo swaps and the goal-preview content
+fade and move slightly, keeping the controls outside the moving content. Cleanup
+cancels animation and restores fully visible content on pause, reduced motion,
+selection change or unmount. Pointer tilt, touch swiping and tappable Stubby are
+preserved. There is no autoplay activity carousel or saved motion preference.
+
+[Current evidence and reproduction](qa/landing-local-photos/README.md) includes
+actual browser photo loading, responsive variants, Motion frames and missing-file
+recovery. Earlier reports with blocked external photos remain historical.

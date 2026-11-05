@@ -6,7 +6,7 @@ export interface ActivityExample {
   step: string;
   setting: "home" | "outside";
   social: string;
-  art: "sketch" | "guitar" | "walk" | "cook" | "book" | "bird";
+  art: "sketch" | "paint" | "guitar" | "walk" | "cook" | "book" | "bird";
   tone: "orange" | "violet" | "lime" | "blue";
   /** A practice suggestion, not a verified duration or calendar slot. */
   minutes: number;
@@ -31,9 +31,14 @@ export const ACTIVITY_EXAMPLES: readonly ActivityExample[] = [
     required: [["Book"], ["E-reader", "Digital book"]], optional: ["Bookmark"], corner: ["books-writing", "books"], prompt: "I’d like to read at home." },
   { id: "birds", interest: "Birdwatching", title: "Listen for birds", step: "Choose somewhere you can stop safely. Listen and try to identify a bird.", setting: "outside", social: "Solo or together", art: "bird", tone: "blue", minutes: 15,
     required: [["Bird identification guide or app"]], optional: ["Binoculars"], corner: ["nature-outdoors", "birdwatching"], prompt: "I’d like to try birdwatching outside." },
+  { id: "paint", interest: "Painting", title: "Paint a small scene", step: "Choose a photo or an object nearby. Try its shapes and colors on paper.", setting: "home", social: "On your own", art: "paint", tone: "orange", minutes: 20,
+    required: [["Watercolor paper", "Watercolor paints", "Brush", "Water"]], optional: ["Pencil", "Mixing palette"], corner: ["art-creative", "painting"], prompt: "I’d like to try watercolor painting at home." },
+  { id: "read-outside", interest: "Reading", title: "Take a book outside", step: "Choose somewhere comfortable to sit. Read a few pages at your own pace.", setting: "outside", social: "On your own", art: "book", tone: "violet", minutes: 20,
+    required: [["Book"], ["E-reader", "Digital book"]], optional: ["Bookmark"], corner: ["books-writing", "books"], prompt: "I’d like to read outside." },
 ];
 
-export const FEATURED_EXAMPLES = ACTIVITY_EXAMPLES.slice(0, 4);
+/** Keep older ids valid for existing request drafts, but showcase only photographed activities. */
+export const LANDING_EXAMPLES = ["paint", "guitar", "photo-walk", "cook", "read", "read-outside"].map(id => ACTIVITY_EXAMPLES.find(example => example.id === id)!);
 
 /** Only our fixed example ids can seed a draft. Never accept arbitrary history-state text. */
 export function exampleFromEntry(state: unknown): ActivityExample | undefined {
