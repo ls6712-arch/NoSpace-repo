@@ -1,5 +1,10 @@
 # Landing page v3 implementation
 
+This records the initial v3 implementation. The photo-host blocker below has
+been resolved by the owner-uploaded local photography and Motion follow-up:
+[current evidence](../landing-local-photos/README.md). Historical test results
+and screenshots below are retained rather than relabeled as a later run.
+
 Implements the reviewed landing design after the owner asked to return to the
 landing page and build it. Built on main `d9477bb`, preserving the newer Pursuit
 and Calendar changes and carrying forward the existing photo/motion work.
