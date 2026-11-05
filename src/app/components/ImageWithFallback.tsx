@@ -22,6 +22,8 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "loading" | "widt
   priority?: boolean;
   /** Display width in CSS px; when image transforms are on, a copy this size is requested. */
   width?: number;
+  /** Explicit local responsive variants. A failed candidate retries src without srcSet. */
+  srcSet?: string;
   /** Shown instead of the default placeholder when the photo can't load. */
   fallback?: ReactNode;
   /** Called once when the photo (and its original, if a resized copy failed) can't load. */
@@ -47,6 +49,7 @@ export function ImageWithFallback({
   fit = "cover",
   priority = false,
   width,
+  srcSet: providedSrcSet,
   fallback,
   onFail,
   tint = false,
@@ -79,7 +82,7 @@ export function ImageWithFallback({
 
   const handleError: ImgHTMLAttributes<HTMLImageElement>["onError"] = (e) => {
     onError?.(e);
-    if (stage === "resized" && resized !== original) {
+    if (stage === "resized" && (resized !== original || providedSrcSet)) {
       setStage("original");
       return;
     }
@@ -109,7 +112,7 @@ export function ImageWithFallback({
         {...rest}
         ref={setImg}
         src={url}
-        srcSet={stage === "resized" && width ? variantSrcSet(original, width) : undefined}
+        srcSet={stage === "resized" ? providedSrcSet ?? (width ? variantSrcSet(original, width) : undefined) : undefined}
         alt={alt}
         loading={priority ? "eager" : "lazy"}
         decoding="async"

@@ -911,7 +911,7 @@ What Start on a suggestion opens: `/start/:space/:corner`. It is the activity it
 
 The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
 
-## Interactive landing page (PDF v2, Nov 4, 2026)
+## Interactive landing page (PDF v2, Nov 4, 2026, superseded by v3 below)
 
 Implements the reviewed PDF v2 and the request to build it. The signed-out page's
 copy is in `src/app/landing/copy.ts`; editorial activity examples are in `examples.ts`.
@@ -927,6 +927,12 @@ Examples do not save answers, create a plan, prepare an invitation or use recomm
 | Example activity | Always visible over the interactive example; never a personalized or scheduled result |
 | At home / Outside | Local example choices; they do not write preferences |
 | Another example | Cycles only within the selected setting |
+| Choose a setting or try another example. | Instruction above the photo-backed example |
+| Pause motion / Play motion | Stops or resumes the page's decorative graphics, photo movement and Stubby animations. Does not save a preference |
+| Motion off | Shown when the device requests reduced motion; animations remain off |
+| Tap Stubby / Play with Stubby | Visible instruction and accessible name for the same native play button. Reacts locally and never makes a plan or uses an ask |
+| Swipe the photo to change the example. | Touch shortcut with equivalent native buttons. Vertical scrolling is preserved |
+| Photo: {credit} | Link to the recorded photograph source. Uses Unsplash when an older library entry has no photographer credit |
 | What you’ll need | Expands the activity details |
 | Choose either option / Optional | Distinguishes whole required bundles from optional supplies |
 | Suggested time / Cost / Activity guide | Example facts. Practice time is suggested; missing price or unconfirmed ownership never means free |
@@ -1217,3 +1223,56 @@ Requested by the founder in the Calendar planning PR. The usual week uses local 
 | Choose an end time after the start. Split overnight hours between two days. | Invalid range guidance |
 | These hours overlap. Adjust or remove a time range. | Invalid overlapping ranges |
 | Keep up to eight time ranges per day. | Range limit guidance |
+
+
+## Landing page v3 (reviewed design, Nov 5, 2026)
+
+Implements the reviewed PDF v3 after the request to return to the landing and build.
+This section supersedes v2 marketing copy. The product is Soosh; Stubby is its helper.
+No 3D world, multiplayer or mobile-store availability is promised on this page.
+
+| Term | Meaning |
+| --- | --- |
+| Make time for the things you keep meaning to do. | Emotional hero headline |
+| Hobbies, activities & personal goals | Literal product description and SEO vocabulary |
+| Find my next step | Header, hero and final entry into the real calendar/Stubby flow; existing guest gates apply |
+| Start with Stubby, Soosh’s activity helper. | Explains the entry destination |
+| You may need to sign up to ask. An account is needed to make a plan. | Account requirement beside the primary action |
+| See how it works | Focuses and scrolls to the explanation without modifying the hash route |
+| Explore Corners / Explore this Corner | Actual public Corner destinations, never a fixed catalog count |
+| Preview activity | Opens a selected editorial example and its requirements, without making an ask |
+| Ask about this activity | Carries the selected example into an editable Stubby request |
+| A little of everything / Make something / Spend time outside / Try something at home | Local filters for the representative Corner cards, never saved preferences |
+| That thing you’d like to keep going with. | Introduces personal goals called Pursuits |
+| Start a Pursuit | Existing creation wording; chosen example title and Corner pass through signup, with no sample progress copied |
+| Example Pursuit / Choose an example goal / Stepping stones | Clearly labeled editorial goal preview; not account data |
+| On your own. With someone. Both belong here. | Equal solo and shared activity emphasis |
+| Keep what you do. Choose what you share. | Introduces Moments, Shelf, Stubs and Spaces without implying all data is public |
+| Something to start today. Something to keep working toward. | Closing promise |
+
+Complete approved implementation wording is in `src/app/landing/copy.ts` and the
+editorial examples in `PursuitPreview.tsx` and `examples.ts`. Photos are actual
+activity photography, never AI-generated member evidence. Failed photo loading
+retains the activity graphic; photographer credits appear only after photo load.
+No geographic coverage claim is made until independently verified. Guest asks,
+quotas, privacy controls, age/access checks and onboarding flags are unchanged.
+
+
+### Uploaded landing photography and Motion (Nov 5, 2026)
+
+The owner supplied six real photographs for the landing page and requested
+Framer Motion. The existing Motion dependency provides the transitions. There
+is no new public product name, plugin requirement or automatic saving behavior.
+
+| Term | Use |
+| --- | --- |
+| Paint a small scene | Photographed Painting activity; requirements and request describe watercolor painting, not pencil drawing |
+| Take a book outside | Photographed Reading activity used for the outside selection |
+
+Both Reading photos are used in matching contexts. Each Corner appears once in
+the all-interests gallery. Earlier Drawing and Birdwatching example ids remain
+valid for old editable requests, without exposing unrelated photos. Photograph
+credits use the provided filenames and recorded source ids, and appear only
+when that photograph actually loads. All displayed landing photos are local.
+Motion transitions obey Pause motion and the device reduced-motion preference;
+controls remain outside the animated content.

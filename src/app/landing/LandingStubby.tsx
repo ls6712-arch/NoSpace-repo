@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { Stubby, type StubbyState } from "../components/stubby/Stubby";
 import { burstFromElement } from "./confetti";
 import { canHover, reducedMotion, replayClass } from "./motion";
+import { useLandingMotion } from "./LandingMotion";
 
 /** What the landing page can ask Stubby to do. */
 export interface StubbyHandle {
@@ -33,6 +34,7 @@ export const LandingStubby = forwardRef<
     className?: string;
   }
 >(function LandingStubby({ size = 160, followPointer = false, tappable = false, label, onDark, className }, ref) {
+  const { enabled } = useLandingMotion();
   const box = useRef<HTMLSpanElement>(null);
   const [state, setState] = useState<StubbyState>("idle");
   const current = useRef<StubbyState>("idle");
@@ -50,13 +52,17 @@ export const LandingStubby = forwardRef<
     timers.current = [];
   }, []);
   useEffect(() => clear, [clear]);
+  useEffect(() => {
+    if (!enabled) { clear(); go("idle"); }
+  }, [enabled, clear, go]);
 
   const happy = useCallback(
     (confetti = 22) => {
+      if (!enabled) return;
       clear();
       const play = () => {
         go("stamped");
-        burstFromElement(box.current, confetti);
+        if (confetti > 0) burstFromElement(box.current, confetti);
         later(() => go("unstamped"), 1800);
       };
       if (current.current === "stamped") {
@@ -64,12 +70,13 @@ export const LandingStubby = forwardRef<
         later(play, 80);
       } else play();
     },
-    [clear, go, later],
+    [clear, go, later, enabled],
   );
 
   const handle: StubbyHandle = {
     happy,
     think: () => {
+      if (!enabled) return;
       clear();
       go("thinking");
       later(() => go("idle"), 800);
@@ -79,7 +86,7 @@ export const LandingStubby = forwardRef<
   };
   useImperativeHandle(ref, () => handle);
 
-  const follow = followPointer && !reducedMotion() && canHover();
+  const follow = enabled && followPointer && !reducedMotion() && canHover();
 
   return (
     <span ref={box} className={`lp-stubby ${className ?? ""}`}>
@@ -88,8 +95,9 @@ export const LandingStubby = forwardRef<
         size={size}
         onDark={onDark}
         followPointer={follow}
+        motionEnabled={enabled}
         label={label}
-        onPoke={tappable ? () => happy() : undefined}
+        onPoke={tappable ? () => happy(0) : undefined}
       />
     </span>
   );

@@ -7,9 +7,12 @@ import { LANDING_COPY as COPY } from "./copy";
 import { ACTIVITY_EXAMPLES, exampleFromEntry } from "./examples";
 import { startContent } from "../lib/startContent";
 
-vi.mock("motion/react", () => ({ useReducedMotion: () => true }));
+const motion = vi.hoisted(() => ({ reduced: true }));
+vi.mock("motion/react", () => ({ useReducedMotion: () => motion.reduced }));
+vi.mock("motion/mini", () => ({ animate: vi.fn(() => ({ cancel: vi.fn() })) }));
 
 beforeEach(() => {
+  motion.reduced = true;
   vi.stubGlobal("matchMedia", () => ({ matches: true, addEventListener() {}, removeEventListener() {} }));
   window.HTMLElement.prototype.scrollIntoView = vi.fn();
 });
@@ -20,6 +23,55 @@ afterEach(() => {
 });
 
 describe("landing page", () => {
+  it("removes the local-suggestions question and uses actual photographs", () => {
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    expect(screen.queryByText("Where are local suggestions available?")).toBeNull();
+    expect(document.querySelectorAll(".lp-activity-photo img").length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: COPY.motionDevice }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("filters real Corner links without saving answers or changing the request draft", () => {
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    const gallery = document.querySelector(".lp-activity-grid")!;
+    expect(gallery.querySelectorAll("article")).toHaveLength(5);
+    fireEvent.click(screen.getByRole("button", { name: "Spend time outside" }));
+    expect(gallery.querySelectorAll("article")).toHaveLength(2);
+    expect(gallery.querySelector('a[href="/corners/photography"]')).toBeTruthy();
+    expect(gallery.querySelector('a[href="/corners/books"]')).toBeTruthy();
+    expect(gallery.querySelector('a[href="/corners/drawing"]')).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "A little of everything" }));
+    expect(gallery.querySelectorAll("article")).toHaveLength(5);
+    expect(document.querySelector(".lp")?.textContent).not.toMatch(/New York|Local suggestions start/);
+    expect(screen.getByText(COPY.solo)).toBeTruthy();
+    expect(screen.getByText(COPY.shared)).toBeTruthy();
+  });
+
+  it("credits only a successfully loaded photo, not a fallback illustration", () => {
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    const preview = screen.getByRole("group", { name: COPY.exampleLabel });
+    const image = preview.querySelector("img")!;
+    expect(preview.querySelector(".lp-photo-credit")).toBeNull();
+    fireEvent.load(image);
+    expect(preview.querySelector(".lp-photo-credit")?.textContent).toContain("Alex Gorin");
+    fireEvent.error(image);
+    fireEvent.error(image);
+    expect(preview.querySelector(".lp-photo-credit")).toBeNull();
+  });
+
+  it("pauses the page's motion while keeping the example controls usable", () => {
+    motion.reduced = false;
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    expect(document.querySelector(".lp")?.getAttribute("data-motion")).toBe("on");
+    expect(screen.getByRole("button", { name: COPY.playStubby })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: COPY.pauseMotion }));
+    expect(document.querySelector(".lp")?.getAttribute("data-motion")).toBe("off");
+    expect(screen.queryByRole("button", { name: COPY.playStubby })).toBeNull();
+    const preview = within(screen.getByRole("group", { name: COPY.exampleLabel }));
+    fireEvent.click(preview.getByRole("button", { name: COPY.outside }));
+    expect(preview.getByRole("heading", { name: "Take a photo walk" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: COPY.playMotion }));
+    expect(document.querySelector(".lp")?.getAttribute("data-motion")).toBe("on");
+  });
   it("has no in-page #links: the app uses hash routing, so they would be read as routes", () => {
     const { container } = render(
       <MemoryRouter>
@@ -59,7 +111,7 @@ describe("landing page", () => {
     expect(preview.getByRole("heading",{name:"Take a photo walk"})).toBeTruthy();
     expect(preview.getByRole("button",{name:COPY.outside}).getAttribute("aria-pressed")).toBe("true");
     fireEvent.click(preview.getByRole("button",{name:COPY.another}));
-    expect(preview.getByRole("heading",{name:"Listen for birds"})).toBeTruthy();
+    expect(preview.getByRole("heading",{name:"Take a book outside"})).toBeTruthy();
     fireEvent.click(preview.getByRole("button",{name:COPY.another}));
     expect(preview.getByRole("heading",{name:"Take a photo walk"})).toBeTruthy();
     expect(preview.getByRole("status").textContent).toContain("Take a photo walk");
@@ -67,7 +119,7 @@ describe("landing page", () => {
 
   it("opens the chosen card's real details and moves keyboard focus to the preview", () => {
     render(<MemoryRouter><Landing/></MemoryRouter>);
-    fireEvent.click(screen.getByRole("button",{name:/Music Play a song you know/}));
+    fireEvent.click(screen.getByRole("button",{name:"Preview activity: Music"}));
     const preview=screen.getByRole("group",{name:COPY.exampleLabel});
     expect(preview.querySelector("details")?.open).toBe(true);
     expect(document.activeElement).toBe(within(preview).getByRole("heading",{name:"Play a song you know"}));

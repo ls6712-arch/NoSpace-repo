@@ -17,9 +17,9 @@ describe("open sign-up copy", () => {
     expect(landing).not.toMatch(GATE);
   });
 
-  it("uses the approved Try Soosh entry without changing Sign up or implying a completed action", () => {
+  it("uses the reviewed next-step entry without changing Sign up or implying a completed action", () => {
     expect(LANDING_COPY.signUp).toBe("Sign up");
-    expect(LANDING_COPY.heroCta).toBe("Try Soosh");
+    expect(LANDING_COPY.heroCta).toBe("Find my next step");
     expect(landing).toContain('to="/onboarding"');
     expect(landing).not.toContain("WaitlistForm");
     expect(landing).toContain('to="/calendar"');
