@@ -29,6 +29,33 @@ describe("landing page", () => {
     expect(screen.getByRole("button", { name: COPY.motionDevice }).hasAttribute("disabled")).toBe(true);
   });
 
+  it("filters real Corner links without saving answers or changing the request draft", () => {
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    const gallery = document.querySelector(".lp-activity-grid")!;
+    expect(gallery.querySelectorAll("article")).toHaveLength(6);
+    fireEvent.click(screen.getByRole("button", { name: "Spend time outside" }));
+    expect(gallery.querySelectorAll("article")).toHaveLength(2);
+    expect(gallery.querySelector('a[href="/corners/photography"]')).toBeTruthy();
+    expect(gallery.querySelector('a[href="/corners/birdwatching"]')).toBeTruthy();
+    expect(gallery.querySelector('a[href="/corners/drawing"]')).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "A little of everything" }));
+    expect(gallery.querySelectorAll("article")).toHaveLength(6);
+    expect(document.querySelector(".lp")?.textContent).not.toMatch(/New York|Local suggestions start/);
+    expect(screen.getByText(COPY.solo)).toBeTruthy();
+    expect(screen.getByText(COPY.shared)).toBeTruthy();
+  });
+
+  it("credits only a successfully loaded photo, not a fallback illustration", () => {
+    render(<MemoryRouter><Landing/></MemoryRouter>);
+    const preview = screen.getByRole("group", { name: COPY.exampleLabel });
+    const image = preview.querySelector("img")!;
+    expect(preview.querySelector(".lp-photo-credit")).toBeNull();
+    fireEvent.load(image);
+    expect(preview.querySelector(".lp-photo-credit")?.textContent).toContain("Richard Fox");
+    fireEvent.error(image);
+    expect(preview.querySelector(".lp-photo-credit")).toBeNull();
+  });
+
   it("pauses the page's motion while keeping the example controls usable", () => {
     motion.reduced = false;
     render(<MemoryRouter><Landing/></MemoryRouter>);
@@ -90,7 +117,7 @@ describe("landing page", () => {
 
   it("opens the chosen card's real details and moves keyboard focus to the preview", () => {
     render(<MemoryRouter><Landing/></MemoryRouter>);
-    fireEvent.click(screen.getByRole("button",{name:/Music Play a song you know/}));
+    fireEvent.click(screen.getByRole("button",{name:"Preview activity: Music"}));
     const preview=screen.getByRole("group",{name:COPY.exampleLabel});
     expect(preview.querySelector("details")?.open).toBe(true);
     expect(document.activeElement).toBe(within(preview).getByRole("heading",{name:"Play a song you know"}));

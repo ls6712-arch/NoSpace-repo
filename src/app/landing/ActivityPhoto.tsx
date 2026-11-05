@@ -20,9 +20,9 @@ export function activityPhoto(example: ActivityExample, width = 800) {
   };
 }
 
-export function ActivityPhoto({ example, priority = false }: { example: ActivityExample; priority?: boolean }) {
+export function ActivityPhoto({ example, priority = false, onLoad, onFail }: { example: ActivityExample; priority?: boolean; onLoad?: () => void; onFail?: () => void }) {
   const photo = activityPhoto(example, priority ? 960 : 400);
-  return <ImageWithFallback src={photo.src} alt={photo.alt} priority={priority}
-    aspect="16 / 10" className="lp-activity-photo"
+  return <ImageWithFallback src={photo.src} alt={photo.alt} priority={priority} onLoad={onLoad} onFail={onFail}
+    aspect={priority ? "16 / 9" : "16 / 10"} className="lp-activity-photo"
     fallback={<ActivityArt art={example.art} tone={example.tone}/>}/>;
 }

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { Link } from "react-router";
 import { Pause, Play } from "lucide-react";
+import { track } from "../lib/analytics";
 import { formatDuration } from "../lib/dates";
 import { startPath } from "../lib/startContent";
 import { ACTIVITY_EXAMPLES, type ActivityExample } from "./examples";
-import { ActivityArt } from "./ActivityArt";
 import { ActivityPhoto, activityPhoto } from "./ActivityPhoto";
 import { useLandingMotion } from "./LandingMotion";
 import { usePhotoInteraction } from "./usePhotoInteraction";
@@ -16,6 +16,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
   onChoose: (id: string) => void;
   headingRef: RefObject<HTMLHeadingElement>;
 }) {
+  const [loadedPhoto, setLoadedPhoto] = useState<string | null>(null);
   const stubby = useRef<StubbyHandle>(null);
   const { enabled, reduced, toggle } = useLandingMotion();
   const wrap = useRef<HTMLDivElement>(null);
@@ -58,8 +59,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
       <p className="lp-interaction-hint">{COPY.exampleHint}</p>
       <div className="lp-photo-stage" {...interaction}>
         <div key={example.id} className="lp-photo-swap">
-          <ActivityPhoto example={example} priority/>
-          <div className="lp-example-doodle"><ActivityArt art={example.art} tone={example.tone} animated/></div>
+          <ActivityPhoto example={example} priority onLoad={() => setLoadedPhoto(example.id)} onFail={() => setLoadedPhoto(null)}/>
         </div>
         <div className="lp-stubby-dock">
           {enabled ? <button type="button" className="lp-play-stubby" aria-label={COPY.playStubby} onClick={() => stubby.current?.happy(0)}>
@@ -68,7 +68,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
           </button> : <LandingStubby ref={stubby} size={100} className="lp-example-stubby"/>}
         </div>
       </div>
-      <a className="lp-photo-credit" href={photo.source} target="_blank" rel="noopener noreferrer">{COPY.photo}: {photo.credit}</a>
+      {loadedPhoto === example.id && <a className="lp-photo-credit" href={photo.source} target="_blank" rel="noopener noreferrer">{COPY.photo}: {photo.credit}</a>}
       <p className="lp-swipe-hint">{COPY.swipeHint}</p>
       <div className="lp-example-copy">
         <p className="lp-tag">{example.setting === "home" ? COPY.atHome : COPY.outside} · {example.social}</p>
@@ -93,7 +93,7 @@ export function ExamplePreview({ example, onChoose, headingRef }: {
       </details>
       <div className="lp-example-actions">
         <button type="button" className="lp-btn lp-btn-ghost" onClick={() => cycle()}>{COPY.another}</button>
-        <Link className="lp-text-link" to="/calendar" state={{ landingExample: example.id }}>Ask Stubby</Link>
+        <Link className="lp-text-link" to="/calendar" state={{ landingExample: example.id }} onClick={() => track({ name: "landing_action_clicked", action: "ask", placement: "example", hasExample: true })}>{COPY.askExample}</Link>
       </div>
     </div>
     <p className="lp-example-note">{COPY.exampleNote}</p>

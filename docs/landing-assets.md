@@ -1,7 +1,7 @@
 # Landing page assets
 
 The interactive landing page combines real activity photography with the app's
-Stubby and small animated SVG activity graphics. It does not show example members
+Stubby. Small illustration overlays were removed for the v3 design. It does not show example members
 or depend on the older screenshot assets to render a section.
 
 `src/app/landing/ActivityPhoto.tsx` reuses `data/hobbyPhotos.ts` for drawing,
@@ -12,10 +12,10 @@ its recorded Unsplash source. Other old screenshot assets remain historical.
 Photographs use `ImageWithFallback`: the hero loads eagerly, gallery photographs
 load lazily, and fixed aspect ratios prevent layout shifts. If a request fails,
 the corresponding local activity illustration is shown. Recorded credits appear
-under the hero photograph. Old library entries without a photographer credit use
+under the hero photograph only after successful loading. Old library entries without a photographer credit use
 the Unsplash license link, without inventing a name.
 
-The animated badge, pointer tilt, photo transitions and tappable Stubby are
+The pointer tilt, photo transitions and tappable Stubby are
 presentation only. The motion control pauses them locally; the device's reduced
 motion preference always wins. Touch swiping has native button equivalents and
 does not prevent vertical scrolling. There is no automatic activity carousel.

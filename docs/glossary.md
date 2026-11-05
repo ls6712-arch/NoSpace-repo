@@ -911,7 +911,7 @@ What Start on a suggestion opens: `/start/:space/:corner`. It is the activity it
 
 The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
 
-## Interactive landing page (PDF v2, Nov 4, 2026)
+## Interactive landing page (PDF v2, Nov 4, 2026, superseded by v3 below)
 
 Implements the reviewed PDF v2 and the request to build it. The signed-out page's
 copy is in `src/app/landing/copy.ts`; editorial activity examples are in `examples.ts`.
@@ -1223,3 +1223,36 @@ Requested by the founder in the Calendar planning PR. The usual week uses local 
 | Choose an end time after the start. Split overnight hours between two days. | Invalid range guidance |
 | These hours overlap. Adjust or remove a time range. | Invalid overlapping ranges |
 | Keep up to eight time ranges per day. | Range limit guidance |
+
+
+## Landing page v3 (reviewed design, Nov 5, 2026)
+
+Implements the reviewed PDF v3 after the request to return to the landing and build.
+This section supersedes v2 marketing copy. The product is Soosh; Stubby is its helper.
+No 3D world, multiplayer or mobile-store availability is promised on this page.
+
+| Term | Meaning |
+| --- | --- |
+| Make time for the things you keep meaning to do. | Emotional hero headline |
+| Hobbies, activities & personal goals | Literal product description and SEO vocabulary |
+| Find my next step | Header, hero and final entry into the real calendar/Stubby flow; existing guest gates apply |
+| Start with Stubby, Soosh’s activity helper. | Explains the entry destination |
+| You may need to sign up to ask. An account is needed to make a plan. | Account requirement beside the primary action |
+| See how it works | Focuses and scrolls to the explanation without modifying the hash route |
+| Explore Corners / Explore this Corner | Actual public Corner destinations, never a fixed catalog count |
+| Preview activity | Opens a selected editorial example and its requirements, without making an ask |
+| Ask about this activity | Carries the selected example into an editable Stubby request |
+| A little of everything / Make something / Spend time outside / Try something at home | Local filters for the representative Corner cards, never saved preferences |
+| That thing you’d like to keep going with. | Introduces personal goals called Pursuits |
+| Start a Pursuit | Existing creation wording; chosen example title and Corner pass through signup, with no sample progress copied |
+| Example Pursuit / Choose an example goal / Stepping stones | Clearly labeled editorial goal preview; not account data |
+| On your own. With someone. Both belong here. | Equal solo and shared activity emphasis |
+| Keep what you do. Choose what you share. | Introduces Moments, Shelf, Stubs and Spaces without implying all data is public |
+| Something to start today. Something to keep working toward. | Closing promise |
+
+Complete approved implementation wording is in `src/app/landing/copy.ts` and the
+editorial examples in `PursuitPreview.tsx` and `examples.ts`. Photos are actual
+activity photography, never AI-generated member evidence. Failed photo loading
+retains the activity graphic; photographer credits appear only after photo load.
+No geographic coverage claim is made until independently verified. Guest asks,
+quotas, privacy controls, age/access checks and onboarding flags are unchanged.

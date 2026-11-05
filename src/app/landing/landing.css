@@ -208,3 +208,81 @@
   .lp *, .lp *::before, .lp *::after { animation: none !important; transition: none !important; }
   .lp :is(button, a):hover { transform: none; }
 }
+
+/* The reviewed landing design uses existing theme tokens in both color schemes. */
+.lp-hero-grid { align-items: start; gap: 32px; }
+.lp-hero h1 { margin: 18px 0; font-size: clamp(2.3rem, 1.4rem + 3.5vw, 4.5rem); }
+.lp-hero h1 em { color: var(--accent-text); font-weight: 600; }
+.lp-hero-sub { font-size: var(--text-body); max-width: 48ch; }
+.lp-cta-row { margin-top: 24px; align-items: center; gap: 16px; }
+.lp-btn { gap: 8px; }
+.lp-hero-hint { margin-top: 16px !important; max-width: none; }
+.lp-access { margin-top: 4px !important; color: var(--muted-foreground); font-size: var(--text-caption); max-width: 48ch; }
+.lp-invitations { display: flex; flex-wrap: wrap; gap: 12px 24px; list-style: none; padding: 0; margin: 20px 0 0; font-size: var(--text-caption); font-weight: 600; }
+.lp-invitations li { display: inline-flex; align-items: center; gap: 8px; }
+.lp-preview .lp-example-wrap { padding-top: 0; }
+.lp-example { padding: 18px; }
+.lp-choices { margin: 12px 0; }
+.lp-example h2 { min-height: 0; }
+.lp-example-step { min-height: 0; }
+.lp-example-copy { margin-top: 12px; }
+.lp-details { margin-top: 12px; }
+.lp-interaction-hint { display: none; }
+.lp-section-intro { display: grid; gap: 20px; align-items: end; }
+.lp-section-intro .lp-lede { margin-top: 0 !important; }
+.lp-filters, .lp-goal-choices { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; border: 0; margin: 24px 0; }
+.lp-filters button, .lp-goal-choices button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 8px 16px; border: 1px solid var(--border); border-radius: 999px; background: var(--background); color: var(--foreground); font: inherit; font-size: var(--text-small); cursor: pointer; }
+.lp-filters button[aria-pressed="true"], .lp-goal-choices button[aria-pressed="true"] { color: var(--background); background: var(--foreground); border-color: var(--foreground); }
+.lp-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.lp-activity { text-align: left; cursor: default; padding: 14px; gap: 10px; }
+.lp-corner-link { display: flex; justify-content: space-between; align-items: center; min-height: 44px; gap: 8px; color: var(--foreground); text-decoration: none; }
+.lp-corner-link h3 { font-family: var(--font-display); font-size: var(--text-title); font-weight: 800; margin: 0; }
+.lp-corner-link svg { flex: none; }
+.lp-activity-title { min-height: 0; font-family: var(--font-body); font-size: var(--text-small); font-weight: 400; line-height: 1.5; }
+.lp-activity .lp-text-link { justify-content: start; margin-top: auto; background: transparent; border: 0; cursor: pointer; text-align: left; }
+.lp-pursuits { background: color-mix(in srgb, var(--pastel-sage) 18%, var(--background)); border-block: 1px solid var(--border); }
+.lp-pursuit-grid { display: grid; gap: 32px; align-items: center; }
+.lp-pursuit-preview { min-width: 0; }
+.lp-goal-choices { margin-top: 0; }
+.lp-goal-choices legend { font-size: var(--text-caption); margin-bottom: 12px; }
+.lp-goal-card { padding: 24px; background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: 6px 8px 0 color-mix(in srgb, var(--foreground) 8%, transparent); }
+.lp-goal-card h3 { font-family: var(--font-display); font-size: var(--text-title); font-weight: 800; line-height: 1.15; margin: 16px 0 24px; }
+.lp-goal-label { font-size: var(--text-small); font-weight: 600; }
+.lp-goal-meter { height: 8px; margin: 12px 0; background: var(--border); border-radius: 999px; overflow: hidden; }
+.lp-goal-meter span { display: block; width: 33.333%; height: 100%; background: var(--foreground); }
+.lp-goal-card ol { list-style: none; padding: 0; margin: 0; }
+.lp-goal-card li { display: flex; align-items: center; gap: 12px; min-height: 48px; padding-block: 8px; border-bottom: 1px solid var(--border); font-size: var(--text-small); }
+.lp-goal-card li > span { display: inline-flex; justify-content: center; align-items: center; flex: none; width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 50%; font-size: var(--text-caption); }
+.lp-goal-card .lp-goal-done { background: var(--foreground); color: var(--background); }
+.lp-goal-card .lp-btn { margin-top: 20px; }
+.lp-together { background: var(--card); }
+.lp-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 32px; }
+.lp-pair article { border-top: 1px solid var(--border); padding-top: 24px; }
+.lp-pair h3, .lp-feature-grid h3 { font-family: var(--font-display); font-size: var(--text-title); font-weight: 700; line-height: 1.2; margin: 16px 0 12px; }
+.lp-pair p, .lp-feature-grid p { color: var(--muted-foreground); font-size: var(--text-small); }
+.lp-feature-grid { display: grid; gap: 16px; margin-top: 32px; }
+.lp-feature-grid article { padding: 24px; border: 1px solid var(--border); border-radius: 20px; background: var(--card); }
+.lp-stub-details { margin-top: 20px; font-size: var(--text-small); }
+.lp-stub-details summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; }
+.lp-stub-details p { max-width: 70ch; margin-top: 12px; color: var(--muted-foreground); }
+.lp-final-card > div { flex: 1 1 480px; }
+.lp-final-card .lp-h2 { max-width: 32ch; }
+.lp-final-card p { margin-top: 16px; }
+@media (min-width: 744px) {
+  .lp-feature-grid, .lp-activity-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lp-pursuit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 64px; }
+  .lp-section-intro { grid-template-columns: 1.3fr 1fr; gap: 48px; }
+}
+@media (min-width: 960px) { .lp-hero-grid { gap: 64px; } }
+@media (max-width: 743px) {
+  .lp-nav-cta { display: none; }
+  .lp-hero { padding-top: 28px; }
+  .lp-cta-row > .lp-btn { padding-inline: 20px; font-size: var(--text-small); }
+  .lp-h2 { font-size: clamp(1.8rem, 1.4rem + 2vw, 2.3rem); }
+  .lp-activity { padding: 12px; }
+  .lp-corner-link h3 { font-size: var(--text-body); }
+  .lp-activity .lp-text-link { font-size: var(--text-caption); }
+  .lp-pair { gap: 20px; }
+  .lp-pair h3 { font-size: var(--text-lead); }
+}
+@media (max-width: 359px) { .lp-activity-grid, .lp-pair { grid-template-columns: 1fr; } }
