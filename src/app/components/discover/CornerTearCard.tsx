@@ -3,11 +3,13 @@ import { SuggestionPhoto } from "../home/SuggestionPhoto";
 import { PillButton } from "../ui/PillButton";
 import type { CornerCardModel } from "../../lib/discoverCorners";
 import { useShownOnce } from "../../lib/useShownOnce";
+import { cornerStyle } from "../../lib/categoryStyle";
+import { ArrowUpRight } from "lucide-react";
 
 /**
- * A tear-off card for a Corner new to you: the tile, its name and a hook line, a
- * Follow button, a dotted perforation, then three tabs (At home, With people, At a
- * place), each a link to the Corner page on that section. A tab with nothing
+ * A Corner card with its existing thumbnail, full name and two-line description.
+ * Follow and the three activity tabs retain their original actions. Each tab
+ * links to the Corner page on that section. A tab with nothing
  * there is left out, so the row never shows an empty invitation.
  */
 export function CornerTearCard({
@@ -27,39 +29,36 @@ export function CornerTearCard({
 }) {
   const ref = useShownOnce<HTMLLIElement>(() => onShown(model, position));
   return (
-    <li ref={ref} className={`overflow-hidden rounded-card bg-card ${className}`}>
-      <div className="flex items-center gap-3 p-4">
-        <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} aria-label={model.name} className="shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <SuggestionPhoto corner={model} className="size-14 rounded-control" width={56} />
-        </Link>
-        <div className="min-w-0 flex-1">
-          <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} className="block truncate font-[family-name:var(--font-display)] text-lead leading-tight font-extrabold outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {model.name}
+    <li ref={ref} style={cornerStyle(model.spaceSlug, model.slug)} className={`flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card transition-colors duration-fast hover:border-foreground/25 focus-within:border-foreground/25 ${className}`}>
+      <div className="bg-[color-mix(in_srgb,var(--cat)_8%,var(--card))] p-5">
+        <div className="flex items-start justify-between gap-4">
+          <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} aria-label={model.name} className="shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <SuggestionPhoto corner={model} className="size-20 rounded-control" width={80} />
           </Link>
-          {model.hook && <p className="truncate text-small text-muted-foreground">{model.hook}</p>}
+          <PillButton variant="outline" className="shrink-0" onClick={() => onFollow(model, position)}>
+            Follow
+          </PillButton>
         </div>
-        <PillButton variant="outline" className="shrink-0" onClick={() => onFollow(model, position)}>
-          Follow
-        </PillButton>
+        <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} className="mt-4 flex min-h-11 items-center justify-between gap-3 break-words font-[family-name:var(--font-display)] text-lead leading-tight font-extrabold outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <span className="min-w-0">{model.name}</span><ArrowUpRight className="size-5 shrink-0" aria-hidden="true" />
+        </Link>
+        {model.hook && <p className="mt-1 min-h-10 line-clamp-2 text-small text-muted-foreground">{model.hook}</p>}
       </div>
       {model.tabs.length > 0 && (
-        <>
-          <div className="mx-4 border-t-2 border-dotted border-border" aria-hidden="true" />
-          <ul className={`grid ${model.tabs.length === 1 ? "grid-cols-1" : model.tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-            {model.tabs.map((tab, i) => (
-              <li key={tab.id} className={i > 0 ? "border-l-2 border-dotted border-border" : ""}>
-                <Link
-                  to={tab.to}
-                  onClick={() => onOpen(model, position)}
-                  className="flex min-h-16 flex-col gap-0.5 p-3 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-                >
-                  <span className="text-caption text-muted-foreground">{tab.label}</span>
-                  <span className="line-clamp-3 text-small font-semibold leading-snug">{tab.line}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul className={`grid flex-1 divide-x divide-border border-t border-border ${model.tabs.length === 1 ? "grid-cols-1" : model.tabs.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+          {model.tabs.map(tab => (
+            <li key={tab.id}>
+              <Link
+                to={tab.to}
+                onClick={() => onOpen(model, position)}
+                className="flex h-full min-h-24 flex-col gap-2 p-3 outline-none transition-colors duration-fast hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
+                <span className="text-caption text-muted-foreground">{tab.label}</span>
+                <span className="line-clamp-3 text-small font-semibold leading-snug">{tab.line}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </li>
   );

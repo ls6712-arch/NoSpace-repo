@@ -79,7 +79,7 @@ try {
     await page.locator("#discover-people").waitFor();
     await page.locator("#discover-moments").getByText("Dialled in the new grinder.", { exact: false }).first().waitFor();
     assert.equal(await row.evaluate(el => el.children.length), 3);
-    assert.equal(await row.locator(".size-14").count(), 3);
+    assert.equal(await row.locator(".size-20").count(), 3);
     const layout = await page.evaluate(() => ({ corners: document.querySelector("#discover-corners")!.getBoundingClientRect().top, ideas: document.querySelector("#discover-ideas")!.getBoundingClientRect().top, overflow: document.documentElement.scrollWidth > innerWidth }));
     assert(layout.corners > layout.ideas, "Original section order must stay intact");
     assert.equal(layout.overflow, false);
@@ -111,8 +111,9 @@ try {
     const savedLeft = await row.evaluate(el => el.scrollLeft);
     await target.click();
     await page.waitForURL(url => url.hash === "#/corners/piano");
+    await page.getByRole("heading", { name: "Piano and keys", exact: true }).first().waitFor();
     await page.goBack(); await row.waitFor();
-    await page.waitForFunction(left => Math.abs(document.querySelector<HTMLUListElement>('#discover-corners ul[aria-label="Corners new to you"]')!.scrollLeft - left) < 3, savedLeft);
+    await page.waitForFunction(left => { const node = document.querySelector<HTMLUListElement>('#discover-corners ul[aria-label="Corners new to you"]'); return node && Math.abs(node.scrollLeft - left) < 3; }, savedLeft);
     await section.getByRole("link", { name: "See all", exact: true }).click();
     await page.waitForURL(url => url.hash === "#/corners");
     pass(`${view.name}: existing section order and three compact cards, six-result request, native keyboard scrolling, ${view.touch ? "touch swipe" : "desktop arrows"}, existing Corner/directory links and Back restoration`);

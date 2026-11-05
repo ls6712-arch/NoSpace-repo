@@ -1,0 +1,11 @@
+{
+  "scope": "Local production UI with real CSP and fixture services. Existing remote photos/fonts are blocked; actual thumbnail fallbacks are shown. Only the existing Corner grid becomes a carousel. No live provider/database validation.",
+  "checks": [
+    "mobile: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration",
+    "desktop: existing section order and three compact cards, six-result request, native keyboard scrolling, desktop arrows, existing Corner/directory links and Back restoration",
+    "small-phone: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration",
+    "tablet: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration",
+    "dark: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration"
+  ],
+  "errors": []
+}

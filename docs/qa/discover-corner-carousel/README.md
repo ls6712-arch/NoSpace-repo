@@ -1,5 +1,9 @@
 # Existing Corner cards as a carousel
 
+The subsequent [Corner-only visual polish](../discover-corner-polish/README.md)
+contains the latest card design requested for release. This report records the
+earlier compact-card carousel and its unchanged surrounding sections.
+
 The owner clarified that Discover should keep its existing presentation. The
 earlier broader proposal has been removed from `feature/discover-corner-carousel`.
 This correction is based on main `d06c795` and keeps the existing Corner section
