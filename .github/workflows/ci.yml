@@ -110,6 +110,8 @@ jobs:
         run: npm run e2e:landing -- --record --out landing-e2e-out
       - name: Interactive landing, human onboarding preview
         run: npm run e2e:landing -- --dist dist-e2e --human --out landing-e2e-human-out
+      - name: Discover Corner carousel
+        run: npm run e2e:discover -- --out discover-corners-e2e-out
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -124,6 +126,7 @@ jobs:
           path: |
             landing-e2e-out
             landing-e2e-human-out
+            discover-corners-e2e-out
           if-no-files-found: ignore
 
   # The member gate, checked on a real database (supabase/verification/member_gate_check.sql):
