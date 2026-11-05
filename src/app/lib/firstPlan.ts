@@ -1,3 +1,5 @@
+import { weeklyHours, matchingHours, parseWeeklyHours, WEEKLY_HOURS_TIME_ZONE } from "../../../supabase/functions/_shared/weeklyHours";
+import { hourLabel } from "./weeklyHours";
 import { localClock, localTimeMs } from "../../../supabase/functions/_shared/preferenceTime";
 import { activityFor, activityCost, activityScore } from "../../../supabase/functions/_shared/activityFit";
 import { costFits, priceMaximum, type Personalization } from "./personalization";
@@ -136,6 +138,7 @@ export interface UpcomingWindow {
 /** The person's free windows as real times in the next week, soonest first. */
 export function upcomingWindows(windows: readonly string[], now: number,timeZone?:string,hours:Record<SlotKey,number>=SLOT_START_HOUR): UpcomingWindow[] {
   const out: UpcomingWindow[] = [];
+  if(weeklyHours(windows).some(r=>!r.legacy))timeZone=WEEKLY_HOURS_TIME_ZONE;
   const clock=timeZone?localClock(now,timeZone):null;
   const base = clock ? new Date(clock.year,clock.month-1,clock.day,12) : new Date(now);
   for (const day of DAYS) {
@@ -152,11 +155,20 @@ export function upcomingWindows(windows: readonly string[], now: number,timeZone
       }
     }
   }
+  for (const range of weeklyHours(windows).filter(r=>!r.legacy)) {
+    for (let offset=0;offset<8;offset++) {
+      const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+offset,12);
+      if (DAY_BY_INDEX(d.getDay())!==range.day) continue;
+      const h=Math.floor(range.start/60), minute=range.start%60;
+      const at=timeZone?localTimeMs(d.getFullYear(),d.getMonth()+1,d.getDate(),h,timeZone)+minute*60_000:new Date(d.getFullYear(),d.getMonth(),d.getDate(),h,minute).getTime();
+      if (at>=now+MIN_LEAD_MS && matchingHours([range.key],at,at+1,timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone)) {out.push({key:range.key,day:range.day,slot:range.start>=1080?"eve":"day",startsAt:at});break;}
+    }
+  }
   return out.sort((a, b) => a.startsAt - b.startsAt);
 }
 
 /** "Saturday afternoon". */
-export const windowWhen = (w: UpcomingWindow,timeZone?:string) => `${formatWeekday(w.startsAt, "long",timeZone)} ${w.slot === "day" && (timeZone ? localClock(w.startsAt,timeZone).hour : new Date(w.startsAt).getHours())<12 ? "morning" : SLOT_PART[w.slot]}`;
+export const windowWhen = (w: UpcomingWindow,timeZone?:string) => w.key.includes("@") ? listingWhen(w.startsAt,timeZone) : `${formatWeekday(w.startsAt, "long",timeZone)} ${w.slot === "day" && (timeZone ? localClock(w.startsAt,timeZone).hour : new Date(w.startsAt).getHours())<12 ? "morning" : SLOT_PART[w.slot]}`;
 /** "Thursday, 7:00 PM". */
 export const listingWhen = (startsAt: number,timeZone?:string) => `${formatWeekday(startsAt, "long",timeZone)}, ${formatTime(startsAt,timeZone)}`;
 
@@ -207,6 +219,8 @@ const firstOf = (name: string) => name.trim().split(/\s+/)[0] ?? "";
 
 /** "Thursday evenings", for the reason line, from the window that matched. */
 const windowPhrase = (key: string) => {
+  const exact=parseWeeklyHours(key);
+  if(exact && !exact.legacy) return `${DAYS.find(d=>d.key===exact.day)?.label} ${hourLabel(exact.start)} to ${hourLabel(exact.end)}`;
   const [d, s] = key.split("-") as [DayKey, SlotKey];
   const day = DAYS.find((x) => x.key === d)?.label ?? "";
   return `${day} ${SLOT_PLURAL[s] ?? ""}`.trim();
@@ -248,17 +262,16 @@ export function buildPlans(input: PlanInput): Plan[] {
     });
   }
 
-  const inWindow = (t: number) => {
+  const inWindow = (t: number, end?:number|null) => {
     if (t < now + MIN_LEAD_MS || t > now + WEEK_MS) return null;
     if (windows.length === 0) return { key: null as string | null };
-    const w = windowOfTime(t,input.timeZone);
-    return {key:w && windows.includes(w) ? w : null};
+    return {key:matchingHours(windows,t,end ?? t+1,input.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone)};
   };
 
   const live: (Plan & { sort: number })[] = [];
   for (const e of input.events) {
     const pick = pickByKey.get(e.cornerKey);
-    const fit = inWindow(e.startsAt);
+    const fit = inWindow(e.startsAt,e.endsAt);
     if (!pick || !fit) continue;
     const price = parsePrice(e.price);
     const pass = passFor(pick.slug, passes);
@@ -280,7 +293,7 @@ export function buildPlans(input: PlanInput): Plan[] {
   for (const p of input.pursuits) {
     const pick = pickByKey.get(p.cornerKey);
     if (!costFits(null, input.activityBudget ?? (budget === 0 ? 0 : null))) continue;
-    const fit = inWindow(p.startsAt);
+    const fit = inWindow(p.startsAt,p.endsAt);
     if (!pick || !fit) continue;
     live.push({
       timeZone:input.timeZone,id: `pursuit:${p.pursuitId}`,

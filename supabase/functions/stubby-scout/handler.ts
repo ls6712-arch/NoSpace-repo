@@ -1,3 +1,4 @@
+import { weeklyHours } from "../_shared/weeklyHours.ts";
 // Stubby's scout: the request, from "is this allowed" to "these were saved". Three modes:
 //
 //   admin    (default) An admin presses Find picks. Runs as the admin, so the database's own
@@ -533,13 +534,10 @@ export function applyFollowUp(intent: Intent, window: Window, kind: FollowUpKind
 }
 
 const DAY_WORDS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
-const SLOT_WORDS: Record<string, string> = { day: "daytime", eve: "evening" };
 /** "sat-eve" to "Saturday evening". Anything else is left out. */
 export function windowWords(windows: readonly string[]): string[] {
-  return windows.flatMap((w) => {
-    const [d, s] = w.split("-");
-    return DAY_WORDS[d] && SLOT_WORDS[s] ? [`${DAY_WORDS[d]} ${SLOT_WORDS[s]}`] : [];
-  });
+  const clock=(minute:number)=>`${String(Math.floor(minute/60)).padStart(2,"0")}:${String(minute%60).padStart(2,"0")}`;
+  return weeklyHours(windows).map(r => r.legacy ? `${DAY_WORDS[r.day]} ${r.start===360?"daytime":"evening"}` : `${DAY_WORDS[r.day]} ${clock(r.start)} to ${clock(r.end)} America/New_York`);
 }
 
 const SAFE_SLUG = /^[A-Za-z0-9_-]+$/;

@@ -217,7 +217,7 @@ function slotsOfDay(day: WeekDay, spans: readonly Span[], windows: readonly stri
     .map((s) => ({ startMs: Math.max(s.startMs, day.startMs), endMs: Math.min(s.endMs, day.endMs) }))
     .filter((s) => s.endMs - s.startMs >= MIN_FREE_MS)
     .map((s) => {
-      const part: FreePart = s.endMs <= sixPm ? "day" : s.startMs >= sixPm ? "eve" : "all";
+      const part: FreePart = used.some(w=>w.key.includes("@")) ? "time" : s.endMs <= sixPm ? "day" : s.startMs >= sixPm ? "eve" : "all";
       const keys = [
         ...(s.startMs < sixPm && s.endMs > sixAm ? [`${day.dayKey}-day`] : []),
         ...(s.endMs > sixPm ? [`${day.dayKey}-eve`] : []),
@@ -229,7 +229,7 @@ function slotsOfDay(day: WeekDay, spans: readonly Span[], windows: readonly stri
         endMs: s.endMs,
         usualKeys: used.filter((w) => overlaps(w, s)).map((w) => w.key),
         entryIds: free.filter((e) => occurrences(e, s.startMs, s.endMs).length > 0).map((e) => e.id),
-        slotKey: `${dateParam(day.noonMs)}:${keys[0] ?? `${day.dayKey}-day`}`,
+        slotKey: `${dateParam(day.noonMs)}:${keys[0] ?? `${day.dayKey}-day`}${used.some(w=>w.key.includes("@")) ? `:${s.startMs}:${s.endMs}` : ""}`,
       };
     });
 }

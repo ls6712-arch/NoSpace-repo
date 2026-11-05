@@ -29,7 +29,7 @@ export const NOTE_MAX = 80;
 const HOUR = 3_600_000;
 const WEEK = 7 * 24 * HOUR;
 /** A stretch of free time shorter than this is not worth showing. */
-export const MIN_FREE_MS = HOUR;
+export const MIN_FREE_MS = 15 * 60_000;
 
 /** One showing of an entry: the entry may repeat, so the same id can have many. */
 export interface Occurrence extends Span {
@@ -79,7 +79,7 @@ export function subtractSpans(from: readonly Span[], out: readonly Span[]): Span
 }
 
 export interface FreeTimeInput {
-  /** The usual week: "sat-day", "tue-eve". */
+  /** The usual week: exact "mon@1140-1260" or legacy "sat-day". */
   windows: readonly string[];
   entries: readonly CalendarEntry[];
   plans: readonly WeekPlanDetail[];
