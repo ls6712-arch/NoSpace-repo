@@ -1,5 +1,8 @@
 # Landing photos and visible motion
 
+Historical validation for the photo/motion follow-up. The current landing layout,
+copy and reduced photo overlays are documented in [landing v3](../landing-v3/README.md).
+
 Follow-up to merged PR #324. Removes the local-suggestions FAQ from the page,
 crawler copy and FAQ structured data. Keeps Soosh as the product and Stubby as
 the helper, with the existing request, account and feature-flag behavior.

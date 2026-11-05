@@ -102,7 +102,7 @@ try {
     page.on("pageerror", e => report.errors.push(`${view.name}: ${e.message}`));
     await page.goto(origin, { waitUntil: "networkidle" });
     const preview = page.getByRole("group", { name: "Try an activity example" });
-    await preview.getByRole("heading", { name: "Sketch an object" }).waitFor();
+    await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
     assert.equal(await page.locator("main").count(), 1);
     assert.equal(await page.locator("main main").count(), 0);
     assert.equal(await page.getByText("What would you like to make more room for?", { exact: true }).count(), human ? 1 : 0);
@@ -114,7 +114,7 @@ try {
     assert(await preview.getByRole("button", { name: "Motion is off for your device" }).isDisabled());
     assert.deepEqual(initial.controls, [], `${view.name}: undersized touch targets`);
     const wrappedNavLabels = await page.locator(".lp-nav-actions a").evaluateAll(links => links.filter(link => {
-      const r=document.createRange();r.selectNodeContents(link);return r.getClientRects().length > 1;
+      const r=document.createRange();r.selectNodeContents(link.querySelector("span") ?? link);return r.getClientRects().length > 1;
     }).map(link=>link.textContent));
     assert.deepEqual(wrappedNavLabels,[],`${view.name}: wrapped navigation labels`);
     const contrast = await page.evaluate(contrastInPage);
@@ -122,6 +122,25 @@ try {
     report.views.push({ name: view.name, ...initial, contrast });
     await page.screenshot({ path: path.join(out, `${view.name}-hero.png`) });
     await page.screenshot({ path: path.join(out, `${view.name}-full.png`), fullPage: true });
+    await page.getByRole("button", { name: "Spend time outside", exact: true }).click();
+    assert.equal(await page.locator(".lp-activity-grid article").count(), 2);
+    assert.equal(await page.locator('.lp-activity-grid a[href="#/corners/photography"]').count(), 1);
+    await page.getByRole("button", { name: "A little of everything", exact: true }).click();
+    assert.equal(await page.locator(".lp-activity-grid article").count(), 6);
+    const goal = page.getByRole("group", { name: "Choose an example goal" });
+    await goal.getByRole("button", { name: "Drawing", exact: true }).click();
+    await page.getByRole("heading", { name: "Make a collection of drawings", exact: true }).waitFor();
+    const signupHref = await page.getByRole("link", { name: "Start a Pursuit", exact: true }).getAttribute("href");
+    assert(signupHref);
+    const next = new URLSearchParams(signupHref.split("?")[1]).get("redirect");
+    assert(next?.startsWith("/pursuits/new?"));
+    assert.equal(new URLSearchParams(next.split("?")[1]).get("title"), "Make a collection of drawings");
+    await page.locator(".lp-pursuits").screenshot({ path: path.join(out, `${view.name}-pursuits.png`) });
+    await page.getByRole("link", { name: "Start a Pursuit", exact: true }).click();
+    await page.waitForURL(url => url.hash.startsWith("#/onboarding"));
+    assert.equal(new URLSearchParams(new URL(page.url()).hash.split("?")[1]).get("redirect"), next);
+    await page.goto(origin, { waitUntil: "networkidle" });
+    await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
     const outside = preview.getByRole("button", { name: "Outside", exact: true });
     if (view.touch) await outside.tap(); else { await outside.focus(); await page.keyboard.press("Enter"); }
     await preview.getByRole("heading", { name: "Take a photo walk" }).waitFor();
@@ -143,7 +162,7 @@ try {
     assert.match(await preview.innerText(), /Choose either option/);
     await page.keyboard.press("Enter");
     assert.equal(await preview.locator("details").evaluate((d: HTMLDetailsElement) => d.open), false);
-    const gallery = page.getByRole("button", { name: /Music Play a song you know/ });
+    const gallery = page.getByRole("button", { name: "Preview activity: Music" });
     if (view.touch) await gallery.tap(); else { await gallery.focus(); await page.keyboard.press("Enter"); }
     assert.equal(await preview.getByRole("heading", { name: "Play a song you know" }).evaluate(e => e === document.activeElement), true);
     assert(await preview.locator("details").evaluate((d: HTMLDetailsElement) => d.open));
@@ -152,7 +171,7 @@ try {
     assert.deepEqual(detailsContrast.failures, [], `${view.name}: expanded details contrast`);
     assert.equal(await page.locator(".lp").evaluate(e => e.getAnimations({ subtree: true }).some(a => a.playState === "running")), false, "Reduced motion still animates");
     await preview.screenshot({ path: path.join(out, `${view.name}-details.png`) });
-    const how = page.getByRole("button", { name: "How it works", exact: true }).last();
+    const how = page.getByRole("button", { name: "See how it works", exact: true }).last();
     await how.click();
     assert.equal(await page.locator("#how-heading").evaluate(e => e === document.activeElement), true);
     assert(!new URL(page.url()).hash.includes("how"));
@@ -163,7 +182,7 @@ try {
     passed(`${view.name}: layout, examples, details, keyboard/touch, FAQ, reduced motion and no side effects`);
     // The actual route and field are used; choosing an example never automatically submits it.
     await outside.click();
-    await page.getByRole("link", { name: "Try Soosh", exact: true }).first().click();
+    await page.getByRole("link", { name: "Find my next step", exact: true }).first().click();
     const field = page.getByRole("textbox", { name: "What are you in the mood for?", exact: true });
     await field.waitFor();
     assert.equal(await field.inputValue(), "I’d like to take a photo walk outside.");
@@ -199,6 +218,7 @@ try {
     await page.waitForFunction(() => document.querySelector(".lp")?.getAttribute("data-motion") === "off" && !document.querySelector(".lp")!.getAnimations({ subtree: true }).some(a => a.playState === "running"));
     await show();
     assert.equal(await page.locator(".lp").evaluate(e => e.getAnimations({ subtree: true }).some(a => a.playState === "running")), false);
+    await preview.getByRole("button", { name: "At home", exact: true }).click();
     await preview.getByRole("button", { name: "Another example" }).click();
     await preview.getByRole("heading", { name: "Play a song you know" }).waitFor();
     await show();
@@ -272,7 +292,7 @@ try {
   await closedPage.getByRole("link", { name: "Log in", exact: true }).click();
   await closedPage.getByRole("heading", { name: "Welcome back.", exact: true }).waitFor();
   await closedPage.goto(origin, { waitUntil: "networkidle" });
-  await closedPage.getByRole("link", { name: "Try Soosh", exact: true }).first().click();
+  await closedPage.getByRole("link", { name: "Find my next step", exact: true }).first().click();
   await closedPage.getByText("Log in to use Stubby.", { exact: true }).first().waitFor();
   assert.equal(await closedPage.getByRole("textbox", { name: "What are you in the mood for?" }).count(), 0);
   assert.equal(counts.anonymousSignups, 1);
