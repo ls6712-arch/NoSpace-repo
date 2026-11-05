@@ -1,8 +1,5 @@
 # Discover v2: copy
 
-The Nov 5 Corner carousel keeps these labels and moves Corners directly below
-search. Visitors see “Explore Corners”. See [current implementation and evidence](qa/discover-corner-carousel/README.md).
-
 Status: **approved by the founder on Oct 31, 2026, with these changes**, all applied and recorded in
 `docs/glossary.md` under "Discover v2":
 

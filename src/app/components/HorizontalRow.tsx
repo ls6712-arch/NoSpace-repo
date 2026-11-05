@@ -18,6 +18,7 @@ export function HorizontalRow({
   label,
   listRef,
   contentKey,
+  focusable = false,
   children,
 }: {
   /** Scroll position is remembered per name when going back. */
@@ -27,6 +28,8 @@ export function HorizontalRow({
   listRef?: ForwardedRef<HTMLUListElement>;
   /** What the row holds (its ids, joined). A saved scroll offset is restored only when this is unchanged, so a row whose contents changed starts at the left. */
   contentKey?: string;
+  /** Allow native keyboard scrolling of this row. Other callers keep their existing behavior. */
+  focusable?: boolean;
   children: ReactNode;
 }) {
   const row = useRowScrollMemory(name, contentKey);
@@ -87,6 +90,7 @@ export function HorizontalRow({
           measure();
         }}
         aria-label={label}
+        tabIndex={focusable ? 0 : undefined}
         className={`flex snap-x scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] tab:scroll-px-6 desk:scroll-px-8 tab:gap-4 tab:px-6 desk:px-8 [&::-webkit-scrollbar]:hidden ${fade}`}
       >
         {children}

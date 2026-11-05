@@ -20,7 +20,6 @@
     "landing:screens": "node scripts/landing-screens/capture.mjs",
     "e2e:guest": "node scripts/e2e/guest-stubby.ts",
     "e2e:landing": "node scripts/e2e/landing.ts",
-    "e2e:discover": "node scripts/e2e/discover-corners.ts",
     "test:pursuits:db": "node scripts/check-pursuit-workflow-db.mjs",
     "e2e:pursuits": "node scripts/e2e/pursuit-workflow.mjs",
     "e2e:pursuits:compatibility": "node scripts/e2e/pursuit-compatibility.mjs"

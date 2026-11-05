@@ -1,14 +1,11 @@
 {
-  "scope": "Local production build, real CSP, fixture services. Five exact-activity owner-supplied local photos are decoded. Other remote media and fonts are blocked, so their honest icon fallbacks are visible. No live provider/database validation.",
+  "scope": "Local production UI with real CSP and fixture services. Existing remote photos/fonts are blocked; actual thumbnail fallbacks are shown. Only the existing Corner grid becomes a carousel. No live provider/database validation.",
   "checks": [
-    "mobile: top carousel, 12 cards, five decoded local photos, keyboard navigation, touch swipe, real Corner and directory routes",
-    "Normal-motion desktop dragging moves the carousel without accidentally opening a Corner",
-    "desktop: top carousel, 12 cards, five decoded local photos, keyboard navigation, desktop arrows, real Corner and directory routes",
-    "small-phone: top carousel, 12 cards, five decoded local photos, keyboard navigation, touch swipe, real Corner and directory routes",
-    "tablet: top carousel, 12 cards, five decoded local photos, keyboard navigation, touch swipe, real Corner and directory routes",
-    "dark: top carousel, 12 cards, five decoded local photos, keyboard navigation, touch swipe, real Corner and directory routes",
-    "Visitors browse twelve Corners; following uses the existing signup gate without a write",
-    "Failed recommendation read leaves the directory reachable"
+    "mobile: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration",
+    "desktop: existing section order and three compact cards, six-result request, native keyboard scrolling, desktop arrows, existing Corner/directory links and Back restoration",
+    "small-phone: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration",
+    "tablet: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration",
+    "dark: existing section order and three compact cards, six-result request, native keyboard scrolling, touch swipe, existing Corner/directory links and Back restoration"
   ],
   "errors": []
 }

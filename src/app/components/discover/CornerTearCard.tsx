@@ -4,18 +4,8 @@ import { PillButton } from "../ui/PillButton";
 import type { CornerCardModel } from "../../lib/discoverCorners";
 import { useShownOnce } from "../../lib/useShownOnce";
 
-// Owner-supplied photographs already shipped for these exact activities. Other
-// Corners retain their existing photo and honest category-icon fallback.
-const LOCAL_PHOTOS: Record<string, { file: string; alt: string }> = {
-  "music/guitar": { file: "guitar", alt: "Hands playing an electric guitar" },
-  "food-cooking/cooking": { file: "cooking", alt: "People preparing vegetables together" },
-  "books-writing/reading": { file: "reading", alt: "A person reading beside a window" },
-  "photography-film/photography": { file: "photography", alt: "A person photographing flowers with a camera" },
-  "art-creative/painting": { file: "painting", alt: "Hands painting fruit with watercolors" },
-};
-
 /**
- * A photo card for a Corner new to you: its name and a hook line, a
+ * A tear-off card for a Corner new to you: the tile, its name and a hook line, a
  * Follow button, a dotted perforation, then three tabs (At home, With people, At a
  * place), each a link to the Corner page on that section. A tab with nothing
  * there is left out, so the row never shows an empty invitation.
@@ -26,25 +16,22 @@ export function CornerTearCard({
   onFollow,
   onShown,
   onOpen,
-  priority = false,
+  className = "",
 }: {
   model: CornerCardModel;
   position: number;
   onFollow: (model: CornerCardModel, position: number) => void;
   onShown: (model: CornerCardModel, position: number) => void;
   onOpen: (model: CornerCardModel, position: number) => void;
-  priority?: boolean;
+  className?: string;
 }) {
-  const ref = useShownOnce<HTMLElement>(() => onShown(model, position));
-  const local = LOCAL_PHOTOS[model.key];
-  const base = local && `${import.meta.env.BASE_URL}landing/photos/${local.file}`;
-  const photo = local && { src: `${base}-800.webp`, srcSet: `${base}-400.webp 400w, ${base}-800.webp 800w, ${base}-1600.webp 1600w`, alt: local.alt };
+  const ref = useShownOnce<HTMLLIElement>(() => onShown(model, position));
   return (
-    <article ref={ref} className="overflow-hidden rounded-card border border-border bg-card">
-      <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} aria-label={model.name} className="block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring">
-        <SuggestionPhoto corner={model} photo={photo} className="aspect-video w-full" width={320} priority={priority} />
-      </Link>
+    <li ref={ref} className={`overflow-hidden rounded-card bg-card ${className}`}>
       <div className="flex items-center gap-3 p-4">
+        <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} aria-label={model.name} className="shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <SuggestionPhoto corner={model} className="size-14 rounded-control" width={56} />
+        </Link>
         <div className="min-w-0 flex-1">
           <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} className="block truncate font-[family-name:var(--font-display)] text-lead leading-tight font-extrabold outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {model.name}
@@ -74,6 +61,6 @@ export function CornerTearCard({
           </ul>
         </>
       )}
-    </article>
+    </li>
   );
 }

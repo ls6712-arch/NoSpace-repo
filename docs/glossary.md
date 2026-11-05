@@ -739,7 +739,7 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Empty Search | Nothing typed: Busy this week (the Corners with the most events in the next 7 days, each with its event count) and Corners (a row of up to six). A section with nothing in it is left out, and neither says "Be the first". With both empty: Type something to search. |
 | / | On desktop, pressing / opens search, except while typing in a field |
 | Search (old note) | Discover had no search box of its own before this (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
-| Jump chips | Corners / Stubby / Ideas / Spaces / People / Moments. Stubby, People and Moments are for signed-in people only, and a section left out because it is empty has no chip (approved Nov 3, 2026) |
+| Jump chips | Stubby / Ideas / Corners / Spaces / People / Moments. Stubby, People and Moments are for signed-in people only, and a section left out because it is empty has no chip (approved Nov 3, 2026) |
 | Stubby’s picks row heading / link | Stubby’s picks / Ask Stubby (opens Calendar). The cards are Stubby’s pick cards with Make it a plan under each; Remove deletes the pick. Left out with no picks (approved Nov 3, 2026) |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
 | Time pill | An hour / Tonight / Weekend (each includes the ones before it) |
@@ -1300,26 +1300,3 @@ The five repeated disclaimer lines are removed from the hero/gallery/preview.
 Account, cost and booking requirements stay in the FAQ. Event/finish samples
 change no actual Stub issuance rules. The photo, title and “Another example”
 remain in the hero, with photographer attribution after a successful load.
-
-
-### Discover Corner carousel (Nov 5, 2026)
-
-The owner requested easy-to-find Corners on Discover, presented as a carousel.
-The existing Corner section now sits directly below search, before the other
-sections, with larger activity photographs and a partial next card. Existing
-“Corners new to you”, “Explore Corners”, “Three ways into each one”, “See all”,
-“Follow” and the Corner tab labels retain their meanings. No new product term
-is introduced. The visitor heading is “Explore Corners”.
-
-The signed-in row keeps server ranking and eligibility, showing up to twelve
-Corners from a bounded sixteen-result request. Visitors keep the existing
-diverse public selection. Follow behavior, real Corner/tab links and the
-existing directory stay available. The directory link remains visible while
-recommendations load and when their read returns no results. Jump chips follow
-the revised section order. No catalog total is displayed.
-
-Navigation is user initiated: touch/trackpad scrolling, desktop arrows, mouse
-dragging and keyboard arrows/Home/End. There is no autoplay. The shared row
-restores its position on Back for unchanged contents. Exact-activity local
-photos already supplied by the owner are reused for Guitar, Cooking, Reading,
-Photography and Painting; other Corners retain their existing photo/fallback.
