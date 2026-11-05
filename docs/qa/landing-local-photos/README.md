@@ -1,5 +1,9 @@
 # Uploaded landing photos and Motion
 
+Historical evidence for the uploaded-photo revision. The subsequent owner-requested
+simplification removes the hero pause/setting controls and adds visual Stubs.
+See [the current revision](../landing-streamlined/README.md) for its results.
+
 Follow-up to landing v3 on `feature/landing-purpose-and-pursuits`. The owner
 provided six original photographs in `Archive.zip` and requested Framer Motion.
 No application data, recommendation provider, production flag, quota or access
