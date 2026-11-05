@@ -103,12 +103,12 @@ describe("Make a plan", () => {
     expect(screen.getByText("No Corner matches.")).toBeTruthy();
   });
 
-  it("makes the plan for the day and part picked, and says it can be undone", async () => {
+  it("makes the plan for the visible date and time, and says it can be undone", async () => {
     await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
-    fireEvent.click(screen.getByRole("button", { name: "Evening" }));
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "19:00" } });
     fireEvent.click(screen.getByRole("button", { name: "Make the plan" }));
     await flush();
     expect(remote.createPlan).toHaveBeenCalledTimes(1);
@@ -124,7 +124,7 @@ describe("Make a plan", () => {
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
-    fireEvent.change(screen.getByLabelText("Exact time (optional)"), { target: { value: "20:30" } });
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "20:30" } });
     fireEvent.click(screen.getByRole("button", { name: "Make the plan" }));
     await flush();
     expect(remote.createPlan.mock.calls[0][0]).toMatchObject({ startsAt: ny(10, 30, 20) + 30 * 60_000 });
@@ -133,8 +133,24 @@ describe("Make a plan", () => {
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
-    fireEvent.change(screen.getByLabelText("Exact time (optional)"), { target: { value: "09:00" } });
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "09:00" } });
     expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("does not submit a cleared Corner or a nonexistent daylight-saving time", async () => {
+    await show("/calendar");
+    fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
+    await flush();
+    fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
+    expect(screen.queryByText("No Corner matches.")).toBeNull();
+    fireEvent.change(screen.getByLabelText("Day"), { target: { value: "2027-03-14" } });
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "02:30" } });
+    expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "03:30" } });
+    expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText("Find a Corner"), { target: { value: "climb" } });
+    expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(remote.createPlan).not.toHaveBeenCalled();
   });
 
   it("offers a friend only when there are connections, and sends the pick", async () => {
@@ -143,6 +159,7 @@ describe("Make a plan", () => {
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
+    fireEvent.click(screen.getByRole("button", { name: "Bring someone" }));
     fireEvent.change(screen.getByLabelText("Bring a friend (optional)"), { target: { value: "f1" } });
     fireEvent.click(screen.getByRole("button", { name: "Make the plan" }));
     await flush();
@@ -160,7 +177,7 @@ describe("empty hours", () => {
     fireEvent.click(column(), { clientY: 288 });
     await flush();
     expect(screen.getByRole("dialog", { name: "Friday, 1 PM" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Make a plan at 1 PM" })).toBeTruthy();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Make a plan" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "I’m free then" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Block this time" })).toBeTruthy();
   });
@@ -169,10 +186,13 @@ describe("empty hours", () => {
     await show("/calendar?view=week");
     fireEvent.click(column(), { clientY: 288 });
     await flush();
-    fireEvent.click(screen.getByRole("button", { name: "Make a plan at 1 PM" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Make a plan" }));
     await flush();
-    expect((screen.getByLabelText("Exact time (optional)") as HTMLInputElement).value).toBe("13:00");
-    expect(screen.getByRole("button", { name: "Daytime", pressed: true })).toBeTruthy();
+    expect((screen.getByLabelText("When") as HTMLInputElement).value).toBe("13:00");
+    expect(screen.queryByRole("button", { name: "Daytime" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Evening" })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Day"), { target: { value: "2026-11-05" } });
+    expect((screen.getByLabelText("When") as HTMLInputElement).value).toBe("13:00");
   });
 
   it("adds free time once or every week, and Undo takes it away", async () => {

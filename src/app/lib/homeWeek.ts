@@ -1,13 +1,13 @@
+import { weeklyHours } from "../../../supabase/functions/_shared/weeklyHours";
 import { localClock, localTimeMs } from "../../../supabase/functions/_shared/preferenceTime";
 import { formatTime, formatWeekday } from "./dates";
 import { plural } from "./plural";
-import { SLOTS, windowKey, type DayKey, type SlotKey } from "./tasteModel";
+import { type DayKey, type SlotKey } from "./tasteModel";
 
 /**
  * The "Your week" card on Home, as pure functions. Everything is in New York
- * time, like the free windows themselves (Daytime 06:00 to 17:59, Evening from
- * 18:00): the same definition the ranking uses. A window is "left" until it
- * ends: Daytime at 18:00, Evening at midnight.
+ * time. Exact windows use Calendar's displayed timezone; older Daytime and
+ * Evening selections remain readable. A window is left until its actual end.
  */
 
 export const HOME_TZ = "America/New_York";
@@ -68,7 +68,6 @@ export function nyTimeToMs(y: number, m: number, d: number, hour: number,timeZon
   return ms;
 }
 
-const SLOT_HOURS: Record<SlotKey, [number, number]> = { day: [6, 18], eve: [18, 24] };
 
 export interface WeekWindow {
   key: string;
@@ -83,6 +82,7 @@ export interface WeekWindow {
 /** The person's free windows over the next 7 days (today included) that have not ended yet, soonest first. */
 export function windowsLeft(windows: readonly string[], now: number,timeZone=HOME_TZ): WeekWindow[] {
   if (windows.length === 0) return [];
+  if(weeklyHours(windows).some(r=>!r.legacy)) timeZone=HOME_TZ;
   const today = nyParts(now,timeZone);
   const out: WeekWindow[] = [];
   for (let offset = 0; offset < 7; offset++) {
@@ -90,13 +90,14 @@ export function windowsLeft(windows: readonly string[], now: number,timeZone=HOM
     const date=new Date(Date.UTC(today.y,today.m-1,today.d+offset,12));
     const day={y:date.getUTCFullYear(),m:date.getUTCMonth()+1,d:date.getUTCDate(),dow:date.getUTCDay()};
     const dayKey = DAY_KEY_BY_DOW[day.dow];
-    for (const slot of SLOTS) {
-      const key = windowKey(dayKey, slot.key);
-      if (!windows.includes(key)) continue;
-      const [from, to] = SLOT_HOURS[slot.key];
-      const startMs = nyTimeToMs(day.y, day.m, day.d, from,timeZone);
-      const endMs = to === 24 ? nyTimeToMs(day.y, day.m, day.d + 1, 0,timeZone) : nyTimeToMs(day.y, day.m, day.d, to,timeZone);
-      if (endMs > now) out.push({ key, day: dayKey, slot: slot.key, offset, startMs, endMs });
+    for (const range of weeklyHours(windows).filter(r => r.day === dayKey)) {
+      const key = range.key;
+      const slot = range.start >= 1080 ? "eve" : "day";
+      const at = (minute: number) => nyTimeToMs(day.y, day.m, day.d, Math.floor(minute / 60),timeZone) + minute % 60 * 60_000;
+      const startMs = at(range.start), endMs = at(range.end);
+      const startClock=localClock(startMs,timeZone), endClock=localClock(endMs,timeZone);
+      if(startClock.hour*60+startClock.minute!==range.start%1440 || endClock.hour*60+endClock.minute!==range.end%1440) continue;
+      if (endMs > now) out.push({ key, day: dayKey, slot, offset, startMs, endMs });
     }
   }
   return out.sort((a, b) => a.startMs - b.startMs);
@@ -149,6 +150,8 @@ export function weekChips(windows: readonly string[], plans: readonly WeekPlan[]
       chips.push({ heading, line: `${shortTitle(plan.title)} ${shortTime(plan.startsAt)}`, plan: true });
       continue;
     }
+    const exact=left.filter(w=>w.offset===offset && w.key.includes("@"));
+    if(exact.length){chips.push({heading,line:`Free ${exact.map(w=>`${shortTime(w.startMs)} to ${shortTime(w.endMs)}`).join(", ")}`,plan:false});continue;}
     const slots = new Set(left.filter((w) => w.offset === offset).map((w) => w.slot));
     if (slots.size === 2) chips.push({ heading, line: "Free all day", plan: false });
     else if (slots.has("eve")) chips.push({ heading, line: "Free evening", plan: false });

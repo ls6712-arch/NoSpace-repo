@@ -1,3 +1,4 @@
+import { matchingHours } from "../../_shared/weeklyHours.ts";
 import { activityFor } from "../../_shared/activityFit.ts";
 import { preferenceScore } from "../../_shared/personalization.ts";
 import { matchesTopic, topicChoices } from "./request.ts";
@@ -55,8 +56,7 @@ export function rankCandidates(candidates: Candidate[], ctx: Context, exclude: s
     const explicit = ctx.requestedTopics.some(t => matchesTopic(`${c.title} ${tags}`, t));
     const affinity = explicit ? 0 : Math.max(-25, Math.min(15, learned.reduce((n, s) => n + (s.signal === "down" ? -15 : s.signal === "save" ? 8 : 6), 0)));
     const when = nyParts(c.startsAt, ctx.timeZone);
-    const day = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"][when.dow];
-    const usual = ctx.usualWindows.includes(`${day}-${when.hour < 18 ? "day" : "eve"}`);
+    const usual = matchingHours(ctx.usualWindows,c.startsAt,c.endsAt ?? c.startsAt+1,ctx.timeZone) !== null;
     const goalMatch = [...ctx.goals, ...ctx.preferences].some(x => topicChoices(x).positive.some(t => matchesTopic(tags, t)));
     // Soosh's own ideas are checked by definition, so they get a smaller bonus than a verified source:
     // otherwise every deck would be the person's own Pursuits.

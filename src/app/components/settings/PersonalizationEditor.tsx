@@ -1,4 +1,4 @@
-import { TimeGrid } from "../onboarding/TimeGrid";
+import { Link } from "react-router";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { usePreferenceDraft } from "../../lib/usePreferenceDraft";
@@ -21,8 +21,8 @@ function Editor({userId}:{userId:string}){
   <button className="min-h-11 underline" type="button" disabled={draft.busy} onClick={()=>{setSaved(false);draft.reload();}}>Reload saved answers</button>
   {draft.status==="ready" && <fieldset disabled={draft.busy} className="flex flex-col gap-6">
     {(["motivations","interests","rhythm"] as const).map(question=><fieldset key={question} className="flex flex-col gap-3"><legend className="mb-3 font-semibold">{QUESTION_TITLES[question]}</legend><PreferenceFields question={question} draft={draft}/></fieldset>)}
-    <fieldset><legend>Usual free times</legend><TimeGrid windows={draft.windows} onToggle={key=>draft.setWindows(w=>w.includes(key)?w.filter(x=>x!==key):[...w,key])}/><Button variant="outline" onClick={()=>draft.setWindows([])}>Clear usual free times</Button></fieldset>
-    <Button onClick={()=>void draft.save({windows:draft.windows,motivations:draft.value.motivations,interests:draft.value.interests,rhythm:draft.value.rhythm,durationMax:draft.value.durationMax}).then(ok=>setSaved(ok))}>Save preferences</Button>
+    <fieldset><legend>Usual free times</legend><Link className="inline-flex min-h-11 items-center text-body font-semibold underline" to="/week/free?from=settings">Change when you’re free</Link></fieldset>
+    <Button onClick={()=>void draft.save({motivations:draft.value.motivations,interests:draft.value.interests,rhythm:draft.value.rhythm,durationMax:draft.value.durationMax}).then(ok=>setSaved(ok))}>Save preferences</Button>
     {saved && <p role="status">Your preferences are saved.</p>}
   </fieldset>}
  </details>;

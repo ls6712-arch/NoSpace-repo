@@ -151,16 +151,15 @@ describe("picks (screen 7)", () => {
 });
 
 describe("free (screen 8)", () => {
-  it("has 14 cells that say their own state, and a live count", () => {
+  it("offers exact ranges per day instead of broad checkboxes", async () => {
     render(<FreeScreen />);
-    expect(screen.getAllByRole("button", { name: /^\w+day (daytime|evening), off$/ }).length).toBe(14);
-    expect(screen.getByText("0 windows a week")).toBeTruthy();
-    const sat = screen.getByRole("button", { name: "Saturday daytime, off" });
-    fireEvent.click(sat);
-    expect(screen.getByRole("button", { name: "Saturday daytime, on" }).getAttribute("aria-pressed")).toBe("true");
-    expect(screen.getByText("1 window a week")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Sunday evening, off" }));
-    expect(screen.getByText("2 windows a week")).toBeTruthy();
+    await waitFor(()=>expect(screen.getByRole("button",{name:"Add time"}).matches(":disabled")).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: /^Saturday/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time" }));
+    fireEvent.change(screen.getByLabelText("Saturday from 1"),{target:{value:"10:00"}});
+    fireEvent.change(screen.getByLabelText("Saturday to 1"),{target:{value:"14:00"}});
+    expect(screen.getByRole("button", {name:/^Saturday.*10:00 AM to 2:00 PM/})).toBeTruthy();
+    expect(screen.getByRole("button", {name:"Next"})).toBeTruthy();
   });
 
   it("needs a time for Next, and shows the calendar row as coming soon", () => {
@@ -173,19 +172,21 @@ describe("free (screen 8)", () => {
   it("saves the windows", async () => {
     render(<FreeScreen />);
     await waitFor(()=>expect(remote.fetchTaste).toHaveBeenCalled());
-    await waitFor(()=>expect(screen.getByRole("button",{name:"Saturday daytime, off"}).matches(":disabled")).toBe(false));
-    fireEvent.click(screen.getByRole("button", { name: "Saturday daytime, off" }));
-    fireEvent.click(screen.getByRole("button", { name: "Monday evening, off" }));
+    await waitFor(()=>expect(screen.getByRole("button",{name:"Add time"}).matches(":disabled")).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: /^Saturday/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time" }));
+    fireEvent.click(screen.getByRole("button", { name: /^Monday/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Add time" }));
     fireEvent.click(screen.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalled());
-    expect(remote.savePrivate).toHaveBeenCalledWith("u1", { free_windows: ["mon-eve", "sat-day"] });
+    expect(remote.savePrivate).toHaveBeenCalledWith("u1", { free_windows: ["mon@1080-1140", "sat@1080-1140"] });
     expect(flow.next).toHaveBeenCalledWith(undefined);
   });
 
   it("skips: saves nothing, and Stubby shrugs", async () => {
     render(<FreeScreen />);
     await waitFor(()=>expect(remote.fetchTaste).toHaveBeenCalled());
-    await waitFor(()=>expect(screen.getByRole("button",{name:"Saturday daytime, off"}).matches(":disabled")).toBe(false));
+    await waitFor(()=>expect(screen.getByRole("button",{name:"Add time"}).matches(":disabled")).toBe(false));
     fireEvent.click(screen.getByRole("button", { name: "Skip for now" }));
     await waitFor(() => expect(flow.next).toHaveBeenCalledWith({ reaction: "shrug" }));
     expect(remote.savePrivate).not.toHaveBeenCalled();

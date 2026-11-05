@@ -1,3 +1,4 @@
+import { matchingHours } from "./weeklyHours";
 import { costFits } from "./personalization";
 import { activityScore } from "./activityFit";
 import type { Personalization } from "./personalization";
@@ -84,9 +85,8 @@ function candidates(input: PickInput): Candidate[] {
   const { now, budget, passes } = input;
   const byKey = new Map(input.picks.map((p) => [p.key, p]));
   const gone = new Set(Object.values(input.declined).flat());
-  const windowKey = (t: number) => {
-    const w = nyWindowKey(t);
-    return w && input.windows.includes(w) ? w : null;
+  const windowKey = (t: number, end?:number|null) => {
+    return matchingHours(input.windows,t,end ?? t+1,input.timeZone);
   };
   const ok = (id: string, startsAt: number) => !input.taken.has(id) && !gone.has(id) && startsAt >= now + MIN_LEAD_MS && startsAt <= now + WEEK_MS;
   const out: Candidate[] = [];
@@ -108,7 +108,7 @@ function candidates(input: PickInput): Candidate[] {
         endsAt: planSpan(e.startsAt, e.endsAt).endMs,
         where: e.place || (e.online ? "Online" : undefined),
         cost: price === null ? undefined : price === 0 ? "Free" : `$${price}`,
-        reason: reasonLine({ windowKey: windowKey(e.startsAt), cornerName: corner.name, pass }),
+        reason: reasonLine({ windowKey: windowKey(e.startsAt,e.endsAt), cornerName: corner.name, pass }),
         eventId: e.eventId,
       },
     });
@@ -126,7 +126,7 @@ function candidates(input: PickInput): Candidate[] {
         corner,
         startsAt: p.startsAt,
         endsAt: p.endsAt!,
-        reason: reasonLine({ windowKey: windowKey(p.startsAt), cornerName: corner.name, pass: passFor(corner.slug, passes) }),
+        reason: reasonLine({ windowKey: windowKey(p.startsAt,p.endsAt), cornerName: corner.name, pass: passFor(corner.slug, passes) }),
         pursuitId: p.pursuitId,
         hostName: p.hostName.trim().split(/\s+/)[0],
         needsApproval: p.needsApproval || undefined,

@@ -841,7 +841,7 @@ Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026
 
 | Term | Use |
 |---|---|
-| Make a plan | Opens the plan sheet: Corner (yours first, then a search), a day, Daytime or Evening with an optional exact time, an optional friend. Button: Make the plan (approved) |
+| Make a plan | Opens the plan sheet: Corner (yours first, then a search), Day and When fields with a visible exact time, and Bring someone to reveal the optional friend picker. A selected calendar time stays filled in; changing the day keeps that time. Button: Make the plan (approved) |
 | Make a plan at {time} | The first choice in the time sheet. Opens the plan sheet with the time filled in |
 | I'm free then | Adds free time. Choice: Just this {Tuesday} · Every {Tuesday} |
 | Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (the period is approved, Nov 1, 2026), then Just this once · Every week |
@@ -1200,3 +1200,20 @@ The human onboarding questions and editable summary are approved in the clean pe
 Use “What would you like to make more room for?”, “What do you already love, or keep meaning to try?” and “What does a little free time look like for you?”. One interest, Help me explore and Skip for now are valid paths. “Suggested time” identifies a flexible suggestion, not an event booking. Cost unknown means check cost; it never means Free. Private preferences, goals and feedback are never public profile copy.
 
 | This changes the time for everyone. | Explanation before rescheduling a shared Calendar session |
+
+### Calendar: exact usual hours
+
+Requested by the founder in the Calendar planning PR. The usual week uses local time ranges for each day, replacing the broad Daytime/Evening checkbox grid. Earlier selections remain readable and are only changed by an explicit save.
+
+| Term | Use |
+| --- | --- |
+| Choose your usual hours. Only you see this. | Owner-only weekly editor helper |
+| Times shown in New York. | Exact usual hours use Calendar’s displayed timezone |
+| No times added | Day with no saved ranges; it makes no claim about being busy |
+| From · To · Add time · Remove | Exact time range controls; midnight as To ends that day |
+| Copy to other days · Copy hours | Copy the current day's hours to selected days |
+| Adds these hours without removing existing times. | Copy merges overlapping ranges and preserves other hours |
+| Your earlier daytime and evening choices are shown below. Adjust them before saving. | Existing coarse selections shown for explicit review |
+| Choose an end time after the start. Split overnight hours between two days. | Invalid range guidance |
+| These hours overlap. Adjust or remove a time range. | Invalid overlapping ranges |
+| Keep up to eight time ranges per day. | Range limit guidance |
