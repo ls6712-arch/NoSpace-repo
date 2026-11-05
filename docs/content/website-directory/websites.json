@@ -1,0 +1,511 @@
+{
+  "title": "Specialist websites for Soosh users to visit",
+  "status": "draft_link_directory",
+  "prepared_date": "2026-11-05",
+  "scope": "Outbound links and original short descriptions only. No scraping, embedding, image copying, article republication or content import.",
+  "verification_limit": "The environment proxy returned 403 when accessing publicdomainreview.org and si.edu. No page or current terms was live-verified in this session.",
+  "resources": [
+    {
+      "id": "public-domain-review",
+      "name": "The Public Domain Review",
+      "url": "https://publicdomainreview.org/",
+      "topic": "Art and visual culture",
+      "description": "Curious art, illustrations and stories from historical collections.",
+      "suggested_corners": [
+        "Drawing",
+        "Painting",
+        "Photography",
+        "Writing"
+      ],
+      "optional_activity_prompt": "Browse a collection, choose one detail and use it as a starting point for a sketch.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Historic collection items and the site’s own essays can have different rights. Do not treat the entire site as copyright-free.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/drawing",
+        "art-creative/painting",
+        "photography-film/photography",
+        "books-writing/writing"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "closer-to-van-eyck",
+      "name": "Closer to Van Eyck",
+      "url": "https://closertovaneyck.kikirpa.be/",
+      "topic": "Art and visual culture",
+      "description": "Explore paintings in close detail through a specialist conservation project.",
+      "suggested_corners": [
+        "Painting",
+        "Photography"
+      ],
+      "optional_activity_prompt": "Choose a small area of a painting and notice how color, edges and texture are used.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Public viewing does not grant permission to reproduce conservation imagery.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/painting",
+        "photography-film/photography"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "smithsonian-3d",
+      "name": "Smithsonian 3D",
+      "url": "https://3d.si.edu/",
+      "topic": "Art and visual culture",
+      "description": "Explore digitized objects through an interactive 3D collection.",
+      "suggested_corners": [
+        "Drawing",
+        "Photography"
+      ],
+      "optional_activity_prompt": "Rotate an object and draw it from more than one viewpoint.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Some Smithsonian assets have open-access designations; verify the individual asset before reusing it.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/drawing",
+        "photography-film/photography"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "obelisk",
+      "name": "Obelisk Art History",
+      "url": "https://www.arthistoryproject.com/",
+      "topic": "Art and visual culture",
+      "description": "Artist biographies, movements and works to explore by interest.",
+      "suggested_corners": [
+        "Drawing",
+        "Painting",
+        "Writing"
+      ],
+      "optional_activity_prompt": "Choose one artist and compare how they handled the same subject in different works.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Link to the project. Do not assume its writing or images are free to republish.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/drawing",
+        "art-creative/painting",
+        "books-writing/writing"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "europeana",
+      "name": "Europeana",
+      "url": "https://www.europeana.eu/",
+      "topic": "Art and visual culture",
+      "description": "Cultural collections from museums, libraries and archives across Europe.",
+      "suggested_corners": [
+        "Drawing",
+        "Painting",
+        "Photography",
+        "Writing"
+      ],
+      "optional_activity_prompt": "Explore one theme across several collections and save links to the sources you like.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Rights differ between items and supplying institutions; an aggregator listing is not a reuse license.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/drawing",
+        "art-creative/painting",
+        "photography-film/photography",
+        "books-writing/writing"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "biodiversity-heritage-library",
+      "name": "Biodiversity Heritage Library",
+      "url": "https://www.biodiversitylibrary.org/",
+      "topic": "Nature and visual reference",
+      "description": "Digitized natural-history books and detailed botanical and animal illustrations.",
+      "suggested_corners": [
+        "Drawing",
+        "Painting",
+        "Gardening"
+      ],
+      "optional_activity_prompt": "Choose a botanical plate and study its shapes before drawing a plant of your own.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Historic pages can have different copyright statuses by item and jurisdiction. Link-only in this shortlist.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/drawing",
+        "art-creative/painting",
+        "home-garden/gardening"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "standard-ebooks",
+      "name": "Standard Ebooks",
+      "url": "https://standardebooks.org/",
+      "topic": "Reading and writing",
+      "description": "Carefully formatted editions of classic books to browse by author and subject.",
+      "suggested_corners": [
+        "Reading",
+        "Writing"
+      ],
+      "optional_activity_prompt": "Choose an opening chapter, read a little and decide whether you want to continue.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Public-domain status can differ by country. Do not import books or covers into Soosh based on this listing.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "books-writing/reading",
+        "books-writing/writing"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "poetry-foundation",
+      "name": "Poetry Foundation",
+      "url": "https://www.poetryfoundation.org/",
+      "topic": "Reading and writing",
+      "description": "Poems, poet profiles and introductions to different ways of writing.",
+      "suggested_corners": [
+        "Reading",
+        "Writing"
+      ],
+      "optional_activity_prompt": "Read a poem, then write a few original lines about an ordinary object.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Many poems are copyrighted and displayed with permission. Link to them rather than copying them.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "books-writing/reading",
+        "books-writing/writing"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "the-marginalian",
+      "name": "The Marginalian",
+      "url": "https://www.themarginalian.org/",
+      "topic": "Reading and writing",
+      "description": "Essays connecting books, art, science and creative lives.",
+      "suggested_corners": [
+        "Reading",
+        "Writing",
+        "Painting"
+      ],
+      "optional_activity_prompt": "Follow one essay to a book or artist you want to explore further.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "The essays and illustrations are not automatically licensed for republication.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "books-writing/reading",
+        "books-writing/writing",
+        "art-creative/painting"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "chrome-music-lab",
+      "name": "Chrome Music Lab",
+      "url": "https://musiclab.chromeexperiments.com/",
+      "topic": "Music",
+      "description": "Browser experiments for exploring rhythm, melody and sound.",
+      "suggested_corners": [
+        "Guitar"
+      ],
+      "optional_activity_prompt": "Try a short rhythm and then attempt to play a version on your instrument.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Link to the interactive tools. Do not copy their code, branding or recordings without checking applicable terms.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "music/guitar"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "musictheory-net",
+      "name": "musictheory.net",
+      "url": "https://www.musictheory.net/",
+      "topic": "Music",
+      "description": "Music-theory explanations and exercises for learning the basics.",
+      "suggested_corners": [
+        "Guitar"
+      ],
+      "optional_activity_prompt": "Choose one concept you are learning and try it on your instrument afterward.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "The educational material remains subject to the site’s terms. Listing a link is not a reuse permission.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "music/guitar"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "exploratorium-snacks",
+      "name": "Exploratorium Science Snacks",
+      "url": "https://www.exploratorium.edu/snacks",
+      "topic": "Making and curiosity",
+      "description": "Hands-on science activities with explanations, materials and steps.",
+      "suggested_corners": [
+        "Photography"
+      ],
+      "optional_activity_prompt": "Choose a relevant light or color activity and read its instructions and requirements before starting.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Use an outbound link. Do not copy the activity instructions, diagrams or photos into Soosh without permission or an applicable license.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "photography-film/photography"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "craftsmanship-museum",
+      "name": "Miniature Engineering Craftsmanship Museum",
+      "url": "https://craftsmanshipmuseum.com/",
+      "topic": "Making and curiosity",
+      "description": "Miniature machines, models and examples of detailed craftsmanship.",
+      "suggested_corners": [
+        "Drawing",
+        "Photography"
+      ],
+      "optional_activity_prompt": "Choose an object and study how its maker joined small parts or represented details.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Museum and maker images may be copyrighted. Link to the museum rather than republishing them.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "art-creative/drawing",
+        "photography-film/photography"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "kew-powo",
+      "name": "Plants of the World Online",
+      "url": "https://powo.science.kew.org/",
+      "topic": "Nature and visual reference",
+      "description": "Kew’s reference for plant names, distributions and botanical information.",
+      "suggested_corners": [
+        "Gardening"
+      ],
+      "optional_activity_prompt": "Check a plant’s accepted name before looking for a care guide suited to your conditions.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "A botanical reference is not a universal plant-care guide. Text, images and data may have different terms.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "home-garden/gardening"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "macaulay-library",
+      "name": "Macaulay Library",
+      "url": "https://www.macaulaylibrary.org/",
+      "topic": "Nature and visual reference",
+      "description": "Animal sounds, photographs and video from a scientific media archive.",
+      "suggested_corners": [
+        "Photography"
+      ],
+      "optional_activity_prompt": "Explore a species you recognize and listen for differences between recordings.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "Recordings and images can belong to contributors. Do not download and rehost them based on this listing.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "photography-film/photography"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    },
+    {
+      "id": "old-maps-online",
+      "name": "Old Maps Online",
+      "url": "https://www.oldmapsonline.org/",
+      "topic": "Maps and exploration",
+      "description": "Find historical maps and follow links to the collections that hold them.",
+      "suggested_corners": [
+        "City walks",
+        "Drawing",
+        "Writing"
+      ],
+      "optional_activity_prompt": "Compare an old map with a place you know before deciding on a suitable present-day route.",
+      "presentation": "outbound_link_only",
+      "copyright_status": "not_assumed_copyright_free",
+      "reuse_permission": "not_assessed_do_not_republish_from_this_listing",
+      "rights_note": "The map provider controls image rights. Old maps do not verify current access, routes or venue availability.",
+      "verification_status": "known_source_candidate_not_live_verified",
+      "availability": "not_live_verified",
+      "price_or_account_requirements": "not_live_verified",
+      "thumbnail": "none",
+      "source_basis": "Known official institution, educational project or specialist publisher; not a live search result.",
+      "corner_keys": [
+        "travel-adventure/city-walks",
+        "art-creative/drawing",
+        "books-writing/writing"
+      ],
+      "listing_review": {
+        "approved_for_listing": false,
+        "last_live_checked_at": null,
+        "current_terms_checked_at": null,
+        "audience_suitability_checked_at": null
+      }
+    }
+  ]
+}
