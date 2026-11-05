@@ -3,9 +3,9 @@ import { Chip } from "../ui/Chip";
 import { usePrefersReducedMotion } from "../../lib/useReducedMotion";
 
 export const JUMP_SECTIONS = [
+  { id: "discover-corners", label: "Corners" },
   { id: "discover-stubby", label: "Stubby" },
   { id: "discover-ideas", label: "Ideas" },
-  { id: "discover-corners", label: "Corners" },
   { id: "discover-spaces", label: "Spaces" },
   { id: "discover-people", label: "People" },
   { id: "discover-moments", label: "Moments" },

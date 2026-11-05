@@ -17,6 +17,7 @@ export function SuggestionPhoto({
   className,
   width,
   priority = false,
+  photo,
   children,
 }: {
   /** A Home suggestion, or `corner` for anything else that has a Corner (Discover's ideas and Corner cards). */
@@ -25,6 +26,8 @@ export function SuggestionPhoto({
   className: string;
   width: number;
   priority?: boolean;
+  /** An approved local photograph, when a surface already has one for this exact Corner. */
+  photo?: { src: string; srcSet: string; alt: string };
   children?: ReactNode;
 }) {
   const { spaceSlug, slug } = (item?.corner ?? corner)!;
@@ -32,8 +35,10 @@ export function SuggestionPhoto({
   return (
     <div className={`relative overflow-hidden ${className}`} style={cornerStyle(spaceSlug, slug)}>
       <ImageWithFallback
-        src={cornerPhoto(spaceSlug, slug, width * 2)}
-        alt={cornerPhotoAlt(slug)}
+        src={photo?.src ?? cornerPhoto(spaceSlug, slug, width * 2)}
+        srcSet={photo?.srcSet}
+        sizes={photo ? `${width}px` : undefined}
+        alt={photo?.alt ?? cornerPhotoAlt(slug)}
         className="size-full"
         tint
         priority={priority}

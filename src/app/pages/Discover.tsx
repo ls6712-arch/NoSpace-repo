@@ -11,12 +11,13 @@ import { SignUpPrompt } from "../components/SignUpPrompt";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
 import { ChevronDown } from "lucide-react";
-import { LIST_GRID, PageShell } from "../components/layout/PageShell";
+import { PageShell } from "../components/layout/PageShell";
 import { GlobalSearchBox } from "../components/nav/GlobalSearchBox";
 import { JumpChips } from "../components/discover/JumpChips";
 import { IdeaPills } from "../components/discover/IdeaPills";
 import { IdeasRow } from "../components/discover/IdeasRow";
 import { CornerTearCard } from "../components/discover/CornerTearCard";
+import { SnapCarousel } from "../components/ui/SnapCarousel";
 import { SpacesRow } from "../components/discover/SpacesRow";
 import { CityFeed } from "../components/discover/CityFeed";
 import { SectionBoundary } from "../components/discover/SectionBoundary";
@@ -54,8 +55,8 @@ import { useFeedInputs } from "../lib/useFeedInputs";
 import type { Post } from "../data/posts";
 
 const FEED_PAGE = 20;
-const CORNER_SHOWN = 3;
-const CORNER_FETCHED = 6;
+const CORNER_SHOWN = 12;
+const CORNER_FETCHED = 16;
 
 function SectionHeading({ id, title, sub, action }: { id: string; title: string; sub?: string; action?: { label: string; to: string } }) {
   return (
@@ -89,7 +90,7 @@ function SectionSkeleton({ cards }: { cards: number }) {
  * Discover v2: the world, not your world. Home is what is yours (dated plans,
  * people you follow, Spaces you joined); this is what is not yet: undated ideas,
  * Corners new to you, Spaces near you, and Moments from people you do not follow.
- * One scrolling page: a header with the city, jump chips, then the sections. Signed in, two more:
+ * One scrolling page: search, a prominent Corner carousel, then jump chips and the other sections. Signed in, two more:
  * Stubby's picks (what he found when you asked him) and People near you (the authors of the feed).
  * Every section loads and fails on
  * its own, and a Moment, Corner or Space is never on both Home and Discover.
@@ -167,6 +168,9 @@ export function Discover() {
   const [hiddenCorners, setHiddenCorners] = useState<Set<string>>(new Set());
   useEffect(() => {
     let live = true;
+    setCorners(null);
+    setHiddenCorners(new Set());
+    setCornerNames(new Map());
     if (user) {
       void orEmpty(fetchDiscoverCorners(CORNER_FETCHED, cornerCandidates())).then((list) => live && setCorners(list));
     } else {
@@ -177,7 +181,7 @@ export function Discover() {
       live = false;
     };
   }, [user?.id]);
-  const shownCorners = useMemo(() => (corners ?? []).filter((c) => !hiddenCorners.has(c.cornerKey)).slice(0, CORNER_SHOWN + 1), [corners, hiddenCorners]);
+  const shownCorners = useMemo(() => (corners ?? []).filter((c) => !hiddenCorners.has(c.cornerKey)).slice(0, CORNER_SHOWN), [corners, hiddenCorners]);
   // The soonest open Pursuit and nearest Space named on the tabs. Until they arrive, the tabs show their fallback lines.
   const [cornerNames, setCornerNames] = useState<Map<string, CornerNames>>(new Map());
   const shownKeys = shownCorners.map((c) => c.cornerKey).join("|");
@@ -356,6 +360,29 @@ export function Discover() {
         {/* One search: this box only leads to /search, the same one the side menu and the phone magnifier open. */}
         <GlobalSearchBox launcher />
 
+        <SectionBoundary>
+          <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
+            <SectionHeading id="corners-title" title={user ? "Corners new to you" : "Explore Corners"} sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
+            {cornersLoading ? <SectionSkeleton cards={3} /> : cornerCards.length > 0 ? (
+              <SnapCarousel
+                items={cornerCards}
+                getKey={m => m.key}
+                label={user ? "Corners new to you" : "Explore Corners"}
+                name="discover.corners"
+                itemClassName="w-[calc(100%-2.5rem)] max-w-80 tab:w-80"
+                renderItem={(m, i) => <CornerTearCard
+                  model={m}
+                  position={i}
+                  priority={i < 2}
+                  onFollow={followCorner}
+                  onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
+                  onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
+                />}
+              />
+            ) : null}
+          </section>
+        </SectionBoundary>
+
         <JumpChips signedIn={!!user} />
 
         {owner && (
@@ -378,30 +405,6 @@ export function Discover() {
               onLoosen={() => changePills(loosenSpend(pills))}
             />
           </section>
-        </SectionBoundary>
-
-        <SectionBoundary>
-          {cornersLoading ? (
-            <section id="discover-corners" className="scroll-mt-24" aria-hidden="true">
-              <Skeleton className="h-64 w-full rounded-card" />
-            </section>
-          ) : cornerCards.length > 0 ? (
-            <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
-              <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
-              <ul className={LIST_GRID}>
-                {cornerCards.map((m, i) => (
-                  <CornerTearCard
-                    key={m.key}
-                    model={m}
-                    position={i}
-                    onFollow={followCorner}
-                    onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
-                    onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
-                  />
-                ))}
-              </ul>
-            </section>
-          ) : null}
         </SectionBoundary>
 
         <SectionBoundary>

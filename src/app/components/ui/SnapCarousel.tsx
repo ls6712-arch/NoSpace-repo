@@ -54,28 +54,37 @@ export function SnapCarousel<T>({
 
   useEffect(() => {
     const ul = list.current;
-    if (!ul || !dots) return;
+    if (!ul) return;
     ul.addEventListener("scroll", measure, { passive: true });
     measure();
     return () => ul.removeEventListener("scroll", measure);
-  }, [dots, measure, items.length]);
+  }, [measure, items.length]);
 
   const goTo = (i: number) => {
     const ul = list.current;
-    const kid = ul?.children[Math.max(0, Math.min(items.length - 1, i))] as HTMLElement | undefined;
+    const target = Math.max(0, Math.min(items.length - 1, i));
+    const kid = ul?.children[target] as HTMLElement | undefined;
     if (!ul || !kid) return;
+    setActive(target);
     const pad = parseFloat(getComputedStyle(ul).paddingLeft) || 0;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     ul.scrollTo({ left: kid.offsetLeft - ul.offsetLeft - pad, behavior: reduced ? "auto" : "smooth" });
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
+    if ((e.target as HTMLElement).closest("input,textarea,select,[contenteditable=true]")) return;
     if (e.key === "ArrowRight") {
       e.preventDefault();
       goTo(active + 1);
     } else if (e.key === "ArrowLeft") {
       e.preventDefault();
       goTo(active - 1);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      goTo(0);
+    } else if (e.key === "End") {
+      e.preventDefault();
+      goTo(items.length - 1);
     }
   };
 
@@ -117,6 +126,9 @@ export function SnapCarousel<T>({
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
+      // Native image/link dragging otherwise takes over before the carousel can
+      // capture the pointer, leaving a photo ghost instead of moving the row.
+      onDragStart={(e) => e.preventDefault()}
       // A drag must not end as a click on the card under the pointer.
       onClickCapture={(e) => {
         if (drag.current?.moved) {
