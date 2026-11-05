@@ -160,6 +160,18 @@ describe("Discover ideas", () => {
 });
 
 describe("Discover Corners and Spaces", () => {
+  it("scrolls the existing three Corner cards without changing their content or the six-result request", async () => {
+    show();
+    await settle();
+    const row = screen.getByRole("list", { name: "Corners new to you" });
+    expect(row.getAttribute("tabindex")).toBe("0");
+    expect(row.children).toHaveLength(3);
+    expect(fetchers.corners).toHaveBeenCalledWith(6, expect.any(Array));
+    expect(Array.from(row.children).map(card => card.querySelector("a")?.getAttribute("href"))).toEqual(["/corners/pottery", "/corners/piano", "/corners/dance"]);
+    expect(within(row).getAllByRole("button", { name: "Follow" })).toHaveLength(3);
+    expect(row.querySelector("img")?.closest("a")?.querySelector(".size-20")).toBeTruthy();
+  });
+
   it("hides a Corner at once when it is followed, and follows it with its Space and slug", async () => {
     show();
     await settle();
@@ -269,13 +281,13 @@ describe("Discover Corner tabs and headings", () => {
     expect(within(section).getAllByText("Find people to go with").length).toBeGreaterThan(0);
   });
 
-  it("keeps a Corner hook to one line", async () => {
+  it("gives the Corner description two lines without shortening the Corner name", async () => {
     show();
     await settle();
     const section = screen.getByRole("heading", { name: "Corners new to you" }).closest("section")!;
     const hook = within(section).getByText(/Making|Hands|clay|wheel|pottery/i, { selector: "p" });
-    expect(hook.className).toContain("truncate");
-    expect(hook.className).not.toContain("line-clamp");
+    expect(hook.className).toContain("line-clamp-2");
+    expect(within(section).getAllByRole("link", { name: "Pottery" })[1].className).not.toContain("truncate");
   });
 
   it("calls the feed What people are making when no city is saved", async () => {

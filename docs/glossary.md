@@ -760,7 +760,7 @@ Words around the page, approved Oct 31, 2026:
 
 | Where | String |
 |---|---|
-| Corner card, hook line | The Corner guide's own description, on one line with an ellipsis |
+| Corner card, hook line | The Corner guide's own description, up to two lines with an ellipsis (Corner-only polish approved Nov 5, 2026) |
 | Corner card, At home tab | The idea's title, a short thing to do (for example Start a sourdough starter) |
 | Corner card, With people tab | The title of the soonest open Pursuit for that Corner; with no name, Find people to go with |
 | Corner card, At a place tab | The name of the nearest Space for that Corner (same neighborhood, then same city); with no name, Find a place near you |

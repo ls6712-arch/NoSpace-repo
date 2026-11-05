@@ -11,7 +11,8 @@ import { SignUpPrompt } from "../components/SignUpPrompt";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
 import { ChevronDown } from "lucide-react";
-import { LIST_GRID, PageShell } from "../components/layout/PageShell";
+import { PageShell } from "../components/layout/PageShell";
+import { HorizontalRow } from "../components/HorizontalRow";
 import { GlobalSearchBox } from "../components/nav/GlobalSearchBox";
 import { JumpChips } from "../components/discover/JumpChips";
 import { IdeaPills } from "../components/discover/IdeaPills";
@@ -388,18 +389,19 @@ export function Discover() {
           ) : cornerCards.length > 0 ? (
             <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
               <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
-              <ul className={LIST_GRID}>
+              <HorizontalRow name="discover.corners" label="Corners new to you" contentKey={cornerCards.map(m => m.key).join("|")} focusable>
                 {cornerCards.map((m, i) => (
                   <CornerTearCard
                     key={m.key}
                     model={m}
+                    className="w-[calc(100%-2.5rem)] shrink-0 snap-start tab:w-[22rem]"
                     position={i}
                     onFollow={followCorner}
                     onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
                     onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
                   />
                 ))}
-              </ul>
+              </HorizontalRow>
             </section>
           ) : null}
         </SectionBoundary>
