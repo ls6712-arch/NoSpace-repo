@@ -1,0 +1,11 @@
+﻿corner,status,local_image,existing_remote_image,credit,source_page,verified_source_page
+Drawing,needs_photo,,https://images.unsplash.com/photo-1593472807861-5bb884af28f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200,Andrés Gómez,https://unsplash.com/photos/RP7cgKNW2-g,False
+Painting,attached,../../../public/landing/photos/painting-800.webp,,Sincerely Media,https://unsplash.com/photos/s3tPywNsLSo,False
+Reading,attached,../../../public/landing/photos/reading-800.webp,,Sergei Nikulin,https://unsplash.com/photos/tglfT2WsX8E,False
+Writing,needs_photo,,https://images.unsplash.com/photo-1455390582262-044cdead277a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200,,,False
+Photography,attached,../../../public/landing/photos/photography-800.webp,,Alex Gorin,https://unsplash.com/photos/31KvOn6d818,False
+Cooking,attached,../../../public/landing/photos/cooking-800.webp,,Maarten van den Heuvel,https://unsplash.com/photos/EzH46XCDQRY,False
+Guitar,attached,../../../public/landing/photos/guitar-800.webp,,Parker Coffman,https://unsplash.com/photos/GgsG8aNLgjQ,False
+Gardening,needs_photo,,https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200,,,False
+Chess,needs_photo,,https://images.unsplash.com/photo-1529699211952-734e80c4d42b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200,,,False
+City walks,attached,../../../public/landing/photos/shelf-pier-800.webp,,Richard Fox,https://unsplash.com/photos/Uujb21HwpBw,False

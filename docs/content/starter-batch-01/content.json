@@ -1,0 +1,2868 @@
+{
+  "batch_id": "soosh-editorial-01",
+  "status": "draft_for_review",
+  "language": "en-US",
+  "editorial_date": "2026-11-05",
+  "scope": "Original editorial activity guides and generic Pursuit templates. Not member Moments, live events, user goals or venue listings.",
+  "inventory": {
+    "totalGuideEntries": 149,
+    "browsableGeneralGuideEntries": 130,
+    "ideaEntries": 143,
+    "curatedGuides": 55,
+    "browsableWithoutIdea": [
+      "collecting-fandom/trading-cards"
+    ],
+    "selected": [
+      {
+        "key": "art-creative/drawing",
+        "label": "Drawing",
+        "browsable": true,
+        "curated": true,
+        "existingIdea": "Draw your coffee mug",
+        "existingStep": "Draw your coffee mug for 10 minutes."
+      },
+      {
+        "key": "art-creative/painting",
+        "label": "Painting",
+        "browsable": true,
+        "curated": false,
+        "existingIdea": "Paint a small scene from a photo",
+        "existingStep": "Paint one small scene from a photo you took."
+      },
+      {
+        "key": "books-writing/reading",
+        "label": "Reading",
+        "browsable": true,
+        "curated": false,
+        "existingIdea": "Read 20 pages of a book",
+        "existingStep": "Read 20 pages of a book you've been meaning to start."
+      },
+      {
+        "key": "books-writing/writing",
+        "label": "Writing",
+        "browsable": true,
+        "curated": false,
+        "existingIdea": "Write 300 words from a prompt",
+        "existingStep": "Write 300 words starting with “The last time I saw her...”"
+      },
+      {
+        "key": "photography-film/photography",
+        "label": "Photography",
+        "browsable": true,
+        "curated": true,
+        "existingIdea": "Shoot one subject from 20 angles",
+        "existingStep": "Take 20 photos of one subject from 20 angles."
+      },
+      {
+        "key": "food-cooking/cooking",
+        "label": "Cooking",
+        "browsable": true,
+        "curated": false,
+        "existingIdea": "Cook a recipe you have never made",
+        "existingStep": "Pick one recipe with under 8 ingredients and buy them on the way home."
+      },
+      {
+        "key": "music/guitar",
+        "label": "Guitar",
+        "browsable": true,
+        "curated": false,
+        "existingIdea": "Learn the G, C and D chords",
+        "existingStep": "Learn the G, C and D chords."
+      },
+      {
+        "key": "home-garden/gardening",
+        "label": "Gardening",
+        "browsable": true,
+        "curated": false,
+        "existingIdea": "Plant an herb in a pot",
+        "existingStep": "Plant one herb in a pot on a sunny sill."
+      },
+      {
+        "key": "gaming-tabletop/chess",
+        "label": "Chess",
+        "browsable": true,
+        "existingIdea": "Existing single activity idea confirmed in cornerIdeas.ts",
+        "curated": true
+      },
+      {
+        "key": "travel-adventure/city-walks",
+        "label": "City walks",
+        "browsable": true,
+        "existingIdea": "Existing single activity idea confirmed in cornerIdeas.ts",
+        "curated": true
+      }
+    ],
+    "otherGameKeys": [
+      "books-writing/writing",
+      "books-writing/poetry",
+      "books-writing/book-clubs",
+      "books-writing/language-learning",
+      "books-writing/reading",
+      "gaming-tabletop/board-games",
+      "gaming-tabletop/chess",
+      "gaming-tabletop/video-games",
+      "music/songwriting",
+      "tech-building/game-development",
+      "travel-adventure/city-walks",
+      "books-writing/letter-writing",
+      "sports-fitness/walking-clubs"
+    ]
+  },
+  "activities": [
+    {
+      "id": "drawing-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "art-creative/drawing",
+      "corner_name": "Drawing",
+      "title": "Draw what is in your pocket",
+      "summary": "Put a few everyday objects on a table and make a small drawing of them.",
+      "steps": [
+        "Choose 2 or 3 objects you already have.",
+        "Draw their outlines, then add one detail that makes each object recognizable.",
+        "Choose one object and draw it again from another side."
+      ],
+      "duration": {
+        "min_minutes": 10,
+        "max_minutes": 15,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Compare the objects you each chose, or draw the same arrangement.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Paper",
+          "Pencil or pen"
+        ],
+        "optional": [],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: draw what is in your pocket. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "drawing-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "art-creative/drawing",
+      "corner_name": "Drawing",
+      "title": "Draw a room with one continuous line",
+      "summary": "Keep your pen moving as you draw part of a room.",
+      "steps": [
+        "Choose one corner of a room and a place to sit.",
+        "Draw what you see without lifting your pen. Leave mistakes in the picture.",
+        "Start a second version and follow a different route through the same scene."
+      ],
+      "duration": {
+        "min_minutes": 10,
+        "max_minutes": 15,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Sit in different places and compare how the room looks from each one.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Paper",
+          "Pen"
+        ],
+        "optional": [],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: draw a room with one continuous line. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "drawing-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "art-creative/drawing",
+      "corner_name": "Drawing",
+      "title": "Make a tiny texture collection",
+      "summary": "Fill a page with small drawings of textures you can find nearby.",
+      "steps": [
+        "Divide a page into 6 small boxes.",
+        "Look for textures such as fabric, bark, tiles or a leaf. Draw one in each box.",
+        "Choose one box and make a larger version using the same marks."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Each person contributes a few boxes to one shared page.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Paper",
+          "Pencil or pen"
+        ],
+        "optional": [],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: make a tiny texture collection. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "painting-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "art-creative/painting",
+      "corner_name": "Painting",
+      "title": "Mix a page of colors",
+      "summary": "See how many colors you can mix from the paints you already have.",
+      "steps": [
+        "Protect the table and set out a small amount of paint.",
+        "Mix pairs of colors and paint a swatch of each mixture.",
+        "Pick 3 mixtures and use them to paint a small shape or object."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 30,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Use the same starting colors and compare the mixtures you make.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Paintbrush",
+          "Water container",
+          "Protected work surface"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "painting_materials",
+            "label": "Choose materials that work together",
+            "options": [
+              {
+                "label": "Watercolors and watercolor paper",
+                "required_items": [
+                  "Watercolor paints",
+                  "Watercolor paper"
+                ]
+              },
+              {
+                "label": "Gouache and suitable paper",
+                "required_items": [
+                  "Gouache paints",
+                  "Paper suitable for gouache"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: mix a page of colors. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "painting-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "painting-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "art-creative/painting",
+      "corner_name": "Painting",
+      "title": "Paint a leaf with two colors",
+      "summary": "Look closely at one leaf and paint its shape with a limited palette.",
+      "steps": [
+        "Choose a leaf you can examine without damaging a plant.",
+        "Paint its outline and large areas using 2 colors.",
+        "Add a few veins or shadows after the first layer has dried enough for your paint."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 35,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Paint the same leaf separately, or each choose a different leaf.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Paintbrush",
+          "Water container",
+          "Protected work surface",
+          "A leaf or a reference photo you took"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "painting_materials",
+            "label": "Choose materials that work together",
+            "options": [
+              {
+                "label": "Watercolors and watercolor paper",
+                "required_items": [
+                  "Watercolor paints",
+                  "Watercolor paper"
+                ]
+              },
+              {
+                "label": "Gouache and suitable paper",
+                "required_items": [
+                  "Gouache paints",
+                  "Paper suitable for gouache"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: paint a leaf with two colors. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "painting-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "painting-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "art-creative/painting",
+      "corner_name": "Painting",
+      "title": "Paint a postcard-sized view",
+      "summary": "Make a small painting of the view from a window.",
+      "steps": [
+        "Choose a window view and a small piece of suitable paper.",
+        "Block in the largest shapes before adding details.",
+        "Choose one detail to finish, then leave the painting to dry."
+      ],
+      "duration": {
+        "min_minutes": 30,
+        "max_minutes": 50,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Choose the same view and compare which details caught your attention.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Paintbrush",
+          "Water container",
+          "Protected work surface"
+        ],
+        "optional": [
+          "Tape for holding paper in place"
+        ],
+        "choose_one_groups": [
+          {
+            "id": "painting_materials",
+            "label": "Choose materials that work together",
+            "options": [
+              {
+                "label": "Watercolors and watercolor paper",
+                "required_items": [
+                  "Watercolor paints",
+                  "Watercolor paper"
+                ]
+              },
+              {
+                "label": "Gouache and suitable paper",
+                "required_items": [
+                  "Gouache paints",
+                  "Paper suitable for gouache"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: paint a postcard-sized view. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "painting-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "reading-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "books-writing/reading",
+      "corner_name": "Reading",
+      "title": "Read the opening of a book you already own",
+      "summary": "Give an unread book a short first try.",
+      "steps": [
+        "Pick a book you can access now.",
+        "Read its opening for about 15 minutes.",
+        "Mark your place and decide whether you want another session with this book."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 20,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Each read your own opening, then tell the other person whether you want to continue.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [],
+        "optional": [
+          "Bookmark"
+        ],
+        "choose_one_groups": [
+          {
+            "id": "book_format",
+            "label": "Choose a reading format",
+            "options": [
+              {
+                "label": "Print book",
+                "required_items": [
+                  "Print book"
+                ]
+              },
+              {
+                "label": "Digital book",
+                "required_items": [
+                  "Device",
+                  "Accessible digital book"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: read the opening of a book you already own. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "reading-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "reading-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "books-writing/reading",
+      "corner_name": "Reading",
+      "title": "Read a short story in one sitting",
+      "summary": "Choose a story short enough to finish in the time you have.",
+      "steps": [
+        "Choose a short story you already have access to.",
+        "Read to the end, with breaks if you need them.",
+        "Pick one scene or sentence you would like to return to."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 40,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Read the same story separately, then compare which part stayed with you.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "story_format",
+            "label": "Choose a reading format",
+            "options": [
+              {
+                "label": "Printed story",
+                "required_items": [
+                  "Printed short story"
+                ]
+              },
+              {
+                "label": "Digital story",
+                "required_items": [
+                  "Device",
+                  "Accessible digital short story"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: read a short story in one sitting. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "reading-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "reading-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "books-writing/reading",
+      "corner_name": "Reading",
+      "title": "Read the same passage in two ways",
+      "summary": "Try a passage silently, then hear how it sounds aloud.",
+      "steps": [
+        "Choose a short passage from a book you can access.",
+        "Read it silently, then read it aloud somewhere you can do so comfortably.",
+        "Notice where you pause or change your voice. Read it once more if you want."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Take turns reading, or listen to each person read the passage they chose.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "book_format",
+            "label": "Choose a reading format",
+            "options": [
+              {
+                "label": "Print book",
+                "required_items": [
+                  "Print book"
+                ]
+              },
+              {
+                "label": "Digital book",
+                "required_items": [
+                  "Device",
+                  "Accessible digital book"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: read the same passage in two ways. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "notes": "For reading aloud, choose a place where speaking will not disturb others.",
+      "corner_cover_asset_id": "reading-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "writing-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "books-writing/writing",
+      "corner_name": "Writing",
+      "title": "Write a scene around a lost object",
+      "summary": "Start with someone finding an object they were not looking for.",
+      "steps": [
+        "Choose an object and a place where it could be found.",
+        "Write what happens when someone picks it up.",
+        "End the scene with a choice the person has to make."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Write different versions of the same starting scene, then share only if you want to.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "writing_tools",
+            "label": "Choose how to write",
+            "options": [
+              {
+                "label": "On paper",
+                "required_items": [
+                  "Paper",
+                  "Pen or pencil"
+                ]
+              },
+              {
+                "label": "On a device",
+                "required_items": [
+                  "Device",
+                  "Text editor"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: write a scene around a lost object. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "writing-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "books-writing/writing",
+      "corner_name": "Writing",
+      "title": "Write a conversation without explanations",
+      "summary": "Let two characters disagree through what they say.",
+      "steps": [
+        "Choose something small for 2 characters to disagree about.",
+        "Write their conversation without explaining their feelings between lines.",
+        "Read it aloud and change any line that does not sound like the person speaking."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 20,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Each write one character’s lines, or compare two separate conversations.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "writing_tools",
+            "label": "Choose how to write",
+            "options": [
+              {
+                "label": "On paper",
+                "required_items": [
+                  "Paper",
+                  "Pen or pencil"
+                ]
+              },
+              {
+                "label": "On a device",
+                "required_items": [
+                  "Device",
+                  "Text editor"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: write a conversation without explanations. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "writing-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "books-writing/writing",
+      "corner_name": "Writing",
+      "title": "Rewrite one scene from another viewpoint",
+      "summary": "Take a scene you wrote and tell it through someone else in it.",
+      "steps": [
+        "Choose a short scene you have written.",
+        "Pick a different character and write what they notice.",
+        "Compare the versions and choose which one serves your story."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 30,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Each take a different viewpoint on a scene you created together.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A short scene you wrote"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "writing_tools",
+            "label": "Choose how to write",
+            "options": [
+              {
+                "label": "On paper",
+                "required_items": [
+                  "Paper",
+                  "Pen or pencil"
+                ]
+              },
+              {
+                "label": "On a device",
+                "required_items": [
+                  "Device",
+                  "Text editor"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: rewrite one scene from another viewpoint. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "photography-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "photography-film/photography",
+      "corner_name": "Photography",
+      "title": "Photograph five shades of one color",
+      "summary": "Look for variations of one color around your home or on a short route.",
+      "steps": [
+        "Choose a color and decide where you can look for it.",
+        "Photograph 5 examples, paying attention to light and shade.",
+        "Choose an order that shows the differences between them."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 35,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Pick the same color and compare what each person found.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "camera",
+            "label": "Choose one camera",
+            "options": [
+              {
+                "label": "Phone camera",
+                "required_items": [
+                  "Phone with a camera"
+                ]
+              },
+              {
+                "label": "Camera",
+                "required_items": [
+                  "Camera"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: photograph five shades of one color. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "notes": "Photograph things you can access. Ask before including identifiable people.",
+      "corner_cover_asset_id": "photography-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "photography-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "photography-film/photography",
+      "corner_name": "Photography",
+      "title": "Make an ordinary object look unfamiliar",
+      "summary": "Use close framing and unusual angles to change how an object looks.",
+      "steps": [
+        "Choose an object you can move or walk around.",
+        "Photograph details from close up and from several angles.",
+        "Pick 3 frames that show the object in different ways."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Take turns choosing an object for the other person to photograph.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "One everyday object"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "camera",
+            "label": "Choose one camera",
+            "options": [
+              {
+                "label": "Phone camera",
+                "required_items": [
+                  "Phone with a camera"
+                ]
+              },
+              {
+                "label": "Camera",
+                "required_items": [
+                  "Camera"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: make an ordinary object look unfamiliar. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "notes": "Photograph things you can access. Ask before including identifiable people.",
+      "corner_cover_asset_id": "photography-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "photography-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "photography-film/photography",
+      "corner_name": "Photography",
+      "title": "Photograph light in one small space",
+      "summary": "Make a short photo set using the available light near one window.",
+      "steps": [
+        "Choose a small area with daylight and something to photograph.",
+        "Move your subject or change your position to try side light, back light and shade.",
+        "Keep one image from each setup and compare the shadows."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 30,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "One person moves the subject while the other photographs it, then swap.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A subject you can move",
+          "A space with daylight"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "camera",
+            "label": "Choose one camera",
+            "options": [
+              {
+                "label": "Phone camera",
+                "required_items": [
+                  "Phone with a camera"
+                ]
+              },
+              {
+                "label": "Camera",
+                "required_items": [
+                  "Camera"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: photograph light in one small space. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "notes": "Photograph things you can access. Ask before including identifiable people.",
+      "corner_cover_asset_id": "photography-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "cooking-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "food-cooking/cooking",
+      "corner_name": "Cooking",
+      "title": "Make a chickpea salad from what you have",
+      "summary": "Use ready-to-eat chickpeas and vegetables to put together a simple meal.",
+      "steps": [
+        "Drain ready-to-eat canned chickpeas and wash the vegetables you choose.",
+        "Chop the vegetables and mix them with the chickpeas.",
+        "Add a dressing you like, taste, and adjust the seasoning."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 30,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Divide the chopping and mixing, then choose the final seasoning together.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Ready-to-eat canned chickpeas",
+          "Vegetables suitable for eating raw",
+          "Dressing ingredients that suit your dietary needs",
+          "Bowl",
+          "Knife",
+          "Chopping board",
+          "Clean water"
+        ],
+        "optional": [
+          "Bread or another accompaniment"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: make a chickpea salad from what you have. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "cooking-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "cooking-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "food-cooking/cooking",
+      "corner_name": "Cooking",
+      "title": "Cook a small pot of tomato beans",
+      "summary": "Make a warm dish with ready-cooked beans and canned tomatoes.",
+      "steps": [
+        "Drain a can of ready-cooked beans and put them in a small saucepan with canned tomatoes.",
+        "Add seasoning you like and simmer gently, stirring, until the mixture is hot throughout and as thick as you want.",
+        "Taste and adjust. Serve with an accompaniment you already have."
+      ],
+      "duration": {
+        "min_minutes": 25,
+        "max_minutes": 40,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "One person handles the pan while the other prepares the accompaniment.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Ready-cooked canned beans",
+          "Canned tomatoes",
+          "Seasonings that suit your dietary needs",
+          "Saucepan",
+          "Spoon",
+          "Working stove"
+        ],
+        "optional": [
+          "Bread or another accompaniment"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: cook a small pot of tomato beans. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "cooking-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "cooking-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "food-cooking/cooking",
+      "corner_name": "Cooking",
+      "title": "Roast a tray of vegetables you will actually eat",
+      "summary": "Choose a few vegetables and use a tested roasting guide for them.",
+      "steps": [
+        "Choose vegetables, wash them and cut them into sizes suited to the roasting guide you are following.",
+        "Use a reputable recipe or appliance guide for the oven temperature, tray and cooking time.",
+        "Roast until cooked, checking carefully with oven protection. Taste and adjust the seasoning."
+      ],
+      "duration": {
+        "min_minutes": 40,
+        "max_minutes": 60,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Choose the vegetables together and share the preparation. One person handles the hot tray.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Vegetables",
+          "Oil and seasonings that suit your dietary needs",
+          "Knife",
+          "Chopping board",
+          "Oven",
+          "Oven-safe tray",
+          "Oven protection",
+          "A tested roasting guide for the chosen vegetables"
+        ],
+        "optional": [],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: roast a tray of vegetables you will actually eat. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "cooking-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "guitar-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "music/guitar",
+      "corner_name": "Guitar",
+      "title": "Make a two-note guitar pattern",
+      "summary": "Use two comfortable notes to make a short repeating pattern.",
+      "steps": [
+        "Tune the guitar with a tuner you already have access to.",
+        "Choose 2 notes you can play comfortably and try a few orders.",
+        "Choose one pattern and repeat it slowly with an even pulse."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 20,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Play a simple pulse for one another, or take turns repeating the pattern.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Playable guitar",
+          "A tuner you can access"
+        ],
+        "optional": [
+          "Pick",
+          "Metronome"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: make a two-note guitar pattern. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "guitar-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "guitar-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "music/guitar",
+      "corner_name": "Guitar",
+      "title": "Practice one chord change slowly",
+      "summary": "Focus on changing between two chords you are learning.",
+      "steps": [
+        "Choose 2 chord shapes from a lesson or guide you can use.",
+        "Place the first shape, sound it, then move slowly to the second.",
+        "Repeat with a light touch. Pause if your hand becomes uncomfortable."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "One person keeps a slow pulse while the other changes chords, then swap.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Playable guitar",
+          "A tuner you can access",
+          "A chord guide you can access"
+        ],
+        "optional": [
+          "Pick",
+          "Metronome"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: practice one chord change slowly. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "guitar-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "guitar-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "music/guitar",
+      "corner_name": "Guitar",
+      "title": "Try a simple strumming pattern",
+      "summary": "Practice a steady pattern before adding a full song.",
+      "steps": [
+        "Tune the guitar and choose a comfortable chord or muted strings.",
+        "Try slow, evenly spaced downward strums.",
+        "Add a pause or change the accents to make a short pattern you can repeat."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Take turns making a pattern for the other person to repeat.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Playable guitar",
+          "A tuner you can access"
+        ],
+        "optional": [
+          "Pick",
+          "Metronome"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: try a simple strumming pattern. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "guitar-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "gardening-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "home-garden/gardening",
+      "corner_name": "Gardening",
+      "title": "Check the care needs of one plant",
+      "summary": "Find out what a plant you already have needs before changing its care.",
+      "steps": [
+        "Find the plant’s name from its label or a reliable identification source.",
+        "Check a reliable guide for its light, watering and drainage needs.",
+        "Look at its current spot and container, then choose one change only if it is needed."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Work through the guide together and compare what you notice about the plant.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A plant you can care for",
+          "A reliable care guide for that plant"
+        ],
+        "optional": [
+          "Notebook"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: check the care needs of one plant. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "gardening-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "home-garden/gardening",
+      "corner_name": "Gardening",
+      "title": "Sow a small pot of herbs",
+      "summary": "Plant a small batch of suitable herb seeds using their packet instructions.",
+      "steps": [
+        "Choose seeds that suit the growing conditions you can provide.",
+        "Prepare a clean pot with drainage and a suitable growing medium.",
+        "Follow the packet for sowing depth, moisture and light. Label the pot."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 35,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Share a packet between suitable pots and compare the growing conditions later.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Suitable herb seeds with instructions",
+          "Pot with drainage",
+          "Suitable growing medium",
+          "Water",
+          "Plant label"
+        ],
+        "optional": [
+          "Small tray for catching water"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: sow a small pot of herbs. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "gardening-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "home-garden/gardening",
+      "corner_name": "Gardening",
+      "title": "Make useful labels for your plants",
+      "summary": "Give each plant a label that helps you care for it.",
+      "steps": [
+        "Choose up to 3 plants you can identify.",
+        "Write their names and one care point from a reliable guide.",
+        "Attach labels without tightening anything around a stem. Keep paper labels out of water."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 25,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home",
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Choose a few plants each and help check the names on the labels.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Identified plants",
+          "Pen or pencil",
+          "Reliable care information"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "labels",
+            "label": "Choose a label material",
+            "options": [
+              {
+                "label": "Reusable plant labels",
+                "required_items": [
+                  "Reusable plant labels"
+                ]
+              },
+              {
+                "label": "Reused card beside the pot",
+                "required_items": [
+                  "Reused card"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: make useful labels for your plants. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "chess-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "gaming-tabletop/chess",
+      "corner_name": "Chess",
+      "title": "Explore how a knight moves",
+      "summary": "Use an empty board to get comfortable with the knight’s movement.",
+      "steps": [
+        "Put a knight near the center of an empty chessboard.",
+        "Mark or point to the squares it can reach in one move using the L-shaped move.",
+        "Move it toward an edge and compare the available squares."
+      ],
+      "duration": {
+        "min_minutes": 15,
+        "max_minutes": 20,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Take turns choosing the starting square and finding the legal moves.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A guide to the knight’s legal move"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "board",
+            "label": "Choose a board",
+            "options": [
+              {
+                "label": "Physical board",
+                "required_items": [
+                  "Chessboard",
+                  "Knight piece"
+                ]
+              },
+              {
+                "label": "Digital board",
+                "required_items": [
+                  "Device",
+                  "Accessible chessboard app or website"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: explore how a knight moves. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "chess-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "gaming-tabletop/chess",
+      "corner_name": "Chess",
+      "title": "Play chess without a clock",
+      "summary": "Play at a pace where you can think through a move.",
+      "steps": [
+        "Agree to play without a time limit, or choose an untimed computer setting.",
+        "Play a game, checking the rules when you need to.",
+        "Choose one move to discuss or review afterward. You can pause and resume if the game takes longer."
+      ],
+      "duration": {
+        "min_minutes": 25,
+        "max_minutes": 50,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Use the physical setup and agree that either player can ask a rules question.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "Access to the rules of chess"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "game_setup",
+            "label": "Choose a complete playing setup",
+            "options": [
+              {
+                "label": "Physical game with someone",
+                "required_items": [
+                  "Chessboard",
+                  "Chess pieces",
+                  "Another player"
+                ]
+              },
+              {
+                "label": "Computer opponent",
+                "required_items": [
+                  "Device",
+                  "Chess program with an untimed opponent"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: play chess without a clock. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "chess-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "gaming-tabletop/chess",
+      "corner_name": "Chess",
+      "title": "Replay the opening of a game",
+      "summary": "Look at the first few moves of a game you played or are allowed to access.",
+      "steps": [
+        "Choose a saved game or a game recorded in a book or accessible guide.",
+        "Play through its first 10 moves on a board.",
+        "Pause at 3 positions and say what you would consider next."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 30,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "home"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Take turns explaining what you notice about each position.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A recorded game you can access"
+        ],
+        "optional": [],
+        "choose_one_groups": [
+          {
+            "id": "board",
+            "label": "Choose a board",
+            "options": [
+              {
+                "label": "Physical board",
+                "required_items": [
+                  "Chessboard",
+                  "Chess pieces"
+                ]
+              },
+              {
+                "label": "Digital board",
+                "required_items": [
+                  "Device",
+                  "Accessible chessboard app or website"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No paid venue is required. Supplies, equipment, digital access or travel may cost extra; check what you already have."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: replay the opening of a game. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "city-walks-01-01",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "travel-adventure/city-walks",
+      "corner_name": "City walks",
+      "title": "Notice five details on a familiar route",
+      "summary": "Look again at a route you already know.",
+      "steps": [
+        "Choose a short public route that suits your access and mobility needs.",
+        "Notice 5 details, such as signs, colors, doors, trees or sounds.",
+        "Choose one detail you would like to look at again."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 35,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Take turns choosing a detail to point out. Stay together at a pace that suits both of you.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A suitable public route"
+        ],
+        "optional": [
+          "Clothing or equipment suited to the route and conditions"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No purchase is part of the activity. Access and transport costs are unverified; choose a suitable public route."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: notice five details on a familiar route. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "city-walks-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "city-walks-01-02",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "travel-adventure/city-walks",
+      "corner_name": "City walks",
+      "title": "Take a short walk with no errands",
+      "summary": "Choose a nearby loop and give yourself time to look around.",
+      "steps": [
+        "Choose a public route of a manageable length and check any access restrictions.",
+        "Walk or move through it at your own pace, with pauses when needed.",
+        "Choose one place along it where you might stop another time."
+      ],
+      "duration": {
+        "min_minutes": 20,
+        "max_minutes": 40,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Choose the route together and agree on a comfortable turnaround point.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A suitable public route"
+        ],
+        "optional": [
+          "Water suited to the conditions",
+          "Clothing or equipment suited to the route and conditions"
+        ],
+        "choose_one_groups": []
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No purchase is part of the activity. Access and transport costs are unverified; choose a suitable public route."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: take a short walk with no errands. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "city-walks-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "city-walks-01-03",
+      "content_type": "activity_guide",
+      "status": "draft",
+      "corner_key": "travel-adventure/city-walks",
+      "corner_name": "City walks",
+      "title": "Make a tiny guide to one block",
+      "summary": "Collect a few observations about a small public area.",
+      "steps": [
+        "Choose a block or similarly small area you can access.",
+        "Make notes about 3 to 5 details you could point out to someone else.",
+        "Put them in an order that follows your route. Do not include private addresses or identifiable people without permission."
+      ],
+      "duration": {
+        "min_minutes": 25,
+        "max_minutes": 40,
+        "confidence": "editorial_estimate",
+        "includes": "setup_and_activity",
+        "excludes": [
+          "shopping",
+          "travel_to_start"
+        ]
+      },
+      "settings": [
+        "outdoors"
+      ],
+      "venue_required": false,
+      "social_formats": [
+        "solo",
+        "with_someone"
+      ],
+      "shared_version": "Each choose a few details, then combine them into one short route.",
+      "experience": "beginner_friendly",
+      "requirements": {
+        "required": [
+          "A suitable public route"
+        ],
+        "optional": [
+          "Clothing or equipment suited to the route and conditions"
+        ],
+        "choose_one_groups": [
+          {
+            "id": "notes",
+            "label": "Choose how to keep observations",
+            "options": [
+              {
+                "label": "Paper notes",
+                "required_items": [
+                  "Paper",
+                  "Pen or pencil"
+                ]
+              },
+              {
+                "label": "Digital notes",
+                "required_items": [
+                  "Device",
+                  "Notes app"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "cost": {
+        "total_status": "unknown",
+        "currency": null,
+        "amount": null,
+        "note": "No purchase is part of the activity. Access and transport costs are unverified; choose a suitable public route."
+      },
+      "source": {
+        "kind": "original_editorial_draft",
+        "external_sources": [],
+        "confidence": "not_independently_verified"
+      },
+      "completion_prompt": "What did you try? Keep a Moment if you want to.",
+      "photo_brief": "Show the actual activity: make a tiny guide to one block. Use an owned or licensed photograph; credit the source. No simulated member evidence.",
+      "corner_cover_asset_id": "city-walks-cover",
+      "image_status": "attached"
+    }
+  ],
+  "pursuit_templates": [
+    {
+      "id": "drawing-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "art-creative/drawing",
+      "corner_name": "Drawing",
+      "title": "Make a small drawing collection",
+      "description": "Make 6 drawings of ordinary things, using a few different ways of looking.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "6 drawings you choose to keep",
+      "milestones": [
+        {
+          "title": "Choose 3 subjects",
+          "instruction": "Pick objects or views you can return to without buying anything."
+        },
+        {
+          "title": "Draw each subject twice",
+          "instruction": "Try a different line or viewpoint on the second version."
+        },
+        {
+          "title": "Choose your collection",
+          "instruction": "Put 6 drawings together. Add titles if you want."
+        }
+      ],
+      "starting_activity_ids": [
+        "drawing-01-01",
+        "drawing-01-02",
+        "drawing-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "painting-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "art-creative/painting",
+      "corner_name": "Painting",
+      "title": "Make a set of small paintings",
+      "description": "Use subjects you can find at home to make 4 small paintings.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "4 completed small paintings",
+      "milestones": [
+        {
+          "title": "Try your materials",
+          "instruction": "Make a few color swatches and choose a small painting surface."
+        },
+        {
+          "title": "Make 4 paintings",
+          "instruction": "Use a different subject or color combination for each one."
+        },
+        {
+          "title": "Bring them together",
+          "instruction": "Let the paintings dry and choose an order for the set."
+        }
+      ],
+      "starting_activity_ids": [
+        "painting-01-01",
+        "painting-01-02",
+        "painting-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": "painting-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "reading-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "books-writing/reading",
+      "corner_name": "Reading",
+      "title": "Finish a book you keep meaning to read",
+      "description": "Choose a book, make space for a few reading sessions and work toward its final page.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "One book finished, if you decide to keep reading it",
+      "milestones": [
+        {
+          "title": "Choose the book",
+          "instruction": "Try a few pages. Choose a different book if this one is not right for you."
+        },
+        {
+          "title": "Find your way through it",
+          "instruction": "Choose a manageable section for each session and keep your place."
+        },
+        {
+          "title": "Reach the final page",
+          "instruction": "Finish the book and decide what, if anything, you want to read next."
+        }
+      ],
+      "starting_activity_ids": [
+        "reading-01-01",
+        "reading-01-02",
+        "reading-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": "reading-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "writing-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "books-writing/writing",
+      "corner_name": "Writing",
+      "title": "Finish a short story",
+      "description": "Start with one scene and build a short story you can read from beginning to end.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "One finished short story of a length you choose",
+      "milestones": [
+        {
+          "title": "Find a scene",
+          "instruction": "Choose a character, a place and something the character wants."
+        },
+        {
+          "title": "Write a first version",
+          "instruction": "Give the story a beginning, a change and an ending."
+        },
+        {
+          "title": "Read and revise",
+          "instruction": "Read the whole story and change the parts that do not say what you meant."
+        }
+      ],
+      "starting_activity_ids": [
+        "writing-01-01",
+        "writing-01-02",
+        "writing-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "photography-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "photography-film/photography",
+      "corner_name": "Photography",
+      "title": "Make a photo set about one ordinary thing",
+      "description": "Choose a subject and make a set of 8 photographs that show different sides of it.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "A selected set of 8 photos",
+      "milestones": [
+        {
+          "title": "Choose a subject",
+          "instruction": "Pick something you can photograph more than once without special access."
+        },
+        {
+          "title": "Try different approaches",
+          "instruction": "Change your distance, angle, framing or available light."
+        },
+        {
+          "title": "Make the final selection",
+          "instruction": "Choose 8 photos that belong together and put them in an order."
+        }
+      ],
+      "starting_activity_ids": [
+        "photography-01-01",
+        "photography-01-02",
+        "photography-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": "photography-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "cooking-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "food-cooking/cooking",
+      "corner_name": "Cooking",
+      "title": "Build a small recipe collection",
+      "description": "Make 3 simple dishes and keep the versions you would cook again.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "3 dishes cooked, with your own usable instructions",
+      "milestones": [
+        {
+          "title": "Choose 3 dishes",
+          "instruction": "Check the ingredients, kitchen equipment and dietary needs first."
+        },
+        {
+          "title": "Cook each dish",
+          "instruction": "Follow a suitable recipe or the simple activity instructions and note any changes."
+        },
+        {
+          "title": "Keep the useful versions",
+          "instruction": "Write down enough detail to make each dish again."
+        }
+      ],
+      "starting_activity_ids": [
+        "cooking-01-01",
+        "cooking-01-02",
+        "cooking-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": "cooking-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "guitar-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "music/guitar",
+      "corner_name": "Guitar",
+      "title": "Play one song from start to finish",
+      "description": "Choose a song that fits your current ability and work through its parts at your own pace.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "One complete play-through of a chosen song",
+      "milestones": [
+        {
+          "title": "Choose the song",
+          "instruction": "Find a suitable lesson, melody or chord guide you can access."
+        },
+        {
+          "title": "Work through the parts",
+          "instruction": "Practice small sections and the changes between them."
+        },
+        {
+          "title": "Join the parts",
+          "instruction": "Try a complete play-through. Slow down or simplify it if that helps."
+        }
+      ],
+      "starting_activity_ids": [
+        "guitar-01-01",
+        "guitar-01-02",
+        "guitar-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": "guitar-cover",
+      "image_status": "attached"
+    },
+    {
+      "id": "gardening-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "home-garden/gardening",
+      "corner_name": "Gardening",
+      "title": "Care for one plant and keep a simple record",
+      "description": "Learn what one plant needs and make a record of how you care for it.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "A plant identified, its care needs checked, and 4 care checks recorded",
+      "milestones": [
+        {
+          "title": "Identify the plant",
+          "instruction": "Use its label or a reliable plant guide to check its light, water and space needs."
+        },
+        {
+          "title": "Choose its place",
+          "instruction": "Find a suitable spot and check its container and drainage."
+        },
+        {
+          "title": "Make 4 care checks",
+          "instruction": "Look at the plant and its growing conditions before deciding what care it needs. Growth is not guaranteed."
+        }
+      ],
+      "starting_activity_ids": [
+        "gardening-01-01",
+        "gardening-01-02",
+        "gardening-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "chess-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "gaming-tabletop/chess",
+      "corner_name": "Chess",
+      "title": "Play a game and explain three choices",
+      "description": "Play a complete game, then look back at a few decisions you made.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "One completed game and 3 positions discussed or reviewed",
+      "milestones": [
+        {
+          "title": "Choose how to play",
+          "instruction": "Use a physical board with someone or a chess program you can access."
+        },
+        {
+          "title": "Play a full game",
+          "instruction": "Choose a pace that gives you time to think."
+        },
+        {
+          "title": "Look back at 3 choices",
+          "instruction": "Use remembered positions, a saved game or notes to discuss what you considered."
+        }
+      ],
+      "starting_activity_ids": [
+        "chess-01-01",
+        "chess-01-02",
+        "chess-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": null,
+      "image_status": "needs_photo"
+    },
+    {
+      "id": "city-walks-pursuit-01",
+      "content_type": "pursuit_template",
+      "status": "draft",
+      "corner_key": "travel-adventure/city-walks",
+      "corner_name": "City walks",
+      "title": "Make a small guide to a route you enjoy",
+      "description": "Explore a manageable route and choose a few things you would point out to someone else.",
+      "suggested_pace": "Try one small step, then choose whether and when to continue. No deadline is required.",
+      "completion_definition": "A route tried and 5 observations collected",
+      "milestones": [
+        {
+          "title": "Choose a suitable route",
+          "instruction": "Start with public places you can access and a distance that suits you."
+        },
+        {
+          "title": "Try it in small sections",
+          "instruction": "Notice details and record them in a way that works for you."
+        },
+        {
+          "title": "Make your guide",
+          "instruction": "Choose 5 observations. Leave private addresses and identifying details out."
+        }
+      ],
+      "starting_activity_ids": [
+        "city-walks-01-01",
+        "city-walks-01-02",
+        "city-walks-01-03"
+      ],
+      "can_do_with_someone": true,
+      "sharing_note": "This is a generic editorial template. Creating a personal Pursuit or sharing any progress is a separate user choice.",
+      "source": {
+        "kind": "original_editorial_draft",
+        "confidence": "not_independently_verified"
+      },
+      "corner_cover_asset_id": "city-walks-cover",
+      "image_status": "attached"
+    }
+  ],
+  "corner_images": [
+    {
+      "id": "drawing-cover-pending",
+      "corner_key": "art-creative/drawing",
+      "corner_name": "Drawing",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "Hands drawing an everyday object with a pencil on plain paper. A real drawing activity, not a painting setup.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "art-creative/drawing",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1593472807861-5bb884af28f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": {
+          "credit": "Andrés Gómez",
+          "source": "https://unsplash.com/photos/RP7cgKNW2-g",
+          "alt": "A pencil sketch of a face on white paper"
+        },
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "painting-cover",
+      "corner_key": "art-creative/painting",
+      "corner_name": "Painting",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/painting-800.webp",
+      "alt": "A person painting fruit and leaves with watercolors",
+      "credit": "Sincerely Media",
+      "source": "https://unsplash.com/photos/s3tPywNsLSo",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/painting-400.webp",
+          "width": 400,
+          "bytes": 9002,
+          "sha256": "5500fc04212fdf2a02802a6823f862390775a6a6110d642ea17bee3aa5877552"
+        },
+        {
+          "path": "../../../public/landing/photos/painting-800.webp",
+          "width": 800,
+          "bytes": 22320,
+          "sha256": "63c1849d30c0ebeff31568387ef4a741beac70337442cb6bfe7f79fa619a68bd"
+        },
+        {
+          "path": "../../../public/landing/photos/painting-1600.webp",
+          "width": 1600,
+          "bytes": 67432,
+          "sha256": "22542381d172094428be26ba7b980e9f64c2d6b3a3a9598c1f1dd9177804139d"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "reading-cover",
+      "corner_key": "books-writing/reading",
+      "corner_name": "Reading",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/reading-800.webp",
+      "alt": "A person reading an open book beside a window",
+      "credit": "Sergei Nikulin",
+      "source": "https://unsplash.com/photos/tglfT2WsX8E",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/reading-400.webp",
+          "width": 400,
+          "bytes": 12726,
+          "sha256": "cf8fda78d165d38955b5511d4dffe8b540d9e1d040034dd7cbd6e8dce5d3f569"
+        },
+        {
+          "path": "../../../public/landing/photos/reading-800.webp",
+          "width": 800,
+          "bytes": 31280,
+          "sha256": "fcc8ef4fc8c7f4ac00cd433ae29cbfdb02d20ee6b4c3628b6ccfcb581f252207"
+        },
+        {
+          "path": "../../../public/landing/photos/reading-1600.webp",
+          "width": 1600,
+          "bytes": 77016,
+          "sha256": "f5f17f7efb93c01abadd5586c843fee01b03cb0a56752bb7ee1c3c2a25c7e6eb"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "writing-cover-pending",
+      "corner_key": "books-writing/writing",
+      "corner_name": "Writing",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "A person drafting a story on paper or a laptop, with the writing surface clearly visible. No readable personal information.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "books-writing/writing",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1455390582262-044cdead277a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": null,
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "photography-cover",
+      "corner_key": "photography-film/photography",
+      "corner_name": "Photography",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/photography-800.webp",
+      "alt": "A person photographing flowers beside a walkway",
+      "credit": "Alex Gorin",
+      "source": "https://unsplash.com/photos/31KvOn6d818",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/photography-400.webp",
+          "width": 400,
+          "bytes": 30042,
+          "sha256": "c38a912286cf29da44ce9d549b7678e1535f47d32c110bc25c378ffae010481d"
+        },
+        {
+          "path": "../../../public/landing/photos/photography-800.webp",
+          "width": 800,
+          "bytes": 99124,
+          "sha256": "f01547ad44f8a8bb0d39a889f3c5eb22addfabacc59af95f9193f57e36e98cb0"
+        },
+        {
+          "path": "../../../public/landing/photos/photography-1600.webp",
+          "width": 1600,
+          "bytes": 315392,
+          "sha256": "bd0dafa4c9b5267dd8e11e4166cdb0a22e1318db237eadcbb04285d5932155f2"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "cooking-cover",
+      "corner_key": "food-cooking/cooking",
+      "corner_name": "Cooking",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/cooking-800.webp",
+      "alt": "People chopping vegetables together at a table",
+      "credit": "Maarten van den Heuvel",
+      "source": "https://unsplash.com/photos/EzH46XCDQRY",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/cooking-400.webp",
+          "width": 400,
+          "bytes": 33074,
+          "sha256": "1e4ce11c663f684e0eba6dde96892c452ba1c3f63ae5a559c868921d07e87572"
+        },
+        {
+          "path": "../../../public/landing/photos/cooking-800.webp",
+          "width": 800,
+          "bytes": 101048,
+          "sha256": "420f27fbdb2dcdcb825fb13d5a522a0c2cf71556e7fcf4c54dfd87697778f0c5"
+        },
+        {
+          "path": "../../../public/landing/photos/cooking-1600.webp",
+          "width": 1600,
+          "bytes": 298378,
+          "sha256": "b1b715e1b49a01a010235aa25b3021db1c168d152a9b72aaee28974f5f1e8848"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "guitar-cover",
+      "corner_key": "music/guitar",
+      "corner_name": "Guitar",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/guitar-800.webp",
+      "alt": "Hands playing a white electric guitar",
+      "credit": "Parker Coffman",
+      "source": "https://unsplash.com/photos/GgsG8aNLgjQ",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/guitar-400.webp",
+          "width": 400,
+          "bytes": 12996,
+          "sha256": "3b5ad9d08d043e7060c2bd495b0d2c97ef536039a1ccaed95d23d8c2cf2a0532"
+        },
+        {
+          "path": "../../../public/landing/photos/guitar-800.webp",
+          "width": 800,
+          "bytes": 46562,
+          "sha256": "3b94d2370867e58370c07eecf44a46d9b4e4a8f80ec8e11b040b1999bb9cda0d"
+        },
+        {
+          "path": "../../../public/landing/photos/guitar-1600.webp",
+          "width": 1600,
+          "bytes": 306390,
+          "sha256": "3aa45940e4b33e9176538d0cdf4e4faa1c1a22fa2854299cd72071ccbf19ccd7"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "gardening-cover-pending",
+      "corner_key": "home-garden/gardening",
+      "corner_name": "Gardening",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "Hands caring for a potted herb or houseplant. Keep the plant and pot visible; avoid an unrelated landscape.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "home-garden/gardening",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": null,
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "chess-cover-pending",
+      "corner_key": "gaming-tabletop/chess",
+      "corner_name": "Chess",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "A real chessboard and pieces in an ordinary playing setup. No recognizable people needed.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "gaming-tabletop/chess",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": null,
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "city-walks-cover",
+      "corner_key": "travel-adventure/city-walks",
+      "corner_name": "City walks",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/shelf-pier-800.webp",
+      "alt": "A pier and people over the water at sunset",
+      "credit": "Richard Fox",
+      "source": "https://unsplash.com/photos/Uujb21HwpBw",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Existing local repository asset; credit and source recorded in docs/landing-assets.md.",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/shelf-pier-400.webp",
+          "width": 400,
+          "bytes": 6060,
+          "sha256": "f023dfa7d3fb747f0e161196f5aa8fb48b6eccd36b5a860b11197ba35bd6e7a1"
+        },
+        {
+          "path": "../../../public/landing/photos/shelf-pier-800.webp",
+          "width": 800,
+          "bytes": 21092,
+          "sha256": "ce985f12217570655df15a7bb3ec7e4cf99fb9734bc5ae3fb419ebbff17f0166"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    }
+  ],
+  "image_summary": {
+    "attached_corner_covers": 6,
+    "corners_needing_photos": 4,
+    "records_with_illustrative_corner_cover": 24,
+    "images_are": "Existing real photographs, not generated images",
+    "published": false
+  }
+}

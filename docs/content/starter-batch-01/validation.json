@@ -1,0 +1,19 @@
+{
+  "draftActivities": 30,
+  "draftPursuitTemplates": 10,
+  "existingCorners": 10,
+  "uniqueIds": 40,
+  "threeStepsPerActivity": true,
+  "allPursuitReferencesValid": true,
+  "allCornerKeysBrowsable": true,
+  "allCostsRemainUnknown": true,
+  "noExactExistingIdeaTitleDuplicates": true,
+  "published": false,
+  "attachedRealCornerCovers": 6,
+  "includedImageVariants": 17,
+  "galleryImagesDecoded": 6,
+  "cornersPendingPhotos": 4,
+  "existingPhotoReferencesForPendingCorners": 4,
+  "imageCreditsAndHashesPresent": true,
+  "recordImageReferencesConsistent": true
+}

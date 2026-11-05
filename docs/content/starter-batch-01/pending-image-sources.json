@@ -1,0 +1,30 @@
+[
+  {
+    "corner_key": "art-creative/drawing",
+    "existing_app_image_url": "https://images.unsplash.com/photo-1593472807861-5bb884af28f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+    "recorded_credit": {
+      "credit": "Andrés Gómez",
+      "source": "https://unsplash.com/photos/RP7cgKNW2-g",
+      "alt": "A pencil sketch of a face on white paper"
+    },
+    "status": "reference_only_not_downloaded"
+  },
+  {
+    "corner_key": "books-writing/writing",
+    "existing_app_image_url": "https://images.unsplash.com/photo-1455390582262-044cdead277a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+    "recorded_credit": null,
+    "status": "reference_only_not_downloaded"
+  },
+  {
+    "corner_key": "home-garden/gardening",
+    "existing_app_image_url": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+    "recorded_credit": null,
+    "status": "reference_only_not_downloaded"
+  },
+  {
+    "corner_key": "gaming-tabletop/chess",
+    "existing_app_image_url": "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+    "recorded_credit": null,
+    "status": "reference_only_not_downloaded"
+  }
+]

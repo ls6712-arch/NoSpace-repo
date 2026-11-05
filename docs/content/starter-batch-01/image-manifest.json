@@ -1,0 +1,280 @@
+{
+  "role": "illustrative_corner_cover",
+  "assets": [
+    {
+      "id": "drawing-cover-pending",
+      "corner_key": "art-creative/drawing",
+      "corner_name": "Drawing",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "Hands drawing an everyday object with a pencil on plain paper. A real drawing activity, not a painting setup.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "art-creative/drawing",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1593472807861-5bb884af28f6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": {
+          "credit": "Andrés Gómez",
+          "source": "https://unsplash.com/photos/RP7cgKNW2-g",
+          "alt": "A pencil sketch of a face on white paper"
+        },
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "painting-cover",
+      "corner_key": "art-creative/painting",
+      "corner_name": "Painting",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/painting-800.webp",
+      "alt": "A person painting fruit and leaves with watercolors",
+      "credit": "Sincerely Media",
+      "source": "https://unsplash.com/photos/s3tPywNsLSo",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/painting-400.webp",
+          "width": 400,
+          "bytes": 9002,
+          "sha256": "5500fc04212fdf2a02802a6823f862390775a6a6110d642ea17bee3aa5877552"
+        },
+        {
+          "path": "../../../public/landing/photos/painting-800.webp",
+          "width": 800,
+          "bytes": 22320,
+          "sha256": "63c1849d30c0ebeff31568387ef4a741beac70337442cb6bfe7f79fa619a68bd"
+        },
+        {
+          "path": "../../../public/landing/photos/painting-1600.webp",
+          "width": 1600,
+          "bytes": 67432,
+          "sha256": "22542381d172094428be26ba7b980e9f64c2d6b3a3a9598c1f1dd9177804139d"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "reading-cover",
+      "corner_key": "books-writing/reading",
+      "corner_name": "Reading",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/reading-800.webp",
+      "alt": "A person reading an open book beside a window",
+      "credit": "Sergei Nikulin",
+      "source": "https://unsplash.com/photos/tglfT2WsX8E",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/reading-400.webp",
+          "width": 400,
+          "bytes": 12726,
+          "sha256": "cf8fda78d165d38955b5511d4dffe8b540d9e1d040034dd7cbd6e8dce5d3f569"
+        },
+        {
+          "path": "../../../public/landing/photos/reading-800.webp",
+          "width": 800,
+          "bytes": 31280,
+          "sha256": "fcc8ef4fc8c7f4ac00cd433ae29cbfdb02d20ee6b4c3628b6ccfcb581f252207"
+        },
+        {
+          "path": "../../../public/landing/photos/reading-1600.webp",
+          "width": 1600,
+          "bytes": 77016,
+          "sha256": "f5f17f7efb93c01abadd5586c843fee01b03cb0a56752bb7ee1c3c2a25c7e6eb"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "writing-cover-pending",
+      "corner_key": "books-writing/writing",
+      "corner_name": "Writing",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "A person drafting a story on paper or a laptop, with the writing surface clearly visible. No readable personal information.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "books-writing/writing",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1455390582262-044cdead277a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": null,
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "photography-cover",
+      "corner_key": "photography-film/photography",
+      "corner_name": "Photography",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/photography-800.webp",
+      "alt": "A person photographing flowers beside a walkway",
+      "credit": "Alex Gorin",
+      "source": "https://unsplash.com/photos/31KvOn6d818",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/photography-400.webp",
+          "width": 400,
+          "bytes": 30042,
+          "sha256": "c38a912286cf29da44ce9d549b7678e1535f47d32c110bc25c378ffae010481d"
+        },
+        {
+          "path": "../../../public/landing/photos/photography-800.webp",
+          "width": 800,
+          "bytes": 99124,
+          "sha256": "f01547ad44f8a8bb0d39a889f3c5eb22addfabacc59af95f9193f57e36e98cb0"
+        },
+        {
+          "path": "../../../public/landing/photos/photography-1600.webp",
+          "width": 1600,
+          "bytes": 315392,
+          "sha256": "bd0dafa4c9b5267dd8e11e4166cdb0a22e1318db237eadcbb04285d5932155f2"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "cooking-cover",
+      "corner_key": "food-cooking/cooking",
+      "corner_name": "Cooking",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/cooking-800.webp",
+      "alt": "People chopping vegetables together at a table",
+      "credit": "Maarten van den Heuvel",
+      "source": "https://unsplash.com/photos/EzH46XCDQRY",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/cooking-400.webp",
+          "width": 400,
+          "bytes": 33074,
+          "sha256": "1e4ce11c663f684e0eba6dde96892c452ba1c3f63ae5a559c868921d07e87572"
+        },
+        {
+          "path": "../../../public/landing/photos/cooking-800.webp",
+          "width": 800,
+          "bytes": 101048,
+          "sha256": "420f27fbdb2dcdcb825fb13d5a522a0c2cf71556e7fcf4c54dfd87697778f0c5"
+        },
+        {
+          "path": "../../../public/landing/photos/cooking-1600.webp",
+          "width": 1600,
+          "bytes": 298378,
+          "sha256": "b1b715e1b49a01a010235aa25b3021db1c168d152a9b72aaee28974f5f1e8848"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "guitar-cover",
+      "corner_key": "music/guitar",
+      "corner_name": "Guitar",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/guitar-800.webp",
+      "alt": "Hands playing a white electric guitar",
+      "credit": "Parker Coffman",
+      "source": "https://unsplash.com/photos/GgsG8aNLgjQ",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Owner-uploaded Archive.zip; source and credit recorded from the original filename, not independently fetched",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/guitar-400.webp",
+          "width": 400,
+          "bytes": 12996,
+          "sha256": "3b5ad9d08d043e7060c2bd495b0d2c97ef536039a1ccaed95d23d8c2cf2a0532"
+        },
+        {
+          "path": "../../../public/landing/photos/guitar-800.webp",
+          "width": 800,
+          "bytes": 46562,
+          "sha256": "3b94d2370867e58370c07eecf44a46d9b4e4a8f80ec8e11b040b1999bb9cda0d"
+        },
+        {
+          "path": "../../../public/landing/photos/guitar-1600.webp",
+          "width": 1600,
+          "bytes": 306390,
+          "sha256": "3aa45940e4b33e9176538d0cdf4e4faa1c1a22fa2854299cd72071ccbf19ccd7"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    },
+    {
+      "id": "gardening-cover-pending",
+      "corner_key": "home-garden/gardening",
+      "corner_name": "Gardening",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "Hands caring for a potted herb or houseplant. Keep the plant and pot visible; avoid an unrelated landscape.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "home-garden/gardening",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": null,
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "chess-cover-pending",
+      "corner_key": "gaming-tabletop/chess",
+      "corner_name": "Chess",
+      "status": "needs_photo",
+      "role": "illustrative_corner_cover",
+      "photo_brief": "A real chessboard and pieces in an ordinary playing setup. No recognizable people needed.",
+      "reason": "Suitable photo not in supplied files; photo-host downloads blocked by current environment network policy.",
+      "existing_photo_reference": {
+        "corner_key": "gaming-tabletop/chess",
+        "existing_app_image_url": "https://images.unsplash.com/photo-1529699211952-734e80c4d42b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=85&w=1200",
+        "recorded_credit": null,
+        "status": "reference_only_not_downloaded"
+      }
+    },
+    {
+      "id": "city-walks-cover",
+      "corner_key": "travel-adventure/city-walks",
+      "corner_name": "City walks",
+      "status": "attached",
+      "role": "illustrative_corner_cover",
+      "default_path": "../../../public/landing/photos/shelf-pier-800.webp",
+      "alt": "A pier and people over the water at sunset",
+      "credit": "Richard Fox",
+      "source": "https://unsplash.com/photos/Uujb21HwpBw",
+      "license_page": "https://unsplash.com/license",
+      "provenance": "Existing local repository asset; credit and source recorded in docs/landing-assets.md.",
+      "source_page_independently_verified": false,
+      "variants": [
+        {
+          "path": "../../../public/landing/photos/shelf-pier-400.webp",
+          "width": 400,
+          "bytes": 6060,
+          "sha256": "f023dfa7d3fb747f0e161196f5aa8fb48b6eccd36b5a860b11197ba35bd6e7a1"
+        },
+        {
+          "path": "../../../public/landing/photos/shelf-pier-800.webp",
+          "width": 800,
+          "bytes": 21092,
+          "sha256": "ce985f12217570655df15a7bb3ec7e4cf99fb9734bc5ae3fb419ebbff17f0166"
+        }
+      ],
+      "usage_note": "An illustrative cover for the Corner, not a photo of every activity step, a real member result, a venue recommendation or a confirmed event."
+    }
+  ],
+  "summary": {
+    "attached_corner_covers": 6,
+    "corners_needing_photos": 4,
+    "records_with_illustrative_corner_cover": 24,
+    "images_are": "Existing real photographs, not generated images",
+    "published": false
+  }
+}
