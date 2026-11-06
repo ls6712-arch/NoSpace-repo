@@ -41,6 +41,7 @@ import { PAGE_X, SECTION_GAP } from "../lib/pageGrid";
 import { plural } from "../lib/plural";
 import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
+import { CornerStarterContent } from "../components/corners/CornerStarterContent";
 
 /**
  * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
@@ -50,11 +51,12 @@ import { tieNumbers } from "../lib/typography";
  * Top to bottom: the hero (the Corner's photo, its name, and a line with its category as a
  * link, its length and place, and one button: I'm going to the next event, else See
  * Spaces, else Create a Space), How to start beside Why it's worth it,
- * What you'll need, then the live rows (this week's events, Spaces, people,
+ * What you'll need, editorial starter activities, editable Pursuit ideas and
+ * outbound resources where available, then the live rows (this week's events, Spaces, people,
  * your Moments, recent Moments), more Corners like it, and Create a Space.
  * A section with nothing in it is not shown. Nothing from a Closed Space
- * reaches a non-member beyond an event's title and time. There is no
- * logging or Pursuit button here: the page is for finding out and joining in.
+ * reaches a non-member beyond an event's title and time. Starter ideas never
+ * create a person's Pursuit until they review and submit the existing form.
  */
 
 const MOMENTS_PAGE = 8;
@@ -417,6 +419,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
             )}
           </div>
         )}
+
+        <CornerStarterContent spaceSlug={corner.spaceSlug} slug={corner.slug} restricted={restricted}/>
 
         {showStrip && (
           <section className={SECTION_GAP} aria-labelledby="strip-title">

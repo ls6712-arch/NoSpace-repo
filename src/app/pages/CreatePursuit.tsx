@@ -14,6 +14,7 @@ import {
 } from "../components/pursuit/workflow/GoalFields";
 import { Button } from "../components/ui/button";
 import { CreatePursuit as LegacyCreatePursuit } from "./LegacyCreatePursuit";
+import { starterPursuit, starterWorkflow } from "../lib/starterContent";
 export { PersonAvatar } from "./LegacyCreatePursuit";
 
 export function CreatePursuit() {
@@ -21,22 +22,23 @@ export function CreatePursuit() {
   return params.get("legacy") === "1" ? (
     <LegacyCreatePursuit />
   ) : (
-    <SimpleCreatePursuit />
+    <SimpleCreatePursuit key={params.get("template") ?? "blank"}/>
   );
 }
 function SimpleCreatePursuit() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [title, setTitle] = useState(params.get("title") ?? "");
-  const [workflow, setWorkflow] = useState<Workflow>({
+  const template = starterPursuit(params.get("template"));
+  const [title, setTitle] = useState(params.get("title") ?? template?.title ?? "");
+  const [workflow, setWorkflow] = useState<Workflow>(() => template ? starterWorkflow(template) : ({
     version: 2,
     tracking: "sessions",
     target: params.get("target") ? Number(params.get("target")) : undefined,
     finishBy: params.get("finishBy") || undefined,
     unit: "sessions",
     items: [],
-  });
+  }));
   const [friends, setFriends] = useState(
     params.get("together") === "1" || !!params.get("with"),
   );
@@ -77,8 +79,8 @@ function SimpleCreatePursuit() {
     try {
       const input = {
         title: title.trim(),
-        hobbySlug: params.get("hobby") || guessSpace(title),
-        subHobby: params.get("sub") || undefined,
+        hobbySlug: params.get("hobby") || template?.corner_key.split("/")[0] || guessSpace(title),
+        subHobby: params.get("sub") || template?.corner_key.split("/")[1] || undefined,
         inspiredByPostId: Number(params.get("from")) || undefined,
         shared: false,
         ownerId: user?.id,
@@ -260,7 +262,7 @@ function SimpleCreatePursuit() {
           Start a Pursuit
         </Button>
         <Link
-          to={`/pursuits/new?${new URLSearchParams({ ...Object.fromEntries(params), legacy: "1" })}`}
+          to={`/pursuits/new?${new URLSearchParams({ ...Object.fromEntries(params), ...(template ? { title, hobby: params.get("hobby") || template.corner_key.split("/")[0], sub: params.get("sub") || template.corner_key.split("/")[1] } : {}), legacy: "1" })}`}
           className="inline-flex min-h-11 items-center text-small text-muted-foreground underline"
         >
           More options

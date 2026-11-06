@@ -1,0 +1,12 @@
+{
+  "scope": "Production build and real CSP with mocked Supabase. No live account, provider, database write or external-resource verification.",
+  "checks": [
+    "mobile: visible activities/resources/Pursuit, keyboard disclosure, no auto-create, editable steps, existing private creation and retry",
+    "desktop: visible activities/resources/Pursuit, keyboard disclosure, no auto-create, editable steps, existing private creation and save",
+    "small-phone: visible activities/resources/Pursuit, keyboard disclosure, no auto-create, editable steps, existing private creation and save",
+    "tablet: visible activities/resources/Pursuit, keyboard disclosure, no auto-create, editable steps, existing private creation and save",
+    "dark: visible activities/resources/Pursuit, keyboard disclosure, no auto-create, editable steps, existing private creation and save",
+    "All ten public Corners show their three activities and starter Pursuit; local covers decode and guest signup preserves the template"
+  ],
+  "errors": []
+}
