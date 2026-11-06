@@ -2,6 +2,8 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../config", async (orig) => ({ ...(await orig<typeof import("../config")>()), stubbyAskEnabled: true }));
 import { nyTimeToMs, windowsLeft } from "../lib/homeWeek";
 import type { StubCard } from "../lib/stubs";
 import type { WeekData } from "../lib/useWeekData";

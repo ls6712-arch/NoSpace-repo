@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../config", async (orig) => ({ ...(await orig<typeof import("../config")>()), stubbyAskEnabled: true }));
 import { Landing } from "./Landing";
 import { LANDING_COPY as COPY } from "./copy";
 import { ACTIVITY_EXAMPLES, LANDING_EXAMPLES, exampleFromEntry } from "./examples";

@@ -22,7 +22,8 @@ describe("open sign-up copy", () => {
     expect(LANDING_COPY.heroCta).toBe("Find my next step");
     expect(landing).toContain('to="/onboarding"');
     expect(landing).not.toContain("WaitlistForm");
-    expect(landing).toContain('to="/calendar"');
+    // The main button goes to Ask Stubby, or to sign-up while Ask Stubby is off (config.ts).
+    expect(landing).toContain('to={stubbyAskEnabled ? "/calendar" : "/onboarding"}');
     expect(landing).not.toContain("You’re going");
   });
 

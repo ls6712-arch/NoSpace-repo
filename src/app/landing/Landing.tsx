@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { ArrowUpRight, BookOpen, Camera, Users, UserRound, Layers, Compass } from "lucide-react";
-import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL } from "../config";
+import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL, stubbyAskEnabled } from "../config";
 import { humanOnboardingEnabled } from "../lib/personalization";
 import { QUESTION_TITLES } from "../components/settings/PreferenceFields";
 import { cornerPath } from "../lib/cornerPath";
@@ -45,8 +45,9 @@ function LandingPage() {
     exampleHeading.current?.focus({ preventScroll: true });
     preview.current?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
   }, [focusRequest]);
-  const tryLink = (placement: "header" | "hero" | "footer", className = "lp-btn") => <Link to="/calendar" state={entry} className={className}
-    onClick={() => track({ name: "landing_action_clicked", action: "ask", placement, hasExample: chosen })}><span>{COPY.heroCta}</span><ArrowUpRight size={17} aria-hidden="true"/></Link>;
+  // The main button: Ask Stubby with the chosen example, or sign-up while Ask Stubby is off (config.ts).
+  const tryLink = (placement: "header" | "hero" | "footer", className = "lp-btn") => <Link to={stubbyAskEnabled ? "/calendar" : "/onboarding"} state={stubbyAskEnabled ? entry : undefined} className={className}
+    onClick={() => track({ name: "landing_action_clicked", action: stubbyAskEnabled ? "ask" : "signup", placement, hasExample: chosen })}><span>{COPY.heroCta}</span><ArrowUpRight size={17} aria-hidden="true"/></Link>;
   const filtered = LANDING_EXAMPLES.filter(item => filter === "all" || (filter === "creative" ? ["paint", "guitar", "photo-walk", "cook"].includes(item.id) : item.setting === filter));
   const visible = filtered.filter((item, i) => filtered.findIndex(other => other.corner[1] === item.corner[1]) === i);
   const icons = [Camera, Layers, BookOpen];
@@ -66,7 +67,7 @@ function LandingPage() {
         <h1 id="landing-heading" tabIndex={-1}>{COPY.heroLead} <em>{COPY.heroTail}</em></h1>
         <p className="lp-hero-sub">{COPY.heroSub}</p>
         <div className="lp-cta-row">{tryLink("hero", "lp-btn lp-btn-lg")}<button type="button" className="lp-text-link" onClick={() => scrollToSection("how")}>{COPY.heroSecondary}</button></div>
-        <p className="lp-hero-hint">{COPY.heroHint}</p>
+        {stubbyAskEnabled && <p className="lp-hero-hint">{COPY.heroHint}</p>}
         <ul className="lp-invitations"><li><UserRound size={18} aria-hidden="true"/>{COPY.solo}</li><li><Users size={18} aria-hidden="true"/>{COPY.shared}</li></ul>
       </div>
       <div ref={preview} className="lp-preview" id="activity-example"><ExamplePreview example={example} onChoose={choose} headingRef={exampleHeading}/></div>

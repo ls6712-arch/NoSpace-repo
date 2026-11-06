@@ -1,4 +1,4 @@
-import { APP_NAME } from "../config";
+import { APP_NAME, stubbyAskEnabled } from "../config";
 
 /** Shared with metadata and the public HTML fallback. */
 export const LANDING_COPY = {
@@ -45,7 +45,7 @@ export const LANDING_COPY = {
   howHeading: "Start small. See where it goes.",
   howLabel: `How to use ${APP_NAME}`,
   steps: [
-    { title: "Find a starting point", line: "Ask Stubby for ideas or explore a Corner. Start with something you love, something new, or an interest you miss." },
+    { title: "Find a starting point", line: `${stubbyAskEnabled ? "Ask Stubby for ideas or explore a Corner." : "Explore a Corner."} Start with something you love, something new, or an interest you miss.` },
     { title: "Grab the Stub", line: "Pick a time, bring someone if you like." },
     { title: "Keep going if you want", line: "Turn an interest into a Pursuit. Log what you try and see your progress over time." },
   ],
@@ -74,7 +74,7 @@ export const LANDING_COPY = {
     { q: `What can I do on ${APP_NAME}?`, a: "Find hobbies and activities to try, make plans and work toward personal goals called Pursuits. Explore on your own or do something with someone." },
     { q: "What is a Corner?", a: "A Corner brings activities together around an interest, such as drawing, cooking or photography. Available guides can help you find a first step and see what you’ll need." },
     { q: "Do I need a goal to get started?", a: "No. You can explore an interest first. Start a Pursuit when there’s something you want to keep working toward." },
-    { q: "Do I need an account?", a: "You’ll need an account to make plans and return to them. You may need to sign up before asking Stubby." },
+    { q: "Do I need an account?", a: `You’ll need an account to make plans and return to them.${stubbyAskEnabled ? " You may need to sign up before asking Stubby." : ""}` },
     { q: "What do the activities cost?", a: "Some have a fee or need supplies. A missing price means the cost is unknown." },
     { q: `Does ${APP_NAME} book tickets?`, a: "Bookings and payments happen with the provider. Check their price and availability before booking." },
   ],

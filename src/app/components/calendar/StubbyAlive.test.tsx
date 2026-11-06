@@ -5,6 +5,8 @@
 import { MemoryRouter } from "react-router";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../../config", async (orig) => ({ ...(await orig<typeof import("../../config")>()), stubbyAskEnabled: true }));
 import type { AskStep, MyPick } from "../../lib/stubbyAsk";
 
 type Call = { text: string; signal?: AbortSignal; onStep: (s: AskStep) => void; finish: (r: unknown) => void };
