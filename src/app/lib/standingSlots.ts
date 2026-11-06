@@ -47,7 +47,8 @@ export interface SlotInput {
 
 /** Same number the database falls back to; the live value is app_config standing_slots_v1.stale_days. */
 export const DEFAULT_STALE_DAYS = 60;
-export const SLOT_CITY = "new-york";
+/** A key from the fixed city list (docs/city-keys-plan.md): every NYC borough is new-york-ny. */
+export const SLOT_CITY = "new-york-ny";
 export const SLOT_TZ = "America/New_York";
 
 export const SLOT_COPY = {

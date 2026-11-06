@@ -84,6 +84,18 @@ begin
                                         else format('%s FAIL (admin sees %s)', v_i, v_n) end);
 
   -- 2. A stranger sees only the fresh active one.
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.standing_slots ss where ss.title like 'vcheck-%' and ss.city = 'new-york-ny');
+  results := array_append(results, case when v_n = 3 then format('%s PASS (the default city is the key new-york-ny)', v_i)
+                                        else format('%s FAIL (%s slots in new-york-ny)', v_i, v_n) end);
+  v_i := v_i + 1;
+  begin
+    insert into public.standing_slots (corner_slug, title, place_name, area, weekday, start_time, city) values ('trivia', 'vcheck-old-city', 'x', 'x', 1, '10:00', 'new-york');
+    results := array_append(results, format('%s FAIL (the old city value new-york was allowed)', v_i));
+  exception
+    when check_violation then results := array_append(results, format('%s PASS (a city that is not a key is refused)', v_i));
+    when others then results := array_append(results, format('%s ERROR (%s %s)', v_i, sqlstate, sqlerrm));
+  end;
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_stranger), true);
   v_i := v_i + 1;
   v_n := (select count(*) from public.standing_slots ss where ss.title like 'vcheck-%');

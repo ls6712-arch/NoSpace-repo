@@ -47,7 +47,8 @@ create table public.standing_slots (
   place_name text not null check (char_length(btrim(place_name)) between 1 and 80),
   -- The neighbourhood: "Greenpoint".
   area text not null check (char_length(btrim(area)) between 1 and 60),
-  city text not null default 'new-york' check (char_length(city) between 1 and 40),
+  -- A city key from the fixed list (docs/city-keys-plan.md): city slug, then state or country code.
+  city text not null default 'new-york-ny' check (char_length(city) between 1 and 40 and city ~ '^[a-z0-9]+(-[a-z0-9]+)*-[a-z]{2}$'),
   lat double precision check (lat is null or lat between -90 and 90),
   lng double precision check (lng is null or lng between -180 and 180),
   weekday smallint not null check (weekday between 0 and 6),
