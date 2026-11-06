@@ -200,6 +200,7 @@ export function AccountSection() {
             <AdminLinkRow to="/admin/reports" label="Reports" />
             <AdminLinkRow to="/admin/invites" label="Invites" />
             <AdminLinkRow to="/admin/city-picks" label="City picks" />
+            <AdminLinkRow to="/admin/weekly-schedule" label="Weekly schedule" />
           </SettingsPanel>
         </>
       )}

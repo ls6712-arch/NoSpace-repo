@@ -36,6 +36,7 @@ import { AdminCorners } from "./pages/AdminCorners";
 import { AdminReports } from "./pages/AdminReports";
 import { AdminInvites } from "./pages/AdminInvites";
 import { AdminCityPicks } from "./pages/AdminCityPicks";
+import { AdminStandingSlots } from "./pages/AdminStandingSlots";
 import { HobbyArchive } from "./pages/HobbyArchive";
 import { Studio } from "./pages/Studio";
 import { Pursuit } from "./pages/Pursuit";
@@ -124,6 +125,7 @@ export const router = createHashRouter([
       { path: "admin/reports", Component: AdminReports },
       { path: "admin/invites", Component: AdminInvites },
       { path: "admin/city-picks", Component: AdminCityPicks },
+      { path: "admin/weekly-schedule", Component: AdminStandingSlots },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
       // Your own profile, and anyone's at /u/:username (the server decides what each viewer gets).

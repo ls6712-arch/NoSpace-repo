@@ -1351,3 +1351,20 @@ Both are readable without opening a Corner, following or signing up.
 Visit website opens the source directly. Start a Pursuit retains the existing
 editable creation form, account gates and private defaults. This editorial set
 does not claim to be personalized by Stubby or display any member progress.
+
+## Weekly times (Nov 2026)
+
+New with the weekly schedule behind Tonight (`standing_slots`). **Every row below is a new string for approval.** The admin screen is at `/admin/weekly-schedule`; the Space host panel is on a Space's Events tab and is seen by hosts only.
+
+| Term | Where and what it means |
+|---|---|
+| Weekly schedule | Admin screen title, and its row under Site admin in Settings |
+| Add a weekly time / Edit weekly time | Button and form title, admin screen and Space host panel |
+| Weekly times | Heading of the host panel on a Space's Events tab |
+| Something you do every week, like Every Thursday, 7:00 PM. | Line under that heading |
+| Every Thursday, 7:00 PM | How one weekly time reads: "Every" + weekday + the clock time from `dates.ts` |
+| Verified today | Button that stamps a weekly time as checked just now. A weekly time not verified for 60 days stops showing in Tonight until someone presses it |
+| Needs checking | Badge on a weekly time past its 60 days (admin screen) |
+| Off | Badge and checkbox label for a weekly time that is turned off |
+| Take part / Watch | Admin form: whether you can join in or only watch (`mode` do or watch) |
+| No weekly times yet. | Empty state, host panel and admin screen |
