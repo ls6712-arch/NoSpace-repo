@@ -554,6 +554,17 @@ async function main() {
       details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null, fixedChromeProblems: fxProblems < 0 ? null : fxProblems });
       rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
       if (smallInputs?.size) for (const x of smallInputs) rows.push(`    input under 16px: ${x}`);
+      // Name what to fix, grouped by screen, so a red run says where without downloading the report.
+      const screenOf = (k: string) => k.split("/").slice(2).join("/");
+      for (const [k, d] of lay.results) if (d.hscroll > 0) rows.push(`    sideways scroll +${d.hscroll}px [${k}]: ${(d.wide ?? []).map((w) => `${w.sel} "${w.text}" right=${w.right}`).join(" | ") || "(no single element found)"}`);
+      if (tch) {
+        const smalls = new Map<string, Set<string>>();
+        for (const [k, r] of tch) for (const f of r.failing) if (f.reason === "small") { const sc = screenOf(k); (smalls.get(sc) ?? smalls.set(sc, new Set()).get(sc)!).add(`${f.sel} "${f.text}" ${f.w}x${f.h}`); }
+        for (const [sc, items] of smalls) rows.push(`    touch target under 44px [${sc}]: ${[...items].join(" | ")}`);
+        const ovs = new Map<string, Set<string>>();
+        for (const [k, r] of tch) for (const x of r.overlaps) { const sc = screenOf(k); (ovs.get(sc) ?? ovs.set(sc, new Set()).get(sc)!).add(`${x.a} / ${x.b}`); }
+        for (const [sc, items] of ovs) rows.push(`    overlapping targets [${sc}]: ${[...items].join(" | ")}`);
+      }
       if (cf > 0) {
         // Name each failing pair, so a red run says what to fix without downloading the report.
         const seen = new Set<string>();
