@@ -27,7 +27,8 @@ const entries = keptEntries(csvRows(csv));
 const approvals = JSON.parse(fs.readFileSync(path.join(root, "data/catalog_merge_overrides.json"), "utf8"));
 const overrides = approvals.overrides as Record<string, string>;
 const keepSeparate = approvals.keepSeparate as string[];
-const result = mergeCatalog(entries, uniq, { overrides, keepSeparate, canonical: canonicalCorner });
+const acceptFollowOn = (approvals.acceptFollowOn ?? []) as string[];
+const result = mergeCatalog(entries, uniq, { overrides, keepSeparate, acceptFollowOn, canonical: canonicalCorner });
 const out = renderCatalogFile(result);
 const target = path.join(root, "src/app/data/catalogCorners.ts");
 

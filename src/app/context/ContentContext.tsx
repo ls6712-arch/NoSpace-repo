@@ -105,6 +105,9 @@ export interface NewPostInput {
   audience?: "group" | "friends" | "everyone";
   /** The city shown on the Moment ("New York"). Null or missing saves no city. */
   city?: string | null;
+  /** True when the person took the city off this Moment. posts.city_hidden (migration 20261118000000) tells the
+   * database not to count the Moment toward a city either; sent only when true, and dropped if the column is missing. */
+  cityHidden?: boolean;
   forSale?: ForSaleInput;
   /** Set when this moment is a thing happening at a time. */
   startsAt?: number;
@@ -766,7 +769,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       const held = withShareNow(row, input.shareNow);
       // posts.city is the same: sent only when set, and dropped when its column is missing.
       const withAudience = input.audience ? { ...held, audience: input.audience } : held;
-      const withCity = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
+      const withCityShown = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
+      // posts.city_hidden: the person removed the city from this Moment, so no city key is kept for it.
+      const withCity = input.cityHidden ? { ...withCityShown, city_hidden: true } : withCityShown;
       // posts.inspired_by (migration 20261101134703) is sent only when set, and dropped when its column is missing.
       const withInspired = input.inspiredBy ? { ...withCity, inspired_by: input.inspiredBy } : withCity;
       let { data, error } = await supabase
@@ -783,6 +788,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       }
       if (input.inspiredBy && error && /inspired_by/.test(error.message ?? "")) {
         ({ data, error } = await supabase.from("posts").insert(withCity as typeof row).select(POST_COLUMNS).single());
+      }
+      if (input.cityHidden && error && /city_hidden/.test(error.message ?? "")) {
+        ({ data, error } = await supabase.from("posts").insert(withCityShown as typeof row).select(POST_COLUMNS).single());
       }
       if (input.city?.trim() && error && isMissingCountColumn(error)) {
         ({ data, error } = await supabase.from("posts").insert(withAudience as typeof row).select(POST_COLUMNS).single());
