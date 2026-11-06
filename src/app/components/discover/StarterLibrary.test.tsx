@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter, useLocation, useNavigate } from "react-router";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { StarterLibrary } from "./StarterLibrary";
@@ -15,6 +15,23 @@ beforeEach(() => {
   window.matchMedia = ((query: string) => ({ matches: false, media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
+
+it("keeps a search cleared when a Corner is chosen straight after (no stale URL params)", async () => {
+  mount();
+  fireEvent.click(screen.getByRole("link", { name: "See all resources" }));
+  const dialog = await screen.findByRole("dialog", { name: "Resources" });
+  fireEvent.change(within(dialog).getByRole("searchbox", { name: "Search resources" }), { target: { value: "Standard" } });
+  expect(screen.getByTestId("location").textContent).toContain("browseQuery=Standard");
+  // Both changes land before React renders again, as when a fast input clears the box and picks a Corner.
+  act(() => {
+    fireEvent.change(within(dialog).getByRole("searchbox", { name: "Search resources" }), { target: { value: "" } });
+    fireEvent.change(within(dialog).getByRole("combobox", { name: "Corner" }), { target: { value: "books-writing/reading" } });
+  });
+  const url = screen.getByTestId("location").textContent ?? "";
+  expect(url).toContain("browseCorner=books-writing%2Freading");
+  expect(url).not.toContain("browseQuery");
+  expect(within(dialog).getAllByRole("link", { name: /^Visit website:/ })).toHaveLength(3);
+});
 
 it("shows the website descriptions and starter steps without navigation or account writes", () => {
   const fetch = vi.fn(); vi.stubGlobal("fetch", fetch);

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import { ArrowUpRight, X } from "lucide-react";
 import { ImageWithFallback } from "../ImageWithFallback";
@@ -69,12 +69,16 @@ export function StarterLibrary({ restricted }: { restricted: boolean }) {
     if (location.state?.discoverCollectionEntry) navigate(-1);
     else setParams(starterBrowseParams(params, null), { replace: true, preventScrollReset: true, state: location.state });
   };
+  // The params as of the last change, until a render catches up. setSearchParams(fn) hands fn the params of the
+  // last render, so two changes in quick succession (clear the search, then pick a Corner) made the second one start
+  // from stale params and write the cleared search back into the URL.
+  const pendingParams = useRef<URLSearchParams | null>(null);
+  useEffect(() => { pendingParams.current = null; }, [params]);
   const change = (key: "browseQuery" | "browseCorner", value: string) => {
-    setParams(prev => {
-      const next = new URLSearchParams(prev);
-      if (value) next.set(key, value); else next.delete(key);
-      return next;
-    }, { replace: true, preventScrollReset: true, state: location.state });
+    const next = new URLSearchParams(pendingParams.current ?? params);
+    if (value) next.set(key, value); else next.delete(key);
+    pendingParams.current = next;
+    setParams(next, { replace: true, preventScrollReset: true, state: location.state });
   };
   const browse = (collection: StarterCollection, label: string) => <Link
     id={`browse-${collection}`}
