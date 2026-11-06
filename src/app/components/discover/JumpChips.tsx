@@ -6,6 +6,8 @@ export const JUMP_SECTIONS = [
   { id: "discover-stubby", label: "Stubby" },
   { id: "discover-ideas", label: "Ideas" },
   { id: "discover-corners", label: "Corners" },
+  { id: "discover-resources", label: "Resources" },
+  { id: "discover-pursuit-ideas", label: "Pursuit ideas" },
   { id: "discover-spaces", label: "Spaces" },
   { id: "discover-people", label: "People" },
   { id: "discover-moments", label: "Moments" },
@@ -36,7 +38,7 @@ export function JumpChips({ signedIn = true }: { signedIn?: boolean }) {
     return () => watch.disconnect();
   }, []);
   return (
-    <nav ref={nav} aria-label="Sections" className="-mx-4 flex gap-2 overflow-x-auto px-4 py-1 tab:-mx-6 tab:px-6 desk:-mx-8 desk:px-8 [scrollbar-width:none]">
+    <nav ref={nav} aria-label="Sections" className="flex flex-wrap gap-2 py-1">
       {JUMP_SECTIONS.filter((s) => (signedIn || !SIGNED_IN_ONLY.has(s.id)) && present.has(s.id)).map((s) => (
         <Chip
           key={s.id}

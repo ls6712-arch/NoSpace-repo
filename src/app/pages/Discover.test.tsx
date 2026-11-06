@@ -106,9 +106,9 @@ describe("Discover layout", () => {
     expect(screen.getByRole("button", { name: /New York/ })).toBeTruthy();
     
     const nav = screen.getByRole("navigation", { name: "Sections" });
-    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Spaces", "Moments"]);
+    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Resources", "Pursuit ideas", "Spaces", "Moments"]);
     const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
-    expect(headings).toEqual(["What could you do?", "Corners new to you", "Spaces near you", "What New York is making"]);
+    expect(headings).toEqual(["What could you do?", "Corners new to you", "Resources", "Pursuit ideas", "Spaces near you", "What New York is making"]);
   });
 
   it("has no member or follower counts anywhere and no price on an idea card", async () => {
@@ -206,6 +206,17 @@ describe("Discover Corners and Spaces", () => {
 });
 
 describe("Discover fails one section at a time", () => {
+  it("keeps resources and Pursuit ideas visible when no recommended Corners load", async () => {
+    fetchers.corners.mockResolvedValue([]);
+    show();
+    await settle();
+    expect(screen.queryByRole("heading", { name: "Corners new to you" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Resources" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Pursuit ideas" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Visit website: Standard Ebooks" }).getAttribute("target")).toBe("_blank");
+    expect(screen.getByRole("heading", { name: "Spaces near you" })).toBeTruthy();
+  });
+
   it("hides Spaces when they cannot load and keeps everything else", async () => {
     fetchers.spaces.mockResolvedValue([]);
     show();
@@ -331,10 +342,10 @@ describe("Discover signed out", () => {
     await settle();
     expect(screen.queryByRole("heading", { name: /is making/ })).toBeNull();
     const nav = screen.getByRole("navigation", { name: "Sections" });
-    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Spaces"]);
+    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Resources", "Pursuit ideas", "Spaces"]);
   });
 
-  it("opens the sign up prompt for any action and closes it with Keep looking around", async () => {
+  it("opens the sign up prompt for membership actions and closes it with Keep looking around", async () => {
     show();
     await settle();
     fireEvent.click(within(screen.getByRole("heading", { name: "Spaces near you" }).closest("section")!).getByRole("button", { name: "Join" }));

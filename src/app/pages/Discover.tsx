@@ -18,6 +18,7 @@ import { JumpChips } from "../components/discover/JumpChips";
 import { IdeaPills } from "../components/discover/IdeaPills";
 import { IdeasRow } from "../components/discover/IdeasRow";
 import { CornerTearCard } from "../components/discover/CornerTearCard";
+import { StarterLibrary } from "../components/discover/StarterLibrary";
 import { SpacesRow } from "../components/discover/SpacesRow";
 import { CityFeed } from "../components/discover/CityFeed";
 import { SectionBoundary } from "../components/discover/SectionBoundary";
@@ -94,7 +95,8 @@ function SectionSkeleton({ cards }: { cards: number }) {
  * Stubby's picks (what he found when you asked him) and People near you (the authors of the feed).
  * Every section loads and fails on
  * its own, and a Moment, Corner or Space is never on both Home and Discover.
- * Signed out, everything is read only and any action opens the sign up prompt.
+ * Public starter resources and editable Pursuit ideas sit below the Corner carousel.
+ * Signed out, membership actions require signup; browsing and visiting a resource do not.
  */
 export function Discover() {
   const { user, profile } = useAuth();
@@ -404,6 +406,10 @@ export function Discover() {
               </HorizontalRow>
             </section>
           ) : null}
+        </SectionBoundary>
+
+        <SectionBoundary>
+          <StarterLibrary restricted={!user || profile?.access === "pending"}/>
         </SectionBoundary>
 
         <SectionBoundary>
