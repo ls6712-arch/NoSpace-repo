@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { csvRows, INTERNAL_CATEGORY_TO_SPACE, keptEntries, mergeCatalog, parseCsv, renderCatalogFile, type CatalogEntry } from "./catalogCornersLogic";
-import { CATALOG_ALIAS_ADDITIONS, CATALOG_CORNERS } from "../src/app/data/catalogCorners";
+import { CATALOG_ALIAS_ADDITIONS, CATALOG_CORNERS, CATALOG_EXISTING_META } from "../src/app/data/catalogCorners";
 import { hobbies, canonicalCorner } from "../src/app/data/hobbies";
 import { catalogCornerByName } from "../src/app/lib/catalogLookup";
 
@@ -95,6 +95,7 @@ describe("merging with existing Corners", () => {
   it("the same hobby in another Space is listed and held out, never merged", () => {
     const r = mergeCatalog([entry({ slug: "camping", name: "Camping", spaceSlug: "nature-outdoors" })], existing);
     expect(r.crossSpace[0].existing.spaceSlug).toBe("travel-adventure");
+    expect(r.crossSpace[0].rule).toBe("same-slug");
     expect(r.merged).toHaveLength(0);
     expect(r.fresh).toHaveLength(0);
   });
@@ -107,11 +108,22 @@ describe("merging with existing Corners", () => {
     expect(k.fresh).toHaveLength(1);
   });
 
-  it("a match on a Corner that was merged away lands on the Corner that was kept", () => {
+  it("a match on a Corner that was merged away is a follow-on decision: nothing is applied", () => {
     const pool = [{ spaceSlug: "a", slug: "old", name: "Old" }, { spaceSlug: "a", slug: "kept", name: "Kept" }];
-    const r = mergeCatalog([entry({ slug: "old", name: "Old", spaceSlug: "a" })], pool, { canonical: (s, sl) => (sl === "old" ? { spaceSlug: s, slug: "kept" } : { spaceSlug: s, slug: sl }) });
-    expect(r.merged[0].existing.slug).toBe("kept");
-    expect(r.aliasAdditions["a/kept"]).toEqual(["Old"]);
+    const canonical = (s: string, sl: string) => (sl === "old" ? { spaceSlug: s, slug: "kept" } : { spaceSlug: s, slug: sl });
+    const r = mergeCatalog([entry({ slug: "old", name: "Old", spaceSlug: "a" })], pool, { canonical });
+    expect(r.followOn[0]).toMatchObject({ existing: { slug: "kept" }, via: { slug: "old" } });
+    expect(r.merged).toHaveLength(0);
+    expect(r.fresh).toHaveLength(0);
+    expect(r.aliasAdditions).toEqual({});
+    expect(r.existingMeta).toEqual({});
+  });
+
+  it("a held-out cross-Space row gives its aliases, nyc_fit and season to the existing Corner", () => {
+    const r = mergeCatalog([entry({ slug: "camping", name: "Camping", spaceSlug: "nature-outdoors", aliases: ["tent camping"], nycFit: "day_trip", season: "warm" })], existing);
+    expect(r.fresh).toHaveLength(0);
+    expect(r.aliasAdditions["travel-adventure/camping"]).toEqual(["tent camping"]);
+    expect(r.existingMeta["travel-adventure/camping"]).toEqual({ nycFit: "day_trip", season: "warm" });
   });
 });
 
@@ -126,11 +138,20 @@ describe("the generated catalog against the app's Corners", () => {
     }
   });
 
-  it("alias additions point at Corners that exist", () => {
-    for (const key of Object.keys(CATALOG_ALIAS_ADDITIONS)) {
-      const [space, slug] = key.split("/");
-      expect(hobbies.find((h) => h.slug === space)?.subItems.some((s) => s.slug === slug), key).toBe(true);
+  it("alias additions and metadata point at Corners that exist (built in, or a table row in the snapshot)", () => {
+    const snapshot = JSON.parse(fs.readFileSync(path.join(root, "data/existing_corners_snapshot.json"), "utf8"));
+    const known = new Set([
+      ...hobbies.flatMap((h) => h.subItems.map((s) => `${h.slug}/${s.slug}`)),
+      ...snapshot.corners.map((c: { spaceSlug: string; slug: string }) => `${c.spaceSlug}/${c.slug}`),
+    ]);
+    for (const key of [...Object.keys(CATALOG_ALIAS_ADDITIONS), ...Object.keys(CATALOG_EXISTING_META)]) expect(known.has(key), key).toBe(true);
+  });
+
+  it("the six cross-Space rows reach the existing Corner, not a second one", () => {
+    for (const key of ["nature-outdoors/camping", "health-wellness/pilates", "travel-adventure/skiing", "food-cooking/storytelling", "nature-outdoors/surfing", "travel-adventure/volunteering"]) {
+      expect(CATALOG_EXISTING_META[key], key).toBeDefined();
     }
+    expect(CATALOG_CORNERS.filter((c) => ["camping", "pilates", "skiing", "storytelling", "surfing", "volunteering"].includes(c.slug))).toEqual([]);
   });
 });
 

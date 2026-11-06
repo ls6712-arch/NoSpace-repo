@@ -130,6 +130,13 @@ export interface MergeMatch {
   catalog: CatalogEntry;
   existing: ExistingCorner;
   rule: MatchRule;
+  /** Set on a follow-on match: the matched Corner had itself been merged away (hobbies.ts MERGED_CORNERS) and `existing` is the one kept. */
+  via?: ExistingCorner;
+}
+
+export interface ExistingMeta {
+  nycFit: NycFit;
+  season?: Season;
 }
 
 export interface MergeResult {
@@ -139,10 +146,14 @@ export interface MergeResult {
   merged: MergeMatch[];
   /** Same slug or same name in another Space. Listed, never merged, and held out of the catalog. */
   crossSpace: MergeMatch[];
+  /** Follow-on matches that would land in a narrower Corner (Singing into Choir). Decisions for the founder: nothing is applied and no catalog row is created. */
+  followOn: MergeMatch[];
   /** Same-Space fuzzy matches (matchesFor's rule). Too loose to merge unasked: listed, and the entry is still created. */
   suggested: MergeMatch[];
   /** "space/slug" of the existing Corner to the extra aliases it gains. */
   aliasAdditions: Record<string, string[]>;
+  /** "space/slug" of an existing Corner to the catalog's nyc_fit and season for it (merged and held-out rows alike). */
+  existingMeta: Record<string, ExistingMeta>;
 }
 
 const lc = (s: string) => s.trim().toLowerCase();
@@ -163,14 +174,19 @@ export interface MergeOptions {
  * Deviation, flagged in the PR: the fuzzy rule alone would fold Ice hockey into
  * Roller and ice skating, so it only suggests. Rules 1 and 2 merge, and so do
  * founder-approved overrides. Other-Space matches on rules 1 and 2 are listed
- * and held out; other-Space fuzzy matches are noise and are not reported.
+ * and held out of the catalog, but the existing Corner still gains their aliases, nyc_fit and
+ * season; a match on a Corner that was itself merged away (Singing, now Choir and singing) is
+ * a follow-on decision: listed, nothing applied; other-Space fuzzy matches are noise and are not reported.
  */
 export function mergeCatalog(entries: CatalogEntry[], existing: ExistingCorner[], opts: MergeOptions = {}): MergeResult {
   const fresh: CatalogEntry[] = [];
   const merged: MergeMatch[] = [];
   const crossSpace: MergeMatch[] = [];
   const suggested: MergeMatch[] = [];
+  const followOn: MergeMatch[] = [];
   const aliasAdditions: Record<string, string[]> = {};
+  const existingMeta: Record<string, ExistingMeta> = {};
+  const metaSource: Record<string, string> = {};
   const canon = opts.canonical ?? ((spaceSlug: string, slug: string) => ({ spaceSlug, slug }));
 
   const strict = (e: CatalogEntry, pool: ExistingCorner[]): { existing: ExistingCorner; rule: MatchRule } | undefined => {
@@ -182,13 +198,27 @@ export function mergeCatalog(entries: CatalogEntry[], existing: ExistingCorner[]
     return undefined;
   };
 
-  const take = (e: CatalogEntry, hit: ExistingCorner, rule: MatchRule) => {
-    const k = canon(hit.spaceSlug, hit.slug);
-    const winner = existing.find((x) => x.spaceSlug === k.spaceSlug && x.slug === k.slug) ?? hit;
-    merged.push({ catalog: e, existing: winner, rule });
+  // The existing Corner gains the row's names, nyc_fit and season. Where several rows land on one
+  // Corner, the row with the Corner's own slug supplies nyc_fit and season, else the first.
+  const give = (e: CatalogEntry, winner: ExistingCorner) => {
     const key = `${winner.spaceSlug}/${winner.slug}`;
     const add = [e.name, ...e.aliases].filter((a) => lc(a) !== lc(winner.name));
     aliasAdditions[key] = [...new Set([...(aliasAdditions[key] ?? []), ...add])];
+    if (!existingMeta[key] || (e.slug === winner.slug && metaSource[key] !== winner.slug)) {
+      existingMeta[key] = { nycFit: e.nycFit, ...(e.season ? { season: e.season } : {}) };
+      metaSource[key] = e.slug;
+    }
+  };
+
+  const take = (e: CatalogEntry, hit: ExistingCorner, rule: MatchRule) => {
+    const k = canon(hit.spaceSlug, hit.slug);
+    const winner = existing.find((x) => x.spaceSlug === k.spaceSlug && x.slug === k.slug) ?? hit;
+    if (winner !== hit && rule !== "override") {
+      followOn.push({ catalog: e, existing: winner, rule, via: hit });
+      return;
+    }
+    merged.push({ catalog: e, existing: winner, rule });
+    give(e, winner);
   };
 
   for (const e of entries) {
@@ -212,13 +242,14 @@ export function mergeCatalog(entries: CatalogEntry[], existing: ExistingCorner[]
     const other = strict(e, existing.filter((x) => x.spaceSlug !== e.spaceSlug));
     if (other) {
       crossSpace.push({ catalog: e, existing: other.existing, rule: other.rule });
+      give(e, other.existing);
       continue;
     }
     const fuzzy = matchCorners(sameSpace.map((x) => ({ ...x })), e.name)[0];
     if (fuzzy) suggested.push({ catalog: e, existing: fuzzy, rule: "fuzzy" });
     fresh.push(e);
   }
-  return { fresh, merged, crossSpace, suggested, aliasAdditions };
+  return { fresh, merged, crossSpace, suggested, followOn, aliasAdditions, existingMeta };
 }
 
 /** The generated file's text. Stable output so a re-run with no CSV change is a no-op diff. */
@@ -239,10 +270,18 @@ export function renderCatalogFile(result: MergeResult): string {
   const adds = Object.keys(result.aliasAdditions)
     .sort()
     .map((k) => `  ${q(k)}: [${result.aliasAdditions[k].map(q).join(", ")}],`);
+  const metas = Object.keys(result.existingMeta)
+    .sort()
+    .map((k) => {
+      const m = result.existingMeta[k];
+      return `  ${q(k)}: { nycFit: ${q(m.nycFit)}${m.season ? `, season: ${q(m.season)}` : ""} },`;
+    });
   return `// GENERATED FILE. DO NOT EDIT.
 // Source: data/corners_catalog.csv. Regenerate with: npx tsx scripts/build-catalog-corners.ts
 // Only rows with status "keep" are loaded. Rows that match an existing Corner are
-// not listed here; their aliases are in CATALOG_ALIAS_ADDITIONS instead.
+// not listed here; their aliases are in CATALOG_ALIAS_ADDITIONS and their nyc_fit and
+// season in CATALOG_EXISTING_META instead. The same goes for a row held out because the
+// same hobby already exists in another Space.
 
 export type NycFit = "city" | "seasonal" | "day_trip" | "hard";
 export type Season = "warm" | "mild" | "cold";
@@ -263,6 +302,11 @@ ${lines.join("\n")}
 /** "space/slug" of an existing Corner to the extra names people may call it. */
 export const CATALOG_ALIAS_ADDITIONS: Readonly<Record<string, readonly string[]>> = {
 ${adds.join("\n")}
+};
+
+/** "space/slug" of an existing Corner to the catalog's nyc_fit and season for it. */
+export const CATALOG_EXISTING_META: Readonly<Record<string, { nycFit: NycFit; season?: Season }>> = {
+${metas.join("\n")}
 };
 `;
 }

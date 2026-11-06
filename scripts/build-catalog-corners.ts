@@ -37,7 +37,8 @@ const table = (title: string, rows: { catalog: { name: string; spaceSlug: string
 };
 console.log(`kept ${entries.length}; catalog Corners ${result.fresh.length}; merged into existing ${result.merged.length}; held (other Space) ${result.crossSpace.length}; fuzzy suggestions ${result.suggested.length}`);
 table("Merged (existing Corner wins):", result.merged);
-table("Held out, same hobby in another Space (never merged automatically):", result.crossSpace);
+table("Same hobby in another Space (no second Corner; the existing one gains the aliases, nyc_fit and season):", result.crossSpace);
+table("Follow-on merges, NOT applied (the match was a Corner already merged away; decision for the founder):", result.followOn.map((m) => ({ ...m, rule: `${m.rule}, via ${m.via!.name}` })));
 table("Fuzzy suggestions, NOT merged (add to data/catalog_merge_overrides.json to approve):", result.suggested);
 
 if (process.argv.includes("--check")) {

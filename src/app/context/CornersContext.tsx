@@ -17,7 +17,7 @@ import { guessSpace } from "../lib/pursuitProgress";
 import { isBlocklistedName } from "../lib/blocklist";
 import { matchCorners } from "../lib/cornerMatching";
 import { CATALOG_CORNERS, type NycFit, type Season } from "../data/catalogCorners";
-import { aliasesForExisting, catalogCornerByName } from "../lib/catalogLookup";
+import { aliasesForExisting, catalogCornerByName, metaForExisting } from "../lib/catalogLookup";
 import { cornerGuide } from "../data/cornerGuides";
 
 /**
@@ -221,6 +221,8 @@ const BASELINE: Corner[] = hobbies.flatMap((h) =>
     isCurated: true,
     isCatalog: false,
     aliases: aliasesForExisting(h.slug, s.slug),
+    nycFit: metaForExisting(h.slug, s.slug)?.nycFit,
+    season: metaForExisting(h.slug, s.slug)?.season,
   })),
 );
 
@@ -333,7 +335,10 @@ export function CornersProvider({ children }: { children: ReactNode }) {
           hidden: r.hidden ?? false,
           isCurated: false,
           isCatalog: false,
-          aliases: [],
+          // A Corner that already existed keeps its name and slug; the catalog only adds names and fit.
+          aliases: aliasesForExisting(r.space_slug, r.slug),
+          nycFit: metaForExisting(r.space_slug, r.slug)?.nycFit,
+          season: metaForExisting(r.space_slug, r.slug)?.season,
           description: r.description ?? undefined,
           createdAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
         })),
@@ -452,6 +457,9 @@ export function CornersProvider({ children }: { children: ReactNode }) {
                 momentCount30d: c.momentCount30d,
                 hasActiveSpace: c.hasActiveSpace,
                 hidden: c.hidden,
+                aliases: [...new Set([...existing.aliases, ...c.aliases])],
+                nycFit: existing.nycFit ?? c.nycFit,
+                season: existing.season ?? c.season,
                 description: c.description ?? existing.description,
                 createdAt: c.createdAt ?? existing.createdAt,
               }

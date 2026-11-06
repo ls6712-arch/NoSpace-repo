@@ -1,4 +1,4 @@
-import { CATALOG_CORNERS, CATALOG_ALIAS_ADDITIONS, type CatalogCorner } from "../data/catalogCorners";
+import { CATALOG_CORNERS, CATALOG_ALIAS_ADDITIONS, CATALOG_EXISTING_META, type CatalogCorner } from "../data/catalogCorners";
 import { getSubHobby, titleCaseSlug } from "../data/hobbies";
 import { normalize } from "./tagMatching";
 
@@ -34,4 +34,9 @@ export function catalogCornerByName(text: string, spaceSlug?: string): CatalogHi
 /** Extra names for a Corner that already existed before the catalog ("space/slug" key). */
 export function aliasesForExisting(spaceSlug: string, slug: string): string[] {
   return [...(CATALOG_ALIAS_ADDITIONS[`${spaceSlug}/${slug}`] ?? [])];
+}
+
+/** The catalog's nyc_fit and season for a Corner that already existed (merged or held-out rows). */
+export function metaForExisting(spaceSlug: string, slug: string) {
+  return CATALOG_EXISTING_META[`${spaceSlug}/${slug}`];
 }
