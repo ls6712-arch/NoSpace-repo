@@ -64,7 +64,7 @@ export function ShelfRail() {
               <li key={s.key}>
                 <Link
                   to={`/you/work/${archiveKey(s)}`}
-                  className="flex items-center gap-3 hover:text-accent"
+                  className="flex items-center gap-3 hover:text-accent-text"
                 >
                   <span
                     aria-hidden="true"

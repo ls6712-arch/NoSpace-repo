@@ -295,7 +295,7 @@ export function MySpaceGrid() {
             <button
               type="button"
               onClick={() => setPageIndex((p) => p + 1)}
-              className="mt-6 text-caption text-accent hover:underline"
+              className="mt-6 text-caption text-accent-text hover:underline"
             >
               Turn the page
             </button>
@@ -307,7 +307,7 @@ export function MySpaceGrid() {
               <p className="mt-1 text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 You’re caught up
               </p>
-              <Link to="/create" className="mt-2 inline-block text-caption text-accent hover:underline">
+              <Link to="/create" className="mt-2 inline-block text-caption text-accent-text hover:underline">
                 Log a Moment
               </Link>
             </div>

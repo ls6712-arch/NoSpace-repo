@@ -302,7 +302,7 @@ export function CreatePursuit() {
                   <button
                     type="button"
                     onClick={() => patch({ milestones: [...(measure.milestones ?? []), ""] })}
-                    className="mt-2 text-caption text-accent hover:underline"
+                    className="mt-2 text-caption text-accent-text hover:underline"
                   >
                     + Add a stepping stone
                   </button>
@@ -416,7 +416,7 @@ export function CreatePursuit() {
               <>
                 {!user && (
                   <p className="mt-4 text-small text-muted-foreground">
-                    <Link to="/login?redirect=/pursuits/new" className="text-accent hover:underline">
+                    <Link to="/login?redirect=/pursuits/new" className="text-accent-text hover:underline">
                       Log in
                     </Link>{" "}
                     to invite people.

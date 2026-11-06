@@ -165,7 +165,7 @@ export function PursuitTrack({
         <div className="min-w-0">
           <Link
             to={`/pursuit/${pursuit.id}`}
-            className="block text-body text-foreground hover:text-accent"
+            className="block text-body text-foreground hover:text-accent-text"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {pursuit.title}

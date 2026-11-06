@@ -407,7 +407,7 @@ export function Pursuit() {
               <p className="text-small text-muted-foreground">What would you tell yourself on day one?</p>
             )}
             {owner && (
-              <button type="button" onClick={() => setEndingOpen("edit")} className="mt-3 text-caption text-accent hover:underline">
+              <button type="button" onClick={() => setEndingOpen("edit")} className="mt-3 text-caption text-accent-text hover:underline">
                 {view.endingNote ? "Edit" : "Write it"}
               </button>
             )}

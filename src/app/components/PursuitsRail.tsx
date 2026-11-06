@@ -57,7 +57,7 @@ export function PursuitsRail({
         <h2 className="text-lead" style={{ fontFamily: "var(--font-serif)" }}>
           Pursuits still moving
         </h2>
-        <button type="button" onClick={() => setStarting(true)} className="text-caption text-accent hover:underline">
+        <button type="button" onClick={() => setStarting(true)} className="text-caption text-accent-text hover:underline">
           Start one
         </button>
       </div>
@@ -68,7 +68,7 @@ export function PursuitsRail({
       {pursuits.length === 0 ? (
         <p className="mt-4 text-small text-muted-foreground">
           No Pursuits yet.{" "}
-          <button type="button" onClick={() => setStarting(true)} className="text-accent hover:underline">
+          <button type="button" onClick={() => setStarting(true)} className="text-accent-text hover:underline">
             Start your first
           </button>
           .
@@ -104,7 +104,7 @@ export function PursuitsRail({
           <button
             type="button"
             onClick={() => scrollToElementId(ALL_PURSUITS_SECTION_ID)}
-            className="mt-2 text-caption text-accent hover:underline"
+            className="mt-2 text-caption text-accent-text hover:underline"
           >
             See all my Pursuits ({pursuits.length})
           </button>

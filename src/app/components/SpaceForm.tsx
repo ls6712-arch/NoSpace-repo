@@ -362,7 +362,7 @@ export function SpaceForm({
           <button
             type="button"
             onClick={() => setCornerSlots((n) => Math.min(3, n + 1))}
-            className="mt-2 text-caption text-accent"
+            className="mt-2 text-caption text-accent-text"
           >
             + Add another Corner
           </button>

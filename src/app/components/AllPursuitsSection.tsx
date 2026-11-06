@@ -30,7 +30,7 @@ function AllPursuitsRow({ pursuit: p, last }: { pursuit: Project; last: number |
     <li className="flex items-center gap-3 py-2.5">
       <Link to={`/pursuit/${p.id}`} className="group min-w-0 flex-1">
         <span
-          className="block truncate text-body text-foreground group-hover:text-accent"
+          className="block truncate text-body text-foreground group-hover:text-accent-text"
           style={{ fontFamily: "var(--font-serif)" }}
                  title={p.title}>
           {p.title}
@@ -239,7 +239,7 @@ export function AllPursuitsSection({
           ) : (
             <>No Pursuits in this status.</>
           )}{" "}
-          <button type="button" onClick={clearFilters} className="text-accent hover:underline">
+          <button type="button" onClick={clearFilters} className="text-accent-text hover:underline">
             Clear filters
           </button>
           .
