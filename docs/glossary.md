@@ -1300,3 +1300,31 @@ The five repeated disclaimer lines are removed from the hero/gallery/preview.
 Account, cost and booking requirements stay in the FAQ. Event/finish samples
 change no actual Stub issuance rules. The photo, title and “Another example”
 remain in the hero, with photographer attribution after a successful load.
+
+
+## Visible Corner starter content (Nov 5, 2026)
+
+The owner requested that the prepared activities, generic Pursuit templates and
+website resources be visible in the application. The relevant Corner pages now
+show these editorial sections below their existing introduction. Other Discover
+sections, member Moments, recommendation ranking and private goals are unchanged.
+
+| Wording | Meaning |
+| --- | --- |
+| Things to try | Three readable activity guides in each of ten existing Corners |
+| About {duration} to {duration} | Estimated activity duration, formatted with the shared duration helper |
+| What you’ll need / Optional / Choose a setup | Required resources, optional extras and complete alternative setups remain distinct |
+| Cost unknown. Check supplies, access and travel before starting. | An unknown total is never described as free |
+| With someone | Optional shared version of an activity; no invitation or event is created |
+| Pursuit ideas | Generic starter goals, separate from members’ own Pursuits and progress |
+| Start a Pursuit | Opens the existing creation form with an editable title and checklist; account gates apply |
+| Resources | Original descriptions and outbound website links relevant to this Corner |
+| Visit website | Opens the named source in a new tab; includes its name in the accessible label |
+
+The runtime catalog is in `src/app/data/starterContent.json`. It contains no
+member identity, private preference, sample completion or invitation. User
+requests to display these link-only resources authorize their inclusion; their
+current external availability and source terms were not independently verified.
+The earlier directory review files remain a historical candidate snapshot,
+not a claim that any third-party material is copyright-free. Resource cards
+contain no copied website images, logos, text excerpts, audio or embeds.
