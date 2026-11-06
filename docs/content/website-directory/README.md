@@ -1,5 +1,11 @@
 # Specialist website directory draft
 
+This is the original candidate-review snapshot. The subsequent Corner starter
+content implementation selects the link-only names and original descriptions
+into `src/app/data/starterContent.json` following the owner’s request to make
+them visible. Verification dates below remain unfilled; they are not invented
+by the application integration.
+
 A reviewable list of 16 specialist websites for Soosh users to visit, with
 original descriptions, existing Corner mappings and optional activity prompts.
 
