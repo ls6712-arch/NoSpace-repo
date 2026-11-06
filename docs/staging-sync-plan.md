@@ -35,20 +35,85 @@ neither Supabase project has been changed. Everything below was found with read-
   do not exist there, so staging does not behave like live for guests, Stubby accounts or signed-out visitors.
 - Other differences I hit while testing on it: `posts.city` is missing and `posts.media_url` is still NOT NULL.
 - It has no reference data (`app_config`, `categories`), so Discover, limits and thresholds would all fall back to defaults.
-- **Production itself is one migration ahead of its record:** `main` has `20261117000000_weekly_free_hours.sql`, which
-  production has not recorded. Staging should get it before production does.
+- **One migration on `main` is live on production but not recorded there:** `20261117000000_weekly_free_hours.sql`
+  (see "Findings from the comparison" below). It is the only difference between `main`'s 143 migrations and production's 142 records.
 
-## What I could not see (needs you)
+## Findings from the comparison (read-only, Nov 6, 2026)
 
-1. **Which database does www.trynospace.com use today?** `docs/deploys.md` says both sites use the *same* Supabase
-   project. If so, the staging site is writing to live data and the `nospace-staging` project is not wired in at all.
-   This is set in Vercel environment variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`), which I can't read.
-2. Whether Supabase's GitHub integration applies migrations on merge. `scripts/migrationRules.ts` says "every merge to
-   main is a production database deploy" while `CLAUDE.md` says migrations are applied by hand with your written
-   approval, and production has not recorded `20261117000000`. I need to know which is true before moving PRs to `staging`.
-3. Auth settings on `nospace-staging`: redirect URLs for `www.trynospace.com`, Google sign-in, the Turnstile key, email templates.
-4. Edge function secrets (`stubby-scout`, `calendar-feed`) and the 8 production cron jobs' targets.
-5. A way to read production's schema as a dump (`pg_dump`/`supabase db dump` needs the database connection string).
+**Catalogue fingerprint** (a hash per object, `public` and `private` schemas, storage and cron; the query is in the session
+notes and can be re-run on both projects at any time). Only the 3 storage buckets match.
+
+| Object | Production | Staging | Same? |
+|---|---|---|---|
+| Tables | 79 (77 `public`, 2 `private`) | 62 | no |
+| Functions | 248 | 189 | no |
+| Policies | 299 | 165 | no |
+| Triggers | 70 | 49 | no |
+| Constraints / indexes | 446 / 189 | 334 / 153 | no |
+| Table grants (anon, authenticated, service_role) | 194 | 164 | no |
+| Enums | 13 | 12 | no |
+| Extensions | 7 (adds `pg_net`) | 6 | no |
+| Cron jobs | 8 | 4 | no |
+| Storage policies | 16 | 15 | no |
+| Storage buckets | 3 | 3 | **yes** |
+
+- **Cron.** Seven of production's eight jobs are plain SQL calls with no environment-specific target. Staging lacks
+  `purge-inactive-guests`, `purge-stubby-rows`, `pursuit-session-reminders` and `stubby-restock`. Only `stubby-restock`
+  calls out: it posts to production's own host, so on staging it must be recreated against the staging host, and it
+  needs the `pg_net` extension, which staging does not have. No cron command contains key text.
+- **Edge functions.** Production: `calendar-feed` (v13) and `stubby-scout` (v26). Staging: `calendar-feed` (v1) only, so
+  there is no Stubby on staging.
+- **Secrets.** Postgres Vault is empty on both projects, so the function secrets live in each project's edge-function
+  settings, which the connector cannot read (it can only create one). Names and values are unknown to me.
+- **`20261117000000_weekly_free_hours.sql`.** This migration (merged to `main` Nov 5, commit `2502af4`) lets the private
+  "free windows" setting hold exact weekly hours such as `mon@1140-1260` alongside the old `mon-day` values, and makes
+  Home's ranking use them. **Production already has all of it:** both new functions, the replaced check constraint, and
+  `home_suggestions` rewired. I ran its own verification script (`supabase/verification/weekly_free_hours_check.sql`, no
+  fixture rows) against production: **13 of 13 PASS**. Production simply has no row for the version in
+  `supabase_migrations.schema_migrations`, so it was applied outside the migration tool (the SQL editor, most likely).
+  Running the file again would fail on purpose (its guard refuses to rewrite a ranking function that has already been
+  rewritten), so the fix is to **record the version, not re-apply it**:
+  `insert into supabase_migrations.schema_migrations (version, name) values ('20261117000000', 'weekly_free_hours')`.
+  That is a change to the live database, so I have not run it; say go and I will.
+- **Which database each site uses.** Production's API logs for the last 24 hours show requests from `www.onsoosh.com`
+  (8,101) and from eight Vercel preview URLs (`no-space-repo-*.vercel.app`, about 300 together), and **none from
+  `www.trynospace.com`**. The staging project's logs show **no requests at all**. So: the live site and every preview use
+  the production database, and the `nospace-staging` project is not wired to anything. The live bundle at
+  `www.onsoosh.com` names `eyzokuhhbyidvmuqfmwm` (production). I could not fetch `www.trynospace.com` (the network
+  allowlist refused it), and nobody used it in the last day, so I cannot confirm what it points at; `docs/deploys.md`
+  says production, and nothing contradicts that.
+
+## What I still cannot see (needs you)
+
+1. **Auth settings on `nospace-staging`** (redirect URLs, Google sign-in, Turnstile/captcha, email templates): the connector
+   has no tool for them. Please check them in the dashboard: Authentication, URL Configuration and Providers.
+2. **Edge function secrets** on both projects: names and values (see above).
+3. **Vercel environment variables** for `www.trynospace.com` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). One look at
+   Project Settings, Environment Variables, answers it for certain.
+4. **A way to get the production schema.** See the next section.
+
+## Can the schema be copied through the connector?
+
+Possible, but not a good idea. Production's catalogue is about 580 KB of definitions (248 function bodies alone are 289 KB,
+plus 299 policies, 635 constraints and indexes, 1,220 grants and 70 triggers). Through the connector every byte would have to
+come back into my context and then be sent out again to staging: roughly 150,000 tokens each way, with a real chance of a
+dropped or mangled statement in a security-critical schema. The connector also cannot read auth settings or secrets.
+
+A `pg_dump` connection from this environment is also unlikely to work: the sandbox reaches the internet through an HTTPS
+proxy with a host allowlist, and Postgres is not HTTPS. **So I would not ask you for a connection string.**
+
+**Recommended instead: you run two commands on your machine, nothing is shared with me.** (Do not run them until you
+approve the plan.)
+
+```bash
+supabase db dump --db-url "$PROD_DB_URL" -f prod_schema.sql
+```
+```bash
+psql "$STAGING_DB_URL" -v ON_ERROR_STOP=1 -f prod_schema.sql
+```
+
+(After the staging wipe in Phase 1.) Then I take over through the connector: re-run the fingerprint on both projects until
+it matches, run the verification scripts on staging, and record the migration versions.
 
 ## Recommended approach
 
@@ -59,21 +124,22 @@ and staging has no data to lose.
 
 ### Phase 0: decisions and read-only checks (no changes)
 
-- You answer the five items above.
-- I run a **catalogue fingerprint** on both projects (a hash per table, column, function body, policy, trigger, grant
-  and cron job, read-only) so "identical" is a result, not a belief. I keep the same query for the end.
+- Done (Nov 6): the catalogue fingerprint on both projects and the checks above. You answer the open items.
+- Still to do before Phase 1: your answers on auth settings, secrets and Vercel variables.
 
 ### Phase 1: staging database (nothing live is touched)
 
-1. Dump production's `public` and `private` schemas, **schema only** (`supabase db dump --db-url <prod> -f prod_schema.sql`),
+1. You dump production's `public` and `private` schemas, **schema only**, on your machine (commands above),
    plus the reference data only: `app_config`, `categories`, `corner_categories` and any other table that holds
    configuration rather than people (I'll list them from the dump for your approval). **No user data, no `profile_private`, no Moments.**
-2. On `nospace-staging` only: drop and recreate `public` and `private`, restore the dump, restore the grants.
+2. On `nospace-staging` only: drop and recreate `public` and `private`, then you restore the dump (grants included). Create
+   the `pg_net` extension first.
    Supabase-managed schemas (`auth`, `storage`, `extensions`) are left alone.
 3. Copy production's 142 recorded versions into staging's `supabase_migrations.schema_migrations`, so both
    projects have the same record from here on.
 4. Recreate the 4 missing cron jobs pointing at the **staging** project URL and key (not production's).
-5. Apply `20261117000000_weekly_free_hours.sql` (and later, each new migration) to staging first.
+5. Record `20261117000000` too (staging gets the *schema* from the dump, so the migration file is not re-run there either), and
+   from here on apply each new migration to staging first.
 6. **Gate:** the fingerprint matches production; `supabase/verification/member_gate_check.sql` and the existing
    verification scripts pass on staging, each ending in rollback with no fixture rows left.
 
@@ -105,7 +171,7 @@ keys; I never see them), check the 3 storage buckets and their policies match, s
 
 | Risk | Handling |
 |---|---|
-| The staging site is on the live database today | Settled in Phase 0 before anything else; if true, Phase 3 step 2 comes first |
+| The staging site and every preview are on the live database today | Evidence above; Phase 3 step 2 repoints the staging deployment, and previews should be pointed at staging too |
 | Dump copies personal data into staging | Schema only, plus a reviewed list of reference tables |
 | Staging cron jobs or functions call production | Recreated with staging URLs and keys; checked in the fingerprint |
 | Restored grants differ from live | The fingerprint compares grants, and the access-allowlist test and `member_gate_check.sql` run on staging |
@@ -113,5 +179,8 @@ keys; I never see them), check the 3 storage buckets and their policies match, s
 
 ## What I need from you
 
-Approve (or change) the approach, answer the five items under "What I could not see", and tell me whether I may run
-the Phase 0 read-only fingerprint now. Nothing is reset until you approve.
+1. Approve (or change) the approach, including that **you** run the dump and restore rather than sharing a connection string.
+2. Say **go** to record `20261117000000` on production (one row; its effects are already live and verified).
+3. Check the auth settings and Vercel variables above (or tell me the values that are not secret, such as the Supabase URL).
+
+Nothing is reset or changed until you approve.
