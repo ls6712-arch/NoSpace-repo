@@ -163,6 +163,8 @@ export interface MergeOptions {
   overrides?: Readonly<Record<string, string>>;
   /** Catalog slugs the founder wants created even though an alias matches a narrower existing Corner (Playing an instrument vs Guitar). */
   keepSeparate?: readonly string[];
+  /** Catalog slugs whose follow-on match the founder approved (Singing into Choir and singing). */
+  acceptFollowOn?: readonly string[];
   /** Follows hobbies.ts MERGED_CORNERS: a Corner merged away resolves to the one kept. */
   canonical?: (spaceSlug: string, slug: string) => { spaceSlug: string; slug: string };
 }
@@ -213,11 +215,11 @@ export function mergeCatalog(entries: CatalogEntry[], existing: ExistingCorner[]
   const take = (e: CatalogEntry, hit: ExistingCorner, rule: MatchRule) => {
     const k = canon(hit.spaceSlug, hit.slug);
     const winner = existing.find((x) => x.spaceSlug === k.spaceSlug && x.slug === k.slug) ?? hit;
-    if (winner !== hit && rule !== "override") {
+    if (winner !== hit && rule !== "override" && !opts.acceptFollowOn?.includes(e.slug)) {
       followOn.push({ catalog: e, existing: winner, rule, via: hit });
       return;
     }
-    merged.push({ catalog: e, existing: winner, rule });
+    merged.push({ catalog: e, existing: winner, rule, ...(winner !== hit ? { via: hit } : {}) });
     give(e, winner);
   };
 

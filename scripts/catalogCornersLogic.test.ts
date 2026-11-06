@@ -58,7 +58,7 @@ describe("CSV generation", () => {
     ];
     const uniq = [...new Map(existing.map((c: { spaceSlug: string; slug: string }) => [`${c.spaceSlug}/${c.slug}`, c])).values()];
     const result = mergeCatalog(keptEntries(csvRows(csvText)), uniq as never, {
-      overrides: approvals.overrides, keepSeparate: approvals.keepSeparate, canonical: canonicalCorner,
+      overrides: approvals.overrides, keepSeparate: approvals.keepSeparate, acceptFollowOn: approvals.acceptFollowOn, canonical: canonicalCorner,
     });
     expect(fs.readFileSync(path.join(root, "src/app/data/catalogCorners.ts"), "utf8")).toBe(renderCatalogFile(result));
   });
@@ -117,6 +117,15 @@ describe("merging with existing Corners", () => {
     expect(r.fresh).toHaveLength(0);
     expect(r.aliasAdditions).toEqual({});
     expect(r.existingMeta).toEqual({});
+  });
+
+  it("an approved follow-on match merges into the kept Corner", () => {
+    const pool = [{ spaceSlug: "a", slug: "old", name: "Old" }, { spaceSlug: "a", slug: "kept", name: "Kept" }];
+    const canonical = (s: string, sl: string) => (sl === "old" ? { spaceSlug: s, slug: "kept" } : { spaceSlug: s, slug: sl });
+    const r = mergeCatalog([entry({ slug: "old", name: "Old", spaceSlug: "a", aliases: ["ancient"] })], pool, { canonical, acceptFollowOn: ["old"] });
+    expect(r.followOn).toHaveLength(0);
+    expect(r.merged[0]).toMatchObject({ existing: { slug: "kept" }, via: { slug: "old" } });
+    expect(r.aliasAdditions["a/kept"]).toEqual(["Old", "ancient"]);
   });
 
   it("a held-out cross-Space row gives its aliases, nyc_fit and season to the existing Corner", () => {

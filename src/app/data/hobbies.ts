@@ -280,7 +280,7 @@ export const hobbies: Hobby[] = [
     description: "Video games, board games, D&D, cards, puzzles, RPGs.",
     subItems: [
       sub("Board games"), sub("Chess"), sub("Tabletop RPGs"), sub("Trading cards"),
-      sub("Puzzles"), sub("D&D"), sub("Video games"), sub("Trivia"), sub("Mahjong"), sub("Carrom"),
+      sub("Puzzles"), sub("D&D and tabletop RPGs", "d-d"), sub("Video games"), sub("Trivia"), sub("Mahjong"), sub("Carrom"),
     ],
     gradient: "from-[var(--forest)] to-[var(--sky-deep)]",
     coverImage:
