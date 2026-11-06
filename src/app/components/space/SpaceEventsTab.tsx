@@ -22,6 +22,7 @@ import { ConfirmDialog } from "../ConfirmDialog";
 import { Loadable } from "../ui/skeleton";
 import { CardListSkeleton } from "../Skeletons";
 import { EmptyState, InlineError } from "../StateViews";
+import { SpaceWeeklyTimes } from "../standing/SpaceWeeklyTimes";
 
 
 function initials(name: string) {
@@ -351,6 +352,12 @@ export function SpaceEventsTab({
             ))}
           </ul>
         </section>
+      )}
+
+      {isHost && space.status === "active" && (
+        <div className="mt-8">
+          <SpaceWeeklyTimes spaceId={space.id} city={space.city} />
+        </div>
       )}
 
       {attendanceEvent && (
