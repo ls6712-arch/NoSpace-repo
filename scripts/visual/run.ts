@@ -559,7 +559,7 @@ async function main() {
       for (const [k, d] of lay.results) if (d.hscroll > 0) rows.push(`    sideways scroll +${d.hscroll}px [${k}]: ${(d.wide ?? []).map((w) => `${w.sel} "${w.text}" right=${w.right}`).join(" | ") || "(no single element found)"}`);
       if (tch) {
         const smalls = new Map<string, Set<string>>();
-        for (const [k, r] of tch) for (const f of r.failing) if (f.reason === "small") { const sc = screenOf(k); (smalls.get(sc) ?? smalls.set(sc, new Set()).get(sc)!).add(`${f.sel} "${f.text}" ${f.w}x${f.h}`); }
+        for (const [k, r] of tch) for (const f of r.failing) if (f.reason === "small") { const sc = screenOf(k); (smalls.get(sc) ?? smalls.set(sc, new Set()).get(sc)!).add(`${f.sel} "${f.text}" ${f.w}x${f.h} (corner on ${f.stolenBy ?? "?"})`); }
         for (const [sc, items] of smalls) rows.push(`    touch target under 44px [${sc}]: ${[...items].join(" | ")}`);
         const ovs = new Map<string, Set<string>>();
         for (const [k, r] of tch) for (const x of r.overlaps) { const sc = screenOf(k); (ovs.get(sc) ?? ovs.set(sc, new Set()).get(sc)!).add(`${x.a} / ${x.b}`); }
