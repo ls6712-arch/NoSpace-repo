@@ -22,7 +22,7 @@ Check the project for any other variable that names production (for example a Tu
 `STUBBY` URL). The code reads only the two above (`src/lib/supabase.ts`). Redeploy a preview afterwards: Vercel applies
 variables to new builds only.
 
-Equivalent with the Vercel CLI (run from the repo, logged in to team `nospace1`):
+Equivalent with the Vercel CLI (run from the repo, logged in to the Nospace team):
 
 ```bash
 vercel env add VITE_SUPABASE_URL preview
