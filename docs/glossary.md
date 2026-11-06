@@ -1328,3 +1328,26 @@ current external availability and source terms were not independently verified.
 The earlier directory review files remain a historical candidate snapshot,
 not a claim that any third-party material is copyright-free. Resource cards
 contain no copied website images, logos, text excerpts, audio or embeds.
+
+## Discover content visibility (approved Nov 5, 2026)
+
+The owner approved the Discover visibility design. Public Resources and Pursuit
+ideas appear directly below the existing Corner carousel, with in-page shortcuts.
+Both are readable without opening a Corner, following or signing up.
+
+| Wording | Meaning |
+| --- | --- |
+| Browse art, find a book, or try a lesson. | Resources preview helper text |
+| Pick a goal. Make the steps your own. | Pursuit ideas preview helper text |
+| See all resources / See all ideas | Open the corresponding optional collection |
+| Choose a Corner if you want to narrow it down. | Optional collection filtering |
+| Search resources / Search Pursuit ideas | Search the open public collection |
+| Search by name or interest | Search field placeholder |
+| Corner / All Corners | Optional Corner filter and its unrestricted value |
+| Clear filters | Remove collection search and Corner filter only |
+| No matches. Try another word or Corner. | Empty filtered collection, not a failed read |
+| Close collection | Close the collection and restore Discover position and focus |
+
+Visit website opens the source directly. Start a Pursuit retains the existing
+editable creation form, account gates and private defaults. This editorial set
+does not claim to be personalized by Stubby or display any member progress.
