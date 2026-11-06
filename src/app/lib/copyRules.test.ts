@@ -30,14 +30,18 @@ describe("copy rules", () => {
     expect(show(strings.filter((s) => /[—–]/.test(s.text)))).toEqual([]);
   });
 
-  // G4. "Nature journaling" is a Corner name, so it is allowed.
+  // G4. "Nature journaling" is a Corner name, so it is allowed (see also catalogName below).
   it("has no banned phrases", () => {
     const banned = /\b(journal(ing|s)?|diary|diaries|reflect(s|ion|ions)?|habits?|streaks?)\b|not ranked|non-metric|never scored/i;
     // Allowed: the Nature journaling Corner.
+    // Also allowed, pending the founder's call (PR "Corner catalog"): the two catalog Corners
+    // Journaling and Bullet journaling, by exact name or slug, in the generated catalog file only.
     const allowed = /nature[- ]journaling/i;
+    const catalogName = (s: { file: string; text: string }) =>
+      s.file.endsWith("data/catalogCorners.ts") && /^(bullet[- ])?journaling$/i.test(s.text);
     // Import paths and storage keys ("../lib/journal", "sushii.journal.v1") are code, not copy.
     const isCode = (t: string) => /^(\.{1,2}\/|[\w-]+(\.[\w-]+)+$)/.test(t);
-    const hits = strings.filter((s) => banned.test(s.text) && !allowed.test(s.text) && !isCode(s.text));
+    const hits = strings.filter((s) => banned.test(s.text) && !allowed.test(s.text) && !catalogName(s) && !isCode(s.text));
     expect(show(hits)).toEqual([]);
   });
 

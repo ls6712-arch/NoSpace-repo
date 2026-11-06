@@ -1061,6 +1061,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         visibility: toGroup ? "just_me" : audience,
         audience: toGroup ? "group" : audience === "public" ? "everyone" : "friends",
         city: circle === "private" || cityRemoved || !myCity.trim() ? null : myCity.trim(),
+        // Taken off by the person: the database keeps no city key for this Moment either.
+        cityHidden: cityRemoved || undefined,
         shareNow: circle !== "private" && shareNow,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,

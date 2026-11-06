@@ -46,6 +46,8 @@ const corner = (i: number, extra: Record<string, unknown> = {}) => ({
   hasActiveSpace: false,
   hidden: false,
   isCurated: true,
+  isCatalog: false,
+  aliases: [],
   ...extra,
 });
 
