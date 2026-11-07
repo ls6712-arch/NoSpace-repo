@@ -551,9 +551,12 @@ async function main() {
       const smallInputs = ios ? new Set([...ios].flatMap(([, r]) => r.smallInputs.map((x) => `${x.sel} ${x.fontSize}px`))) : undefined;
       const safeBad = ios ? [...ios].filter(([, r]) => r.safe && (!r.safe.viewportFitCover || !r.safe.tokenIsEnv || r.safe.barFollowsToken === false)).length : 0;
       const safeSeen = ios ? [...ios].filter(([, r]) => r.safe?.barFollowsToken === true).length : 0;
-      if (hs > 0 || cf > 0 || small > 0 || fxProblems > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && safeSeen === 0)) bad++;
+      // The safe-area check is about the fixed bottom tab bar, and the audit must have seen that bar follow the token (a pass that
+      // never saw it proves nothing). From the rail breakpoint (744px) up there is a side rail and no bottom bar, so nothing to see.
+      const hasBottomBar = p.w < 744;
+      if (hs > 0 || cf > 0 || small > 0 || fxProblems > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && hasBottomBar && safeSeen === 0)) bad++;
       details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null, fixedChromeProblems: fxProblems < 0 ? null : fxProblems });
-      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
+      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad > 0 || (hasBottomBar && safeSeen === 0) ? "FAIL" : hasBottomBar ? "ok" : "n/a, side rail"} (${safeSeen} views)` : ""}`);
       if (smallInputs?.size) for (const x of smallInputs) rows.push(`    input under 16px: ${x}`);
       // Name what to fix, grouped by screen, so a red run says where without downloading the report.
       const screenOf = (k: string) => k.split("/").slice(2).join("/");

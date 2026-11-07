@@ -23,7 +23,7 @@ const SUPA = "https://fixture.supabase.co";
 fs.mkdirSync(out, { recursive: true });
 if (!arg("--dist")) {
   const result = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], {
-    cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: "fixture-anon-key", VITE_HUMAN_ONBOARDING: String(human) },
+    cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: "fixture-anon-key", VITE_HUMAN_ONBOARDING: String(human), VITE_STUBBY_ASK: "true" },
   });
   assert.equal(result.status, 0, "Production build failed");
 }

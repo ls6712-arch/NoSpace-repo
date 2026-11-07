@@ -37,7 +37,10 @@ export const marketplaceEnabled = false;
 // already has, but there is no field, no live search and no results under
 // him, and the landing page's main button goes to sign-up instead. The code,
 // the function and the saved picks all stay; flip this to bring it back.
-export const stubbyAskEnabled = false;
+// It is off unless a build sets VITE_STUBBY_ASK=true, and only the guest
+// end-to-end build does (scripts/e2e/guest-stubby.ts), so the Ask path stays
+// tested while it is off on live. Do not set it on Vercel.
+export const stubbyAskEnabled = import.meta.env.VITE_STUBBY_ASK === "true";
 
 // Today's sheet, Books and the Public Scrapbook are named concepts outside
 // the five product nouns (Moment, Shelf, Pursuit, Corner, Space), so they are
