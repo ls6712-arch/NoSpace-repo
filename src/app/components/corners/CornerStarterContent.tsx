@@ -6,6 +6,7 @@ import { SuggestionPhoto } from "../home/SuggestionPhoto";
 import { formatDuration } from "../../lib/dates";
 import { SECTION_GAP } from "../../lib/pageGrid";
 import { starterContentFor, starterPursuitPath, type StarterActivity } from "../../lib/starterContent";
+import { hasActivities } from "../../lib/cornerActivities";
 
 function Activity({ item }: { item: StarterActivity }) {
   const needs = item.requirements;
@@ -33,7 +34,7 @@ export function CornerStarterContent({ spaceSlug, slug, restricted }: { spaceSlu
   const [photoLoaded, setPhotoLoaded] = useState(false);
   const cover = content.cover;
   return <>
-    {content.activities.length > 0 && <section className={SECTION_GAP} id="corner-activities" aria-labelledby="activities-title">
+    {content.activities.length > 0 && !hasActivities(slug) && <section className={SECTION_GAP} id="corner-activities" aria-labelledby="activities-title">
       <h2 className="mb-4 text-title" id="activities-title">Things to try</h2>
       <div className="grid items-start gap-4 tab:grid-cols-2 desk:grid-cols-3">{content.activities.map(item => <Activity key={item.id} item={item}/>)}</div>
     </section>}

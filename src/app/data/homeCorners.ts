@@ -4,6 +4,7 @@ import { CATALOG_CORNERS } from "./catalogCorners";
 import { CORNER_GUIDES } from "./cornerGuides";
 import { curatedFor, type CuratedCorner } from "./curatedCorners";
 import { hasHobbyPhoto, photoCredit } from "./hobbyPhotos";
+import { hasActivities } from "../lib/cornerActivities";
 
 /**
  * A built-in Corner as the Corners home lists it: every Corner in hobbies.ts,
@@ -18,9 +19,12 @@ export interface HomeCorner {
   curated?: CuratedCorner;
 }
 
-/** A Corner ships in the main grid only with a guide, a curated entry and its own photo with a credit (cornerCompleteness.test.ts). */
+/** A guide, or activities: a Corner with activities counts as having a guide (brief of Nov 7, 2026, 2.4). */
+export const hasGuide = (spaceSlug: string, slug: string): boolean => `${spaceSlug}/${slug}` in CORNER_GUIDES || hasActivities(slug);
+
+/** A Corner ships in the main grid only with a guide (or activities), a curated entry and its own photo with a credit (cornerCompleteness.test.ts). */
 export function isCompleteCorner(spaceSlug: string, slug: string): boolean {
-  return `${spaceSlug}/${slug}` in CORNER_GUIDES && !!curatedFor(spaceSlug, slug) && hasHobbyPhoto(slug) && !!photoCredit(slug);
+  return hasGuide(spaceSlug, slug) && !!curatedFor(spaceSlug, slug) && hasHobbyPhoto(slug) && !!photoCredit(slug);
 }
 
 /**
