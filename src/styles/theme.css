@@ -698,6 +698,13 @@
       transform: translate(-50%, -50%);
     }
 
+    /* A visually hidden link (the skip link) has no hit area to enlarge: its
+       44px ::after would sit invisibly over whatever is next to it (the
+       wordmark) and take its taps. It gets the area back when it is shown on focus. */
+    .sr-only:not(:focus)::after {
+      content: none;
+    }
+
     :where(input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="file"]), select, textarea) {
       min-height: 44px;
     }
