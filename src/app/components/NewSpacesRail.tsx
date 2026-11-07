@@ -78,7 +78,7 @@ export function NewSpacesRail() {
                     {openedLabel(new Date(s.created_at).getTime())}
                   </span>
                 </div>
-                <Link to={`/space/${s.slug}`} className="shrink-0 text-caption text-accent hover:underline">
+                <Link to={`/space/${s.slug}`} className="shrink-0 text-caption text-accent-text hover:underline">
                   Visit
                 </Link>
               </div>

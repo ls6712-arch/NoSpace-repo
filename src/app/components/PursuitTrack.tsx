@@ -82,7 +82,8 @@ function Trail({
             +earlier
           </span>
         )}
-        <div className="relative flex w-full items-center justify-between">
+        {/* px-px: the last dot's 44px touch area (theme.css) reaches 17px past the dot, which would otherwise end 1px outside a 375px viewport and scroll the page sideways. */}
+        <div className="relative flex w-full items-center justify-between px-px">
           {shown.map((m, i) => {
             const isLatest = m.id === latestId;
             const isPrivate = isOnlyYou(m);
@@ -164,7 +165,7 @@ export function PursuitTrack({
         <div className="min-w-0">
           <Link
             to={`/pursuit/${pursuit.id}`}
-            className="block text-body text-foreground hover:text-accent"
+            className="block text-body text-foreground hover:text-accent-text"
             style={{ fontFamily: "var(--font-serif)" }}
           >
             {pursuit.title}

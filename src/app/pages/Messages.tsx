@@ -936,7 +936,7 @@ export function Messages() {
                           </span>
                           {unread > 0 && (
                             <span
-                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand"
+                              className="flex size-4 shrink-0 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand dark:text-[var(--accent-foreground)]"
                               aria-label={`${unread} unread`}
                             >
                               {formatBadgeCount(unread)}

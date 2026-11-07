@@ -221,13 +221,21 @@ function SimpleCreatePursuit() {
                       Track progress as
                     </legend>
                     {[false, true].map((v) => (
-                      <label key={String(v)} className="flex gap-3 text-small">
+                      // The input spans the whole row (invisible), so the tap target is the row, not a 13px dot.
+                      <label key={String(v)} className="relative flex min-h-11 gap-3 text-small">
                         <input
                           type="radio"
                           name="groupMode"
                           checked={shared === v}
                           onChange={() => setShared(v)}
+                          className="peer absolute inset-0 m-0 size-full cursor-pointer opacity-0"
                         />
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border peer-checked:border-[var(--accent-text)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent-text)] [&>span]:scale-0 peer-checked:[&>span]:scale-100"
+                        >
+                          <span className="size-2 rounded-full bg-[var(--accent-text)] transition-transform" />
+                        </span>
                         <span>
                           {v ? "Shared goal" : "Individual goals"}
                           <span className="block text-caption text-muted-foreground">

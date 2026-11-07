@@ -31,7 +31,7 @@ export function CheckInCard({ pursuit, lastActivity }: { pursuit: Project; lastA
   return (
     <div className="rounded-card border border-[var(--accent-text)]/40 bg-card p-4">
       <p className="text-small">
-        <Link to={`/pursuit/${pursuit.id}`} className="inline-flex min-h-11 items-center hover:text-accent" style={{ fontFamily: "var(--font-serif)" }}>
+        <Link to={`/pursuit/${pursuit.id}`} className="inline-flex min-h-11 items-center hover:text-accent-text" style={{ fontFamily: "var(--font-serif)" }}>
           {pursuit.title}
         </Link>{" "}
         <span className="text-muted-foreground">has been quiet for {quietFor(lastActivity)}. Where’s it at?</span>

@@ -225,7 +225,7 @@ export function NotificationsMenu({
           <Bell className="size-5" />
           {badgeCount > 0 && (
             <span
-              className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums"
+              className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand dark:text-[var(--accent-foreground)] tabular-nums"
               aria-hidden="true"
             >
               {formatBadgeCount(badgeCount)}

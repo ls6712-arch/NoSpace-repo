@@ -36,7 +36,7 @@ function MessagesLink() {
         <MessagesSquare className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand dark:text-[var(--accent-foreground)] tabular-nums"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -233,7 +233,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
                     item.accent
                       ? "flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
                       : `relative py-1 text-small transition-colors ${
-                          active ? "text-accent" : "text-foreground/75 hover:text-foreground"
+                          active ? "text-accent-text" : "text-foreground/75 hover:text-foreground"
                         }`
                   }
                 >
@@ -271,7 +271,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
           {cartCount > 0 && (
             <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>
               <ShoppingBag className="size-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums">
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand dark:text-[var(--accent-foreground)] tabular-nums">
                 {cartCount}
               </span>
             </Button>

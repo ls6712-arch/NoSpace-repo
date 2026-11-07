@@ -100,7 +100,9 @@ try {
     await source.scrollIntoViewIfNeeded();
     const appUrl = page.url();
     const popupPromise = context.waitForEvent("page"); await source.click();
-    const popup = await popupPromise; await popup.waitForLoadState("domcontentloaded");
+    // A popup opened with noopener reports "" until its first navigation commits, and waitForLoadState can resolve on
+    // that empty first document, so wait for the URL itself (CI saw "" here on Nov 6, 2026).
+    const popup = await popupPromise; await popup.waitForURL("https://standardebooks.org/", { waitUntil: "domcontentloaded" });
     assert.equal(popup.url(), "https://standardebooks.org/");
     assert(await popup.evaluate(() => window.opener === null));
     assert.equal(page.url(), appUrl); await popup.close();

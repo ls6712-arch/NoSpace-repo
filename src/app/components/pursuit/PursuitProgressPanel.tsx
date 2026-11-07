@@ -447,7 +447,7 @@ export function InviteDialog({
                 >
                   <PersonAvatar name={p.displayName} src={p.avatarUrl} />
                   <span className="flex-1 text-small">{p.displayName}</span>
-                  <span className="text-caption text-accent">Invite</span>
+                  <span className="text-caption text-accent-text">Invite</span>
                 </button>
               </li>
             ))}

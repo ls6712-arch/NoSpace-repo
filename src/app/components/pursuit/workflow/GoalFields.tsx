@@ -38,7 +38,7 @@ export function GoalFields({
           {trackingOptions.map((option) => (
             <label
               key={option.value}
-              className={`flex cursor-pointer gap-3 rounded-card border p-3 ${value.tracking === option.value ? "border-accent bg-surface-muted" : "border-border bg-card"}`}
+              className={`relative flex cursor-pointer gap-3 rounded-card border p-3 ${value.tracking === option.value ? "border-accent bg-surface-muted" : "border-border bg-card"}`}
             >
               <input
                 type="radio"
@@ -46,6 +46,8 @@ export function GoalFields({
                 value={option.value}
                 checked={value.tracking === option.value}
                 disabled={locked}
+                // Spans the whole card (invisible), so the tap target is the card, not a 13px dot.
+                className="peer absolute inset-0 m-0 size-full cursor-pointer rounded-card opacity-0"
                 onChange={() =>
                   patch({
                     tracking: option.value,
@@ -59,6 +61,12 @@ export function GoalFields({
                   })
                 }
               />
+              <span
+                aria-hidden="true"
+                className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-border peer-checked:border-[var(--accent-text)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--accent-text)] [&>span]:scale-0 peer-checked:[&>span]:scale-100"
+              >
+                <span className="size-2 rounded-full bg-[var(--accent-text)] transition-transform" />
+              </span>
               <span>
                 <span className="block text-small font-medium">
                   {option.label}
