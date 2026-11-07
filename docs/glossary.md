@@ -1370,3 +1370,21 @@ New with the weekly schedule behind Tonight (`standing_slots`). **Every row belo
 | Off | Badge and checkbox label for a weekly time that is turned off |
 | Take part / Watch | Admin form: whether you can join in or only watch (`mode` do or watch) |
 | No weekly times yet. | Empty state, host panel and admin screen |
+
+## Corner activities, PR A (brief of Nov 7, 2026)
+
+On a Corner's page, a section of things to do from `data/corner_activities.csv` (written by the founder's team and approved as content; the activity titles, descriptions, first steps and Moment prompts are that content and are not repeated here). **New wording for approval.**
+
+| String | Where |
+|---|---|
+| Things to try | Heading of the section on a Corner that has activities. The same words as the existing "Things to try" of the ten starter Corners, which it replaces on a Corner that has both (none today). Reused, not new |
+| At home / With people / At a place | The three tabs. The same words as Discover's Corner cards. An activity is under every tab it fits; a tab with nothing in it is not shown. Reused, not new |
+| Low energy / Medium energy / High energy | Tag on an activity card |
+| Solo / With a friend / With a group | Tags on an activity card, one per way it works |
+| Free / Low cost / Treat | Cost tag on an activity card. Never an amount of money |
+| 15 min / 1 hr / 3 hr / 4 hr | Duration tag, from `formatDuration` (15min, an hour, an evening, half a day; the last two are proposed lengths in `config.ts`) |
+| First step: | Label before an activity's first step, on its card |
+| Do this | Button on an activity card. Opens the composer on that Corner with the activity's Moment prompt above the thought. **Same words as the "Do this" pill on a Moment (Start page) and near "Do this with people" on a Corner page. Different actions: flagged for your decision** |
+
+In the composer, from an activity: a small block above the thought shows the activity's title and its Moment prompt (content, no new label). The Moment saves the activity (`posts.activity_id`) and earns the normal Stub.
+

@@ -108,3 +108,6 @@ export const sooshOnboardingEnabled = true;
 // the button stays hidden; flip this and ship, nothing else changes.
 export const appleSignInEnabled = false;
 
+// How long each "duration" in data/corner_activities.csv is, in minutes, for showing it as "15 min", "1 hr", "3 hr".
+// Proposed numbers (the CSV only says 15min, hour, evening, halfday); the founder confirms or changes them here.
+export const activityDurationMinutes = { "15min": 15, hour: 60, evening: 180, halfday: 240 } as const;

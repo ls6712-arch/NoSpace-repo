@@ -1,4 +1,5 @@
 import { recordStartAction } from "../lib/startActions";
+import { activityFromParams } from "../lib/cornerActivities";
 import { PaperStamp } from "../components/corners/MomentStamp";
 import { formatDate, formatMonth, formatTime } from "../lib/dates";
 import { plural } from "../lib/plural";
@@ -326,6 +327,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     if (initialPursuit?.subHobby) return initialPursuit.subHobby;
     return searchParams.get("sub") ?? "";
   });
+  // Came from "Do this" on a Corner's activity: its prompt shows above the thought, and the Moment keeps the activity.
+  // Dropped if the person moves the Moment to another Corner.
+  const activity = activityFromParams(searchParams, corner);
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   // A Pursuit with a measure (10 loaves, 5 paintings) can take an amount from
@@ -1068,6 +1072,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         pursuitId: projectId || undefined,
         // Made after seeing someone else's Moment (from the Start page). The database checks it.
         inspiredBy: /^\d{1,15}$/.test(searchParams.get("inspired") ?? "") ? Number(searchParams.get("inspired")) : undefined,
+        // Logged from an activity ("Do this"): saved on the Moment as posts.activity_id.
+        activityId: activity?.id,
         // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
         // are readable by everyone today. Only the existing Activity fields may write them;
         // do not add an exact place or time for a plain Moment until that ticket is done.
@@ -1789,6 +1795,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           <p className="mb-4 rounded-card border border-[var(--accent-text)]/40 bg-[color-mix(in_srgb,var(--coral)_9%,var(--surface-elevated))] px-4 py-3 text-left text-caption leading-relaxed text-foreground">
             {heicWarning}
           </p>
+        )}
+
+        {activity && (
+          <div className="mb-3 rounded-card bg-card p-4" data-testid="activity-prompt">
+            <p className="text-caption text-muted-foreground">{activity.title}</p>
+            <p className="mt-1 text-body">{activity.momentPrompt}</p>
+          </div>
         )}
 
         <div className="mb-4">
