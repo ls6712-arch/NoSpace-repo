@@ -5,11 +5,13 @@
 -- not, and a second Moment by A, public, whose thought has a photo too.
 -- Every lookup is scoped to the fixture's own ids and object names.
 --
--- Expect, in order: 1 PASS column, 2 PASS policy, 3 PASS owner reads, 4 PASS
--- follower reads, 5 PASS stranger blocked, 6 PASS public Moment's thought photo
--- readable, 7 PASS signed-out blocked, 8 PASS another
--- person's path refused, 9 PASS both sources refused, 10 PASS photo closed
--- when no thought names it (the state after the thought is deleted).
+-- Expect, in order: 1 PASS column, 2 PASS policy (anon and authenticated), 3 PASS
+-- owner reads, 4 PASS follower reads, 5 PASS stranger blocked, 6 PASS public
+-- Moment's thought photo readable by a stranger, 7 PASS signed-out reads a
+-- public Moment's thought photo, 8 PASS signed-out blocked on a followers-only
+-- Moment's thought photo, 9 PASS another person's path refused, 10 PASS both
+-- sources refused, 11 PASS photo closed when no thought names it (the state
+-- after the thought is deleted).
 begin;
 
 do $$
@@ -55,15 +57,15 @@ begin
 
   v_post_priv := (
     with ins as (
-      insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
-      values (v_a, 'writing', 'written', '', 'TP moment followers', 'followers')
+      insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, visible_at)
+      values (v_a, 'writing', 'written', '', 'TP moment followers', 'followers', now())
       returning posts.id
     ) select ins.id from ins
   );
   v_post_pub := (
     with ins as (
-      insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility)
-      values (v_a, 'writing', 'written', '', 'TP moment public', 'public')
+      insert into public.posts (user_id, hobby_slug, type, media_url, caption, visibility, visible_at)
+      values (v_a, 'writing', 'written', '', 'TP moment public', 'public', now())
       returning posts.id
     ) select ins.id from ins
   );
@@ -94,14 +96,14 @@ begin
   );
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS column' else 'FAIL column missing' end));
 
-  -- 2. The storage policy exists, for select, authenticated only.
+  -- 2. The storage policy exists, for select, for anon and authenticated (it follows the thought's own visibility).
   v_bool := exists (
     select 1 from pg_policies p
     where p.schemaname = 'storage' and p.tablename = 'objects'
       and p.policyname = 'moment-media: see photos on thoughts you can see'
-      and p.cmd = 'SELECT' and p.roles = '{authenticated}'
+      and p.cmd = 'SELECT' and p.roles::text[] @> array['anon', 'authenticated'] and cardinality(p.roles) = 2
   );
-  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS policy' else 'FAIL policy missing or wrong roles' end));
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS policy' else 'FAIL policy missing or not for anon and authenticated' end));
 
   perform set_config('role', 'authenticated', true);
 
@@ -120,23 +122,27 @@ begin
   v_bool := not exists (select 1 from storage.objects o where o.bucket_id = 'moment-media' and o.name = v_obj_priv);
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS stranger blocked' else 'FAIL stranger CAN read a followers-only thought photo' end));
 
-  -- 7. A thought under a public Moment: a stranger reads its photo.
+  -- 6. A thought under a public Moment: a stranger reads its photo.
   v_bool := exists (select 1 from storage.objects o where o.bucket_id = 'moment-media' and o.name = v_obj_pub);
   v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS public Moment thought photo readable' else 'FAIL stranger cannot read a public Moment thought photo' end));
 
-  -- 6. Signed out: nothing.
+  -- 7. Signed out: the photo on a public Moment's thought is readable, as the thought's text is.
   perform set_config('role', 'anon', true);
   perform set_config('request.jwt.claims', '{}', true);
-  v_bool := not exists (select 1 from storage.objects o where o.bucket_id = 'moment-media' and o.name in (v_obj_priv, v_obj_pub));
-  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS signed-out blocked' else 'FAIL signed-out CAN read a thought photo' end));
+  v_bool := exists (select 1 from storage.objects o where o.bucket_id = 'moment-media' and o.name = v_obj_pub);
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS signed-out reads a public Moment thought photo' else 'FAIL signed-out cannot read a public Moment thought photo' end));
+
+  -- 8. Signed out: the photo on a followers-only Moment's thought is not.
+  v_bool := not exists (select 1 from storage.objects o where o.bucket_id = 'moment-media' and o.name = v_obj_priv);
+  v_i := v_i + 1; results := array_append(results, format('%s %s', v_i, case when v_bool then 'PASS signed-out blocked on a followers-only thought photo' else 'FAIL signed-out CAN read a followers-only thought photo' end));
 
   perform set_config('role', 'authenticated', true);
 
-  -- 8 and 9 are table constraints, checked as the owner role: row level security
+  -- 9 and 10 are table constraints, checked as the owner role: row level security
   -- runs before CHECK constraints, so as a member it would hide which one refused.
   perform set_config('role', v_owner_role, true);
 
-  -- 8. A thought cannot point at someone else's folder.
+  -- 9. A thought cannot point at someone else's folder.
   begin
     insert into public.thoughts (post_id, user_id, body, media_path)
     values (v_post_pub, v_f, 'TP thought bad path', v_obj_other);
@@ -149,7 +155,7 @@ begin
       v_i := v_i + 1; results := array_append(results, format('%s ERROR unexpected sqlstate %s on other-folder path', v_i, v_sqlstate));
   end;
 
-  -- 9. A thought cannot carry a private path and a public URL at once.
+  -- 10. A thought cannot carry a private path and a public URL at once.
   begin
     insert into public.thoughts (post_id, user_id, body, media_path, media_url)
     values (v_post_pub, v_a, 'TP thought both', v_a::text || '/x.jpg', 'https://example.invalid/x.jpg');
@@ -162,7 +168,7 @@ begin
       v_i := v_i + 1; results := array_append(results, format('%s ERROR unexpected sqlstate %s on both sources', v_i, v_sqlstate));
   end;
 
-  -- 10. A photo no thought or Moment names is closed to everyone but its folder's owner:
+  -- 11. A photo no thought or Moment names is closed to everyone but its folder's owner:
   -- what a deleted thought's photo looks like to anyone else.
   perform set_config('role', 'authenticated', true);
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_f), true);

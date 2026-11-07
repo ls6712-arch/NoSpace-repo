@@ -27,13 +27,16 @@ create index if not exists thoughts_media_path_idx
   on public.thoughts (media_path)
   where media_path is not null;
 
--- Who can read a thought's photo: anyone who can read the thought. The exists
--- runs under the reader's own row level security on public.thoughts ("thoughts
--- follow the moment's setting", which in turn runs posts' own policy), so a
--- followers-only Moment's thought photo is as private as the Moment, and once
--- the thought row is deleted nobody but its author's own folder rule matches.
+-- Who can read a thought's photo: anyone who can read the thought, signed in or
+-- not. The exists runs under the reader's own row level security on
+-- public.thoughts ("thoughts follow the moment's setting", which in turn runs
+-- posts' own policy). A signed-out visitor can read thoughts on a public Moment,
+-- so they see its photos too (as they do the Moment's own, whose policy is also
+-- anon + authenticated); a followers-only Moment's thought photo is as private
+-- as the Moment; and once the thought row is deleted nobody but its author's own
+-- folder rule matches.
 create policy "moment-media: see photos on thoughts you can see"
-  on storage.objects for select to authenticated
+  on storage.objects for select to anon, authenticated
   using (
     objects.bucket_id = 'moment-media'
     and exists (
