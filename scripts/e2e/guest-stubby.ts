@@ -31,7 +31,7 @@ const args = process.argv.slice(2);
 const distArg = args.includes("--dist") ? args[args.indexOf("--dist") + 1] : null;
 const dist = path.resolve(ROOT, distArg ?? "dist-e2e");
 if (!distArg) {
-  const r = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_STUBBY_V3: "true", VITE_HUMAN_ONBOARDING:"true", VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: ANON_KEY } });
+  const r = spawnSync("npx", ["vite", "build", "--outDir", dist, "--emptyOutDir"], { cwd: ROOT, stdio: "inherit", env: { ...process.env, VITE_STUBBY_V3: "true", VITE_STUBBY_ASK: "true", VITE_HUMAN_ONBOARDING:"true", VITE_SUPABASE_URL: SUPA, VITE_SUPABASE_ANON_KEY: ANON_KEY } });
   if (r.status !== 0) throw new Error("build failed");
 }
 
