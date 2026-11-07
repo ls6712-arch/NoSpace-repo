@@ -19,7 +19,7 @@ import {
   type CornerSetting,
 } from "../data/curatedCorners";
 import { cornerKey, homeCornersIn, notStartedIn, type HomeCorner } from "../data/homeCorners";
-import { NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips } from "../components/corners/NotStartedHere";
+import { NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips, previewOf } from "../components/corners/NotStartedHere";
 import { MOODS, type MoodId } from "../data/moods";
 import { NO_PICK, SETTING_OPTIONS, hasPick, matches, paramsFromPicker, pickerFromParams, type Picker, type Setting } from "../lib/cornerFilters";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
@@ -320,7 +320,12 @@ export function CornersHome() {
                 {notStartedGroups.map(({ cat, corners }) => (
                   <div key={cat.slug}>
                     <h3 className="mb-2 text-small font-semibold text-foreground">{cat.name}</h3>
-                    <NotStartedChips corners={corners} label={cat.name} />
+                    <NotStartedChips corners={previewOf(corners)} label={cat.name} />
+                    {corners.length > previewOf(corners).length && (
+                      <Link to={`/browse/${cat.slug}`} className="mt-1 inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+                        See all
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>

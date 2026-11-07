@@ -56,6 +56,7 @@ export const SCREENS: Screen[] = [
   { name: "corner-pasta-sheet", route: "/corners/pasta", setup: click("Do this with people") },
   { name: "pursuit-recap", route: `/pursuit/${PURSUIT3_ID}/recap` },
   { name: "category-food", route: "/browse/food-drink" },
+  { name: "category-sports", route: "/browse/sports-martial-arts" },
   { name: "log", route: "/create" },
   { name: "log-caption", route: "/create", setup: pickPhotos(3) },
   { name: "log-caption-sheet", route: "/create", setup: async (page) => { await pickPhotos(1)(page); await page.getByText("Counts toward").first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
