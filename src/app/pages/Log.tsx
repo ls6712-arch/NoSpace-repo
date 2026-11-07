@@ -2048,7 +2048,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               <Label htmlFor="place" className="mb-1.5 block text-caption">
                 Where (optional)
               </Label>
-              <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. Prospect Park, Brooklyn" />
+              <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. the park by your place" />
               {locationName.trim() && (
                 <div className="mt-3">
                   <Label className="mb-1.5 block text-caption">How precisely to show it</Label>

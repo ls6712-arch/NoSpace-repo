@@ -13,7 +13,7 @@ Top 10 in {city}, Never been done in {city} and the Founding Stub count Moments 
 ## The key
 
 - Format: `{city-slug}-{state}`, lower case, hyphens: `new-york-ny`, `rockdale-tx`. It is the same shape as the slug the
-  Ticketmaster import already uses for a venue's city (brief section 5.2), so one key space covers people, towns and events.
+  Ticketmaster import already uses for a venue's city (brief section 5.2), so one key space covers people, towns and events. (Event imports were cancelled on Nov 7, 2026; the key format is unchanged and still covers people, towns and Soosh's own events.)
 - The key never contains a neighborhood. Neighborhoods stay in `area` (standing slots, events) and `posts.neighborhood`.
 
 ## The list (one source, two places)

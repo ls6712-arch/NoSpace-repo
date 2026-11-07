@@ -37,6 +37,9 @@ begin
     (v_a, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'vcheck-a@activity-test.invalid', '', now(), now(), now(), '{}', '{}', false),
     (v_c, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'vcheck-c@activity-test.invalid', '', now(), now(), now(), '{}', '{}', false);
   update public.profiles set is_private = false, access = 'active' where public.profiles.id in (v_a, v_c);
+  -- private.is_active() also wants a completed profile (a birthdate), or the test members are not members and RLS refuses them.
+  insert into public.profile_private (user_id, birthdate) values (v_a, date '1990-01-01'), (v_c, date '1990-01-01')
+  on conflict (user_id) do update set birthdate = excluded.birthdate;
   insert into public.corners (space_slug, slug, name) values ('sports-fitness', 'vcheck-activity', 'Vcheck activity');
 
   -- 1. The column is nullable text, and an ordinary Moment has none.
