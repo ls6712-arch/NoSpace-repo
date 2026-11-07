@@ -162,3 +162,7 @@ Answers from the founder before PR 1. These override the entries above where the
 - Founder to review Trivia and Improv photos.
 - Make a beat's credited photo and `CREDITS` entry moved to Music production with the Make a beat merge.
 - Next briefs: event ideas as host prompts ("Ideas for your next event"); wave 2 once members ask for those Corners.
+
+## Event imports are cancelled (founder, Nov 7, 2026)
+
+Event imports part 1 (the `external_events` table and the `import-events` function) and PR 3 of `claude-code-brief-corners-rows-imports.md` (Ticketmaster and CivicPlus imports) will not be built. Mark section 7 of that brief cancelled; the file is a project document and is not in this repo. What stays: Discover rows (PR 4 and 5) use Soosh's own events, standing slots and the at-home fallback only. `docs/city-keys-plan.md` mentions the Ticketmaster venue city only as where the key format came from; the keys themselves are unchanged.

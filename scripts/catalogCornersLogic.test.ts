@@ -10,7 +10,7 @@ const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..")
 const csvText = fs.readFileSync(path.join(root, "data/corners_catalog.csv"), "utf8");
 
 const entry = (o: Partial<CatalogEntry> & { slug: string }): CatalogEntry => ({
-  name: o.slug, spaceSlug: "crafts-making", aliases: [], nycFit: "city", ...o,
+  name: o.slug, spaceSlug: "crafts-making", aliases: [], reach: "anywhere", ...o,
 });
 
 describe("CSV generation", () => {
@@ -129,10 +129,10 @@ describe("merging with existing Corners", () => {
   });
 
   it("a held-out cross-Space row gives its aliases, nyc_fit and season to the existing Corner", () => {
-    const r = mergeCatalog([entry({ slug: "camping", name: "Camping", spaceSlug: "nature-outdoors", aliases: ["tent camping"], nycFit: "day_trip", season: "warm" })], existing);
+    const r = mergeCatalog([entry({ slug: "camping", name: "Camping", spaceSlug: "nature-outdoors", aliases: ["tent camping"], reach: "travel", season: "warm" })], existing);
     expect(r.fresh).toHaveLength(0);
     expect(r.aliasAdditions["travel-adventure/camping"]).toEqual(["tent camping"]);
-    expect(r.existingMeta["travel-adventure/camping"]).toEqual({ nycFit: "day_trip", season: "warm" });
+    expect(r.existingMeta["travel-adventure/camping"]).toEqual({ reach: "travel", season: "warm" });
   });
 });
 

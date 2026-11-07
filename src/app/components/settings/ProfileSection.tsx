@@ -126,7 +126,7 @@ export function ProfileSection() {
         />
         <EditableTextRow
           label="Neighborhood"
-          description="Shown under your name, like Greenpoint, Brooklyn."
+          description="Shown under your name, like your neighborhood or town."
           value={own?.neighborhood ?? ""}
           maxLength={80}
           emptyLabel="Not set"

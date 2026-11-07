@@ -1370,3 +1370,13 @@ New with the weekly schedule behind Tonight (`standing_slots`). **Every row belo
 | Off | Badge and checkbox label for a weekly time that is turned off |
 | Take part / Watch | Admin form: whether you can join in or only watch (`mode` do or watch) |
 | No weekly times yet. | Empty state, host panel and admin screen |
+
+## Going global (founder brief, Nov 7, 2026)
+
+Three strings that named a New York place now name no place. **Approved by the founder, Nov 7, 2026.** Nothing else in the UI changed; the New York time and city-picks wording stays until the time zone and city work (`docs/going-global-audit.md`, Ask A and B) is approved, because it is true until then.
+
+| String | Where |
+|---|---|
+| e.g. the park by your place | Placeholder of the place field when logging a Moment. Was "e.g. Prospect Park, Brooklyn" |
+| Shown under your name, like your neighborhood or town. | Help line under the neighborhood field in Settings. Was "...like Greenpoint, Brooklyn." |
+| (no wording) | `llms.txt` no longer says Soosh is for New York or "in New York first" |
