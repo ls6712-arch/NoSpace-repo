@@ -35,10 +35,10 @@ describe("copy rules", () => {
     const banned = /\b(journal(ing|s)?|diary|diaries|reflect(s|ion|ions)?|habits?|streaks?)\b|not ranked|non-metric|never scored/i;
     // Allowed: the Nature journaling Corner.
     // Also allowed, pending the founder's call (PR "Corner catalog"): the two catalog Corners
-    // Journaling and Bullet journaling, by exact name or slug, in the generated catalog file only.
+    // Journaling and Bullet journaling, by exact name or slug, in the generated catalog file and its category map only.
     const allowed = /nature[- ]journaling/i;
     const catalogName = (s: { file: string; text: string }) =>
-      s.file.endsWith("data/catalogCorners.ts") && /^(bullet[- ])?journaling$/i.test(s.text);
+      /data\/catalogCorner(s|Categories)\.ts$/.test(s.file) && /^(bullet[- ])?journaling$/i.test(s.text);
     // Import paths and storage keys ("../lib/journal", "sushii.journal.v1") are code, not copy.
     const isCode = (t: string) => /^(\.{1,2}\/|[\w-]+(\.[\w-]+)+$)/.test(t);
     const hits = strings.filter((s) => banned.test(s.text) && !allowed.test(s.text) && !catalogName(s) && !isCode(s.text));
