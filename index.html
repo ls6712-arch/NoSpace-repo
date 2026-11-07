@@ -155,9 +155,28 @@
         } catch (e) {}
       })();
     </script>
+    <!--
+      First paint. While the app script loads, people see the Stub mark on the
+      app's background instead of the crawler copy below as unstyled text. The
+      copy stays in the HTML for crawlers and link previews (which read the
+      markup, not the CSS); without JavaScript the noscript block shows it again.
+      The mark fades in only after 300ms, so a fast load never flashes it.
+    -->
+    <style>
+      .crawler-copy { display: none; }
+      .boot-splash { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #F7F5F2; }
+      html.dark .boot-splash { background: #0E0D0C; }
+      .boot-splash img { width: 72px; height: 72px; opacity: 0; animation: boot-in 250ms cubic-bezier(0.22, 0.61, 0.36, 1) 300ms forwards, boot-breathe 1.6s ease-in-out 550ms infinite; }
+      @keyframes boot-in { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+      @keyframes boot-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+      .boot-splash--held img { opacity: 1; animation: boot-breathe 1.6s ease-in-out infinite; }
+      @media (prefers-reduced-motion: reduce) { .boot-splash img { animation: none; opacity: 1; } }
+    </style>
+    <noscript><style>.crawler-copy { display: block; } .boot-splash { display: none; }</style></noscript>
   </head>
   <body>
     <div id="root">
+      <div class="boot-splash" aria-hidden="true"><img src="/favicon.svg" alt="" width="72" height="72" /></div>
       <!--
         Public HTML fallback. AI crawlers (GPTBot, ClaudeBot, PerplexityBot) and link
         previews read this HTML without running JavaScript, so without it they

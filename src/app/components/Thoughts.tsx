@@ -11,6 +11,7 @@ import { ReportDialog } from "./ReportDialog";
 import { Time } from "./ui/time";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { withFirstFrame } from "../lib/mediaUrl";
+import { thoughtMediaIsVideo } from "../lib/thoughtMedia";
 
 /**
  * Thoughts, not comments — short, standalone reflections on a piece of work
@@ -208,7 +209,7 @@ export function Thoughts({
               <p className="text-small leading-relaxed">{t.body}</p>
               {t.media && (
                 <div className="mt-2 overflow-hidden rounded-card border border-[var(--hairline)]">
-                  {/^https?:\/\/.*\.(mp4|webm|mov)$/i.test(t.media) ? (
+                  {thoughtMediaIsVideo(t.media) ? (
                     <video src={withFirstFrame(t.media)} controls playsInline preload="metadata" className="w-full" />
                   ) : (
                     <ImageWithFallback src={t.media} alt="" aspect="4 / 3" className="w-full" />

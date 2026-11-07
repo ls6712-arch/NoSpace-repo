@@ -1,5 +1,6 @@
 import { useState } from "react";
-import * as Icons from "lucide-react";
+import { Check, Copy, EyeOff, Share2 } from "lucide-react";
+import { badgeIcon } from "./badgeIcon";
 import { Badge as BadgeDef, badgeName } from "../data/badges";
 import { useRewards } from "../context/RewardsContext";
 import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
@@ -32,7 +33,7 @@ export function ShareMilestoneDialog({
 
   const shared = isBadgeShared(badge.id);
   const name = badgeName(badge, hobbySlug, hobbyLabel);
-  const Icon = (Icons as any)[badge.icon] ?? Icons.Sparkles;
+  const Icon = badgeIcon(badge.icon);
   const summary = `A milestone reached on ${APP_NAME}: ${name}. ${badge.description}`;
 
   const handleCopy = async () => {
@@ -72,12 +73,12 @@ export function ShareMilestoneDialog({
           <Button variant="outline" className="flex-1" onClick={handleCopy}>
             {copied ? (
               <>
-                <Icons.Check className="size-4" />
+                <Check className="size-4" />
                 Copied
               </>
             ) : (
               <>
-                <Icons.Copy className="size-4" />
+                <Copy className="size-4" />
                 Copy as text
               </>
             )}
@@ -89,12 +90,12 @@ export function ShareMilestoneDialog({
           >
             {shared ? (
               <>
-                <Icons.EyeOff className="size-4" />
+                <EyeOff className="size-4" />
                 Unshare
               </>
             ) : (
               <>
-                <Icons.Share2 className="size-4" />
+                <Share2 className="size-4" />
                 Share on your profile
               </>
             )}

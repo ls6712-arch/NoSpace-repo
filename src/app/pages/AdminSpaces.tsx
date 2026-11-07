@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { Check, Copy, Eye, EyeOff, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
@@ -8,6 +7,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { plural } from "../lib/plural";
+import { NotFound } from "./NotFound";
 
 /**
  * Creating, shaping, hiding and deleting Spaces.
@@ -54,23 +54,8 @@ export function AdminSpaces() {
   const [confirm, setConfirm] = useState<Confirm | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Nothing here for you
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">
-            This screen is for whoever manages Spaces.
-          </p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   // `hobbies` is the shared list, updated in place before context state is
   // published (see applySpaceRows), so reading it here is current.

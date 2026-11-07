@@ -11,7 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { page } from "../../lib/motionTokens";
 import { codeWaitLine, resetSentLine, TOO_MANY_CODES_LINE, WRONG_LOGIN_LINE } from "../../lib/authCopy";
 import { readLoginMethod, rememberLoginMethod, type LoginMethod } from "../../lib/loginMethod";
-import { clearPasswordOffer, readEmail, rememberEmail, rememberRedirect } from "../../lib/onboardingProgress";
+import { clearPasswordOffer, readEmail, rememberEmail, isRealRedirect, rememberRedirect } from "../../lib/onboardingProgress";
 import { signedInTarget } from "../../lib/signInTarget";
 import { ERROR_LINE, OFFLINE_LINE } from "../../lib/stateCopy";
 import { ScreenFrame } from "../onboarding/screens/ScreenFrame";
@@ -46,7 +46,9 @@ export function LoginV2() {
   const [params] = useSearchParams();
   const reduce = useReducedMotion() ?? false;
   const { user, profile, loading, isConfigured, signInWithGoogle, signInWithApple, sendSignInCode, signIn, resetPassword } = useAuth();
-  const redirectTo = params.get("redirect") || "/";
+  // Only an in-app path: never another site, "//host" or a backslash trick.
+  const requestedRedirect = params.get("redirect");
+  const redirectTo = isRealRedirect(requestedRedirect) ? requestedRedirect : "/";
 
   // Sign up now happens in the onboarding; only ?mode=signin stays here.
   const wantsSignUp = params.get("mode") !== "signin";
