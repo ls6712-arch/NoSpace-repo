@@ -776,7 +776,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       const withCity = input.cityHidden ? { ...withCityShown, city_hidden: true } : withCityShown;
       // posts.inspired_by (migration 20261101134703) is sent only when set, and dropped when its column is missing.
       const withInspired = input.inspiredBy ? { ...withCity, inspired_by: input.inspiredBy } : withCity;
-      // posts.activity_id (migration 20261120000000_post_activity_id.sql) is the same: sent only when set, and dropped when its column is missing.
+      // posts.activity_id (migration 20261122000000_post_activity_id.sql) is the same: sent only when set, and dropped when its column is missing.
       const withActivity = input.activityId ? { ...withInspired, activity_id: input.activityId } : withInspired;
       let { data, error } = await supabase
         .from("posts")
