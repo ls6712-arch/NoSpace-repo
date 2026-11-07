@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router";
 import { Check, GitMerge, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
@@ -8,6 +7,7 @@ import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { formatWhen } from "../lib/dates";
 import { EmptyState } from "../components/StateViews";
+import { NotFound } from "./NotFound";
 
 /**
  * Reviewing what people said was missing.
@@ -32,23 +32,8 @@ export function AdminCategories() {
   const [mergeTo, setMergeTo] = useState<Record<number, string>>({});
   const [error, setError] = useState<string | null>(null);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Nothing here for you
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">
-            This screen is for whoever reviews category suggestions.
-          </p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   const pending = suggestions.filter((s) => s.status === "pending");
   const decided = suggestions.filter((s) => s.status !== "pending");

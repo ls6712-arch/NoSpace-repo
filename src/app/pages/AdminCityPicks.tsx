@@ -35,6 +35,7 @@ import {
   type PickInput,
   type ScoutReport,
 } from "../lib/cityPicks";
+import { NotFound } from "./NotFound";
 
 /**
  * Admin: "This week in New York" picks. List, add, edit, publish and
@@ -89,21 +90,8 @@ export function AdminCityPicks() {
     };
   }, [isAdmin]);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title font-bold" style={{ fontFamily: "var(--font-display)" }}>
-            {ADMIN_PICKS.noAccessTitle}
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">{ADMIN_PICKS.noAccessBody}</p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   const open = (row?: Row) => {
     const input = row ? inputFor(row, row.cornerId) : BLANK;

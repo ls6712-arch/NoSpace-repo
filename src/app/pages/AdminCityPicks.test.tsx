@@ -34,10 +34,11 @@ afterEach(cleanup);
 const show = () => render(<MemoryRouter><AdminCityPicks /></MemoryRouter>);
 
 describe("AdminCityPicks", () => {
-  it("shows nothing to someone who is not an admin", () => {
+  it("shows the ordinary 404 to someone who is not an admin, so the page doesn't say it exists", () => {
     auth.isAdmin = false;
     show();
-    expect(screen.getByText("Nothing here for you")).toBeTruthy();
+    expect(screen.getByText("This page doesn’t exist")).toBeTruthy();
+    expect(screen.queryByText(/City picks/)).toBeNull();
     expect(api.fetchAllPicks).not.toHaveBeenCalled();
   });
 
