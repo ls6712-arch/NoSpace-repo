@@ -516,10 +516,11 @@ async function main() {
   }
 
   if (flag("fixed")) {
-    const rows = new Map<string, string[]>(); const warns = new Map<string, string[]>(); let n = 0;
-    for (const w of base.widths) { HEIGHTS[w] = PROFILES.find((p) => p.w === w)?.h ?? HEIGHTS[w] ?? 900; const res = await fixedPass(browser, { ...base, widths: [w] }); n += res.size; for (const [k, r] of res) { for (const wn of r.warnings) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}: ${wn}`; warns.set(kk, [...(warns.get(kk) ?? []), k.split("/").slice(2).join("/")]); } } for (const [k, r] of res) for (const pr of r.problems) rows.set(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`, [...(rows.get(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`) ?? []), k.split("/").slice(2).join("/")]); }
+    const rows = new Map<string, string[]>(); const warns = new Map<string, string[]>(); const clear = new Map<string, number>(); let n = 0;
+    for (const w of base.widths) { HEIGHTS[w] = PROFILES.find((p) => p.w === w)?.h ?? HEIGHTS[w] ?? 900; const res = await fixedPass(browser, { ...base, widths: [w] }); n += res.size; if (process.env.FIXED_DEBUG) for (const [k, r] of res) console.log(`  DEBUG ${k} bars=${JSON.stringify(r.bars)} clearance=${r.clearance}`); for (const [k, r] of res) if (r.clearance !== undefined) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}`; clear.set(kk, Math.min(clear.get(kk) ?? Infinity, r.clearance)); } for (const [k, r] of res) { for (const wn of r.warnings) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}: ${wn}`; warns.set(kk, [...(warns.get(kk) ?? []), k.split("/").slice(2).join("/")]); } } for (const [k, r] of res) for (const pr of r.problems) rows.set(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`, [...(rows.get(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`) ?? []), k.split("/").slice(2).join("/")]); }
     console.log(`fixed chrome audit: ${n} states (screens x widths x safe-area insets x scroll top/bottom); ${rows.size} distinct problem(s)`);
     for (const [k, w] of rows) console.log(`  PROBLEM ${k}  [${w.slice(0, 4).join(", ")}${w.length > 4 ? ` +${w.length - 4}` : ""}]`);
+    for (const [k, px] of clear) console.log(`  CLEAR   ${k}  ${px}px between the lowest content and the tab bar at the end of the page (least over the safe-area settings)`);
     for (const [k, w] of warns) console.log(`  WARN    ${k}  [${w.slice(0, 4).join(", ")}${w.length > 4 ? ` +${w.length - 4}` : ""}]`);
     await browser.close(); process.exit(flag("strict") && rows.size > 0 ? 1 : 0);
   }
