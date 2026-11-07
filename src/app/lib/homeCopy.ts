@@ -48,8 +48,6 @@ export const ADMIN_PICKS = {
   line: "The hand-picked things on the Week view, This week in New York. Published picks show to everyone signed in.",
   add: "Add a pick",
   edit: "Edit pick",
-  noAccessTitle: "Nothing here for you",
-  noAccessBody: "This screen is for whoever manages City picks.",
   emptyTitle: "No picks yet.",
   emptyBody: "Add a pick, then publish it.",
   deleteBody: "This removes the pick for good.",

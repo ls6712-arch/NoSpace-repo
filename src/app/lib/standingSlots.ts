@@ -57,8 +57,6 @@ export const SLOT_COPY = {
   add: "Add a weekly time",
   edit: "Edit weekly time",
   verifiedToday: "Verified today",
-  noAccessTitle: "Nothing here for you",
-  noAccessBody: "This screen is for whoever manages the weekly schedule.",
   emptyTitle: "No weekly times yet.",
   emptyBody: "Add one, then verify it again when you check it.",
   deleteBody: "This removes the weekly time for good.",

@@ -11,6 +11,7 @@ import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { EmptyState } from "../components/StateViews";
+import { NotFound } from "./NotFound";
 
 /**
  * Reports of a profile, message, Moment or Thought, per
@@ -111,21 +112,8 @@ export function AdminReports() {
     if (isAdmin) void load();
   }, [isAdmin]);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Nothing here for you
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">This screen is for whoever reviews reports.</p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   const decide = async (id: number, status: "reviewed" | "dismissed") => {
     if (!supabase || busy) return;
