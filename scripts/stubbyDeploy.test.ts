@@ -40,6 +40,8 @@ describe("stubby-scout deploy record (Nov 3, 2026)", () => {
     expect(liveName("source/handler.ts")).toBe("stubby-scout/handler.ts");
     expect(liveName("_shared/access.ts")).toBe("_shared/access.ts");
     expect(liveName("source/_shared/access.ts")).toBe("_shared/access.ts");
+    expect(liveName("functions/stubby-scout/v3/types.ts")).toBe("stubby-scout/v3/types.ts");
+    expect(liveName("functions/_shared/access.ts")).toBe("_shared/access.ts");
   });
 
   it("records a read-back only when every file matches byte for byte", () => {
