@@ -61,7 +61,7 @@ jobs:
       # --no-verify-jwt: stubby-scout does its own access checks (_shared/access.ts) and is live with verify_jwt off.
       # --use-api: bundles on Supabase's side, so no Docker is needed here.
       - name: Deploy stubby-scout
-        run: supabase functions deploy stubby-scout --project-ref "$PROJECT_REF" --no-verify-jwt --use-api
+        run: supabase functions deploy stubby-scout --project-ref "$PROJECT_REF" --no-verify-jwt --use-api --yes
 
       - name: Live version after
         run: |
