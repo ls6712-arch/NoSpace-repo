@@ -52,6 +52,25 @@ export async function uploadMomentFile(
   return { path, error: null };
 }
 
+/** Uploads a thought's photo or video into the uploader's own folder of the
+ * private bucket. Same path shape and checks as a Moment photo; videos are
+ * still allowed here because a thought's picker has always offered them. */
+export async function uploadThoughtFile(
+  userId: string,
+  file: File,
+): Promise<{ path: string | null; error: string | null }> {
+  if (!supabase) return { path: null, error: "not configured" };
+  const prepared = await prepareForUpload(file);
+  if (prepared.error !== null) return { path: null, error: prepared.error };
+  const ready = prepared.file;
+  const path = `${userId}/${crypto.randomUUID()}.${storageExtension(ready)}`;
+  const { error } = await supabase.storage
+    .from(MOMENT_MEDIA_BUCKET)
+    .upload(path, ready, { contentType: ready.type || undefined, upsert: false });
+  if (error) return { path: null, error: friendlyError(error, UPLOAD_COPY.failed) };
+  return { path, error: null };
+}
+
 interface CacheEntry {
   url: string;
   expiresAt: number;
