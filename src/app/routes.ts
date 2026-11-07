@@ -63,6 +63,7 @@ import {
   PauseOrLeaveSettingsPage,
 } from "./pages/Settings";
 import { NotFound } from "./pages/NotFound";
+import { RouteError } from "./pages/RouteError";
 
 // The landing-page screenshot preview. These routes exist only when the app is
 // built or served with `--mode landing-preview` (npm run landing:screens), where
@@ -93,7 +94,14 @@ export const router = createHashRouter([
   {
     path: "/",
     Component: Root,
+    // If the shell itself fails, a plain error screen with no header.
+    ErrorBoundary: RouteError,
     children: [
+      {
+        // Any page that fails shows the error screen inside the shell, so the
+        // header and tab bar stay and the person can go somewhere else.
+        ErrorBoundary: RouteError,
+        children: [
       // "/" is the signed-out landing page. Signed in, it goes straight to
       // Home (/my-space), the page behind the "Home" nav link and the wordmark.
       { index: true, Component: Home },
@@ -215,6 +223,8 @@ export const router = createHashRouter([
       ...landingPreviewRoutes,
       ...devRoutes,
       { path: "*", Component: NotFound },
+        ],
+      },
     ],
   },
 ]);

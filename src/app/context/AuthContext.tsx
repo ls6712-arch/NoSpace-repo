@@ -325,23 +325,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle: AuthContextType["signInWithGoogle"] = async () => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        // Same reasoning as signUp's emailRedirectTo above — no #/you here.
-        redirectTo: `${window.location.origin}${window.location.pathname}`,
-      },
-    });
-    return { error: error ? error.message : null };
+    // Offline, signInWithOAuth throws instead of returning an error, and the
+    // provider's own message is technical: both become one plain sentence.
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          // Same reasoning as signUp's emailRedirectTo above — no #/you here.
+          redirectTo: `${window.location.origin}${window.location.pathname}`,
+        },
+      });
+      if (error) console.warn("[auth] Google sign-in:", error);
+      return { error: error ? friendlyError(error) : null };
+    } catch (e) {
+      return { error: friendlyError(e) };
+    }
   };
 
   const signInWithApple: AuthContextType["signInWithApple"] = async () => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
-    });
-    return { error: error ? error.message : null };
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
+      });
+      if (error) console.warn("[auth] Apple sign-in:", error);
+      return { error: error ? friendlyError(error) : null };
+    } catch (e) {
+      return { error: friendlyError(e) };
+    }
   };
 
   const sendEmailCode: AuthContextType["sendEmailCode"] = async (email) => {
