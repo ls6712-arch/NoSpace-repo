@@ -60,11 +60,13 @@ export function recordProblems(current: Record<string, string>, record: Pick<Dep
 
 /**
  * A file name as the Supabase API returns it ("user_fn_<project>_<id>_23/source/index.ts",
- * "source/index.ts", "_shared/access.ts"), as a path relative to supabase/functions.
+ * "source/index.ts", "functions/stubby-scout/index.ts", "_shared/access.ts"), as a path relative to supabase/functions.
  */
 export function liveName(name: string): string {
   let n = name.replace(/^.*?_\d+\//, "").replace(/^\/+/, "");
   n = n.replace(/^source\//, "");
+  // The CLI's --use-api deploy names files relative to supabase/ ("functions/stubby-scout/index.ts").
+  n = n.replace(/^functions\//, "");
   if (n.startsWith("_shared/") || n.startsWith("stubby-scout/")) return n;
   return `stubby-scout/${n}`;
 }
