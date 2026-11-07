@@ -42,6 +42,7 @@ import { plural } from "../lib/plural";
 import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
 import { CornerStarterContent } from "../components/corners/CornerStarterContent";
+import { CornerActivities } from "../components/corners/CornerActivities";
 
 /**
  * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
@@ -419,6 +420,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
             )}
           </div>
         )}
+
+        <CornerActivities cornerSlug={corner.slug} />
 
         <CornerStarterContent spaceSlug={corner.spaceSlug} slug={corner.slug} restricted={restricted}/>
 

@@ -1380,3 +1380,21 @@ Three strings that named a New York place now name no place. **Approved by the f
 | e.g. the park by your place | Placeholder of the place field when logging a Moment. Was "e.g. Prospect Park, Brooklyn" |
 | Shown under your name, like your neighborhood or town. | Help line under the neighborhood field in Settings. Was "...like Greenpoint, Brooklyn." |
 | (no wording) | `llms.txt` no longer says Soosh is for New York or "in New York first" |
+
+## Corner activities, PR A (brief of Nov 7, 2026)
+
+On a Corner's page, a section of things to do from `data/corner_activities.csv` (written by the founder's team and approved as content; the activity titles, descriptions, first steps and Moment prompts are that content and are not repeated here). **New wording for approval.**
+
+| String | Where |
+|---|---|
+| Things to try | Heading of the section on a Corner that has activities. The same words as the existing "Things to try" of the ten starter Corners, which it replaces on a Corner that has both (none today). Reused, not new |
+| At home / With people / At a place | The three tabs. The same words as Discover's Corner cards. An activity is under every tab it fits; a tab with nothing in it is not shown. Reused, not new |
+| Low energy / Medium energy / High energy | Tag on an activity card |
+| Solo / With a friend / With a group | Tags on an activity card, one per way it works |
+| Free / Low cost / Treat | Cost tag on an activity card. Never an amount of money |
+| 15 min / 1 hr / 3 hr / 4 hr | Duration tag, from `formatDuration` (15min, an hour, an evening, half a day; the last two are proposed lengths in `config.ts`) |
+| First step: | Label before an activity's first step, on its card |
+| Try this | Button on an activity card (founder, Nov 8, 2026: renamed from "Do this", which the Moment pill and the Corner page already use for other actions). Opens the composer on that Corner with the activity's Moment prompt above the thought |
+
+In the composer, from "Try this": a small block above the thought shows the activity's title and its Moment prompt (content, no new label). The Moment saves the activity (`posts.activity_id`) and earns the normal Stub.
+

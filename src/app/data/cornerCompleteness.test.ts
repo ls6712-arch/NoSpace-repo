@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CORNER_CATEGORIES } from "./cornerCategories";
-import { homeCornersIn } from "./homeCorners";
-import { CORNER_GUIDES } from "./cornerGuides";
+import { hasGuide, homeCornersIn } from "./homeCorners";
 import { curatedFor } from "./curatedCorners";
 import { hasHobbyPhoto, photoCredit } from "./hobbyPhotos";
 import { LEGACY_THIN, LEGACY_THIN_CEILING, type ThinPart } from "./legacyThin";
@@ -27,7 +26,8 @@ function missing(c: { spaceSlug: string; slug: string }): ThinPart[] {
 describe("no Corner ships thin", () => {
   it("every browsable Corner has a guide and a photo, with no exceptions", () => {
     for (const c of all) {
-      expect(`${c.spaceSlug}/${c.slug}` in CORNER_GUIDES, `${c.slug} guide`).toBe(true);
+      // A Corner with activities counts as having a guide (hasGuide).
+      expect(hasGuide(c.spaceSlug, c.slug), `${c.slug} guide`).toBe(true);
       expect(hasHobbyPhoto(c.slug), `${c.slug} photo`).toBe(true);
     }
   });

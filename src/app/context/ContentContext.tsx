@@ -121,6 +121,8 @@ export interface NewPostInput {
   pursuitId?: string;
   /** The Moment this one was made after seeing (the Start page's "Make this too" or "Do this"). The database keeps it only when the poster could see that Moment. */
   inspiredBy?: number;
+  /** The Corner activity this Moment was logged from ("Try this" on its card). posts.activity_id, sent only when set and dropped if the column is missing. */
+  activityId?: string;
 }
 
 function loadFromStorage<T>(key: string): T[] {
@@ -774,11 +776,16 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       const withCity = input.cityHidden ? { ...withCityShown, city_hidden: true } : withCityShown;
       // posts.inspired_by (migration 20261101134703) is sent only when set, and dropped when its column is missing.
       const withInspired = input.inspiredBy ? { ...withCity, inspired_by: input.inspiredBy } : withCity;
+      // posts.activity_id (migration 20261120000000_post_activity_id.sql) is the same: sent only when set, and dropped when its column is missing.
+      const withActivity = input.activityId ? { ...withInspired, activity_id: input.activityId } : withInspired;
       let { data, error } = await supabase
         .from("posts")
-        .insert(withInspired as typeof row)
+        .insert(withActivity as typeof row)
         .select(POST_COLUMNS)
         .single();
+      if (input.activityId && error && /activity_id/.test(error.message ?? "")) {
+        ({ data, error } = await supabase.from("posts").insert(withInspired as typeof row).select(POST_COLUMNS).single());
+      }
       // Before 20261110000000_log_punch_cards.sql runs, posts.hobby_slug is still
       // required (23502): a Moment with nothing picked falls back to the old default
       // Space, as it always did, rather than failing to save.
