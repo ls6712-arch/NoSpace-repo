@@ -2,8 +2,8 @@ import { APP_NAME, stubbyAskEnabled } from "../config";
 
 /** Shared with metadata and the public HTML fallback. */
 export const LANDING_COPY = {
-  metaTitle: `${APP_NAME} | Hobbies, activities & personal goals`,
-  metaDescription: `Find hobbies and activities to try this week with ${APP_NAME}. Explore Corners, keep Stubs and start a Pursuit, on your own or with someone.`,
+  metaTitle: `${APP_NAME} | Discover Hobbies, Plan Activities & Enjoy Life`,
+  metaDescription: `${APP_NAME} helps you discover hobbies, find things to do, plan activities with friends and make progress on personal goals. Find your next thing to try.`,
   signUp: "Sign up",
   logIn: "Log in",
   explore: "Explore Corners",
