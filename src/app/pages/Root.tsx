@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
@@ -16,6 +16,7 @@ import { hasRecoveryKind } from "../lib/recoveryLink";
 import { isTypingTarget, SEARCH_SHORTCUT_EVENT } from "../lib/searchShortcut";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
+import { usePageEnter } from "../lib/usePageEnter";
 import { reconcileSaves } from "../lib/bookmarksRemote";
 import { resumeCalendarChanges } from "../lib/calendarPending";
 import { FinishSettingUp, stubbyAccountMayOpen } from "../components/stubby/FinishSettingUp";
@@ -88,6 +89,8 @@ export function Root() {
   const location = useLocation();
   useTruncationReveal();
   useScrollMemory();
+  const mainRef = useRef<HTMLElement>(null);
+  usePageEnter(mainRef, location.pathname);
 
   // "/" focuses search on desktop, unless someone is typing in a field. Whichever search is on screen answers.
   useEffect(() => {
@@ -228,7 +231,7 @@ export function Root() {
         <AccountStatusBanner />
       </div>
       <Header hideWithRail={rail} />
-      <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
+      <main ref={mainRef} id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
         {under18 && !stubbyAccountMayOpen(location.pathname) ? <Under18Screen /> : stubbyAccount && !stubbyAccountMayOpen(location.pathname) ? <FinishSettingUp /> : <Outlet />}
       </main>
       <SignUpReturnEffect />
