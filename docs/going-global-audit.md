@@ -76,13 +76,24 @@ New copy these need (for approval, added to the glossary in the PR that uses it)
 | 32 | `stubby-scout/v3/context.ts:22` | default zone `America/New_York` | The person's zone, else UTC | E |
 | 33 | `stubby-scout/v3/context.ts:36` | no city at all means "New York" | No city means no city (the prompts above already handle it) | E |
 | 34 | `stubby-scout/v3/request.ts:111` | `CITIES` recognizer list starts with New York | **Keep.** A list of cities to recognize in text, not a default; extended from the city-key list later | |
-| 35 | `stubby-scout/v3/careResources.ts:102` | no city and no zone: the US card; any zone but New York's: the "elsewhere" card | **Needs your confirmation (safety).** By country from the zone (any US zone gets the US card, as today for New York); with no city and no zone, show the "elsewhere" card, not the US card | E |
+| 35 | `stubby-scout/v3/careResources.ts:102` | no city and no zone: the US card; any zone but New York's: the "elsewhere" card | **Approved by the founder, Nov 8, 2026, on one condition (met below):** by country from the zone (any US zone gets the US card, as today for New York); with no city and no zone, show the "elsewhere" card, not the US card; and the "elsewhere" card links to an international helpline directory and says to call the local emergency number if someone is in immediate danger | E |
 | 36 | `_shared/capabilityProfile.ts:27` | default `timeZone: "America/New_York"` | Default from the profile's zone, else UTC | E |
 | 37 | `_shared/capabilityProfile.ts:44` | error message "such as America/New_York" | "such as Europe/London" | E |
 | 38 | `_shared/weeklyHours.ts:3` | `WEEKLY_HOURS_TIME_ZONE = "America/New_York"` | The person's zone, passed in | E |
 | 39 | `_shared/weeklyHours.ts:60` | default `zone = "America/New_York"` | No default; callers pass it | E |
 | 40 | `_shared/preferenceTime.ts:2` | `localClock` default zone | No default; callers pass it | E |
 | 41 | `_shared/preferenceTime.ts:6` | `preferenceTimeScore` default zone | No default; callers pass it | E |
+
+### The "elsewhere" crisis card, final text (line 35)
+
+Shown when the person's country has no verified entry, or when we know neither a city nor a time zone. Today it is one line of words and nothing to tap. Per `careResources.ts`, an entry is shown only when it has been checked against the service's own page, so the directory link carries its own verification.
+
+| Part | Text | Tap |
+|---|---|---|
+| Directory | **Find a helpline in your country**, with the line "Free, confidential helplines in 175+ countries, from Find A Helpline" | opens `https://findahelpline.com/` |
+| In danger | **Call your local emergency number**, with the line "If you or someone else is in immediate danger" | nothing to tap (no number is known) |
+
+Verified on Nov 7, 2026 against `https://findahelpline.com/` itself (the page answers, and says "Free, confidential support from a helpline or hotline near you", "Find A Helpline is powered by ThroughLine", "verified helplines in 175+ countries"). It is a directory run by ThroughLine, not a crisis service itself, which is why the emergency line is separate and always shown first-class on the card. Recorded as `verifiedOn: "2026-11-07"` and `verifiedAgainst: "findahelpline.com home page"`. The country cards that were already verified (the US 988 card) are unchanged, and the drafted-but-unverified countries (CA, GB, IE, AU, NZ, IN) stay unshown until each is checked, as before. The code change is in PR E (it is an edge function and needs the one redeploy).
 
 ### Also decided, not a line above
 
