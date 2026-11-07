@@ -8,6 +8,7 @@ import { SpacePage } from "./SpacePage";
 import type { SpaceRow } from "../lib/spaces";
 import { Loadable, Skeleton } from "../components/ui/skeleton";
 import { MomentCardSkeleton } from "../components/Skeletons";
+import { ErrorNotice } from "../components/StateViews";
 
 /**
  * /space/:slug is shared between two unrelated things that happen to have
@@ -27,7 +28,8 @@ export function SpaceRoute() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
   const { categories } = useCategories();
-  const [space, setSpace] = useState<SpaceRow | null | "loading">("loading");
+  const [space, setSpace] = useState<SpaceRow | null | "loading" | "error">("loading");
+  const [attempt, setAttempt] = useState(0);
 
   const reserved = categories.some((c) => c.slug === slug) || slug in LEGACY_SPACES;
 
@@ -42,8 +44,13 @@ export function SpaceRoute() {
         if (!cancelled) setSpace(null);
         return;
       }
-      const { data } = await supabase.from("spaces").select("*").eq("slug", slug).maybeSingle();
-      if (!cancelled) setSpace((data as SpaceRow) ?? null);
+      // A failed load is not "not found": only a clean empty answer is.
+      try {
+        const { data, error } = await supabase.from("spaces").select("*").eq("slug", slug).maybeSingle();
+        if (!cancelled) setSpace(error ? "error" : ((data as SpaceRow) ?? null));
+      } catch {
+        if (!cancelled) setSpace("error");
+      }
     }
     setSpace("loading");
     load();
@@ -51,10 +58,17 @@ export function SpaceRoute() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug, reserved]);
+  }, [slug, reserved, attempt]);
 
   if (reserved || space === "loading") {
     return <SpacePageSkeleton />;
+  }
+  if (space === "error") {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-4 pt-10">
+        <ErrorNotice onRetry={() => setAttempt((n) => n + 1)} />
+      </div>
+    );
   }
   if (space === null) {
     return <NotFound />;

@@ -40,7 +40,7 @@ import { discoverFeed, feedCornerChips, postCornerKey } from "../lib/discoverFee
 import {
   fetchCornerAffinity,
   fetchDiscoverCorners,
-  fetchDiscoverMoments,
+  fetchDiscoverMomentsOrThrow,
   fetchDiscoverSpaces,
   fetchPassCornerMap,
   fetchPublicSpaces,
@@ -257,6 +257,7 @@ export function Discover() {
   const [corner, setCorner] = useState<string | null>(null);
   const [moments, setMoments] = useState<DiscoverMoment[]>([]);
   const [momentsLoading, setMomentsLoading] = useState(true);
+  const [momentsError, setMomentsError] = useState(false);
   const [momentsDone, setMomentsDone] = useState(false);
   const [chips, setChips] = useState<string[]>([]);
   const [followed, setFollowed] = useState<Set<string>>(new Set());
@@ -277,7 +278,17 @@ export function Discover() {
         setMomentsDone(false);
       }
       setMomentsLoading(true);
-      const page = await fetchDiscoverMoments({ corner, cursor: cursor.current, limit: FEED_PAGE });
+      setMomentsError(false);
+      let page: Awaited<ReturnType<typeof fetchDiscoverMomentsOrThrow>>;
+      try {
+        page = await fetchDiscoverMomentsOrThrow({ corner, cursor: cursor.current, limit: FEED_PAGE });
+      } catch {
+        if (id !== requestId.current) return;
+        setMomentsError(true);
+        setMomentsDone(true);
+        setMomentsLoading(false);
+        return;
+      }
       if (id !== requestId.current) return;
       if (page.length > 0) cursor.current = page[page.length - 1].createdAt;
       setMoments((prev) => (reset ? page : [...prev, ...page]));
@@ -451,6 +462,8 @@ export function Discover() {
                 corner={corner}
                 onCorner={setCorner}
                 loading={momentsLoading || !feedInputsLoaded}
+                failed={momentsError}
+                onRetry={() => void loadMoments(posts.length === 0)}
                 hasMore={!momentsDone}
                 onMore={() => void loadMoments(false)}
                 followed={followed}
