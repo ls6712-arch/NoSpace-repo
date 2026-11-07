@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
 import { Eye, EyeOff, Merge, Pencil, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useCategories } from "../context/CategoriesContext";
@@ -11,6 +10,7 @@ import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { friendlyError } from "../lib/friendlyError";
 import { EmptyState } from "../components/StateViews";
+import { NotFound } from "./NotFound";
 
 /**
  * Merging, renaming and hiding Corners.
@@ -73,21 +73,8 @@ export function AdminCorners() {
     if (isAdmin) void load();
   }, [isAdmin]);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Nothing here for you
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">This screen is for whoever manages Corners.</p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   const startRename = (row: CornerRow) => {
     setRenaming(row.id);

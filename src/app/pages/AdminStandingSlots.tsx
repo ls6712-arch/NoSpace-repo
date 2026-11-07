@@ -29,6 +29,7 @@ import {
   DEFAULT_STALE_DAYS,
   type StandingSlot,
 } from "../lib/standingSlots";
+import { NotFound } from "./NotFound";
 
 /**
  * Admin: the weekly schedule behind Tonight. List, add, edit, "Verified today", turn off and
@@ -64,21 +65,8 @@ export function AdminStandingSlots() {
   const cornerSlugFor = (text: string) => allCorners.find((c) => c.name.toLowerCase() === text.trim().toLowerCase())?.slug ?? text.trim().toLowerCase();
   const shown = useMemo(() => filterSlots(rows, { corner: cornerFilter ? cornerSlugFor(cornerFilter) : "", area: areaFilter }), [rows, cornerFilter, areaFilter, allCorners]);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title font-bold" style={{ fontFamily: "var(--font-display)" }}>
-            {SLOT_COPY.noAccessTitle}
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">{SLOT_COPY.noAccessBody}</p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   const verify = async (s: StandingSlot) => {
     const r = await verifySlot(s.id);
