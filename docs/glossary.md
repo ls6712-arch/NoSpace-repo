@@ -1384,7 +1384,7 @@ On a Corner's page, a section of things to do from `data/corner_activities.csv` 
 | Free / Low cost / Treat | Cost tag on an activity card. Never an amount of money |
 | 15 min / 1 hr / 3 hr / 4 hr | Duration tag, from `formatDuration` (15min, an hour, an evening, half a day; the last two are proposed lengths in `config.ts`) |
 | First step: | Label before an activity's first step, on its card |
-| Do this | Button on an activity card. Opens the composer on that Corner with the activity's Moment prompt above the thought. **Same words as the "Do this" pill on a Moment (Start page) and near "Do this with people" on a Corner page. Different actions: flagged for your decision** |
+| Try this | Button on an activity card (founder, Nov 8, 2026: renamed from "Do this", which the Moment pill and the Corner page already use for other actions). Opens the composer on that Corner with the activity's Moment prompt above the thought |
 
-In the composer, from an activity: a small block above the thought shows the activity's title and its Moment prompt (content, no new label). The Moment saves the activity (`posts.activity_id`) and earns the normal Stub.
+In the composer, from "Try this": a small block above the thought shows the activity's title and its Moment prompt (content, no new label). The Moment saves the activity (`posts.activity_id`) and earns the normal Stub.
 

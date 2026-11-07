@@ -7,7 +7,7 @@ import {
   ENERGY_LABEL,
   WHO_LABEL,
   activitiesFor,
-  doThisPath,
+  tryThisPath,
   durationLabel,
   inTab,
   type ActivityTabId,
@@ -37,10 +37,10 @@ function ActivityCard({ activity }: { activity: Activity }) {
         {activity.firstStep}
       </p>
       <Link
-        to={doThisPath(activity)}
+        to={tryThisPath(activity)}
         className="mt-auto inline-flex min-h-11 items-center justify-center self-start rounded-control bg-[var(--accent)] px-5 text-small font-semibold text-accent-foreground"
       >
-        Do this
+        Try this
       </Link>
     </li>
   );
@@ -48,7 +48,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
 
 /**
  * What to do inside a Corner (data/corner_activities.csv): At home, With people and At a place, each a list of cards, an
- * activity in every tab it fits. A tab with nothing in it is not shown. "Do this" opens the composer on this Corner with the
+ * activity in every tab it fits. A tab with nothing in it is not shown. "Try this" opens the composer on this Corner with the
  * activity's prompt, and the Moment keeps the activity. Nothing when the Corner has no activities.
  */
 export function CornerActivities({ cornerSlug, activities: given }: { cornerSlug: string; activities?: readonly Activity[] }) {

@@ -121,7 +121,7 @@ export interface NewPostInput {
   pursuitId?: string;
   /** The Moment this one was made after seeing (the Start page's "Make this too" or "Do this"). The database keeps it only when the poster could see that Moment. */
   inspiredBy?: number;
-  /** The Corner activity this Moment was logged from ("Do this" on its card). posts.activity_id, sent only when set and dropped if the column is missing. */
+  /** The Corner activity this Moment was logged from ("Try this" on its card). posts.activity_id, sent only when set and dropped if the column is missing. */
   activityId?: string;
 }
 

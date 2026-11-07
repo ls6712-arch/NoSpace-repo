@@ -41,19 +41,9 @@ describe("copy rules", () => {
       /data\/catalogCorner(s|Categories)\.ts$/.test(s.file) && /^(bullet[- ])?journaling$/i.test(s.text);
     // The Bullet journaling Corner's slug and its activity ids ("bullet-journaling", "bullet-journaling-2"), as data, in the generated activities file.
     const activityId = (s: { file: string; text: string }) => /data\/cornerActivities\.ts$/.test(s.file) && /^bullet-journaling(-\d+)?$/.test(s.text);
-    // PENDING THE FOUNDER'S CALL (PR "Corner activities A"): four sentences of approved activity content that use "habit", a dropped word
-    // (docs/style-guide.md). Held here, exactly these and only in the generated activities file, until the founder rewords them or confirms them.
-    // Proposed rewordings are in that PR. Remove this list once they are changed.
-    const HABIT_CONTENT = new Set([
-      "Make a habit tracker",
-      "Days across, habits down, colour in a square when you do it.",
-      "Pick three habits.",
-      "A teacher fixes bad habits before they set.",
-    ]);
-    const pendingHabit = (s: { file: string; text: string }) => /data\/cornerActivities\.ts$/.test(s.file) && HABIT_CONTENT.has(s.text);
     // Import paths and storage keys ("../lib/journal", "sushii.journal.v1") are code, not copy.
     const isCode = (t: string) => /^(\.{1,2}\/|[\w-]+(\.[\w-]+)+$)/.test(t);
-    const hits = strings.filter((s) => banned.test(s.text) && !allowed.test(s.text) && !catalogName(s) && !activityId(s) && !pendingHabit(s) && !isCode(s.text));
+    const hits = strings.filter((s) => banned.test(s.text) && !allowed.test(s.text) && !catalogName(s) && !activityId(s) && !isCode(s.text));
     expect(show(hits)).toEqual([]);
   });
 

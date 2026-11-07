@@ -36,8 +36,8 @@ export const COST_LABEL: Record<ActivityCost, string> = { free: "Free", low: "Lo
 /** "15 min", "1 hr", "3 hr": the same words as a Corner's meta line (dates.ts formatDuration). */
 export const durationLabel = (a: Activity): string => formatDuration(activityDurationMinutes[a.duration]);
 
-/** "Do this": the composer with the Corner set and the activity remembered (its prompt shows there, its id is saved on the Moment). */
-export function doThisPath(a: Activity): string {
+/** "Try this": the composer with the Corner set and the activity remembered (its prompt shows there, its id is saved on the Moment). */
+export function tryThisPath(a: Activity): string {
   return `/create?hobby=${encodeURIComponent(a.spaceSlug)}&sub=${encodeURIComponent(a.cornerSlug)}&activity=${encodeURIComponent(a.id)}`;
 }
 

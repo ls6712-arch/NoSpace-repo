@@ -327,7 +327,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     if (initialPursuit?.subHobby) return initialPursuit.subHobby;
     return searchParams.get("sub") ?? "";
   });
-  // Came from "Do this" on a Corner's activity: its prompt shows above the thought, and the Moment keeps the activity.
+  // Came from "Try this" on a Corner's activity: its prompt shows above the thought, and the Moment keeps the activity.
   // Dropped if the person moves the Moment to another Corner.
   const activity = activityFromParams(searchParams, corner);
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
@@ -1072,7 +1072,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         pursuitId: projectId || undefined,
         // Made after seeing someone else's Moment (from the Start page). The database checks it.
         inspiredBy: /^\d{1,15}$/.test(searchParams.get("inspired") ?? "") ? Number(searchParams.get("inspired")) : undefined,
-        // Logged from an activity ("Do this"): saved on the Moment as posts.activity_id.
+        // Logged from an activity ("Try this"): saved on the Moment as posts.activity_id.
         activityId: activity?.id,
         // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
         // are readable by everyone today. Only the existing Activity fields may write them;

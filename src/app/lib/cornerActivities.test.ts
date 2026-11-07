@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { CORNER_ACTIVITIES } from "../data/cornerActivities";
-import { ACTIVITY_TABS, activitiesFor, activityById, activityFromParams, doThisPath, durationLabel, hasActivities, inTab } from "./cornerActivities";
+import { ACTIVITY_TABS, activitiesFor, activityById, activityFromParams, tryThisPath, durationLabel, hasActivities, inTab } from "./cornerActivities";
 
 const origami1 = activityById("origami-1")!;
 
@@ -40,9 +40,9 @@ describe("duration labels", () => {
   });
 });
 
-describe('"Do this"', () => {
+describe('"Try this"', () => {
   it("opens the composer on the Corner, with the activity", () => {
-    const path = doThisPath(origami1);
+    const path = tryThisPath(origami1);
     expect(path.startsWith("/create?")).toBe(true);
     const params = new URLSearchParams(path.split("?")[1]);
     expect(params.get("hobby")).toBe(origami1.spaceSlug);
@@ -50,7 +50,7 @@ describe('"Do this"', () => {
     expect(params.get("activity")).toBe("origami-1");
   });
   it("gives the composer back the activity, with its prompt, only for the Corner it belongs to", () => {
-    const params = new URLSearchParams(doThisPath(origami1).split("?")[1]);
+    const params = new URLSearchParams(tryThisPath(origami1).split("?")[1]);
     expect(activityFromParams(params, "origami")?.momentPrompt).toBe("Your first crane, wonky neck and all.");
     expect(activityFromParams(params, "pottery")).toBeUndefined();
     expect(activityFromParams(new URLSearchParams("activity=forged-9"), "origami")).toBeUndefined();
