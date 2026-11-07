@@ -5,6 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const auth = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => auth.value }));
+vi.mock("../lib/useSlowNavigation", () => ({ useSlowNavigation: () => false }));
+const prefetch = vi.hoisted(() => vi.fn(() => () => {}));
+vi.mock("../lib/prefetchTabs", () => ({ prefetchMainTabs: prefetch }));
 vi.mock("../config", () => ({ sooshOnboardingEnabled: true }));
 vi.mock("../components/Header", () => ({ Header: ({ hideWithRail }: { hideWithRail?: boolean }) => <header data-testid="header" data-hide-with-rail={String(!!hideWithRail)} /> }));
 vi.mock("../components/nav/SideRail", () => ({ SideRail: () => <nav data-testid="rail" /> }));
@@ -41,9 +44,23 @@ const at = (path: string) =>
     </MemoryRouter>,
   );
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  prefetch.mockClear();
+});
 
 describe("Root and onboarding", () => {
+  it("fetches the main tab pages for a signed-in person, not for a visitor", () => {
+    signedIn({ onboarding_completed: true, access: "active" });
+    at("/");
+    expect(prefetch).toHaveBeenCalledTimes(1);
+    cleanup();
+    prefetch.mockClear();
+    auth.value = { user: null, profile: null, loading: false, isConfigured: true };
+    at("/");
+    expect(prefetch).not.toHaveBeenCalled();
+  });
+
   it("never sends a finished person back into onboarding", () => {
     signedIn({ onboarding_completed: true, access: "active" });
     at("/");

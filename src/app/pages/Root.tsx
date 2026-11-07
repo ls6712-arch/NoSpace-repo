@@ -17,6 +17,9 @@ import { isTypingTarget, SEARCH_SHORTCUT_EVENT } from "../lib/searchShortcut";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
 import { usePageEnter } from "../lib/usePageEnter";
+import { useSlowNavigation } from "../lib/useSlowNavigation";
+import { NavProgress } from "../components/NavProgress";
+import { prefetchMainTabs } from "../lib/prefetchTabs";
 import { reconcileSaves } from "../lib/bookmarksRemote";
 import { resumeCalendarChanges } from "../lib/calendarPending";
 import { FinishSettingUp, stubbyAccountMayOpen } from "../components/stubby/FinishSettingUp";
@@ -91,6 +94,10 @@ export function Root() {
   useScrollMemory();
   const mainRef = useRef<HTMLElement>(null);
   usePageEnter(mainRef, location.pathname);
+  const slowNavigation = useSlowNavigation();
+  // Only for someone signed in: they are the ones who open these tabs, and a visitor on the landing page should not pay for them.
+  const signedIn = !!user;
+  useEffect(() => (signedIn ? prefetchMainTabs() : undefined), [signedIn]);
 
   // "/" focuses search on desktop, unless someone is typing in a field. Whichever search is on screen answers.
   useEffect(() => {
@@ -204,6 +211,7 @@ export function Root() {
   if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || location.pathname === "/reset-password" || (sooshOnboardingEnabled && location.pathname === "/login") || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
     return (
       <div className="min-h-viewport">
+        <NavProgress active={slowNavigation} />
         <PreviewBanner />
         <NetworkBanner />
         <AccountStatusBanner />
@@ -223,6 +231,7 @@ export function Root() {
 
   return (
     <div className="min-h-viewport">
+      <NavProgress active={slowNavigation} />
       {rail && <SkipLink />}
       {rail && <SideRail />}
       <div className={railPad}>
