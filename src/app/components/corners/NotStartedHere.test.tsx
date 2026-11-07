@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it } from "vitest";
-import { NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips } from "./NotStartedHere";
+import { NOT_STARTED_PREVIEW, NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips, previewOf } from "./NotStartedHere";
 
 afterEach(cleanup);
 
@@ -28,5 +28,11 @@ describe("NotStartedChips", () => {
   it("uses the proposed copy", () => {
     expect(NOT_STARTED_TITLE).toBe("Not started here yet");
     expect(NOT_STARTED_SUBLINE).toBe("Tap one to be the first.");
+  });
+
+  it("shows only the first few chips of a group on /corners, in the order given", () => {
+    const many = Array.from({ length: NOT_STARTED_PREVIEW + 4 }, (_, i) => i);
+    expect(previewOf(many)).toEqual(many.slice(0, NOT_STARTED_PREVIEW));
+    expect(previewOf([1, 2])).toEqual([1, 2]);
   });
 });
