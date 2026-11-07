@@ -1,8 +1,9 @@
--- Soosh: Corner activities, PR A (brief of Nov 7, 2026). A Moment logged from an activity ("Do this" on its card)
+-- Soosh: Corner activities, PR A (brief of Nov 7, 2026). A Moment logged from an activity ("Try this" on its card)
 -- remembers which one.
 --
--- Run after 20261119000000_standing_slots.sql. Staging first.
--- Rollback: rollback_20261120000000_post_activity_id.sql.
+-- Run after 20261121000000_thought_photos_private.sql (its first version, 20261120000000, was already taken by security_hardening,
+-- which is applied; this one has never run, so it moved to the next free version). Staging first.
+-- Rollback: rollback_20261122000000_post_activity_id.sql.
 -- Verification: supabase/verification/post_activity_id_check.sql.
 --
 -- posts.activity_id is a nullable id: "origami-1" from data/corner_activities.csv now, and later the id of an

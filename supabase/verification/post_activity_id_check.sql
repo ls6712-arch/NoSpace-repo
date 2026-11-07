@@ -1,4 +1,4 @@
--- Soosh: posts.activity_id (20261120000000_post_activity_id.sql).
+-- Soosh: posts.activity_id (20261122000000_post_activity_id.sql).
 --
 -- Not a migration, nothing here alters the schema. Run AFTER that migration.
 -- Run before it, the script stops at the first check and says so ("NOT APPLIED").
@@ -26,7 +26,7 @@ begin
   v_owner_role := current_user;
 
   if not exists (select 1 from information_schema.columns c where c.table_schema = 'public' and c.table_name = 'posts' and c.column_name = 'activity_id') then
-    raise exception 'RESULTS: NOT APPLIED (run 20261120000000_post_activity_id.sql first, nothing was created)';
+    raise exception 'RESULTS: NOT APPLIED (run 20261122000000_post_activity_id.sql first, nothing was created)';
   end if;
 
   perform set_config('request.jwt.claims', '{}', true);
