@@ -61,3 +61,15 @@ Do not target medical treatment terms such as depression treatment or anxiety me
 6. Verify Vercel preview and Search Console after founder-approved merge.
 
 **PR #350 remains draft; no merge without explicit founder approval.**
+
+## Full export received (November 7, 2026)
+The founder supplied a **1,336-row, 18-column Semrush CSV** spanning **10 topic clusters**. A complete row-by-row triage CSV was generated separately in this conversation as `Soosh_Semrush_1336_Keyword_Mapping.csv` (downloadable artifact; **not committed to GitHub**). Counts from initial automated triage:
+
+- 452 mapped to existing guide/pillar URLs for intent review
+- 610 require additional SERP research (no reliable exact page match)
+- 165 excluded as medical/YMYL treatment topics
+- 86 deferred for sensitive/low-mood intent review
+- 13 deferred for commercial planner-shopping mismatch
+- 10 deferred for child-audience mismatch
+
+This is a **first-pass classification, not 1,336 published SEO targets**. Review all rows manually before targeting or creating content. The export's volumes differ from earlier screenshots (e.g. `hobbies for women` 18,100 in the CSV), so the export should be used as the consistent baseline. The keyword map above reflects earlier supplied figures and should not be merged with the CSV figures without a date/source note.
