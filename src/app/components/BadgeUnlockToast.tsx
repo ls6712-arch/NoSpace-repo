@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import * as Icons from "lucide-react";
+import { Share2, X } from "lucide-react";
+import { badgeIcon } from "./badgeIcon";
 import { badges, badgeName } from "../data/badges";
 import { usePrimaryHobbyKey } from "./usePrimaryHobbyKey";
 import { useRewards } from "../context/RewardsContext";
@@ -29,7 +30,7 @@ export function BadgeUnlockToast() {
 
   if (!badge) return null;
 
-  const Icon = (Icons as any)[badge.icon] ?? Icons.Sparkles;
+  const Icon = badgeIcon(badge.icon);
   const shared = isBadgeShared(badge.id);
 
   return (
@@ -59,7 +60,7 @@ export function BadgeUnlockToast() {
               onClick={() => setShareOpen(true)}
               className="inline-flex items-center gap-1 text-caption text-[var(--accent-text)] hover:underline"
             >
-              <Icons.Share2 className="size-3" />
+              <Share2 className="size-3" />
               Share
             </button>
           )}
@@ -68,7 +69,7 @@ export function BadgeUnlockToast() {
           onClick={dismissLastBadge}
           className="text-muted-foreground hover:text-foreground text-caption"
         >
-          <Icons.X className="size-4" />
+          <X className="size-4" />
         </button>
       </div>
 
