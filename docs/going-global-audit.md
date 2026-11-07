@@ -28,87 +28,68 @@ grep -rInE 'NYC|New York|Brooklyn|Manhattan|Queens|Bronx|Staten Island|America/N
 
 Already global, checked and left alone: the page title and description, Open Graph and Twitter tags in `index.html` (no New York wording; the canonical and share URLs are `https://www.onsoosh.com/`), the landing page copy (the landing e2e asserts there is no "This weekend in NYC"), and all 28 sitemap URLs.
 
-## Ask: the founder decides
+## Ask: proposed answer for each of the 41 lines
 
-The New York assumption is not mostly copy. It is **logic**: the product works in one time zone and one city. Changing the words without the logic would make them false ("Times shown in New York." is true today). So these are proposals, not changes.
+The New York assumption is mostly **logic**, not copy: the product works in one time zone and one city. Changing words without the logic would make them false ("Times shown in New York." is true today), so each line below has a proposed answer and the PR that carries it. **Founder decisions of Nov 7, 2026 are marked "decided"**; the rest are proposals to approve in one go.
 
-### A. One time zone for everything the person does (biggest)
-
-`HOME_TZ = "America/New_York"` is used by **17 client files** (Calendar, Week, Home, onboarding free time, Start page, Stubby lines) and **12 migrations**, including `stubs_four_kinds` (which local day a Stub belongs to) and the weekly-free-hours functions. The edge functions have their own copies (`_shared/weeklyHours.ts`, `preferenceTime.ts`, `capabilityProfile.ts` default, `calendar-feed`).
-
-Proposal, as its own PR (PR E): add `profiles.time_zone` (IANA, from the browser, editable), thread it through the 17 files, and give the SQL day boundaries a time-zone argument (new migration, rollback, verification; no editing of past ones). Punch cards and Stubs count by the person's own days. Until then every "Times shown in New York" line stays true.
-
-Lines affected in the client: 5 listed in A below, plus the 17 files that use the constant.
-
-| Where | Line |
+| PR | What |
 |---|---|
-| `src/app/lib/calendarView.ts:153` | `return [stubs > 0 ? plural(stubs, "Stub") : null, plansToGo > 0 ? `${plural(plansToGo, "plan")} to go` : null,` |
-| `src/app/lib/calendarView.ts:160` | `return [lead, view !== "list" && counts.plans > 0 ? plural(counts.plans, "plan") : null, "New York"].filter(Bo` |
-| `src/app/lib/homeWeek.ts:13` | `export const HOME_TZ = "America/New_York";` |
-| `src/app/pages/WeekFree.tsx:83` | `<p className="text-caption text-muted-foreground">Times shown in New York.</p>` |
-| `src/app/pages/onboarding/screens/FreeScreen.tsx:70` | `<p className="text-caption text-muted-foreground">Times shown in New York.</p>` |
+| **E** | Per-person time zone (decided): the browser's time zone saved on the profile, used for Stub days and everything that used `HOME_TZ`; the `stubby-scout` prompts use the person's city instead of New York. One edge-function redeploy, before the deploy token expires on Nov 13 |
+| **F** | City (decided): "This week in {city}" only where that city has picks, otherwise the section is hidden; the standing schedule loses its NYC framing; onboarding's Where screen accepts any city and maps it to the city-key list |
+| **G** | Distances in km or miles by the person's locale (decided) |
 
-### B. Features that are New York by design
+New copy these need (for approval, added to the glossary in the PR that uses it): "Times shown in your time zone." ; "This week in {city}" ; "{City} time" ; the Where screen's no-match line.
 
-The Week view's hand-picked "This week in New York" row (`cityPicks.ts`, `CITY = "new-york"`), the admin page for it, the standing NYC weekly schedule ("New York is the only city with weekly times for now"), and onboarding's "Where" screen, which maps a location to the nearest of the NYC neighborhoods and says "That's outside New York" otherwise.
+| # | Where | Line | Proposed answer | PR |
+|---|---|---|---|---|
+| 1 | `StandingSlotForm.tsx:101` | hint "New York time" | "{City} time", from the time zone of the slot's city key (each key in the city list carries a zone) | F |
+| 2 | `calendarView.ts:153` | month subline ends in "New York" | Drop the place; show the person's city name when they have one, else nothing | E |
+| 3 | `calendarView.ts:160` | week, day and list sublines end in "New York" | Same as 2 | E |
+| 4 | `interests.ts:27` | `CITY_SUGGESTIONS` (Bangalore, New York, Mumbai, Delhi, ...) | **Keep.** An example list that already spans countries; it becomes the names in the city-key list when PR 4 builds it | |
+| 5 | `cityPicks.ts:18` | `CITY = "new-york"` | Each pick carries its own city key (the column exists); the Week view asks for the person's city key | F |
+| 6 | `homeCopy.ts:12` | `place: "New York"` | The person's city name; nothing when they have none | F |
+| 7 | `homeCopy.ts:15` | "This week in New York" | "This week in {city}", shown only where that city has published picks, else the section is hidden (decided) | F |
+| 8 | `homeCopy.ts:48` | admin intro mentions "This week in New York" | "The hand-picked things on the Week view, for the cities you choose. Published picks show to everyone signed in whose city has them." | F |
+| 9 | `homeWeek.ts:13` | `HOME_TZ = "America/New_York"` | The person's time zone (`profiles.time_zone`, the browser's by default, editable); no zone yet: the browser's | E |
+| 10 | `AdminCityPicks.tsx:193` | hint "New York time" | "{City} time" for the pick's city | F |
+| 11 | `WhereScreen.tsx:58` | "That's outside New York. Type your city instead." | Accept any typed city; map it to the city-key list (exact match, per `docs/city-keys-plan.md`); no match: keep the text as their city, no key, no error. Location: the nearest key in the list, else leave it blank. The NYC neighborhood list stays as the finer choice for New York only (decided) | F |
+| 12 | `FreeScreen.tsx:70` | "Times shown in New York." | "Times shown in your time zone." | E |
+| 13 | `WeekFree.tsx:83` | "Times shown in New York." | Same as 12 | E |
+| 14 | `calendar-feed/plans.ts:23` | day of a plan in `America/New_York` | The feed owner's `time_zone`; none: UTC | E |
+| 15 | `stubby-scout/askPrompt.ts:52` | "...helps people in New York City find things to do outside work." | Built from the person's city: "...helps people in {city} ..."; no city: "...helps people find things to do near them." | E |
+| 16 | `stubby-scout/askPrompt.ts:53` | "...real things in New York City that fit them" | "...in {city}" the same way; no city: "near them" | E |
+| 17 | `stubby-scout/askPrompt.ts:64` | "Times are New York local time" | "Times are local time in {zone}" (the person's zone) | E |
+| 18 | `stubby-scout/askPrompt.ts:124` | "It is now ... in New York." | "It is now ... in {zone}." | E |
+| 19 | `stubby-scout/ask.ts:118` | `nyHour` in `America/New_York` | The hour in the person's zone | E |
+| 20 | `stubby-scout/search.ts:66` | "...people in New York City..." | As 15 | E |
+| 21 | `stubby-scout/search.ts:67` | "search ... in New York City" | As 16 | E |
+| 22 | `stubby-scout/search.ts:75` | "Times are New York local time" | As 17 | E |
+| 23 | `stubby-scout/search.ts:91` | "It is now ... in New York." | As 18 | E |
+| 24 | `stubby-scout/search.ts:92` | "Find up to N activities in New York City" | "...in {city}"; no city: "near the person" | E |
+| 25 | `stubby-scout/search.ts:273` | web-search `user_location` is New York, US | From the person's city and zone; omitted when unknown | E |
+| 26 | `stubby-scout/README.md:6` | restock at 4 to 6 a.m. New York time | Restock per time zone, or stay one global hour with the wording corrected; I would keep one run and say "UTC" in the doc | E |
+| 27 | `stubby-scout/README.md:22` | "a New York start time" | "a start time in the person's zone" | E |
+| 28 | `stubby-scout/picks.ts:14` | `HOME_TZ = "America/New_York"` | The person's zone, passed in | E |
+| 29 | `stubby-scout/handler.ts:53` | `CITY = "new-york"` | The person's city key | F |
+| 30 | `stubby-scout/handler.ts:540` | weekly-hours text ends "America/New_York" | The person's zone | E |
+| 31 | `stubby-scout/handler.ts:629` | default zone `America/New_York` | The person's zone, else UTC | E |
+| 32 | `stubby-scout/v3/context.ts:22` | default zone `America/New_York` | The person's zone, else UTC | E |
+| 33 | `stubby-scout/v3/context.ts:36` | no city at all means "New York" | No city means no city (the prompts above already handle it) | E |
+| 34 | `stubby-scout/v3/request.ts:111` | `CITIES` recognizer list starts with New York | **Keep.** A list of cities to recognize in text, not a default; extended from the city-key list later | |
+| 35 | `stubby-scout/v3/careResources.ts:102` | no city and no zone: the US card; any zone but New York's: the "elsewhere" card | **Needs your confirmation (safety).** By country from the zone (any US zone gets the US card, as today for New York); with no city and no zone, show the "elsewhere" card, not the US card | E |
+| 36 | `_shared/capabilityProfile.ts:27` | default `timeZone: "America/New_York"` | Default from the profile's zone, else UTC | E |
+| 37 | `_shared/capabilityProfile.ts:44` | error message "such as America/New_York" | "such as Europe/London" | E |
+| 38 | `_shared/weeklyHours.ts:3` | `WEEKLY_HOURS_TIME_ZONE = "America/New_York"` | The person's zone, passed in | E |
+| 39 | `_shared/weeklyHours.ts:60` | default `zone = "America/New_York"` | No default; callers pass it | E |
+| 40 | `_shared/preferenceTime.ts:2` | `localClock` default zone | No default; callers pass it | E |
+| 41 | `_shared/preferenceTime.ts:6` | `preferenceTimeScore` default zone | No default; callers pass it | E |
 
-Proposal: each follows the person's city key, and a city with no picks or schedule shows nothing (the row hides, as it does today with no picks). "This week in {city}" needs new copy for your approval. Onboarding: accept any city from the city-key list; the NYC neighborhood list stays as the finer choice for New York only.
+### Also decided, not a line above
 
-| Where | Line |
-|---|---|
-| `src/app/components/standing/StandingSlotForm.tsx:101` | `<Field label="Starts" hint="New York time">` |
-| `src/app/lib/cityPicks.ts:18` | `export const CITY = "new-york";` |
-| `src/app/lib/homeCopy.ts:12` | `place: "New York",` |
-| `src/app/lib/homeCopy.ts:15` | `cityPicks: "This week in New York",` |
-| `src/app/lib/homeCopy.ts:48` | `line: "The hand-picked things on the Week view, This week in New York. Published picks show to everyone signed` |
-| `src/app/pages/AdminCityPicks.tsx:193` | `<Field label="Starts" hint="New York time">` |
-| `src/app/pages/onboarding/screens/WhereScreen.tsx:58` | `setNote("That’s outside New York. Type your city instead.");` |
-
-### C. Edge function prompts and defaults (needs a redeploy)
-
-`stubby-scout` (live version 27, recorded) tells the model "an app that helps people in New York City find things to do" and searches the web for activities "in New York City", defaults the time zone to New York, and defaults a person with no city to New York. Changing any file under `supabase/functions/` turns the `stubby-deploy` check red until it is redeployed and recorded again (the workflow and your token handle that). Ask Stubby is off on live right now, so this is not urgent; I would do it together with PR E so there is one redeploy.
-
-| Where | Line |
-|---|---|
-| `supabase/functions/_shared/capabilityProfile.ts:27` | `return { version: 1, consent: { memory: false, onboarding: false, feedback: false }, timeZone: "America/New_Yo` |
-| `supabase/functions/_shared/capabilityProfile.ts:44` | `if (!validTimeZone(v.timeZone)) throw new Error("Enter a valid timezone, such as America/New_York.");` |
-| `supabase/functions/_shared/preferenceTime.ts:2` | `export function localClock(ms:number,timeZone="America/New_York"){` |
-| `supabase/functions/_shared/preferenceTime.ts:6` | `export function preferenceTimeScore(p:Personalization,ms:number,timeZone="America/New_York"){` |
-| `supabase/functions/_shared/weeklyHours.ts:3` | `export const WEEKLY_HOURS_TIME_ZONE = "America/New_York";` |
-| `supabase/functions/_shared/weeklyHours.ts:60` | `zone = "America/New_York",` |
-| `supabase/functions/calendar-feed/plans.ts:23` | `timeZone: "America/New_York",` |
-| `supabase/functions/stubby-scout/README.md:6` | `- **Each morning** (`{"mode":"restock"}`): pg_cron calls it every 10 minutes from 4 to 6 a.m. New York time (m` |
-| `supabase/functions/stubby-scout/README.md:22` | `- a title (80 characters at most) and a New York start time between 1 hour and 14 days away;` |
-| `supabase/functions/stubby-scout/ask.ts:118` | `const nyHour = (ms: number) => Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "` |
-| `supabase/functions/stubby-scout/askPrompt.ts:52` | `"You are Stubby's scout for Soosh, an app that helps people in New York City find things to do outside work.",` |
-| `supabase/functions/stubby-scout/askPrompt.ts:53` | `"One person asked for ideas. Search the web for real things in New York City that fit them, and report the bes` |
-| `supabase/functions/stubby-scout/askPrompt.ts:64` | `"- Times are New York local time, written as YYYY-MM-DDTHH:MM in 24 hour time.",` |
-| `supabase/functions/stubby-scout/askPrompt.ts:124` | ``It is now ${msToNyLocal(now)} in New York.`,` |
-| `supabase/functions/stubby-scout/handler.ts:53` | `export const CITY = "new-york";` |
-| `supabase/functions/stubby-scout/handler.ts:540` | `return weeklyHours(windows).map(r => r.legacy ? `${DAY_WORDS[r.day]} ${r.start===360?"daytime":"evening"}` : `` |
-| `supabase/functions/stubby-scout/handler.ts:629` | `const zone = validTimeZone(capability.timeZone) ? capability.timeZone : "America/New_York";` |
-| `supabase/functions/stubby-scout/picks.ts:14` | `export const HOME_TZ = "America/New_York";` |
-| `supabase/functions/stubby-scout/search.ts:66` | `"You are the scout for Soosh, an app that helps people in New York City find things to do outside work.",` |
-| `supabase/functions/stubby-scout/search.ts:67` | `"Your job: search the web for real, dated activities in New York City that someone could go to, and report the` |
-| `supabase/functions/stubby-scout/search.ts:75` | `"- Times are New York local time, written as YYYY-MM-DDTHH:MM in 24 hour time.",` |
-| `supabase/functions/stubby-scout/search.ts:91` | ``It is now ${msToNyLocal(now)} in New York.`,` |
-| `supabase/functions/stubby-scout/search.ts:92` | ``Find up to ${max} activities in New York City that start between one hour from now and ${days} days from now.` |
-| `supabase/functions/stubby-scout/search.ts:273` | `user_location: { type: "approximate", city: "New York", region: "New York", country: "US", timezone: "America/` |
-| `supabase/functions/stubby-scout/v3/careResources.ts:102` | `if (timeZone && timeZone !== "America/New_York") return CARE_ELSEWHERE;` |
-| `supabase/functions/stubby-scout/v3/context.ts:22` | `const timeZone = validTimeZone(c.timeZone) ? c.timeZone : "America/New_York";` |
-| `supabase/functions/stubby-scout/v3/context.ts:36` | `const city = parsed.city === null ? null : asked ?? session ?? saved ?? "New York";` |
-| `supabase/functions/stubby-scout/v3/request.ts:111` | `const CITIES = ["New York", "New York City", "NYC", "Boston", "London", "San Francisco", "Los Angeles", "Chica` |
-
-### D. Static copy with US units, and money
-
-- **Miles:** Corner guide and idea text hard-codes miles ("Walk a trail under three miles", "Walk two miles with a day bag", the hiking first step "under 3 miles"). Kilometres by default and miles for the US and UK needs those strings to carry a distance, not a unit. Proposal: write them without a distance ("a short trail"), or store `{km, miles}` pairs and format by locale. Your call; it is content, not code.
-- **`$`:** event prices come from the host's own words (`firstPlan.ts`: "$12" or "Free") and are shown as written; with event imports cancelled, that is the only source. Cost on activities is Free / Low cost / Treat by design. The Week budget slider (`monthlyBudget`) is an amount the person chooses; I left it, because turning a chosen amount into words changes what it does.
-- **City list:** `CITY_SUGGESTIONS` in `interests.ts` (Bangalore, New York, Mumbai, Delhi, ... ) is an example list that already spans countries. Kept.
-- **Locale:** `og:locale` is `en_US`. Fine until there is a translation.
-
-| Where | Line |
-|---|---|
-| `src/app/lib/interests.ts:27` | `export const CITY_SUGGESTIONS = ["Bangalore", "New York", "Mumbai", "Delhi", "Chennai", "Hyderabad", "Pune", "` |
+- **Time zone in SQL.** 12 migrations compute New York days, including `stubs_four_kinds` (which local day a Stub belongs to) and the weekly-free-hours functions. PR E adds the zone as an argument and reads `profiles.time_zone`, in a new migration with a rollback and a verification script. Past migrations are not edited.
+- **Distances (PR G).** One `formatDistance` helper: kilometres, or miles for the US, UK and the other countries that use them, from the person's locale (`Intl` and the browser's language, with a per-country override list). Corner text that hard-codes miles ("Walk a trail under three miles", the hiking first step) is rewritten to carry a distance the helper formats; the content changes are listed in that PR for approval.
+- **Money.** Event prices are the host's own words (kept). Activity cost stays Free, Low cost or Treat. The Week budget is an amount the person picks (kept).
+- **Locale.** `og:locale` stays `en_US` until there is a translation.
 
 ## Sitemap, robots and routing
 

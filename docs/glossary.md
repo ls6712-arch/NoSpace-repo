@@ -1373,7 +1373,7 @@ New with the weekly schedule behind Tonight (`standing_slots`). **Every row belo
 
 ## Going global (founder brief, Nov 7, 2026)
 
-Three strings that named a New York place now name no place. **New wording, for approval.** Nothing else in the UI changed; the New York time and city-picks wording stays until the time zone and city work (`docs/going-global-audit.md`, Ask A and B) is approved, because it is true until then.
+Three strings that named a New York place now name no place. **Approved by the founder, Nov 7, 2026.** Nothing else in the UI changed; the New York time and city-picks wording stays until the time zone and city work (`docs/going-global-audit.md`, Ask A and B) is approved, because it is true until then.
 
 | String | Where |
 |---|---|
