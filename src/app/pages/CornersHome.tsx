@@ -18,7 +18,8 @@ import {
   guideMoods,
   type CornerSetting,
 } from "../data/curatedCorners";
-import { cornerKey, homeCornersIn, type HomeCorner } from "../data/homeCorners";
+import { cornerKey, homeCornersIn, notStartedIn, type HomeCorner } from "../data/homeCorners";
+import { NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips, previewOf } from "../components/corners/NotStartedHere";
 import { MOODS, type MoodId } from "../data/moods";
 import { NO_PICK, SETTING_OPTIONS, hasPick, matches, paramsFromPicker, pickerFromParams, type Picker, type Setting } from "../lib/cornerFilters";
 import { fetchCornersLive, thisWeek, type CornerLive } from "../lib/cornersLive";
@@ -212,6 +213,12 @@ export function CornersHome() {
     return ranker.personal ? rankRows(rows, (r) => r.relevance) : rows;
   }, [latest, ranker]);
 
+  // Catalog Corners with no guide or photo yet, grouped by their group of 18.
+  const notStartedGroups = useMemo(
+    () => CORNER_CATEGORIES.map((cat) => ({ cat, corners: notStartedIn(cat.slug) })).filter((g) => g.corners.length > 0),
+    [],
+  );
+
   return (
     <div className="min-h-viewport pb-24">
       {/* Discover's tabs, with Corners selected: /corners is the Corners tab of Discover. */}
@@ -303,6 +310,27 @@ export function CornersHome() {
               </HorizontalRow>
             </section>
           ))}
+          {notStartedGroups.length > 0 && (
+            <section className={SECTION_GAP} aria-labelledby="not-started-title">
+              <h2 id="not-started-title" className="text-lead font-semibold tab:text-title">
+                {NOT_STARTED_TITLE}
+              </h2>
+              <p className="mb-4 mt-1 text-small text-muted-foreground">{NOT_STARTED_SUBLINE}</p>
+              <div className="flex flex-col gap-6">
+                {notStartedGroups.map(({ cat, corners }) => (
+                  <div key={cat.slug}>
+                    <h3 className="mb-2 text-small font-semibold text-foreground">{cat.name}</h3>
+                    <NotStartedChips corners={previewOf(corners)} label={cat.name} />
+                    {corners.length > previewOf(corners).length && (
+                      <Link to={`/browse/${cat.slug}`} className="mt-1 inline-flex min-h-11 items-center text-small font-semibold text-[var(--accent-text)] hover:underline">
+                        See all
+                      </Link>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
       </div>
