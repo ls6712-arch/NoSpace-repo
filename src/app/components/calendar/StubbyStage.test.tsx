@@ -3,6 +3,8 @@ import { createRef } from "react";
 import { MemoryRouter } from "react-router";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../../config", async (orig) => ({ ...(await orig<typeof import("../../config")>()), stubbyAskEnabled: true }));
 
 const api = vi.hoisted(() => ({
   askStubbyStream: vi.fn(),

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { Link, Navigate, useSearchParams } from "react-router";
+import { stubbyAskEnabled } from "../config";
 import { PageShell } from "../components/layout/PageShell";
 import { useAuth } from "../context/AuthContext";
 import { GuestStubby } from "../components/stubby/GuestStubby";
@@ -261,7 +262,8 @@ export function Calendar() {
   const filters = filtersByView[view] ?? loadFilters(view);
 
   // Signed out: Stubby as a guest, no sign-up first (guest brief §2). The calendar itself needs an account.
-  if (isConfigured && !user) return <GuestStubby />;
+  // Signed out: Stubby as a guest, or, with Ask Stubby off (config.ts), straight to sign-up.
+  if (isConfigured && !user) return stubbyAskEnabled ? <GuestStubby /> : <Navigate to="/onboarding" replace />;
 
   const go = (next: { view?: CalendarView; anchor?: number }) => {
     const v = next.view ?? view;

@@ -31,6 +31,14 @@ export const STAGING_HOSTNAMES: readonly string[] = [STAGING_DOMAIN, `www.${STAG
 // hidden until this flips on.
 export const marketplaceEnabled = false;
 
+// Ask Stubby: the field on the Stubby tab that runs a live search (the
+// stubby-scout function, which calls an AI model). Off for now (founder,
+// Nov 6, 2026): Stubby stays on the tab with his greeting and the picks he
+// already has, but there is no field, no live search and no results under
+// him, and the landing page's main button goes to sign-up instead. The code,
+// the function and the saved picks all stay; flip this to bring it back.
+export const stubbyAskEnabled = false;
+
 // Today's sheet, Books and the Public Scrapbook are named concepts outside
 // the five product nouns (Moment, Shelf, Pursuit, Corner, Space), so they are
 // hidden for now. The code and data stay; flip this to bring them back.

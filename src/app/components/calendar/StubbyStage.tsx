@@ -16,6 +16,7 @@ import { GuestSignUpButton, InlineSignUpCard } from "../stubby/GuestPrompts";
 import { SignUpSheet } from "../stubby/SignUpSheet";
 import { AdultPrompt } from "../stubby/Birthday";
 import { useStubbyAccess } from "../../context/StubbyAccess";
+import { stubbyAskEnabled } from "../../config";
 import { GUEST_COPY, outOfAsksLine } from "../../lib/guestCopy";
 
 /** A hover or focus hop at most this often, so a wandering pointer doesn't keep him bouncing. */
@@ -137,7 +138,7 @@ export const StubbyStage = forwardRef<
     <>
       {/* No height of its own, so it never pushes the page when it appears. Below the phone header, above nothing else. */}
       <div className="sticky top-[calc(var(--safe-top)+65px)] z-30 h-0 rail:top-0">
-        {past && !sheetOpen && (
+        {stubbyAskEnabled && past && !sheetOpen && (
           <button
             type="button"
             data-stubby-sticky=""
@@ -152,7 +153,8 @@ export const StubbyStage = forwardRef<
 
       <section
         ref={stage}
-        aria-label={ASK_COPY.button}
+        // With Ask Stubby off (config.ts) he has no field or line, so the stage isn't named for it.
+        aria-label={stubbyAskEnabled ? ASK_COPY.button : undefined}
         data-stubby-stage=""
         className="mb-6 grid scroll-mt-[calc(var(--safe-top)+80px)] grid-cols-[88px_minmax(0,1fr)] items-start gap-x-3 gap-y-4 rail:scroll-mt-4 tab:grid-cols-[112px_minmax(0,1fr)] tab:gap-x-6"
       >
@@ -177,13 +179,14 @@ export const StubbyStage = forwardRef<
           <StubbyBuddy ref={buddy} size={size} rest="ready" waiting={loading || ask.busy} upset={failed} followPointer={finePointer} className="relative" />
         </div>
 
-        {/* His line, in a bubble pointing at him. Screen readers read the words; Stubby himself is hidden. */}
-        <div className="relative col-start-2 row-start-1 w-fit max-w-full self-center justify-self-start">
+        {/* His line, in a bubble pointing at him. Screen readers read the words; Stubby himself is hidden.
+            With Ask Stubby off, every line invites an ask, so he only reacts and says nothing. */}
+        {stubbyAskEnabled && <div className="relative col-start-2 row-start-1 w-fit max-w-full self-center justify-self-start">
           <span aria-hidden="true" className="absolute left-0 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-l border-border bg-card" />
           <p aria-live="polite" data-stubby-line="" className="relative rounded-card border border-border bg-card px-4 py-3 text-lead font-semibold leading-snug">
             {line}
           </p>
-        </div>
+        </div>}
 
         <div className="col-span-2 row-start-2 flex flex-col gap-4 tab:col-span-1 tab:col-start-2">
           {access.guest && (
@@ -191,14 +194,14 @@ export const StubbyStage = forwardRef<
               <GuestSignUpButton />
             </div>
           )}
-          {ask.showContext && !access.closed && <ContextCard onDone={(t) => void ask.saveContext(t)} onSkip={ask.skipContext} />}
+          {stubbyAskEnabled && ask.showContext && !access.closed && <ContextCard onDone={(t) => void ask.saveContext(t)} onSkip={ask.skipContext} />}
           {/* When his line already asks "What are you in the mood for?", the label isn't shown twice. */}
-          <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} hideLabel={line === ASK_COPY.label} />
+          {stubbyAskEnabled && <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} hideLabel={line === ASK_COPY.label} />}
         </div>
       </section>
 
       {access.guest && <SignUpSheet />}
-      <StubbyResults
+      {stubbyAskEnabled && <StubbyResults
         state={ask}
         onMakePlans={onMakePlans}
         onBring={onBring}
@@ -207,8 +210,8 @@ export const StubbyStage = forwardRef<
           field?.focus();
           field?.select();
         }}
-      />
-      {access.guest && <InlineSignUpCard perDay={ask.accountPerDay} />}
+      />}
+      {stubbyAskEnabled && access.guest && <InlineSignUpCard perDay={ask.accountPerDay} />}
       {!access.guest && ask.offerBirthday && (
         <AdultPrompt onAdded={ask.birthdayAdded} />
       )}
