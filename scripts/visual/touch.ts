@@ -35,6 +35,11 @@ export function touchAuditInPage(min = 44): TouchResult {
     // A tap that lands on an interactive ANCESTOR (a button inside a link) still activates the control, so it passes.
     const bad = hits.find((n) => n && !(el === n || el.contains(n) || (n.contains(el) && n.matches(SEL))));
     if (!bad) continue;
+    // Fixed chrome (the bottom tab bar) is anchored to the viewport, and this audit makes the viewport as tall as the page,
+    // so on a long page it can land over content that is nowhere near the bottom of the real screen. Its own reach and
+    // what it hides at the real viewport are checked by the fixed-chrome pass; here it is not a neighbour's hit area.
+    const inFixed = (n: Element | null) => { for (let a = n; a; a = a.parentElement) if (getComputedStyle(a).position === "fixed") return true; return false; };
+    if (inFixed(bad as Element)) continue;
     // A corner that lands on ANOTHER interactive element is an overlap between neighbours' hit areas
     // (listed separately); a corner that lands on plain content means this element has no hit area there.
     const other = bad ? (bad as Element).closest(SEL) : null;
@@ -44,6 +49,8 @@ export function touchAuditInPage(min = 44): TouchResult {
   const overlaps: TouchOverlap[] = [];
   for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
     const a = boxes[i], b = boxes[j]; if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+    const fixedOf = (n: Element) => { for (let x: Element | null = n; x; x = x.parentElement) if (getComputedStyle(x).position === "fixed") return true; return false; };
+    if (fixedOf(a.el) !== fixedOf(b.el)) continue; // fixed chrome against page content: see above
     const ra = a.el.getBoundingClientRect(), rb = b.el.getBoundingClientRect();
     // only count overlap that comes from the 44px expansion, not from elements that already touch
     const ox = Math.min(a.r, b.r) - Math.max(a.l, b.l), oy = Math.min(a.b, b.b) - Math.max(a.t, b.t);
