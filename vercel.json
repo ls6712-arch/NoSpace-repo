@@ -41,5 +41,27 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/robots.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "trynospace.com"
+        }
+      ],
+      "destination": "/robots-staging.txt"
+    },
+    {
+      "source": "/robots.txt",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.trynospace.com"
+        }
+      ],
+      "destination": "/robots-staging.txt"
+    }
   ]
 }

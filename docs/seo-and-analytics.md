@@ -4,8 +4,12 @@ What is in the code, and what only the owner can do (Google accounts, DNS, Verce
 
 ## In the code
 
-- `public/robots.txt` allows crawling and points to the sitemap.
-- `public/sitemap.xml` lists `https://www.onsoosh.com/`. Served at `/sitemap.xml`.
+- `public/robots.txt` allows crawling and points to the sitemap. On the staging host (`trynospace.com`,
+  `www.trynospace.com`) a host rewrite in `vercel.json` serves `public/robots-staging.txt` instead (`Disallow: /`).
+- `sitemap.xml` is generated at build by `scripts/build-sitemap.ts` (run by `npm run build`, written to
+  `dist/`): the home page and every `public/**/index.html` that does not say `noindex`, all on
+  `https://www.onsoosh.com`, `lastmod` = the build date, no `changefreq` or `priority`, at most 50,000 URLs. A new
+  page under `public/` appears on the next build. Only real paths are listed (see the limit below).
 - `index.html` has a title, description, canonical link and share tags. On any host other
   than onsoosh.com (staging, previews) an inline script adds `noindex`, so only
   the live site is indexed.

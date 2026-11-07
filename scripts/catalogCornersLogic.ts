@@ -5,7 +5,11 @@
  */
 import { matchCorners } from "../src/app/lib/cornerMatching";
 
-export type NycFit = "city" | "seasonal" | "day_trip" | "hard";
+/** The founder's CSV column `nyc_fit` (kept as is so the data stays stable). */
+export type CsvFit = "city" | "seasonal" | "day_trip" | "hard";
+/** What the app uses: how reachable a Corner is anywhere, not from New York. */
+export type Reach = "anywhere" | "needs_place" | "seasonal" | "travel";
+export const REACH_FROM_CSV: Readonly<Record<CsvFit, Reach>> = { city: "anywhere", seasonal: "seasonal", day_trip: "travel", hard: "needs_place" };
 export type Season = "warm" | "mild" | "cold";
 
 /** internal_category name in the CSV to the hobbies.ts Space slug. Listed in the PR. */
@@ -43,7 +47,7 @@ export interface CatalogEntry {
   name: string;
   spaceSlug: string;
   aliases: string[];
-  nycFit: NycFit;
+  reach: Reach;
   season?: Season;
 }
 
@@ -90,7 +94,7 @@ export function csvRows(text: string): CsvRow[] {
   });
 }
 
-const NYC_FITS = new Set(["city", "seasonal", "day_trip", "hard"]);
+const CSV_FITS = new Set<string>(Object.keys(REACH_FROM_CSV));
 const SEASONS = new Set(["warm", "mild", "cold"]);
 
 /** `keep` rows only; throws on anything malformed so a bad CSV never ships. */
@@ -101,7 +105,7 @@ export function keptEntries(rows: CsvRow[]): CatalogEntry[] {
     if (r.status !== "keep") continue;
     const spaceSlug = INTERNAL_CATEGORY_TO_SPACE[r.internal_category];
     if (!spaceSlug) throw new Error(`${r.slug}: unknown internal_category "${r.internal_category}"`);
-    if (!NYC_FITS.has(r.nyc_fit)) throw new Error(`${r.slug}: bad nyc_fit "${r.nyc_fit}"`);
+    if (!CSV_FITS.has(r.nyc_fit)) throw new Error(`${r.slug}: bad nyc_fit "${r.nyc_fit}"`);
     if (r.season && !SEASONS.has(r.season)) throw new Error(`${r.slug}: bad season "${r.season}"`);
     if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(r.slug)) throw new Error(`bad slug "${r.slug}"`);
     if (seen.has(r.slug)) throw new Error(`duplicate slug "${r.slug}"`);
@@ -111,7 +115,7 @@ export function keptEntries(rows: CsvRow[]): CatalogEntry[] {
       name: r.name,
       spaceSlug,
       aliases: r.aliases ? r.aliases.split(";").map((a) => a.trim()).filter(Boolean) : [],
-      nycFit: r.nyc_fit as NycFit,
+      reach: REACH_FROM_CSV[r.nyc_fit as CsvFit],
       season: (r.season || undefined) as Season | undefined,
     });
   }
@@ -135,7 +139,7 @@ export interface MergeMatch {
 }
 
 export interface ExistingMeta {
-  nycFit: NycFit;
+  reach: Reach;
   season?: Season;
 }
 
@@ -207,7 +211,7 @@ export function mergeCatalog(entries: CatalogEntry[], existing: ExistingCorner[]
     const add = [e.name, ...e.aliases].filter((a) => lc(a) !== lc(winner.name));
     aliasAdditions[key] = [...new Set([...(aliasAdditions[key] ?? []), ...add])];
     if (!existingMeta[key] || (e.slug === winner.slug && metaSource[key] !== winner.slug)) {
-      existingMeta[key] = { nycFit: e.nycFit, ...(e.season ? { season: e.season } : {}) };
+      existingMeta[key] = { reach: e.reach, ...(e.season ? { season: e.season } : {}) };
       metaSource[key] = e.slug;
     }
   };
@@ -264,7 +268,7 @@ export function renderCatalogFile(result: MergeResult): string {
       `name: ${q(e.name)}`,
       `spaceSlug: ${q(e.spaceSlug)}`,
       `aliases: [${e.aliases.map(q).join(", ")}]`,
-      `nycFit: ${q(e.nycFit)}`,
+      `reach: ${q(e.reach)}`,
     ];
     if (e.season) parts.push(`season: ${q(e.season)}`);
     return `  { ${parts.join(", ")} },`;
@@ -276,7 +280,7 @@ export function renderCatalogFile(result: MergeResult): string {
     .sort()
     .map((k) => {
       const m = result.existingMeta[k];
-      return `  ${q(k)}: { nycFit: ${q(m.nycFit)}${m.season ? `, season: ${q(m.season)}` : ""} },`;
+      return `  ${q(k)}: { reach: ${q(m.reach)}${m.season ? `, season: ${q(m.season)}` : ""} },`;
     });
   return `// GENERATED FILE. DO NOT EDIT.
 // Source: data/corners_catalog.csv. Regenerate with: npx tsx scripts/build-catalog-corners.ts
@@ -285,7 +289,7 @@ export function renderCatalogFile(result: MergeResult): string {
 // season in CATALOG_EXISTING_META instead. The same goes for a row held out because the
 // same hobby already exists in another Space.
 
-export type NycFit = "city" | "seasonal" | "day_trip" | "hard";
+export type Reach = "anywhere" | "needs_place" | "seasonal" | "travel";
 export type Season = "warm" | "mild" | "cold";
 
 export interface CatalogCorner {
@@ -293,7 +297,7 @@ export interface CatalogCorner {
   name: string;
   spaceSlug: string;
   aliases: string[];
-  nycFit: NycFit;
+  reach: Reach;
   season?: Season;
 }
 
@@ -307,7 +311,7 @@ ${adds.join("\n")}
 };
 
 /** "space/slug" of an existing Corner to the catalog's nyc_fit and season for it. */
-export const CATALOG_EXISTING_META: Readonly<Record<string, { nycFit: NycFit; season?: Season }>> = {
+export const CATALOG_EXISTING_META: Readonly<Record<string, { reach: Reach; season?: Season }>> = {
 ${metas.join("\n")}
 };
 `;

@@ -16,7 +16,7 @@ import { bestMatch } from "../lib/tagMatching";
 import { guessSpace } from "../lib/pursuitProgress";
 import { isBlocklistedName } from "../lib/blocklist";
 import { matchCorners } from "../lib/cornerMatching";
-import { CATALOG_CORNERS, type NycFit, type Season } from "../data/catalogCorners";
+import { CATALOG_CORNERS, type Reach, type Season } from "../data/catalogCorners";
 import { aliasesForExisting, catalogCornerByName, metaForExisting } from "../lib/catalogLookup";
 import { cornerGuide } from "../data/cornerGuides";
 
@@ -77,8 +77,8 @@ export interface Corner {
   isCatalog: boolean;
   /** Other names people use for it (search and typed-name resolution only). */
   aliases: string[];
-  /** Catalog only: how doable it is from NYC. */
-  nycFit?: NycFit;
+  /** Catalog only: how reachable it is: anywhere, needs a place, seasonal or a trip away. */
+  reach?: Reach;
   /** Catalog only: the time of year it suits. */
   season?: Season;
 }
@@ -221,7 +221,7 @@ const BASELINE: Corner[] = hobbies.flatMap((h) =>
     isCurated: true,
     isCatalog: false,
     aliases: aliasesForExisting(h.slug, s.slug),
-    nycFit: metaForExisting(h.slug, s.slug)?.nycFit,
+    reach: metaForExisting(h.slug, s.slug)?.reach,
     season: metaForExisting(h.slug, s.slug)?.season,
   })),
 );
@@ -238,7 +238,7 @@ const CATALOG: Corner[] = CATALOG_CORNERS.map((c) => ({
   isCurated: cornerGuide(c.spaceSlug, c.slug) != null,
   isCatalog: true,
   aliases: [...c.aliases],
-  nycFit: c.nycFit,
+  reach: c.reach,
   season: c.season,
 }));
 
@@ -337,7 +337,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
           isCatalog: false,
           // A Corner that already existed keeps its name and slug; the catalog only adds names and fit.
           aliases: aliasesForExisting(r.space_slug, r.slug),
-          nycFit: metaForExisting(r.space_slug, r.slug)?.nycFit,
+          reach: metaForExisting(r.space_slug, r.slug)?.reach,
           season: metaForExisting(r.space_slug, r.slug)?.season,
           description: r.description ?? undefined,
           createdAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
@@ -458,7 +458,7 @@ export function CornersProvider({ children }: { children: ReactNode }) {
                 hasActiveSpace: c.hasActiveSpace,
                 hidden: c.hidden,
                 aliases: [...new Set([...existing.aliases, ...c.aliases])],
-                nycFit: existing.nycFit ?? c.nycFit,
+                reach: existing.reach ?? c.reach,
                 season: existing.season ?? c.season,
                 description: c.description ?? existing.description,
                 createdAt: c.createdAt ?? existing.createdAt,
