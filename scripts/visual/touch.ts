@@ -60,3 +60,32 @@ export function touchAuditInPage(min = 44): TouchResult {
   }
   return { total: els.length, failing, overlaps };
 }
+
+export interface HitArea { sel: string; box: string; after: string; hit: string; pointerCoarse: boolean; coveredBy: string }
+
+/**
+ * What a tap on an element can actually reach: its own box, the size of its ::after hit area (theme.css), and the
+ * extent found by hit-testing outward from its centre (square 44px boxes need 44 each way). Self-contained, runs in the page.
+ * Used with TOUCH_PROBE=<css selector> to answer "what is the real tap area of this control".
+ */
+export function hitAreaInPage(selector: string): HitArea[] {
+  const els = [...document.querySelectorAll(selector)];
+  return els.map((el) => {
+    const r = el.getBoundingClientRect(); const cx = r.left + r.width / 2; const cy = r.top + r.height / 2;
+    const owns = (n: Element | null) => !!n && (el === n || el.contains(n));
+    const reach = (dx: number, dy: number) => { let k = 0; while (k < 120 && owns(document.elementFromPoint(cx + dx * (k + 1), cy + dy * (k + 1)))) k++; return k; };
+    const w = reach(-1, 0) + reach(1, 0) + 1, h = reach(0, -1) + reach(0, 1) + 1;
+    const a = getComputedStyle(el, "::after");
+    const barOf = (n: Element | null): Element | null => { for (let q = n; q; q = q.parentElement) { if (getComputedStyle(q).position !== "fixed") continue; const b = q.getBoundingClientRect(); if (b.bottom >= innerHeight - 0.5 && b.top > innerHeight / 2) return q; } return null; };
+    const corner = (dx: number, dy: number) => { const n = document.elementFromPoint(cx + dx, cy + dy); if (!n || owns(n)) return "switch"; const fixedUp = (() => { for (let q: Element | null = n; q; q = q.parentElement) if (getComputedStyle(q).position === "fixed") { const b = q.getBoundingClientRect(); return ` inside fixed ${q.tagName.toLowerCase()}.${String(q.className).split(" ").slice(0, 2).join(".")} top ${Math.round(b.top)} bottom ${Math.round(b.bottom)} vh ${innerHeight}`; } return ""; })(); const bar = barOf(n); return `${n.tagName.toLowerCase()}.${String(n.className).split(" ").slice(0, 2).join(".")}${fixedUp} [bottom bar: ${bar ? (bar.contains(el) ? "yes, and the control is inside it" : "yes, control outside it") : "no"}]`; };
+    const corners = [corner(-20.5, -20.5), corner(20.5, -20.5), corner(-20.5, 20.5), corner(20.5, 20.5)].filter((c) => c !== "switch");
+    return {
+      sel: `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}`,
+      box: `${Math.round(r.width)}x${Math.round(r.height)}`,
+      after: a.content === "none" || a.content === "normal" ? "none" : `${a.width} x ${a.height}`,
+      hit: `${w}x${h}`,
+      pointerCoarse: matchMedia("(pointer: coarse)").matches,
+      coveredBy: corners.join(" | "),
+    };
+  });
+}

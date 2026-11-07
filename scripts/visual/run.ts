@@ -28,7 +28,7 @@ import { chromium, webkit, type Browser, type BrowserType, type Page } from "pla
 import { buildFixtures } from "./fixtures.ts";
 import { cacheFonts } from "./fonts.ts";
 import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./detect.ts";
-import { touchAuditInPage, type TouchResult } from "./touch.ts";
+import { hitAreaInPage, touchAuditInPage, type TouchResult } from "./touch.ts";
 import { contrastInPage, type ContrastResult } from "./contrast.ts";
 import { iosChecksInPage, type IosResult } from "./ios.ts";
 import { fixedBarsInPage, type FixedBarsResult } from "./fixedbars.ts";
@@ -134,6 +134,9 @@ async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, Touc
         await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
         const h = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 20000)); await page.setViewportSize({ width: W, height: Math.max(H0, h) }); await page.waitForTimeout(300);
         out.set(`${theme}/${W}/${s.name}`, await page.evaluate(touchAuditInPage, 44));
+        // Measure at the real device viewport with the control scrolled to the middle of it (the tall viewport above is for the audit only).
+        if (process.env.TOUCH_PROBE && !process.env.TOUCH_TALL) { await page.setViewportSize({ width: W, height: H0 }); await page.evaluate((q) => document.querySelector(q)?.scrollIntoView({ block: "center" }), process.env.TOUCH_PROBE); await page.waitForTimeout(400); }
+        if (process.env.TOUCH_PROBE) for (const a of await page.evaluate(hitAreaInPage, process.env.TOUCH_PROBE)) console.log(`HITAREA ${theme}/${W}/${s.name} ${a.sel} box ${a.box}, ::after ${a.after}, effective hit area ${a.hit}, pointer coarse ${a.pointerCoarse}${a.coveredBy ? `, corners covered by ${a.coveredBy}` : ""}`);
       } catch (e) { console.log(`note: touch ${theme}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
     }
     await ctx.close();
