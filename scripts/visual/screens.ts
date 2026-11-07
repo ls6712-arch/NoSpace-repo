@@ -51,6 +51,7 @@ export const SCREENS: Screen[] = [
   { name: "corners", route: "/corners" },
   { name: "corner-pasta", route: "/corners/pasta" },
   { name: "corner-bbq", route: "/corners/bbq" },
+  { name: "corner-origami", route: "/corners/origami" },
   // Core loop v1: onboarding, the Make it a Pursuit sheet over a Corner, and the recap.
   { name: "onboarding", route: "/onboarding" },
   { name: "corner-pasta-sheet", route: "/corners/pasta", setup: click("Do this with people") },
