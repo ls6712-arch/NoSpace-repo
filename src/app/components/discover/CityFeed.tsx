@@ -1,5 +1,5 @@
 import { Chip } from "../ui/Chip";
-import { EmptyState } from "../StateViews";
+import { EmptyState, ErrorNotice } from "../StateViews";
 import { Skeleton } from "../ui/skeleton";
 import { FeedCard } from "../home/FeedCard";
 import type { Post } from "../../data/posts";
@@ -51,6 +51,8 @@ export function CityFeed({
   corner,
   onCorner,
   loading,
+  failed = false,
+  onRetry,
   hasMore,
   onMore,
   followed,
@@ -64,6 +66,9 @@ export function CityFeed({
   corner: string | null;
   onCorner: (key: string | null) => void;
   loading: boolean;
+  /** The last load failed: show the retry line instead of the empty state, or under the Moments already shown. */
+  failed?: boolean;
+  onRetry?: () => void;
   hasMore: boolean;
   onMore: () => void;
   /** Author ids the person has asked to follow from this page. */
@@ -91,6 +96,8 @@ export function CityFeed({
 
       {posts.length === 0 && loading ? (
         <FeedSkeleton />
+      ) : posts.length === 0 && failed ? (
+        <ErrorNotice onRetry={onRetry} />
       ) : posts.length === 0 ? (
         <EmptyState line={CITY_FEED_EMPTY_LINE} action={{ label: "Log a Moment", to: "/create" }} />
       ) : (
@@ -122,6 +129,7 @@ export function CityFeed({
             );
           })}
           {loading && <FeedSkeleton />}
+          {failed && <ErrorNotice onRetry={onRetry} />}
           <div ref={sentinel} aria-hidden="true" />
         </div>
       )}
