@@ -1330,6 +1330,17 @@ summary:focus-visible,
 /* ── Signed-out landing page (src/app/landing) ────────────────────────────
    The page has its own warm palette and looks the same in light and dark mode,
    because the gradient behind it does. Layout lives in landing.css. */
+/* Page enter (lib/usePageEnter.ts): the main column fades in when the page
+   changes. Opacity only, so fixed sheets inside <main> never move. With reduced
+   motion --duration-base is 0ms, so this does nothing. */
+@keyframes page-enter {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+.page-enter {
+  animation: page-enter var(--duration-base) var(--ease-standard);
+}
+
 /* View transitions (a Discover tile growing into its page's header, Step 7).
    Same duration and curve as every other enter; a browser without view
    transitions never runs this, and links only ask for one when the person has
