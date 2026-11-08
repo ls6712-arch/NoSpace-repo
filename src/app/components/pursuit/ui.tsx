@@ -1,13 +1,7 @@
 import { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Check, Minus, Plus } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
-import { ENTER } from "../../lib/motion";
-
-/** Shared spring for every Pursuit card micro-interaction (hover lift, tap,
- * entrance stagger) — one feel across PursuitItem, PursuitsInProgressSection,
- * same spring Onboarding.tsx's own settle() uses. */
-/** Pursuit cards and rows settle on the app's one curve (lib/motion.ts). */
-export const PURSUIT_SPRING = ENTER;
+import { page, pop } from "../../lib/motionTokens";
 
 /** Terracotta fill used by every Pursuit progress bar. */
 export function ProgressBar({ fraction, className = "", thin = false }: { fraction: number; className?: string; thin?: boolean }) {
@@ -77,8 +71,8 @@ export function ProgressRing({
     <motion.div
       className={`relative inline-flex shrink-0 items-center justify-center ${className}`}
       style={{ width: size, height: size }}
-      animate={justCompleted ? { scale: [1, 1.16, 1] } : { scale: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+      animate={{ scale: justCompleted ? 1.16 : 1 }}
+      transition={pop}
     >
       <svg
         width={size}
@@ -115,7 +109,7 @@ export function ProgressRing({
           strokeDasharray={circumference}
           initial={false}
           animate={{ strokeDashoffset: offset }}
-          transition={reduceMotion ? { duration: 0 } : ENTER}
+          transition={reduceMotion ? { duration: 0 } : page}
         />
       </svg>
       {children && <span className="absolute inset-0 flex items-center justify-center">{children}</span>}

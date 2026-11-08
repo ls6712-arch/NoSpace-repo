@@ -5,7 +5,8 @@ import { ImagePlus, Plus, Share2, Sparkle, Target } from "lucide-react";
 import { Project, useJournalSlice, ProgressEntry } from "../lib/journal";
 import { hasMeasure, summarize } from "../lib/pursuitProgress";
 import { PursuitMoment } from "../lib/pursuitTrail";
-import { ProgressRing, PURSUIT_SPRING } from "./pursuit/ui";
+import { ProgressRing } from "./pursuit/ui";
+import { page, staggerDelay } from "../lib/motionTokens";
 import { PostMedia } from "./PostMedia";
 import { GoalDialog } from "./GoalDialog";
 import { CoverImageDialog } from "./CoverImageDialog";
@@ -81,7 +82,7 @@ export function PursuitItem({
       className="group relative flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card"
       initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(index, 7) * 0.05 }}
+      transition={reduceMotion ? { duration: 0 } : { ...page, delay: staggerDelay(index) }}
       whileHover={reduceMotion ? undefined : { y: -4 }}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">

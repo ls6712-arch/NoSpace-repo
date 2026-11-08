@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { BadgeCheck } from "lucide-react";
 import { RollNumber } from "../ui/RollNumber";
 import { cn } from "../ui/utils";
-import { haptic, pop, shared } from "../../lib/motionTokens";
+import { exit, foil, haptic, pop, shared } from "../../lib/motionTokens";
 
 export type TicketVariant = "event" | "finish" | "drop" | "regular";
 
@@ -26,7 +26,7 @@ const GOLD = "#D7A03D"; // design-token-ignore: Finisher stub colour from the vi
  * (Each kind's own material arrives with the Stub look PR; these are the interim faces.)
  *
  * `reveal` plays the Posted moment: the ticket drops in 40px on `pop`, the
- * perforation draws in 120ms, then the count rolls up by one.
+ * perforation draws in on `exit` (150ms), then the count rolls up by one.
  */
 export function Ticket({
   variant = "regular",
@@ -111,7 +111,7 @@ export function Ticket({
         aria-hidden="true"
         initial={reveal ? { scaleY: 0 } : false}
         animate={{ scaleY: 1 }}
-        transition={{ duration: 0.12, delay: reveal ? 0.3 : 0, ease: "linear" }}
+        transition={{ ...exit, delay: reveal ? 0.3 : 0 }}
         style={{ right: stubWidth, transformOrigin: "top" }}
         className="absolute inset-y-3 border-l-2 border-dashed border-[var(--ink)]/35"
       />
@@ -133,7 +133,7 @@ export function Ticket({
           aria-hidden="true"
           initial={{ x: "-120%" }}
           animate={{ x: "420%" }}
-          transition={{ duration: 1.6, ease: "easeInOut", repeat: Infinity, repeatDelay: 3 }}
+          transition={foil}
           className="pointer-events-none absolute inset-y-0 left-0 w-1/4 -skew-x-12 bg-gradient-to-r from-transparent via-[var(--photo-text)]/45 to-transparent"
         />
       )}

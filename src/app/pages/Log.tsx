@@ -77,7 +77,7 @@ import { CornerTagField } from "../components/CornerTagField";
 import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
-import { ENTER } from "../lib/motion";
+import { page } from "../lib/motionTokens";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
@@ -1502,7 +1502,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
             // design-token-ignore: spring, not a fixed duration; layout/layoutId are off under reduced motion
-            transition={ENTER}
+            transition={page}
             className={
               savedTileSettled
                 ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--surface)]"
