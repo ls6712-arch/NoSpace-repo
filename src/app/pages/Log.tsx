@@ -1836,7 +1836,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               return (
                 <button key={`p-${p.id}`} type="button" aria-pressed={on} onClick={() => pickPursuit(p)} className={chipClass(on)}>
                   {on ? <Check className="size-3.5 text-[var(--coral)]" aria-hidden="true" /> : <Flag className="size-3.5" aria-hidden="true" />}
-                  <span className="max-w-[12rem] truncate">{p.title}</span>
+                  <span className="max-w-[12rem] truncate" title={p.title}>{p.title}</span>
                 </button>
               );
             })}
