@@ -8,7 +8,7 @@ import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { signMomentPaths } from "../lib/momentMedia";
 import { scrollToElementId } from "../lib/scrollToElement";
 import { ALL_PURSUITS_SECTION_ID } from "./AllPursuitsSection";
-import { PURSUIT_SPRING } from "./pursuit/ui";
+import { page, staggerDelay } from "../lib/motionTokens";
 import { PursuitItem } from "./PursuitItem";
 import { track } from "../lib/analytics";
 import { EmptyState } from "./StateViews";
@@ -130,7 +130,7 @@ export function PursuitsInProgressSection({
             onClick={openSeeAll}
             initial={reduceMotion ? false : { opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(active.length, 7) * 0.05 }}
+            transition={reduceMotion ? { duration: 0 } : { ...page, delay: staggerDelay(active.length) }}
             whileHover={reduceMotion ? undefined : { y: -4 }}
             whileTap={reduceMotion ? undefined : { scale: 0.97 }}
             className="flex min-h-[9.5rem] flex-col items-center justify-center gap-1.5 rounded-card border border-dashed border-border text-caption text-muted-foreground transition-colors hover:border-[var(--accent-text)] hover:text-foreground"

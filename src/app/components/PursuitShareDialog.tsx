@@ -6,7 +6,8 @@ import { Project, ProgressEntry, setProjectShared, useJournalSlice } from "../li
 import { mirrorPursuit } from "../lib/pursuitsRemote";
 import { hasMeasure, summarize } from "../lib/pursuitProgress";
 import { PostMedia } from "./PostMedia";
-import { ProgressRing, PURSUIT_SPRING } from "./pursuit/ui";
+import { ProgressRing } from "./pursuit/ui";
+import { page } from "../lib/motionTokens";
 import { SendToChatDialog } from "./SendToChatDialog";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -154,7 +155,7 @@ export function PursuitShareDialog({
                 className="flex items-center gap-2"
                 initial={false}
                 animate={justCopied && !reduceMotion ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-                transition={{ ...PURSUIT_SPRING, duration: 0.3 }}
+                transition={page}
               >
                 {justCopied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 {justCopied ? "Link copied" : "Copy link"}

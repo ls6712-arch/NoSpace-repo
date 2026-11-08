@@ -2,7 +2,7 @@ import { useRef, type ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion, useDragControls } from "motion/react";
 import { cn } from "./utils";
-import { DISMISS_OFFSET, DISMISS_VELOCITY, sheet } from "../../lib/motionTokens";
+import { DISMISS_OFFSET, DISMISS_VELOCITY, page, sheet } from "../../lib/motionTokens";
 import { captureOpener, restoreFocus } from "../../lib/returnFocus";
 
 /**
@@ -50,7 +50,7 @@ export function BottomSheet({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                transition={page}
                 className="fixed inset-0 z-50 bg-scrim-solid/70"
               />
             </Dialog.Overlay>

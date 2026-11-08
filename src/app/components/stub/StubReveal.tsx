@@ -4,7 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Stubby, type StubbyState } from "../stubby/Stubby";
 import { StubArt } from "./StubArt";
 import { PillButton } from "../ui/PillButton";
-import { haptic, pop } from "../../lib/motionTokens";
+import { haptic, page, pop, reward, rewardLight } from "../../lib/motionTokens";
 import { KIND_LABEL, type StubFace } from "../../lib/stubFace";
 import { EDGE } from "../../lib/stubMaterials";
 
@@ -117,7 +117,7 @@ export function StubReveal({
         aria-hidden="true"
         initial={false}
         animate={{ width: phase === "build" || phase === "print" ? 260 : 0, opacity: phase === "build" || phase === "print" ? 1 : 0 }}
-        transition={{ duration: phase === "build" ? 0.9 : 0.3, ease: [0.2, 0.8, 0.2, 1] }}
+        transition={phase === "build" ? rewardLight : page}
         // design-token-ignore: warm light, not a theme colour
         className="absolute top-1/2 h-[3px] rounded-full bg-[#FFF7E8] shadow-[0_0_24px_6px_rgba(255,214,150,0.8),0_0_80px_20px_rgba(255,107,74,0.45)]"
       />
@@ -128,7 +128,7 @@ export function StubReveal({
           aria-hidden="true"
           initial={false}
           animate={{ opacity: phase === "shine" ? 1 : 0 }}
-          transition={{ duration: 0.5 }}
+          transition={page}
           // design-token-ignore: warm glow of the holographic burst
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_46%,rgba(255,214,150,0.55),rgba(255,107,74,0.25)_30%,transparent_60%)]"
         />
@@ -149,7 +149,7 @@ export function StubReveal({
             <motion.div
               initial={reduce ? false : { y: 120, scale: 0.4, opacity: 0, rotate: 0 }}
               animate={{ y: 0, scale: 1, opacity: 1, rotate: -3 }}
-              transition={{ type: "spring", stiffness: 260, damping: 16 }}
+              transition={reward}
             >
               <StubArt face={face.kind === "drop" ? { ...face, edition: shown || undefined } : face} width={232} interactive={phase === "rest"} />
             </motion.div>

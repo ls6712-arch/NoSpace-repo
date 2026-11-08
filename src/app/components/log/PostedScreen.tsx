@@ -20,7 +20,7 @@ import { curatedBySlug, cornerMeta } from "../../data/curatedCorners";
 import { formatDateTime } from "../../lib/dates";
 import { plural } from "../../lib/plural";
 import type { Project } from "../../lib/journal";
-import { haptic, PAGE_FROM, PAGE_TO, page, pop, PRESS_SCALE, shared } from "../../lib/motionTokens";
+import { haptic, PAGE_FROM, PAGE_TO, page, pop, PRESS_SCALE, shared, staggerDelay } from "../../lib/motionTokens";
 
 const MotionLink = motion.create(Link);
 
@@ -336,7 +336,7 @@ export function PostedScreen({
                 to={r.to}
                 initial={PAGE_FROM}
                 animate={PAGE_TO}
-                transition={{ ...page, delay: 0.3 + i * 0.04 }}
+                transition={{ ...page, delay: 0.3 + staggerDelay(i) }}
                 whileTap={{ scale: PRESS_SCALE }}
                 className="flex min-h-11 items-center justify-between gap-3 rounded-card bg-card p-4"
               >

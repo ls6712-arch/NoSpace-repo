@@ -42,7 +42,7 @@ import { Time } from "./ui/time";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { notify } from "./ui/toaster";
 import { TOAST } from "../lib/stateCopy";
-import { PURSUIT_SPRING } from "./pursuit/ui";
+import { exit, page, pop, staggerDelay } from "../lib/motionTokens";
 import { track } from "../lib/analytics";
 
 export const hasRealMedia = (post: Post) => !!post.media && /^https?:\/\//.test(post.media);
@@ -513,7 +513,7 @@ export function MomentCard({
       className="flex min-w-0 flex-col"
       initial={staggerIndex == null || reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={reduceMotion ? { duration: 0 } : { ...PURSUIT_SPRING, delay: Math.min(staggerIndex ?? 0, 7) * 0.05 }}
+      transition={reduceMotion ? { duration: 0 } : { ...page, delay: staggerDelay(staggerIndex ?? 0) }}
     >
       {/* The open button and the Save icon are siblings, never nested —
           a button inside a button isn’t valid, and Save must not also
@@ -545,9 +545,8 @@ export function MomentCard({
                   key="heart-burst"
                   className="pointer-events-none absolute inset-0 flex items-center justify-center"
                   initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: [0, 1, 1, 0], scale: [0.5, 1.2, 1, 1] }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.65, times: [0, 0.3, 0.75, 1] }}
+                  animate={{ opacity: 1, scale: 1, transition: pop }}
+                  exit={{ opacity: 0, transition: exit }}
                 >
                   <Heart
                     className="size-20 icon-halo"
@@ -583,7 +582,7 @@ export function MomentCard({
                   initial={reduceMotion ? false : { opacity: 0, scale: 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.7 }}
-                  transition={PURSUIT_SPRING}
+                  transition={page}
                 >
                   <button
                     type="button"
