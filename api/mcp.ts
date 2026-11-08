@@ -68,6 +68,27 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.writeHead(405, { Allow: "GET, POST, DELETE" }).end();
     return;
   }
+  // Bound request size for the public, unauthenticated discovery endpoint.
+  // Requests exceeding this declared size are rejected before SDK parsing.
+  const MAX_REQUEST_BYTES = 16 * 1024;
+  if (req.method === "POST") {
+    const contentLength = req.headers["content-length"];
+    if (contentLength !== undefined) {
+      const parsed = Number(contentLength);
+      if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > MAX_REQUEST_BYTES) {
+        res.writeHead(413, { "Content-Type": "application/json", "Cache-Control": "no-store" })
+          .end(JSON.stringify({ error: "Request too large" }));
+        return;
+      }
+    }
+    const contentType = req.headers["content-type"] ?? "";
+    if (!/^application\\/json(?:\\s*;|\\s*$)/i.test(contentType)) {
+      res.writeHead(415, { "Content-Type": "application/json", "Cache-Control": "no-store" })
+        .end(JSON.stringify({ error: "Content-Type must be application/json" }));
+      return;
+    }
+  }
+  res.setHeader("Cache-Control", "no-store");
   const server = createServer();
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
