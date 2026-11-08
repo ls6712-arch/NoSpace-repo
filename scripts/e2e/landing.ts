@@ -125,14 +125,14 @@ try {
       assert.equal(decoded.size, 6);
       passed("All six hero photographs decode through the single example control");
     }
-    for (const image of await page.locator(".lp-activity-grid img,.lp-pair img").all()) { await image.scrollIntoViewIfNeeded(); await image.evaluate(async (img: HTMLImageElement) => { await img.decode(); if (!img.naturalWidth) throw Error("Undecoded photo"); }); }
+    for (const image of await page.locator(".lp-activity-grid img,.lp-wall-card img").all()) { await image.scrollIntoViewIfNeeded(); await image.evaluate(async (img: HTMLImageElement) => { await img.decode(); if (!img.naturalWidth) throw Error("Undecoded photo"); }); }
     await page.getByRole("button", { name: "Spend time outside", exact: true }).click();
     assert.equal(await page.locator(".lp-activity-grid article").count(), 2);
     await page.getByRole("button", { name: "A little of everything", exact: true }).click();
     await page.locator(".lp-nav,.lp-skip").evaluateAll(nodes => nodes.forEach(node=>(node as HTMLElement).style.visibility="hidden"));
     await page.locator(".lp-activity-grid").screenshot({ path: path.join(out, `${view.name}-gallery.png`) });
     await page.locator(".lp-stubs").screenshot({ path: path.join(out, `${view.name}-stubs.png`) });
-    await page.locator(".lp-together").screenshot({ path: path.join(out, `${view.name}-together.png`) });
+    await page.locator(".lp-walls-section").screenshot({ path: path.join(out, `${view.name}-walls.png`) });
     await page.locator(".lp-nav,.lp-skip").evaluateAll(nodes => nodes.forEach(node=>(node as HTMLElement).style.visibility=""));
     assert.equal(await page.locator(".lp-stub-grid figure").count(), 3);
     await page.getByRole("button", { name: "Preview activity: Music", exact: true }).click();
@@ -153,7 +153,7 @@ try {
     assert.equal(await page.locator(".lp").evaluate(e=>e.getAnimations({subtree:true}).some(a=>a.playState==="running")),false);
     assert.deepEqual(counts,{anonymousSignups:0,asks:0,writes:0});
     await page.getByRole("button", { name: "Another example", exact: true }).click();
-    await page.getByRole("link", { name: "Find my next step", exact: true }).first().click();
+    await page.getByRole("link", { name: "Try Soosh", exact: true }).first().click();
     const field=page.getByRole("textbox",{name:"What are you in the mood for?",exact:true});
     await field.waitFor();assert.equal(await field.inputValue(),"I’d like to cook at home with a friend.");
     assert.equal(counts.asks,0);
@@ -227,7 +227,7 @@ try {
   await closedPage.getByRole("link", { name: "Log in", exact: true }).click();
   await closedPage.getByRole("heading", { name: "Welcome back.", exact: true }).waitFor();
   await closedPage.goto(origin, { waitUntil: "networkidle" });
-  await closedPage.getByRole("link", { name: "Find my next step", exact: true }).first().click();
+  await closedPage.getByRole("link", { name: "Try Soosh", exact: true }).first().click();
   await closedPage.getByText("Log in to use Stubby.", { exact: true }).first().waitFor();
   assert.equal(await closedPage.getByRole("textbox", { name: "What are you in the mood for?" }).count(), 0);
   assert.equal(counts.anonymousSignups, 1);

@@ -19,13 +19,14 @@ const mount = () => render(<MemoryRouter><Landing/></MemoryRouter>);
 describe("simplified landing", () => {
   it("uses the requested copy and keeps the hero to a photo, title and example switch", () => {
     mount();
-    expect(screen.getByText("Find something to try this week. Keep going if you love it. On your own or with someone.")).toBeTruthy();
+    expect(screen.getByText(COPY.heroSub)).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Soosh: Do the thing. Bring a friend. Keep the Stub.");
     const preview = screen.getByRole("group", { name: COPY.exampleLabel });
     expect(within(preview).getAllByRole("button").map(button => button.textContent)).toEqual([COPY.another]);
     expect(preview.querySelector("details")).toBeNull();
     expect(preview.querySelector("fieldset")).toBeNull();
     expect(preview.querySelector("img")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Grab the Stub" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Keep the Stub" })).toBeTruthy();
     expect(document.querySelector(".lp")?.textContent).not.toMatch(/You may need to sign up to ask|These are examples|Illustrative progress|1 step complete|A selection of Corners|Complete account setup to invite someone|This weekend in NYC/);
   });
   it("fills the default grid with a real See all Corners destination and filters without duplicate Corners", () => {
@@ -47,7 +48,7 @@ describe("simplified landing", () => {
     expect(hero.src).toContain("photography-");
     expect(gallery.src).toContain("shelf-pier-");
     expect(gallery.src).not.toBe(hero.src);
-    expect(document.querySelectorAll(".lp-pair img")).toHaveLength(2);
+    expect(document.querySelectorAll(".lp-wall-card img")).toHaveLength(3);
   });
   it("renders actual Stub artwork as labeled examples without reading private progress", () => {
     mount();
@@ -110,6 +111,24 @@ describe("simplified landing", () => {
     if (chosen) fireEvent.click(screen.getByRole("button", { name: COPY.another }));
     fireEvent.click(screen.getAllByRole("link", { name: COPY.heroCta })[0]);
     expect(screen.getByText(chosen ? "I’d like to cook at home with a friend." : "Empty draft")).toBeTruthy();
+  });
+});
+describe("walls, guides and the repeated entry", () => {
+  it("labels the walls as examples and shows both walls and Passed along", () => {
+    mount();
+    const walls = screen.getByRole("group", { name: COPY.wallsExample });
+    for (const name of [COPY.stillMaking, COPY.madeIt, COPY.passedAlong]) expect(within(walls).getByRole("heading", { name })).toBeTruthy();
+    expect(within(walls).getAllByText(COPY.makeYourVersion)).toHaveLength(3);
+    expect(screen.getByText(COPY.membersOnly)).toBeTruthy();
+  });
+  it("links each guide to its static page", () => {
+    mount();
+    for (const g of COPY.guides) expect(screen.getByRole("link", { name: g.title }).getAttribute("href")).toBe(g.href);
+    expect(screen.getByRole("link", { name: COPY.seeAllGuides }).getAttribute("href")).toBe("/hobbies/");
+  });
+  it("repeats one main action in the header, hero, walls and final card", () => {
+    mount();
+    expect(screen.getAllByRole("link", { name: COPY.heroCta })).toHaveLength(4);
   });
 });
 describe("editorial example compatibility", () => {
