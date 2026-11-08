@@ -24,17 +24,17 @@ export const WALL_COPY = {
 
 const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
-/** Love this and Count me in. No counts anywhere on a wall card. */
+/** Love this and Count me in, side by side on one row at every width (tight side padding, no wrapping, 44px tall at least). No counts anywhere on a wall card. */
 function Reactions({ postId, name }: { postId: number; name: string }) {
   const { mine, toggle } = useReactionState(postId);
   const loved = mine.includes("love");
   const going = mine.includes("in");
   return (
-    <div className="flex flex-wrap gap-2">
-      <PillButton variant="outline" aria-pressed={loved} aria-label={loved ? `Loved ${name}’s Moment. Tap to undo` : `Love this, ${name}’s Moment`} className="min-h-11 px-4 text-small" onClick={() => toggle("love")}>
+    <div className="flex flex-nowrap gap-1.5" data-reactions>
+      <PillButton variant="outline" aria-pressed={loved} aria-label={loved ? `Loved ${name}’s Moment. Tap to undo` : `Love this, ${name}’s Moment`} className="min-h-11 min-w-0 flex-1 px-2 text-small" onClick={() => toggle("love")}>
         {loved ? "Loved" : "Love this"}
       </PillButton>
-      <PillButton variant="outline" aria-pressed={going} aria-label={going ? "You’re in. Tap to undo" : `Count me in, ${name}’s Moment`} className="min-h-11 px-4 text-small" onClick={() => toggle("in")}>
+      <PillButton variant="outline" aria-pressed={going} aria-label={going ? "You’re in. Tap to undo" : `Count me in, ${name}’s Moment`} className="min-h-11 min-w-0 flex-1 px-2 text-small" onClick={() => toggle("in")}>
         {going ? "You’re in" : "Count me in"}
       </PillButton>
     </div>
@@ -87,7 +87,7 @@ export function WallCard({
           )}
         </span>
       </button>
-      <div className="flex flex-1 flex-col gap-2 px-3.5 pb-3.5">
+      <div className="flex flex-1 flex-col gap-2 px-3 pb-3.5">
         <span className="flex items-center gap-2 text-caption text-muted-foreground">
           <Avatar className="size-6">
             {card.authorAvatarUrl && <AvatarImage src={card.authorAvatarUrl} alt="" />}
