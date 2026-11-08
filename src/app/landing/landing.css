@@ -303,3 +303,56 @@
 @media (min-width: 744px) { .lp-stub-grid { grid-auto-flow: row; grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 .lp-stub-grid:focus-visible { outline: 3px solid var(--foreground); outline-offset: 4px; }
+
+/* Landing v4 (Nov 8, 2026): a bigger wordmark, the hook, Walls and guides. */
+.lp-logo { font-size: 2rem; gap: 10px; letter-spacing: -0.05em; }
+.lp-hero h1 { margin: 12px 0 20px; }
+.lp-wordmark { display: block; font-size: clamp(5.75rem, 2.6rem + 10vw, 10.5rem); font-weight: 800; line-height: 0.86; letter-spacing: -0.065em; color: var(--foreground); }
+.lp-hook { display: block; margin-top: 18px; font-size: clamp(2rem, 1.3rem + 2.4vw, 3.4rem); line-height: 1.06; letter-spacing: -0.04em; text-wrap: balance; }
+.lp-hook > span, .lp-hook > em { display: block; }
+.lp-hero h1 .lp-hook em { font-style: normal; color: var(--accent-text); font-weight: 800; }
+.lp-hero-sub { font-size: var(--text-lead); line-height: 1.45; max-width: 44ch; }
+.lp-hero-note { margin-top: 14px !important; color: var(--muted-foreground); font-size: var(--text-small); font-weight: 600; }
+.lp-how .lp-steps { gap: 28px; }
+.lp-walls-section { background: color-mix(in srgb, var(--cat-orange) 8%, var(--background)); border-block: 1px solid var(--border); }
+.lp-walls-grid { display: grid; gap: 40px; align-items: start; }
+.lp-members { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 20px; margin-top: 28px; padding: 20px; border: 1px dashed var(--border); border-radius: 20px; background: var(--card); }
+.lp-members p { flex: 1 1 200px; font-family: var(--font-display); font-size: var(--text-lead); font-weight: 800; letter-spacing: -0.02em; }
+.lp-walls { min-width: 0; }
+.lp-walls > .lp-tag { margin-bottom: 12px; }
+.lp-wall-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.lp-wall h3 { margin: 0; font-family: var(--font-display); font-size: var(--text-lead); font-weight: 800; letter-spacing: -0.02em; }
+.lp-wall-line { margin-top: 4px !important; color: var(--muted-foreground); font-size: var(--text-caption); }
+.lp-wall ul, .lp-passed ol { list-style: none; padding: 0; margin: 12px 0 0; }
+.lp-wall-card { position: relative; margin-bottom: 14px; padding: 10px 10px 0; overflow: hidden; border: 1px solid var(--border); border-radius: 18px; background: var(--card); }
+.lp-wall-card .lp-activity-photo { border-radius: 12px; }
+.lp-wall-title { margin-top: 10px !important; font-size: var(--text-small); font-weight: 700; line-height: 1.3; }
+.lp-wall-by, .lp-wall-finisher { margin-top: 2px !important; color: var(--muted-foreground); font-size: var(--text-caption); }
+.lp-wall-finisher { display: flex; align-items: center; gap: 6px; color: var(--accent-text); font-weight: 700; }
+.lp-wall-strip { display: block; margin: 10px -10px 0; padding: 10px; border-top: 2px dashed var(--border); text-align: center; font-size: var(--text-caption); font-weight: 700; }
+.lp-passed { margin-top: 8px; }
+.lp-passed ol { display: flex; flex-wrap: wrap; gap: 6px; }
+.lp-passed li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 999px; background: var(--card); font-size: var(--text-caption); font-weight: 600; }
+.lp-passed li svg { color: var(--muted-foreground); }
+.lp-passed .lp-passed-you { border-style: dashed; background: transparent; }
+.lp-guide-list { display: grid; gap: 0; list-style: none; padding: 0; margin: 32px 0 0; border-top: 1px solid var(--border); }
+.lp-guide-list a { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; padding-block: 12px; border-bottom: 1px solid var(--border); color: var(--foreground); font-family: var(--font-display); font-size: var(--text-lead); font-weight: 700; letter-spacing: -0.02em; text-decoration: none; }
+.lp-guide-list a:hover { color: var(--accent-text); }
+.lp-guide-list svg { flex: none; }
+.lp-guides-all { display: inline-flex; margin-top: 20px; }
+.lp-footer { overflow: hidden; }
+.lp-footer-mark { margin: 0 0 8px !important; text-align: center; font-family: var(--font-display); font-size: clamp(5rem, 24vw, 19rem); font-weight: 800; line-height: 0.8; letter-spacing: -0.07em; color: color-mix(in srgb, var(--foreground) 10%, transparent); user-select: none; }
+@media (min-width: 744px) {
+  .lp-guide-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
+  .lp-how .lp-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 960px) {
+  .lp-walls-grid { grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 64px; }
+}
+@media (max-width: 743px) {
+  .lp-logo { font-size: 1.6rem; }
+  .lp-logo .lp-stubby svg, .lp-logo > svg { width: 40px; height: auto; }
+  .lp-hook { margin-top: 14px; }
+  .lp-hero-sub { font-size: var(--text-body); }
+  .lp-guide-list a { font-size: var(--text-body); min-height: 56px; }
+}

@@ -997,6 +997,27 @@ A Corner page shows what people are making, finished or not, and lets you start 
 | Follow / Following | On a Corner page's hero. The existing words for following a Corner |
 | Love this / Count me in / Show more | Reused as they are. On a wall card neither shows a count |
 
+## Landing page v4 (founder request, Nov 8, 2026; new strings for approval)
+
+Asked for: a bigger Soosh, a real hook, the newest features on the page, and SEO and answer-engine
+wording. Supersedes the v3 hero, the Grab the Stub step and the On your own / With someone section.
+The complete wording is in `src/app/landing/copy.ts`; the crawler copy in `index.html` matches it
+(checked by `src/indexHtml.test.ts`). The walls on this page are labeled examples, never anyone's Moments.
+
+| String | Where |
+|---|---|
+| Hobby ideas and things to do with friends | Hero eyebrow and the start of the page title (search phrase). Replaces "Hobbies, activities & personal goals" |
+| Soosh: Do the thing. Bring a friend. Keep the Stub. | The h1: the wordmark, then the hook on three lines. "Keep the Stub" is a marketing invitation like v3's "Grab the Stub"; it changes no Stub rule |
+| Try Soosh | Header, hero, Walls and final entry. Reused from v2; replaces "Find my next step". Same destinations and gates |
+| Free to use. Works in your browser. | Under the hero button |
+| How Soosh works / Find something to try / Make a plan / Log a Moment / Keep the Stub | The four steps, moved up under the hero |
+| See what people are making, finished or not. | Walls section heading. Uses the approved wall strings (Still making, Made it, Make your version, Finisher, Passed along, Members see who's making what.) |
+| Example walls | Label over the editorial wall cards |
+| Join a Space / Your Shelf / You pick who sees it | The three feature cards |
+| Guides / Not sure what to try? Start with a guide. / See all hobby guides | Links to the static guides under `public/` |
+| Questions | FAQ heading. Replaces "Before you start". New questions: How do I find a new hobby?, What can I do with friends this week?, What is a Stub?, Is Soosh free?, Who can see what I post? |
+| Pick one thing. Do it this week. / Free to use. Go on your own or bring someone. | Final card |
+
 ## Retired terms
 
 Never use these in UI copy.

@@ -1,7 +1,7 @@
 {
   "name": "Soosh",
   "short_name": "Soosh",
-  "description": "Find something to try this week. Keep going if you love it. On your own or with someone.",
+  "description": "Find a hobby to try this week, put it on your calendar and see what other people are making. Go on your own or bring someone.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

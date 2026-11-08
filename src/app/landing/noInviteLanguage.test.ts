@@ -19,7 +19,7 @@ describe("open sign-up copy", () => {
 
   it("uses the reviewed next-step entry without changing Sign up or implying a completed action", () => {
     expect(LANDING_COPY.signUp).toBe("Sign up");
-    expect(LANDING_COPY.heroCta).toBe("Find my next step");
+    expect(LANDING_COPY.heroCta).toBe("Try Soosh");
     expect(landing).toContain('to="/onboarding"');
     expect(landing).not.toContain("WaitlistForm");
     // The main button goes to Ask Stubby, or to sign-up while Ask Stubby is off (config.ts).

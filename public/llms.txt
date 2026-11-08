@@ -1,36 +1,56 @@
 # Soosh
 
-> Soosh tells you one thing to do with your free time. Tell Soosh when you’re free and what you want to spend, and Stubby, the Soosh ticket, brings one pick that fits, with the time, the place, the cost and whether it works solo. Go on your own or bring a friend.
+> Soosh is a free app for finding hobbies and things to do, and making plans with friends. Pick something to try this week, put it on your calendar, see what other people are making, and keep a Stub for what you finish.
 
-Soosh is free to use and runs in the browser at https://www.onsoosh.com/.
+Soosh is free to use and runs in the browser at https://www.onsoosh.com/. Bookings and payments for outside activities happen with the provider, never inside Soosh.
 
 ## How it works
 
-1. Tell us your week: which evenings are free, what you want to spend in a month, and anything you already pay for, like a gym or a museum membership.
-2. Get a pick: Stubby suggests one thing with the time, the place, the cost and whether it works solo.
-3. Say I’m going: go alone or tap Bring someone. The pick shows up on your Home with everything you need.
-4. Go, then tear your Stub: do the thing, post a Moment if you want, and a new Stub goes on your Shelf.
+1. Find something to try: pick a Corner, like pottery, running or guitar. Each Corner has things to try, a first step and what you’ll need.
+2. Make a plan: pick a free evening, go solo or tap Bring someone, and add it to your phone’s calendar.
+3. Log a Moment: post a photo or a line about how it went, and choose who sees it (Only you, Followers or Everyone).
+4. Keep the Stub: finished Pursuits, events a host confirms and 10 days in one Corner in a month each earn a Stub on your Shelf.
+
+## What’s in Soosh
+
+- Corners: one page per interest, with things to try (at home, with people or at a place), how to start and what you’ll need.
+- Walls: every Corner shows Still making (half-done, in progress) and Made it (finished Pursuits). Make your version starts your own Pursuit from someone else’s Moment. Passed along shows who got whom into it. Members see who’s making what.
+- Pursuits: something you are working toward, on your own or shared, with stepping stones and an optional deadline.
+- Calendar: plans and Pursuit sessions in one place, with Add to calendar for Google, Apple or Outlook.
+- Spaces: communities run by hosts, like run clubs, studios and book clubs, with events you can say I’m going to.
+- Stubs: four kinds. Finisher (a finished Pursuit), Was there (a host confirmed you came), Regular (10 days in one Corner in a month) and Drop (a limited Soosh drop).
 
 ## Good for
 
-- People who are free tonight or this weekend and want one specific thing to do, not a list.
-- Going solo: picks are marked Good solo, like drop-in classes, beginner classes, counter dinners, run clubs and silent book clubs.
-- Plans on a budget: free picks and picks under $25.
-- Getting out with friends you already have. Soosh is not for meeting strangers.
-
-## What Soosh does not do
-
-- It never books, pays or messages anyone until you tap.
+- Finding a new hobby and a first step you can take this week.
+- Things to do with friends you already have: cooking, photo walks, classes, run clubs, shared goals.
+- Going solo, with picks that work on your own.
+- Doing something with free time instead of scrolling.
 
 ## Words used in Soosh
 
 - Moment: anything you post, like a photo, video, text or link.
 - Stub: a keepsake for something you did.
-- Shelf: your profile, with your Stubs.
+- Shelf: your profile, with your Moments, Pursuits and Stubs.
 - Corner: an interest, like Pottery, Running or Climbing.
 - Space: a community run by a host.
 - Pursuit: something you are working toward.
 
+## Guides
+
+- [How to find a hobby you enjoy](https://www.onsoosh.com/hobbies/how-to-find-a-hobby/)
+- [What are hobbies?](https://www.onsoosh.com/hobbies/what-are-hobbies/)
+- [Hobbies to try at home](https://www.onsoosh.com/hobbies/at-home/)
+- [Free hobbies](https://www.onsoosh.com/hobbies/free/)
+- [Activities to do with friends](https://www.onsoosh.com/social-life/activities-to-do-with-friends/)
+- [How to make friends through hobbies](https://www.onsoosh.com/social-life/make-friends-through-hobbies/)
+- [30 things to do when bored](https://www.onsoosh.com/activities/things-to-do-when-bored/)
+- [What to do after work](https://www.onsoosh.com/activities/what-to-do-after-work/)
+- [Replace scrolling with activities](https://www.onsoosh.com/planner/reduce-scrolling-plan/)
+- [How to make time for hobbies](https://www.onsoosh.com/planner/how-to-make-time-for-hobbies/)
+
 ## Links
 
 - [Soosh home](https://www.onsoosh.com/)
+- [What is Soosh?](https://www.onsoosh.com/about/)
+- [All hobby guides](https://www.onsoosh.com/hobbies/)
