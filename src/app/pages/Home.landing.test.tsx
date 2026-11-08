@@ -8,7 +8,7 @@ vi.mock("../context/AuthContext", () => ({ useAuth: () => auth }));
 vi.mock("../landing/Landing", () => ({ Landing: () => <p>landing</p> }));
 
 import { Home } from "./Home";
-import { RESUME_KEY } from "../lib/signUpReturn";
+import { saveResume } from "../lib/signUpReturn";
 
 afterEach(() => {
   cleanup();
@@ -33,7 +33,7 @@ describe("Home", () => {
     expect(screen.getByText("home feed")).toBeTruthy();
   });
   it("sends someone back from signing up from Stubby to Stubby, not the feed", () => {
-    sessionStorage.setItem(RESUME_KEY, JSON.stringify({ draft: "x", send: true }));
+    saveResume("x", true);
     at();
     expect(screen.getByText("stubby")).toBeTruthy();
   });

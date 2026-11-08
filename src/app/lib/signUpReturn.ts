@@ -7,7 +7,7 @@ import type { SignUpMethod, SignUpTrigger } from "./analytics";
  * Holds no ids and no tokens; the account is whoever the server says signed in.
  */
 export const RETURN_KEY = "soosh.stubby.return.v1";
-/** Set by SignUpReturnEffect after sign-up: the ask that was in the field, and whether to send it. */
+/** Set by SignUpReturnEffect after sign-up: the ask that was in the field, and whether to send it. Lapses after 30 minutes, like the return note. */
 export const RESUME_KEY = "soosh.stubby.resume.v1";
 const MAX_AGE_MS = 30 * 60_000;
 
@@ -85,18 +85,55 @@ export function linkErrorInUrl(href = window.location.href): "identity_already_e
   return m[1] === "identity_already_exists" ? "identity_already_exists" : "other";
 }
 
+/** What AskStubby picks back up after sign-up: the ask that was in the field and whether to send it. */
+export interface SignUpResume {
+  draft: string;
+  send: boolean;
+}
+
+/** Writes the resume note, stamped with the time so it lapses like the return note does. */
+export function saveResume(draft: string, send: boolean, now = Date.now()): void {
+  try {
+    window.sessionStorage.setItem(RESUME_KEY, JSON.stringify({ draft: draft.slice(0, 200), send, at: now }));
+  } catch {
+    // Private mode: they are back on Stubby, without the draft.
+  }
+}
+
+/** Reads the resume note without taking it. Null, and the note is dropped, when it is older than 30 minutes, has no time on it, or doesn't read. */
+export function peekResume(now = Date.now()): SignUpResume | null {
+  try {
+    const raw = window.sessionStorage.getItem(RESUME_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw) as { draft?: unknown; send?: unknown; at?: unknown };
+    if (!v || typeof v.at !== "number" || now - v.at > MAX_AGE_MS || typeof v.draft !== "string") {
+      window.sessionStorage.removeItem(RESUME_KEY);
+      return null;
+    }
+    return { draft: v.draft.slice(0, 200), send: v.send === true };
+  } catch {
+    return null;
+  }
+}
+
+/** Takes the resume note: read once, then gone. */
+export function takeResume(now = Date.now()): SignUpResume | null {
+  const v = peekResume(now);
+  try {
+    window.sessionStorage.removeItem(RESUME_KEY);
+  } catch {
+    // Nothing to clear.
+  }
+  return v;
+}
+
 /**
  * Where someone who just signed up from Stubby belongs while they are on their way back: the Stubby
  * page, whether the return is still waiting (SignUpReturnEffect has not run yet) or it has already
  * run and set the resume note (AskStubby clears that once it has picked the ask back up). Home reads
  * this so its "signed in, go to Home" redirect cannot override the trip back, whichever of the two
- * runs first. Null for everyone else.
+ * runs first. Both notes lapse after 30 minutes. Null for everyone else.
  */
 export function signUpLanding(now = Date.now()): "/calendar" | null {
-  if (peekReturn(now)) return "/calendar";
-  try {
-    return window.sessionStorage.getItem(RESUME_KEY) ? "/calendar" : null;
-  } catch {
-    return null;
-  }
+  return peekReturn(now) || peekResume(now) ? "/calendar" : null;
 }

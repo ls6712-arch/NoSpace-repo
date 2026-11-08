@@ -53,7 +53,7 @@ import { GuestClosedPanel, LimitPanel } from "./GuestPrompts";
 import { hasBirthdayOnFile } from "../../lib/birthday";
 import { guestSession } from "../../../lib/guestSupabase";
 import { track } from "../../lib/analytics";
-import { RESUME_KEY } from "../../lib/signUpReturn";
+import { takeResume } from "../../lib/signUpReturn";
 import { fetchStayIn, saysStayIn, withoutStayIn, type StayInCard } from "../../lib/stubbyStayIn";
 
 /**
@@ -604,10 +604,9 @@ export function useAskStubby({ onReact, userId, initialDraft = "" }: { onReact?:
   const resumed = useRef(false);
   useEffect(() => {
     if (resumed.current || guest) return;
-    const r = readSession<{ draft?: string; send?: boolean }>(RESUME_KEY);
-    if (!r || typeof r.draft !== "string") return;
+    const r = takeResume();
+    if (!r) return;
     resumed.current = true;
-    writeSession(RESUME_KEY, null);
     const draft = r.draft.slice(0, ASK_MAX_LENGTH);
     setText(draft);
     if (r.send && draft.trim().length >= 2) void run(draft);

@@ -20,7 +20,7 @@ import { nyTimeToMs } from "../../lib/homeWeek";
 import { HELLO_KEY } from "../../lib/stubbyStage";
 import { SETTLE_MS } from "../stubby/StubbyBuddy";
 import { StubbyStage, type StubbyStageHandle } from "./StubbyStage";
-import { RESUME_KEY } from "../../lib/signUpReturn";
+import { saveResume } from "../../lib/signUpReturn";
 
 // Fixed clock: Sunday Nov 1, 2026, 5:00 pm New York.
 const NOW = nyTimeToMs(2026, 11, 1, 17);
@@ -80,7 +80,7 @@ describe("the Stubby stage", () => {
   });
 
   it("keeps the signup return draft ahead of the landing example",async()=>{
-    window.sessionStorage.setItem(RESUME_KEY,JSON.stringify({draft:"My original request",send:false}));
+    saveResume("My original request",false);
     render(<MemoryRouter initialEntries={[{pathname:"/calendar",state:{landingExample:"sketch"}}]}><StubbyStage greeting={{now:NOW,windows:[],plans:[]}}/></MemoryRouter>);
     await waitFor(()=>expect((screen.getByRole("textbox",{name:"What are you in the mood for?"}) as HTMLInputElement).value).toBe("My original request"));
     expect(api.askStubbyStream).not.toHaveBeenCalled();

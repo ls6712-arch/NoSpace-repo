@@ -5,7 +5,7 @@ import { forgetGuest, guestSession, revokeSession } from "../../../lib/guestSupa
 import { useAuth } from "../../context/AuthContext";
 import { track } from "../../lib/analytics";
 import { GUEST_COPY } from "../../lib/guestCopy";
-import { linkErrorInUrl, peekReturn, RESUME_KEY, takeReturn } from "../../lib/signUpReturn";
+import { linkErrorInUrl, peekReturn, saveResume, takeReturn } from "../../lib/signUpReturn";
 import { notify } from "../ui/toaster";
 
 /**
@@ -47,11 +47,7 @@ export function SignUpReturnEffect() {
       }
       forgetGuest();
     })();
-    try {
-      window.sessionStorage.setItem(RESUME_KEY, JSON.stringify({ draft: r.draft, send: r.blocked }));
-    } catch {
-      // Private mode: they're back on Stubby, without the draft.
-    }
+    saveResume(r.draft, r.blocked);
     track({ name: "signup_completed", trigger: r.trigger, method: r.method, guestMessages: r.guestMessages });
     navigate(r.path, { replace: true });
     notify(GUEST_COPY.signedUp);
