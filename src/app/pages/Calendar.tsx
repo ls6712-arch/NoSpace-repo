@@ -12,6 +12,7 @@ import { notifyError } from "../components/ui/toaster";
 import { CalendarToolbar } from "../components/calendar/CalendarToolbar";
 import { ListView } from "../components/calendar/ListView";
 import { MonthView } from "../components/calendar/MonthView";
+import { YearView } from "../components/calendar/YearView";
 import { ShowPanel } from "../components/calendar/ShowPanel";
 import { SubscribeCard } from "../components/calendar/SubscribeLink";
 import { PickCard } from "../components/calendar/PickCard";
@@ -36,6 +37,8 @@ import {
   dateParam,
   loadFilters,
   monthGridDays,
+  yearDays,
+  yearMonths,
   noonOf,
   pickSlots,
   takenIds,
@@ -78,7 +81,7 @@ import { bringSomeone } from "../lib/weekActions";
 import { monthSpend, weekDays, type WeekPlanDetail } from "../lib/weekView";
 
 /**
- * The calendar at /calendar: Day, Week, Month and List, in New York time. It
+ * The calendar at /calendar: Day, Week, Month, Year and List, in New York time. It
  * shows only Soosh things: plans, Pursuit sessions, free time and the Stubs you
  * collected (more kinds arrive with their own changes). The view and the date
  * live in the URL (`?view=` and `?date=`), so Back works and a link can be shared.
@@ -132,6 +135,7 @@ export function Calendar() {
 
   const days = useMemo(() => {
     if (view === "month") return monthGridDays(anchor);
+    if (view === "year") return yearDays(anchor);
     if (view === "week") return weekDays(anchor, 7);
     if (view === "list") return weekDays(anchor, 30);
     return weekDays(anchor, 1);
@@ -167,8 +171,12 @@ export function Calendar() {
       .applyToPlans([...byId.values()])
       .sort((a, b) => a.startsAt - b.startsAt);
   }, [data.plans, extra.plans, extra.loaded, actions.applyToPlans]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Year shows plans and Stubs only: free time and Stubby's picks are for the weeks ahead.
   const safeAvailability =
-    actions.availabilityReady && !extra.failed && extra.loaded !== false;
+    view !== "year" &&
+    actions.availabilityReady &&
+    !extra.failed &&
+    extra.loaded !== false;
   const baseDays = useMemo(
     () =>
       calendarDays(
@@ -195,7 +203,7 @@ export function Calendar() {
   const { declines, notThis } = usePickDeclines(dateParam(now));
   const pickMap = useMemo(
     () =>
-      data.stubby
+      data.stubby && view !== "year"
         ? stubbyPicks({
             now,
             slots: pickSlots(baseDays),
@@ -223,6 +231,7 @@ export function Calendar() {
       declines,
       plans,
       kept,
+      view,
     ],
   );
   const calDays = useMemo(
@@ -429,6 +438,20 @@ export function Calendar() {
 
   const noWindows = data.windows.length === 0;
   const body = () => {
+    if (view === "year") {
+      return (
+        <YearView
+          days={calDays}
+          months={yearMonths(anchor)}
+          now={now}
+          wide={wide}
+          filters={filters}
+          range={range}
+          onOpenMonth={(ms) => go({ view: "month", anchor: ms })}
+          onOpenDay={(ms) => go({ view: "day", anchor: ms })}
+        />
+      );
+    }
     if (view === "month") {
       return (
         <MonthView

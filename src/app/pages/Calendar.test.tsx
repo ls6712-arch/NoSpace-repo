@@ -299,7 +299,7 @@ const Where = () => {
 const at = async(url:string) => {let result!:ReturnType<typeof render>;await act(async()=>{result=render(<Router initialEntries={[url]}><Calendar /><Where /></Router>);});return result;};
 const where = () => screen.getByTestId("where").textContent;
 
-describe("Calendar, the four views", () => {
+describe("Calendar, the five views", () => {
   beforeEach(() => {
     window.localStorage.clear();
     extra.value = { plans: [], stubs: [stub()], failed: false };
@@ -320,7 +320,7 @@ describe("Calendar, the four views", () => {
   });
 
   it("falls back to Month and today for nonsense in the URL", async () => {
-    await at("/calendar?view=year&date=not-a-date");
+    await at("/calendar?view=decade&date=not-a-date");
     expect(screen.getByRole("heading", { level: 1, name: "October 2026" })).toBeTruthy();
   });
 
@@ -348,14 +348,15 @@ describe("Calendar, the four views", () => {
     expect(screen.getByText("7 days · New York")).toBeTruthy();
   });
 
-  it("stops paging back at the month the person joined and 3 months ahead", async () => {
+  it("pages in whole years: back to Jan 1 of the year the person joined, ahead to the end of next year", async () => {
     auth.value = { user: { id: "u1", created_at: new Date(ny(9, 14, 9)).toISOString() }, profile: { display_name: "Alex" }, isConfigured: true };
     await at("/calendar");
-    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
-    expect(screen.getByRole("heading", { level: 1, name: "September 2026" })).toBeTruthy();
+    for (let i = 0; i < 9; i++) fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    expect(screen.getByRole("heading", { level: 1, name: "January 2026" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Previous month" }) as HTMLButtonElement).disabled).toBe(true);
-    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByRole("button", { name: "Next month" }));
-    expect(screen.getByRole("heading", { level: 1, name: "January 2027" })).toBeTruthy();
+    cleanup();
+    await at("/calendar?date=2027-12-10");
+    expect(screen.getByRole("heading", { level: 1, name: "December 2027" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Next month" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -526,5 +527,32 @@ describe("Calendar synchronization and safe availability", () => {
     });
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("Free all day")).toBeTruthy();
+  });
+});
+
+describe("Calendar, the year", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    extra.value = { plans: [], stubs: [stub()], failed: false };
+  });
+  it("shows the twelve months on a phone, each one a button that opens it", async () => {
+    setWide(false);
+    await at("/calendar?view=year");
+    expect(screen.getByRole("heading", { level: 1, name: "2026" })).toBeTruthy();
+    const october = screen.getByRole("button", { name: "October, 1 Stub" });
+    expect(screen.getByRole("button", { name: "Year" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(october);
+    expect(where()).toBe("/calendar?view=month&date=2026-10-01");
+  });
+  it("opens every month of a year the person can page into, none faded", async () => {
+    setWide(false);
+    await at("/calendar?view=year");
+    for (const name of ["January", "March", "December"]) expect((screen.getByRole("button", { name }) as HTMLButtonElement).disabled).toBe(false);
+  });
+  it("opens a day from the year on a wide screen", async () => {
+    setWide(true);
+    await at("/calendar?view=year");
+    fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 3, 1 Stub$/ }));
+    expect(where()).toBe("/calendar?view=day&date=2026-10-03");
   });
 });
