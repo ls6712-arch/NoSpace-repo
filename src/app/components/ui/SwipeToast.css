@@ -55,7 +55,7 @@
 }
 
 .swipe-toast[data-instant] .swipe-toast__lift {
-  transition-duration: 0s;
+  transition: none;
 }
 
 .swipe-toast__card {
