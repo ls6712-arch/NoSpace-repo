@@ -84,3 +84,19 @@ export function linkErrorInUrl(href = window.location.href): "identity_already_e
   if (!m) return /[#&?]error=/.test(href) ? "other" : null;
   return m[1] === "identity_already_exists" ? "identity_already_exists" : "other";
 }
+
+/**
+ * Where someone who just signed up from Stubby belongs while they are on their way back: the Stubby
+ * page, whether the return is still waiting (SignUpReturnEffect has not run yet) or it has already
+ * run and set the resume note (AskStubby clears that once it has picked the ask back up). Home reads
+ * this so its "signed in, go to Home" redirect cannot override the trip back, whichever of the two
+ * runs first. Null for everyone else.
+ */
+export function signUpLanding(now = Date.now()): "/calendar" | null {
+  if (peekReturn(now)) return "/calendar";
+  try {
+    return window.sessionStorage.getItem(RESUME_KEY) ? "/calendar" : null;
+  } catch {
+    return null;
+  }
+}
