@@ -985,7 +985,7 @@ A Corner page shows what people are making, finished or not, and lets you start 
 | Finished things, with the Moments that got them here. | The line under the Made it heading |
 | Finished {date} | On a Made it card, with the date from `dates.ts` |
 | Make your version | The tear-off strip on a wall card (not on your own Moment). Starts your own Pursuit inspired by that Moment. Different from Count me in, which leads to doing it together |
-| You started yours. | Replaces the strip once you have started your own because of that Moment. It only shows once your Moment is on the wall, which is about 2 hours after you post it (the 2 hour hold). Replaces "Yours is on Still making." (founder, Nov 8, 2026) |
+| You started yours. | Replaces the strip on the source card as soon as you start your own Pursuit because of that Moment. The hold of about 2 hours (the 2 hour hold on new Moments) only delays your own card appearing on Still making, once you post a Moment to it. Replaces "Yours is on Still making." (founder, Nov 8, 2026) |
 | Finisher | On a Made it card, with the Stub icon, when the Pursuit's owner holds its Finisher Stub |
 | Started because of {Name} | On a card whose Pursuit started because of another person's Moment you may see, in the accent text colour at the small text size. Shown only when you can open that Moment |
 | {A} started because of this / {A} and {B} started because of this / {A}, {B} and others started because of this | On a card whose Moment other people started a Pursuit because of. Never a number |

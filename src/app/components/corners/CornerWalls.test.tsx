@@ -107,6 +107,22 @@ describe("CornerWalls", () => {
     expect(within(byId(4)).queryByText("Finisher")).toBeNull();
   });
 
+  it("keeps Love this and Count me in on one row that never wraps, each at least 44px tall", async () => {
+    wall([card({ postId: 1 })], []);
+    setup();
+    await screen.findByRole("heading", { name: "Still making" });
+    const row = document.querySelector<HTMLElement>("[data-reactions]")!;
+    expect(row.className).toContain("flex-nowrap");
+    expect(row.className).not.toContain("flex-wrap ");
+    const buttons = within(row).getAllByRole("button");
+    expect(buttons.map((b) => b.textContent)).toEqual(["Love this", "Count me in"]);
+    for (const b of buttons) {
+      expect(b.className).toContain("min-h-11");
+      expect(b.className).toContain("whitespace-nowrap");
+      expect(b.className).toContain("px-2");
+    }
+  });
+
   it("puts the started-because lines in the accent text colour at the small size", async () => {
     wall([card({ startedBecause: ["Sam"], inspiredByName: "Maya", inspiredByPostId: 9 })], []);
     setup();
