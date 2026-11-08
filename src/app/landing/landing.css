@@ -356,3 +356,10 @@
   .lp-hero-sub { font-size: var(--text-body); }
   .lp-guide-list a { font-size: var(--text-body); min-height: 56px; }
 }
+
+/* Corner carousel (carousel/CornerCarousel.tsx). The row runs edge to edge; the text keeps the page width. */
+.lp-carousel-section { padding-inline: 0; }
+.lp-carousel-section > .lp-wide { padding-inline: 24px; }
+.lp-carousel { position: relative; width: 100%; height: clamp(420px, 62vw, 600px); margin-top: 24px; }
+.lp-carousel-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; }
+.lp-carousel-foot .lp-corner-link { justify-content: flex-start; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }

@@ -14,6 +14,7 @@ import { PursuitPreview } from "./PursuitPreview";
 import { Stubby } from "../components/stubby/Stubby";
 import { StubPreview } from "./StubPreview";
 import { WallsPreview } from "./WallsPreview";
+import { CornerCarousel } from "./carousel/CornerCarousel";
 import { reducedMotion } from "./motion";
 import { LandingMotionProvider, useLandingMotion } from "./LandingMotion";
 import "./landing.css";
@@ -73,6 +74,7 @@ function LandingPage() {
       </div>
       <div ref={preview} className="lp-preview" id="activity-example"><ExamplePreview example={example} onChoose={choose} headingRef={exampleHeading}/></div>
     </div></section>
+    <CornerCarousel/>
     <section id="how" className="lp-section lp-how" aria-labelledby="how-heading"><div className="lp-wide">
       <p className="lp-eyebrow">{COPY.howLabel}</p><h2 id="how-heading" tabIndex={-1} className="lp-h2">{COPY.howHeading}</h2>
       <ol className="lp-steps">{COPY.steps.map(s => <li key={s.title}><h3>{s.title}</h3><p>{s.line}</p></li>)}</ol>

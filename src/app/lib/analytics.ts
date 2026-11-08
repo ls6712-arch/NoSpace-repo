@@ -15,7 +15,7 @@ export type SignUpTrigger = "inline_card" | "feature_gate" | "limit" | "header";
 export type SignUpMethod = "google" | "apple" | "email";
 
 export type AnalyticsEvent =
-  | { name: "landing_action_clicked"; action: "ask" | "signup" | "corner" | "pursuit"; placement: "header" | "hero" | "example" | "corner" | "pursuit" | "walls" | "footer"; hasExample?: boolean }
+  | { name: "landing_action_clicked"; action: "ask" | "signup" | "corner" | "pursuit"; placement: "header" | "hero" | "example" | "corner" | "carousel" | "pursuit" | "walls" | "footer"; hasExample?: boolean }
   | { name: "pursuits_in_progress_viewed"; count: number }
   | { name: "pursuits_in_progress_item_tapped"; pursuitId: string }
   | { name: "pursuits_in_progress_see_all_tapped"; count: number }

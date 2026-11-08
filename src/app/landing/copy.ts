@@ -37,6 +37,9 @@ export const LANDING_COPY = {
   examplesHeading: "Something you love. Something you haven’t tried.",
   examplesLine: "Every Corner has things to try, a first step and what you’ll need. Start with drawing, cooking, music or something you’ve never done.",
   cornerLink: "Explore this Corner", previewActivity: "Preview activity",
+  carouselHeading: "Karaoke on Friday. Surfing on Sunday.",
+  carouselLine: "Drag, scroll or use the arrow keys. Tap the middle photo to open its Corner.",
+  carouselLabel: "Corners to explore",
   filters: [
     { id: "all", label: "A little of everything" },
     { id: "creative", label: "Make something" },
