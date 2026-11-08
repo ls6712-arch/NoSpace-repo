@@ -1018,6 +1018,25 @@ The complete wording is in `src/app/landing/copy.ts`; the crawler copy in `index
 | Questions | FAQ heading. Replaces "Before you start". New questions: How do I find a new hobby?, What can I do with friends this week?, What is a Stub?, Is Soosh free?, Who can see what I post? |
 | Pick one thing. Do it this week. / Free to use. Go on your own or bring someone. | Final card |
 
+## Home v3: your Corners, right now (founder request, Nov 8, 2026; new strings for approval)
+
+Home was a planner card, four suggestions, a Log a Moment card and a feed of people you follow that was
+empty for almost everyone (12 accounts, 4 following anyone, 1 Moment in 30 days on Nov 8). Home now
+reads from your Corners, which works at any size. Order: Best fit for you, Your week (one row), Still
+making, Happening this week, then From your people, or the bring-someone card while that is empty.
+More ways and the Log a Moment card are gone from Home (Discover, Corners and the Log button cover them).
+
+| String | Where |
+|---|---|
+| Still making in your Corners | Heading over the newest Still making cards from the Corners you follow. Under it, the wall's own line: Half-done, messy, in progress. New |
+| Still making on Soosh | The same heading when you follow no Corners: the cards come from the Corners of the newest public Moments. New |
+| Follow a few Corners to make this yours. | The line under "Still making on Soosh". New |
+| See all Corners | Link beside the heading, to /corners. Reused |
+| Happening this week | Event tickets in your Corners' Spaces for the next 7 days, else the open Spaces' events this week. Not shown with none. Reused from the Corner page |
+| Your week / Open | Now one row; its count line or "Add when you’re usually free" sits beside it (under it on phones). Still the phone's way into the Calendar. Reused |
+| Soosh is better with your people / Bring a friend and start your first Pursuit together. / Invite on WhatsApp / Find contacts | Shown in place of From your people while it is empty. Reused from the old empty Home |
+| Make your version | On each Still making card; opens the same sheet as on a Corner page. Reused |
+
 ## Retired terms
 
 Never use these in UI copy.

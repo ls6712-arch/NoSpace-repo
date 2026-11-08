@@ -10,9 +10,8 @@ import { FeedCard } from "../components/home/FeedCard";
 import { LIST_GRID, PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell";
 import { YourWeekCard } from "../components/home/YourWeekCard";
 import { BestFitCard, type CardState } from "../components/home/BestFitCard";
-import { MoreWaysList } from "../components/home/MoreWaysList";
-import { LogMomentCard } from "../components/home/LogMomentCard";
-import { HomeEmpty } from "../components/home/HomeEmpty";
+import { BringPeopleCard, HappeningSection, StillMakingSection } from "../components/home/YourCornersSections";
+import { PursuitDialog } from "../components/PursuitDialog";
 import { MomentDetail } from "../components/MomentDetail";
 import { Loadable } from "../components/ui/skeleton";
 import { MomentGridSkeleton } from "../components/Skeletons";
@@ -28,18 +27,21 @@ import { HOME_TZ } from "../lib/homeWeek";
 import { firstName } from "../lib/tasteModel";
 import type { HomeItem } from "../lib/homeItems";
 import type { Owner } from "../lib/firstPlanRemote";
+import { useSocial } from "../context/SocialContext";
+import { useCorners } from "../context/CornersContext";
+import { fetchHomeEvents, fetchStillMaking, yourCorners, type HomeEvent, type HomeWallCard } from "../lib/homeYourCorners";
+import { seedFromCard } from "../lib/cornerWalls";
+import { cornerPath } from "../lib/cornerPath";
 
 const PULL_THRESHOLD = 64;
 
 /**
- * Home (Home v2): your week and what fits it (the best suggestion large, three
- * more below, ranked by home_suggestions() and filled with first steps from
- * your picks), a way to Log a Moment, then Moments from the people you follow,
- * newest first. At most about one card in four is a Space
- * promotion (a stranger's Moment from a Space you are in or a Corner you
- * follow); a friend's Moment at a Space is a friend card and never counts
- * toward that. With nothing from your people yet it shows the empty view
- * (screen 14). The old grid is still at /my-space/all.
+ * Home (Home v3, Nov 8, 2026): your Corners, right now. The one best fit for
+ * you, a one-row way into your week, the newest Still making cards from the
+ * Corners you follow (from the newest public Moments when you follow none),
+ * this week's events in them, then Moments from the people you follow. While
+ * that last part is empty, a card to bring someone in takes its place. The
+ * old grid is still at /my-space/all.
  */
 export function HomeFeed() {
   const { user, profile } = useAuth();
@@ -52,6 +54,28 @@ export function HomeFeed() {
   const [now] = useState(() => Date.now());
   const home = useHomeData(user?.id);
   const touchStart = useRef<number | null>(null);
+  const social = useSocial();
+  const { allCorners } = useCorners();
+  const [wallCards, setWallCards] = useState<HomeWallCard[] | null>(null);
+  const [events, setEvents] = useState<HomeEvent[]>([]);
+  const [seed, setSeed] = useState<Post | null>(null);
+  const [makeOpen, setMakeOpen] = useState(false);
+  const mine = useMemo(
+    () => yourCorners(social.followedHobbies, allCorners, publicFeed),
+    [social.followedHobbies, allCorners, publicFeed],
+  );
+  const cornerKeys = mine.corners.map((c) => `${c.spaceSlug}/${c.slug}`).join(",");
+  useEffect(() => {
+    if (!user) return;
+    let live = true;
+    void fetchStillMaking(mine.corners).then((cards) => live && setWallCards(cards));
+    void fetchHomeEvents(mine.corners).then((list) => live && setEvents(list));
+    return () => {
+      live = false;
+    };
+    // The Corners, by key: a new array with the same Corners does not reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, cornerKeys]);
 
   const { inputs: feedInputs, loaded } = useFeedInputs();
   const feed = useMemo(() => buildFeed(publicFeed, feedInputs), [publicFeed, feedInputs]);
@@ -110,6 +134,16 @@ export function HomeFeed() {
     if (!r.ok) notifyError(r.error ?? "");
     else recordSuggestion("invite", item, position);
   };
+  const openWallCard = ({ card, corner }: HomeWallCard) => {
+    const known = publicFeed.find((p) => p.id === card.postId);
+    if (known) open(known);
+    else navigate(cornerPath(corner.spaceSlug, corner.slug));
+  };
+  // Make your version: your own Pursuit, started because of this Moment (as on the Corner page).
+  const makeFromWall = ({ card, corner }: HomeWallCard) => {
+    setSeed(seedFromCard(card, corner));
+    setMakeOpen(true);
+  };
   const greetingName = firstName(profile?.display_name ?? "");
   const place = home.place.area || home.place.city;
   const subline = [place, formatDate(now, { weekday: "long", timeZone: HOME_TZ })].filter(Boolean).join(" · ");
@@ -153,9 +187,6 @@ export function HomeFeed() {
         </div>
       ) : (
         <div className={PAGE_GRID}>
-          <div className={SPAN_GRID}>
-            <YourWeekCard windows={home.windows} left={home.left} plans={home.plans} now={now} />
-          </div>
           {best && (
             <section aria-labelledby="home-best-fit" className={`flex flex-col gap-2.5 ${SPAN_GRID}`}>
               <h2 id="home-best-fit" className="text-small font-semibold text-muted-foreground">
@@ -172,32 +203,24 @@ export function HomeFeed() {
             </section>
           )}
           <div className={SPAN_GRID}>
-            <MoreWaysList
-              items={home.items.slice(1, 4)}
-              firstPosition={1}
-              states={cardStates}
-              onShown={(item, position) => recordSuggestion("shown", item, position)}
-              onOpen={(item, position) => recordSuggestion("opened", item, position)}
-              onPrimary={(item, position) => void onPrimary(item, position)}
-            />
-          </div>
-          <div className={SPAN_GRID}>
-            <LogMomentCard />
+            <YourWeekCard compact windows={home.windows} left={home.left} plans={home.plans} now={now} />
           </div>
         </div>
       )}
 
-      <h2 className="mb-3 mt-8 text-lead" style={{ fontFamily: "var(--font-display)" }}>
-        From your people
-      </h2>
+      <StillMakingSection cards={wallCards} fallback={mine.fallback} onOpen={openWallCard} onMake={makeFromWall} />
+      <HappeningSection events={events} />
 
       <Loadable loading={loading} skeleton={<MomentGridSkeleton count={2} />}>
         {postsStatus === "error" && feed.length === 0 ? (
           <ErrorNotice onRetry={reloadPosts} />
         ) : feed.length === 0 ? (
-          <HomeEmpty />
+          <BringPeopleCard />
         ) : (
           <>
+            <h2 className="mb-3 mt-8 text-lead" style={{ fontFamily: "var(--font-display)" }}>
+              From your people
+            </h2>
             <div className={`${LIST_GRID} items-start`}>
               {feed.map((item, i) => (
                 <FeedCard key={item.post.id} post={item.post} source={item.source} onOpen={open} priority={i === 0} />
@@ -214,6 +237,7 @@ export function HomeFeed() {
       </Loadable>
 
       <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && close()} />
+      <PursuitDialog open={makeOpen} onOpenChange={setMakeOpen} seedPost={seed} />
     </PageShell>
   );
 }
