@@ -4,9 +4,6 @@ import { Check, Lock, Sparkle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
-import { PaperStamp, tilt } from "../components/corners/MomentStamp";
-import { formatDate } from "../lib/dates";
-import { momentAlt } from "../lib/momentCaption";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 import { ErrorNotice } from "../components/StateViews";
@@ -15,9 +12,15 @@ import { ImageWithFallback } from "../components/ImageWithFallback";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
 import { PressLink } from "../components/common/PressLink";
-import { Reveal } from "../components/common/Reveal";
-import { MomentTile } from "../components/common/MomentTile";
 import { MomentDetail } from "../components/MomentDetail";
+import { PursuitDialog } from "../components/PursuitDialog";
+import { CornerWalls } from "../components/corners/CornerWalls";
+import { WALL_COPY } from "../components/corners/WallCard";
+import { seedFromCard, type Chain, type WallCard } from "../lib/cornerWalls";
+import { POST_COLUMNS, rowToPost } from "../context/ContentContext";
+import { resolvePostMedia, signMomentPaths } from "../lib/momentMedia";
+import { useSocial } from "../context/SocialContext";
+import { useHistoryState } from "../lib/useHistoryState";
 import { type Post } from "../data/posts";
 import { isInCorner } from "../lib/cornerAlias";
 import { curatedBySlug } from "../data/curatedCorners";
@@ -27,12 +30,11 @@ import { cornerKey, homeCornersIn } from "../data/homeCorners";
 import { cornerGuide } from "../data/cornerGuides";
 import { cornerStyle } from "../lib/categoryStyle";
 import { cornerPhotoTransitionName } from "../components/discover/HeroCard";
-import { SnapCarousel } from "../components/ui/SnapCarousel";
 import { AvatarStack } from "../components/ui/AvatarStack";
 import { PillButton } from "../components/ui/PillButton";
 import { MakeItAPursuitSheet } from "../components/pursuit/MakeItAPursuitSheet";
 import { builtInCornerModel, curatedModel, plainModel, type CornerModel } from "../lib/cornerModel";
-import { useCorners } from "../context/CornersContext";
+import { cornerFollowKey, useCorners } from "../context/CornersContext";
 import { hobbies } from "../data/hobbies";
 import { WeekEventCard } from "../components/corners/WeekEventCard";
 import { cornerPhoto, cornerPhotoAlt, cornerPhotoCredit } from "../lib/cornerPhoto";
@@ -51,18 +53,21 @@ import { CornerActivities } from "../components/corners/CornerActivities";
  * visitors, who see Corners, guides, Open Spaces and event titles and times
  * only (no people, Moments, hosts or Closed Spaces) and one line saying
  * members see who's going.
- * Top to bottom: the hero (the Corner's photo, its name, and a line with its category as a
- * link, its length and place, and one button: I'm going to the next event, else See
- * Spaces, else Create a Space), How to start beside Why it's worth it,
- * What you'll need, editorial starter activities, editable Pursuit ideas and
- * outbound resources where available, then the live rows (this week's events, Spaces, people,
- * your Moments, recent Moments), more Corners like it, and Create a Space.
+ * Top to bottom: the hero (the Corner's photo, its name, a line with its category as a link, its length
+ * and place, and Follow), who is into it, then two tabs. Walls (members' default): Still making and
+ * Made it, each card with a Make your version tear-off, then Passed along. Your first time (the default
+ * for visitors): How to start beside Why it's worth it, What you'll need, starter activities, Spaces in
+ * the Corner and more Corners like it, then Create a Space.
+ * Events are not shown on this page (founder, Nov 7, 2026); their code is untouched.
  * A section with nothing in it is not shown. Nothing from a Closed Space
  * reaches a non-member beyond an event's title and time. Starter ideas never
  * create a person's Pursuit until they review and submit the existing form.
  */
 
-const MOMENTS_PAGE = 8;
+/** Founder, Nov 7, 2026: events are not part of Soosh. Hidden here only; nothing behind them is removed. */
+const SHOW_EVENTS = false;
+
+type Tab = "walls" | "first";
 const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
 type Person = { id: string; name: string; avatarUrl?: string; username?: string };
@@ -121,7 +126,11 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openPost, setOpenPost] = useState<Post | null>(null);
-  const [momentPages, setMomentPages] = useState(1);
+  // Remembered through Back. "auto" until chosen: Walls for members, Your first time for visitors.
+  const [chosenTab, setTab] = useHistoryState<Tab | "auto">("corner.tab", "auto");
+  const [seed, setSeed] = useState<Post | null>(null);
+  const [makeOpen, setMakeOpen] = useState(false);
+  const social = useSocial();
 
   // Signed out, or signed in but not approved yet.
   const restricted = !user || profile?.access === "pending";
@@ -156,6 +165,37 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   }, [section]);
   const doWithPeople = () => (restricted ? navigate(`/login?redirect=${here}`) : setSheetOpen(true));
   const goTo = (path: string) => (restricted ? navigate(`/login?redirect=${encodeURIComponent(path)}`) : navigate(path));
+  const tab: Tab = chosenTab === "auto" ? (restricted ? "first" : "walls") : chosenTab;
+  const followKey = cornerFollowKey(corner.spaceSlug, corner.slug);
+  const following = social.followedHobbies.includes(followKey);
+  const toggleFollow = () => (user ? void social.toggleHobbyFollow(followKey, corner.name) : signIn());
+
+  // A wall card opens the Moment itself: the one already loaded, else the full row (its photos signed for this viewer).
+  async function openCard(card: WallCard) {
+    const known = [...publicFeed, ...myPosts].find((p) => p.id === card.postId);
+    if (known) return setOpenPost(known);
+    if (!supabase) return;
+    const { data } = await supabase.from("posts").select(POST_COLUMNS).eq("id", card.postId).maybeSingle();
+    if (!data) return;
+    const post = rowToPost(data, card.authorName);
+    setOpenPost(resolvePostMedia(post, await signMomentPaths(post.mediaPaths ?? [])));
+  }
+  // Make your version: your own Pursuit, started because of this Moment.
+  function makeFromCard(card: WallCard) {
+    setSeed(seedFromCard(card, corner));
+    setMakeOpen(true);
+  }
+  // The dashed You? on a chain starts from the chain's newest Moment.
+  async function makeFromChain(chain: Chain) {
+    const link = chain.links[chain.links.length - 1];
+    let caption = "";
+    if (supabase) {
+      const { data } = await supabase.from("posts").select("caption").eq("id", chain.lastPostId).maybeSingle();
+      caption = (data?.caption as string | null) ?? "";
+    }
+    setSeed({ ...seedFromCard({ postId: chain.lastPostId, authorId: link.authorId, authorName: link.name, caption, postedAt: Date.now(), mine: false, mediaType: "written", finisherStub: false, startedBecause: [] }, corner) });
+    setMakeOpen(true);
+  }
 
   const posts = useMemo(
     () => publicFeed.filter((p) => isInCorner(p, corner.spaceSlug, corner.slug)),
@@ -217,17 +257,15 @@ function CornerBody({ corner }: { corner: CornerModel }) {
     };
   }, [corner, user?.id, restricted, liveAttempt]);
 
-  // People into this Corner: whoever shared a public Moment here most recently, newest first. No counts.
+  // The proof line under the hero: the three people who shared a public Moment here most recently. No counts.
   const ranked = useMemo(() => {
     const seen = new Set<string>();
-    const out: { id: string; latest?: Post }[] = [];
     for (const p of [...posts].sort((a, b) => b.createdAt - a.createdAt)) {
       if (!p.userId || seen.has(p.userId)) continue;
       seen.add(p.userId);
-      out.push({ id: p.userId, latest: p.type === "photo" ? p : posts.filter((q) => q.userId === p.userId && q.type === "photo").sort((a, b) => b.createdAt - a.createdAt)[0] });
-      if (out.length === 8) break;
+      if (seen.size === 3) break;
     }
-    return out;
+    return [...seen];
   }, [posts]);
 
   useEffect(() => {
@@ -236,7 +274,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
     supabase
       .from("profiles")
       .select("id, display_name, avatar_url, username")
-      .in("id", ranked.map((r) => r.id))
+      .in("id", ranked)
       .then(({ data }) => {
         if (!cancelled) setPeople(new Map((data ?? []).map((r) => [r.id as string, toPerson(r)])));
       });
@@ -270,16 +308,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
       .slice(0, 12);
   })();
 
-  // Your own Moments in this Corner (private ones too), newest first.
-  const mine = useMemo(
-    () =>
-      user && !restricted
-        ? myPosts.filter((p) => isInCorner(p, corner.spaceSlug, corner.slug)).sort((a, b) => b.createdAt - a.createdAt)
-        : [],
-    [myPosts, corner, user, restricted],
-  );
   // Who is into this Corner, from the people who shared a Moment here: a few faces and their names, never a count.
-  const proof = ranked.flatMap((r) => (people.get(r.id) ? [people.get(r.id)!] : [])).slice(0, 3);
+  const proof = ranked.flatMap((id) => (people.get(id) ? [people.get(id)!] : []));
   const proofLine =
     proof.length === 0
       ? ""
@@ -288,10 +318,6 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         : proof.length === 2 && ranked.length === 2
           ? `${proof[0].name.slice(0, 60)} and ${proof[1].name.slice(0, 60)} are into this`
           : `${proof[0].name.slice(0, 60)}, ${proof[1].name.slice(0, 60)} and others are into this`;
-  const showMoments = !restricted && posts.length > 0;
-  // Moments strip: square thumbnails of the Corner's public photo Moments. Hidden under 5 Moments.
-  const stripPosts = posts.filter((p) => p.type === "photo" && !!p.media).slice(0, 12);
-  const showStrip = !restricted && posts.length >= 5 && stripPosts.length >= 5;
   const isMember = (s: LiveSpace) => memberships.get(s.id)?.status === "active";
   const isPending = (s: LiveSpace) => memberships.get(s.id)?.status === "pending";
 
@@ -350,6 +376,14 @@ function CornerBody({ corner }: { corner: CornerModel }) {
               {corner.name}
             </h1>
             {metaLine && <p className="text-body text-on-media/90">{metaLine}</p>}
+            <button
+              type="button"
+              onClick={toggleFollow}
+              aria-pressed={following}
+              className="mt-2 inline-flex min-h-11 items-center rounded-full border border-current px-5 text-small font-semibold"
+            >
+              {following ? "Following" : "Follow"}
+            </button>
           </div>
         </div>
       </header>
@@ -371,15 +405,15 @@ function CornerBody({ corner }: { corner: CornerModel }) {
 
         {error && <p role="alert" className="mb-6 text-small text-destructive">{error}</p>}
 
-        {(proof.length > 0 || heroEvent) && (
-          <section aria-label="Who is into this" className="mb-10 flex flex-col gap-4 rounded-card bg-card p-4">
+        {(proof.length > 0 || (SHOW_EVENTS && heroEvent)) && (
+          <section aria-label="Who is into this" className="mb-6 flex flex-col gap-4 rounded-card bg-card p-4">
             {proof.length > 0 && (
               <div className="flex items-center gap-4">
                 <AvatarStack people={proof} size="size-10" />
                 <p className="text-body font-semibold">{proofLine}</p>
               </div>
             )}
-            {heroEvent && (
+            {SHOW_EVENTS && heroEvent && (
               <HeroEvent
                 event={heroEvent}
                 space={spaceById.get(heroEvent.spaceId)}
@@ -395,6 +429,40 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </section>
         )}
 
+        {/* Walls · Your first time. Remembered through Back. */}
+        <div role="tablist" aria-label="Corner" className="mb-6 flex gap-6 border-b border-border">
+          {([["walls", WALL_COPY.walls], ["first", "Your first time"]] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`corner-tab-${id}`}
+              aria-selected={tab === id}
+              aria-controls={`corner-panel-${id}`}
+              onClick={() => setTab(id)}
+              className={`-mb-px flex min-h-11 items-center border-b-2 text-body font-semibold ${tab === id ? "border-[var(--accent)] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "walls" && (
+          <div role="tabpanel" id="corner-panel-walls" aria-labelledby="corner-tab-walls">
+            <CornerWalls
+              corner={corner}
+              restricted={restricted}
+              onOpenMoment={(c) => void openCard(c)}
+              onMake={makeFromCard}
+              onMakeFromChain={(c) => void makeFromChain(c)}
+              onLogMoment={() => goTo(`/create?${cornerParams}`)}
+              onDoWithPeople={doWithPeople}
+            />
+          </div>
+        )}
+
+        {tab === "first" && (
+        <div role="tabpanel" id="corner-panel-first" aria-labelledby="corner-tab-first">
         {(corner.steps.length > 0 || corner.about || corner.worth.length > 0) && (
           <div className={`${SECTION_GAP} grid gap-10 tab:gap-8 ${corner.worth.length > 0 ? "tab:grid-cols-2" : ""}`}>
             {(corner.steps.length > 0 || corner.about) && (
@@ -433,27 +501,6 @@ function CornerBody({ corner }: { corner: CornerModel }) {
 
         <CornerStarterContent spaceSlug={corner.spaceSlug} slug={corner.slug} restricted={restricted}/>
 
-        {showStrip && (
-          <section className={SECTION_GAP} aria-labelledby="strip-title">
-            <h2 id="strip-title" className="sr-only">
-              Moments
-            </h2>
-            <SnapCarousel
-              name={`corner.${corner.slug}.moments`}
-              label={`Moments in ${corner.name}`}
-              items={stripPosts}
-              getKey={(post) => String(post.id)}
-              itemClassName="w-36 tab:w-44"
-              renderItem={(post) => (
-                <button type="button" onClick={() => setOpenPost(post)} className="block aspect-square w-full overflow-hidden rounded-card bg-card">
-                  <ImageWithFallback src={post.mediaUrls?.[0] ?? post.media} alt={momentAlt(post, corner.name)} width={360} className="size-full" />
-                </button>
-              )}
-            />
-            <p className="mt-3 text-small text-muted-foreground">{`${plural(posts.length, "Moment")} in ${corner.name}`}</p>
-          </section>
-        )}
-
         {corner.needs.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="need-title">
             <SectionTitle id="need-title">What you’ll need</SectionTitle>
@@ -468,7 +515,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </section>
         )}
 
-        {week.length > 0 && (
+        {SHOW_EVENTS && week.length > 0 && (
           <section id="section-people" className={`${SECTION_GAP} scroll-mt-24`} aria-labelledby="week-title">
             <SectionTitle id="week-title">Happening this week</SectionTitle>
             <HorizontalRow name={`corner.${corner.slug}.week`} label="Happening this week">
@@ -508,81 +555,6 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </section>
         )}
 
-        {!restricted && ranked.length > 0 && (
-          <section id="section-people-into" className={`${SECTION_GAP} scroll-mt-24`} aria-labelledby="people-title">
-            <SectionTitle id="people-title">{`People into ${corner.name}`}</SectionTitle>
-            <HorizontalRow name={`corner.${corner.slug}.people`} label={`People into ${corner.name}`}>
-              {ranked.map((r) => {
-                const person = people.get(r.id);
-                if (!person) return null;
-                return (
-                  <li key={r.id} className="w-[220px] shrink-0 snap-start">
-                    <PressLink
-                      to={person.username ? `/u/${encodeURIComponent(person.username)}` : "/people"}
-                      className="flex h-full items-center gap-3 rounded-card border border-border bg-card p-3"
-                    >
-                      <Avatar className="size-11 shrink-0">
-                        {person.avatarUrl && <AvatarImage src={person.avatarUrl} alt="" />}
-                        <AvatarFallback className="text-caption">{initials(person.name)}</AvatarFallback>
-                      </Avatar>
-                      <span className="min-w-0 flex-1 truncate text-small font-semibold">{person.name}</span>
-                      {r.latest && (
-                        <ImageWithFallback src={r.latest.media} alt="" className="size-11 shrink-0 overflow-hidden rounded-control" />
-                      )}
-                    </PressLink>
-                  </li>
-                );
-              })}
-            </HorizontalRow>
-          </section>
-        )}
-
-        {restricted && (
-          <p className={`${SECTION_GAP} text-body text-muted-foreground`}>Members see who’s going.</p>
-        )}
-
-        {mine.length > 0 && (
-          <section className={SECTION_GAP} aria-labelledby="mine-title">
-            <SectionTitle id="mine-title">Your Moments</SectionTitle>
-            <HorizontalRow name={`corner.${corner.slug}.mine`} label="Your Moments">
-              {mine.map((p) => (
-                <li key={p.id} className="w-44 shrink-0 snap-start py-2">
-                  <button type="button" onClick={() => setOpenPost(p)} className="block w-full text-left">
-                    <PaperStamp title={corner.name} date={formatDate(p.createdAt)} rotate={tilt(p.id)}>
-                      <ImageWithFallback
-                        src={p.type === "photo" && p.media ? (p.mediaUrls?.[0] ?? p.media) : cornerPhoto(corner.spaceSlug, corner.slug, 400)}
-                        alt={momentAlt(p, corner.name)}
-                        width={176}
-                        className="aspect-square w-full overflow-hidden"
-                      />
-                    </PaperStamp>
-                  </button>
-                </li>
-              ))}
-            </HorizontalRow>
-          </section>
-        )}
-
-        {showMoments && !showStrip && (
-          <section className={SECTION_GAP} aria-labelledby="moments-title">
-            <SectionTitle id="moments-title">Recent Moments</SectionTitle>
-            <div className="grid grid-cols-2 gap-3 tab:grid-cols-4 tab:gap-4">
-              {posts.slice(0, momentPages * MOMENTS_PAGE).map((post, i) => (
-                <Reveal key={post.id} index={i % MOMENTS_PAGE}>
-                  <MomentTile post={post} onOpen={() => setOpenPost(post)} />
-                </Reveal>
-              ))}
-            </div>
-            {posts.length > momentPages * MOMENTS_PAGE && (
-              <div className="mt-10 border-t border-border pt-4">
-                <Button variant="outline" onClick={() => setMomentPages((n) => n + 1)}>
-                  Show more
-                </Button>
-              </div>
-            )}
-          </section>
-        )}
-
         {more.length > 0 && (
           <section className={SECTION_GAP} aria-labelledby="more-title">
             <div className="mb-4 flex items-baseline justify-between gap-4">
@@ -608,6 +580,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
             Create a Space
           </PressLink>
         </section>
+        </div>
+        )}
       </div>
 
       {/* The one primary action; the other two are small links under it. Sits above the tab bar on a phone. */}
@@ -633,6 +607,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         corner={{ spaceSlug: corner.spaceSlug, slug: corner.slug, name: corner.name }}
         startOpenGroup={hostFlow}
       />
+
+      <PursuitDialog open={makeOpen} onOpenChange={setMakeOpen} seedPost={seed} />
 
       <MomentDetail
         post={openPost}

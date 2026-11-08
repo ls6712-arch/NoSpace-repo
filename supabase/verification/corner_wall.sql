@@ -11,6 +11,7 @@
 -- returning-into, no delete (CLAUDE.md). Every lookup is scoped to the fixture's own ids and
 -- captions that start with 'CW ', never to a whole live table.
 --
+-- A trigger sets posts.visible_at two hours after created_at, so every fixture Moment is back-dated past that.
 -- Fixed ids. Users: A …9101 (the viewer), B …9102 (Maya, makes), C …9103 (Priya, starts because
 -- of B), D …9104 (Sam, finished), E …9105 (blocked by A), F …9106 (follows B), G …9107 (starts
 -- because of a private Moment of B). All fixture Moments are in crafts-making/embroidery, except one
@@ -73,6 +74,12 @@ begin
     (v_g, 'cw.g@acct-test.invalid')
   ) as u(id, email);
 
+  -- posts.corner is a foreign key to corners (space_slug, slug); the fixture's Corners go in this transaction only.
+  insert into public.corners (space_slug, slug, name) values
+    ('crafts-making', 'embroidery', 'Embroidery'),
+    ('food-cooking', 'espresso', 'Espresso')
+  on conflict (space_slug, slug) do nothing;
+
   update public.profiles p set display_name = 'Viewer Fixture' where p.id = v_a;
   update public.profiles p set display_name = 'Maya Fixture' where p.id = v_b;
   update public.profiles p set display_name = 'Priya Fixture' where p.id = v_c;
@@ -100,17 +107,17 @@ begin
     ('cw-pe', v_e, 'Erin hoop', 'crafts-making', 'embroidery', true, now() - interval '3 days', null);
 
   -- Moments.
-  insert into public.posts (user_id, hobby_slug, sub_hobby, corner, type, caption, visibility, pursuit_id, created_at) values
-    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW b first', 'public', 'cw-pb', now() - interval '3 days'),
-    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW b second', 'public', 'cw-pb', now() - interval '2 days'),
-    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW b newest', 'public', 'cw-pb', now() - interval '1 day'),
-    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW b private', 'private', null, now() - interval '30 minutes'),
-    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW b followers', 'followers', null, now() - interval '40 minutes'),
-    (v_c, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW c one', 'public', 'cw-pc', now() - interval '1 hour'),
-    (v_d, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW d done', 'public', 'cw-pd', now() - interval '6 days'),
-    (v_g, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW g one', 'public', 'cw-pg', now() - interval '2 hours'),
-    (v_e, 'crafts-making', 'embroidery', 'embroidery', 'written', 'CW e one', 'public', 'cw-pe', now() - interval '3 hours'),
-    (v_b, 'food-cooking', 'espresso', 'espresso', 'written', 'CW espresso', 'public', null, now() - interval '50 minutes');
+  insert into public.posts (user_id, hobby_slug, sub_hobby, corner, type, media_url, caption, visibility, pursuit_id, created_at) values
+    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW b first', 'public', 'cw-pb', now() - interval '3 days'),
+    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW b second', 'public', 'cw-pb', now() - interval '2 days'),
+    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW b newest', 'public', 'cw-pb', now() - interval '1 day'),
+    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW b private', 'just_me', null, now() - interval '3 hours'),
+    (v_b, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW b followers', 'followers', null, now() - interval '4 hours'),
+    (v_c, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW c one', 'public', 'cw-pc', now() - interval '5 hours'),
+    (v_d, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW d done', 'public', 'cw-pd', now() - interval '6 days'),
+    (v_g, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW g one', 'public', 'cw-pg', now() - interval '8 hours'),
+    (v_e, 'crafts-making', 'embroidery', 'embroidery', 'written', '', 'CW e one', 'public', 'cw-pe', now() - interval '9 hours'),
+    (v_b, 'food-cooking', 'espresso', 'espresso', 'written', '', 'CW espresso', 'public', null, now() - interval '6 hours');
 
   v_m1 := (select p.id from public.posts p where p.user_id = v_b and p.caption = 'CW b first');
   v_m3 := (select p.id from public.posts p where p.user_id = v_b and p.caption = 'CW b newest');
