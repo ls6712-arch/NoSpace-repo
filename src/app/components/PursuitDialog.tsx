@@ -167,7 +167,16 @@ export function PursuitDialog({
     if (!open) return;
     const seedTitle = seedPost ? seedPost.caption.split(".")[0].slice(0, 60).trim() : "";
     onOpenChange(false);
-    navigate(`/pursuits/new${seedTitle ? `?title=${encodeURIComponent(seedTitle)}` : ""}`);
+    // The Moment it grew out of rides along as `from` (so the new Pursuit records what it started because of), with its Corner.
+    const q = new URLSearchParams();
+    if (seedTitle) q.set("title", seedTitle);
+    if (seedPost && seedPost.id > 0) {
+      q.set("from", String(seedPost.id));
+      if (seedPost.hobbySlug) q.set("hobby", seedPost.hobbySlug);
+      if (seedPost.subHobby) q.set("sub", seedPost.subHobby);
+    }
+    const qs = q.toString();
+    navigate(`/pursuits/new${qs ? `?${qs}` : ""}`);
   }, [open]);
 
   useEffect(() => {

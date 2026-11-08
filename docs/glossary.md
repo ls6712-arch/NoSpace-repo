@@ -972,6 +972,30 @@ All approved on Nov 3, 2026 (`src/app/lib/guestCopy.ts`). No number or time is w
 |---|---|
 | Message us on X (@onsoosh) | The support link's text, to https://x.com/onsoosh, wherever a message says to contact support (founder, Nov 3, 2026). Set once, in `SUPPORT_CONTACT` (`src/app/config.ts`): an email can replace or join it there |
 
+## Corner walls (brief of Nov 7, 2026; every string approved by the founder Nov 8, 2026)
+
+A Corner page shows what people are making, finished or not, and lets you start your own version. No counts anywhere on these surfaces, no progress bars on wall cards, no leaderboards. "Corner chat" and the rest of chat are PR 3 and are not built yet; "Corner chat" is approved for that PR only.
+
+| String | Where |
+|---|---|
+| Walls | The Corner page tab for the two walls (the other tab is Your first time) |
+| Still making | The wall of Moments from people in the middle of something (unfinished and paused Pursuits, and Moments with no Pursuit). Also its option on the phone control |
+| Made it | The wall of finished Pursuits. The wall is named Made it; a card on it still says Finished {date}, the Pursuit status word. Also its option on the phone control |
+| Half-done, messy, in progress. | The line under the Still making heading |
+| Finished things, with the Moments that got them here. | The line under the Made it heading |
+| Finished {date} | On a Made it card, with the date from `dates.ts` |
+| Make your version | The tear-off strip on a wall card (not on your own Moment). Starts your own Pursuit inspired by that Moment. Different from Count me in, which leads to doing it together |
+| Yours is on Still making. | Replaces the strip once you have started your own because of that Moment |
+| Started because of {Name} | On a card whose Pursuit started because of another person's Moment you may see. Shown only when you can open that Moment |
+| {A} started because of this / {A} and {B} started because of this / {A}, {B} and others started because of this | On a card whose Moment other people started a Pursuit because of. Never a number |
+| Passed along | The section of chains, each a row of chips with arrows |
+| Who got whom into it here. | The line under Passed along |
+| You? | The dashed last chip of a chain. Opens Make your version for the chain's newest Moment |
+| Members see who's making what. | The card over the blurred Walls for visitors (signed out, or not approved yet), with the Sign up button. It replaces "Members see who's going." on the Corner page |
+| Share what you're making. | The one card when both walls are empty, with Log a Moment (opened in this Corner) and, under it, Do this with people (the existing Make it a Pursuit entry). Replaces "Nobody has shared here yet. Be the first." Nothing says "nobody here"; an empty wall has no panel |
+| Follow / Following | On a Corner page's hero. The existing words for following a Corner |
+| Love this / Count me in / Show more | Reused as they are. On a wall card neither shows a count |
+
 ## Retired terms
 
 Never use these in UI copy.
