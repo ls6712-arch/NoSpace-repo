@@ -55,18 +55,21 @@ export function WallCard({
   yoursStarted,
   onOpen,
   onMake,
+  className = "",
 }: {
   card: Card;
   kind: WallKind;
   yoursStarted: boolean;
   onOpen: () => void;
   onMake: () => void;
+  /** Extra classes on the card, e.g. a fixed width in a sideways row (Home). */
+  className?: string;
 }) {
   const because = startedBecauseOfLine(card);
   const others = startedBecauseLine(card.startedBecause);
   const title = card.pursuitTitle ?? "";
   return (
-    <li className="relative flex h-full flex-col overflow-hidden rounded-card border border-border bg-card" data-wall-card={card.postId}>
+    <li className={`relative flex h-full flex-col overflow-hidden rounded-card border border-border bg-card ${className}`} data-wall-card={card.postId}>
       <button type="button" onClick={onOpen} className="flex flex-col text-left" aria-label={`Open ${card.authorName}’s Moment${title ? `: ${title}` : ""}`}>
         {card.photo ? (
           <ImageWithFallback src={card.photo} alt="" width={480} className="aspect-[16/10] w-full overflow-hidden bg-surface-muted" />
