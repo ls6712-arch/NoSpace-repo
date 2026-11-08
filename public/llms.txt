@@ -34,3 +34,13 @@ Soosh is free to use and runs in the browser at https://www.onsoosh.com/.
 ## Links
 
 - [Soosh home](https://www.onsoosh.com/)
+
+## Public guides for hobby and activity discovery
+
+- [What is Soosh?](https://www.onsoosh.com/about/)
+- [Things to do when bored](https://www.onsoosh.com/activities/things-to-do-when-bored/)
+- [Hobby discovery](https://www.onsoosh.com/hobbies/)
+- [Activity planning](https://www.onsoosh.com/planner/)
+- [Managing your social life](https://www.onsoosh.com/social-life/)
+
+Soosh is also for exploring hobbies, planning free time and working on personal goals called Pursuits. Guides offer ideas, not verified event inventory, bookings, prices or availability. Public pages do not expose personal user information. These links are supplemental documentation and do not guarantee inclusion in AI answers.
