@@ -145,6 +145,20 @@ export interface Chain {
   mine: boolean;
 }
 
+/**
+ * A Pursuit title for the source chip: 24 characters at most, cut at a word boundary with "…", never
+ * mid-word. The RPC already cuts at 24, so a title of 24 characters may be a longer one cut short; it is
+ * treated as one. (A single word longer than the chip has to be cut where it is.)
+ */
+export function clipTitle(title: string, max = 24): string {
+  const t = title.trim().replace(/\s+/g, " ");
+  if (t.length < max) return t;
+  const room = t.slice(0, max - 1);
+  const cut = room.lastIndexOf(" ");
+  const base = (cut > 0 ? room.slice(0, cut) : room).replace(/[\s,;:.\-]+$/, "");
+  return `${base}…`;
+}
+
 /** Groups the RPC rows into chains, in chain_no and pos order, with the chips each shows. */
 export function chainsFromRows(rows: readonly PassedRow[], meId?: string): Chain[] {
   const byChain = new Map<number, PassedRow[]>();
@@ -157,7 +171,7 @@ export function chainsFromRows(rows: readonly PassedRow[], meId?: string): Chain
       const links = sorted.map((r) => ({ authorId: r.author_id, name: nameOf(r.author_first_name), pursuitId: r.pursuit_id, lastPostId: r.last_post_id }));
       const chips = sorted.map((r, i) => {
         const name = nameOf(r.author_first_name).slice(0, 60);
-        const title = (r.pursuit_title ?? "").trim().slice(0, 24).trim();
+        const title = clipTitle(r.pursuit_title ?? "");
         return i === 0 ? (title ? `${name}’s ${title}` : name) : name;
       });
       return [{ links, chips, lastPostId: links[links.length - 1].lastPostId, mine: !!meId && links.some((l) => l.authorId === meId) }];

@@ -1,4 +1,4 @@
-import { Scissors } from "lucide-react";
+import { Scissors, Ticket } from "lucide-react";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { PillButton } from "../ui/PillButton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -12,7 +12,7 @@ export const WALL_COPY = {
   stillMakingLine: "Half-done, messy, in progress.",
   madeItLine: "Finished things, with the Moments that got them here.",
   makeYourVersion: "Make your version",
-  yoursIsOn: "Yours is on Still making.",
+  youStarted: "You started yours.",
   passedAlong: "Passed along",
   passedAlongLine: "Who got whom into it here.",
   you: "You?",
@@ -75,9 +75,14 @@ export function WallCard({
           {title && <span className="line-clamp-2 break-words text-small font-semibold">{title}</span>}
           {card.caption && <span className="line-clamp-3 break-words text-small text-muted-foreground">{card.caption}</span>}
           {kind === "made" && card.finishedAt != null && (
-            <span className="flex items-center gap-1.5 text-caption font-semibold text-foreground">
-              {card.finisherStub && <span role="img" aria-label="Finisher Stub" className="inline-block size-2.5 rounded-full bg-[var(--success)]" />}
-              {`Finished ${formatDate(card.finishedAt)}`}
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-caption font-semibold text-foreground">
+              <span>{`Finished ${formatDate(card.finishedAt)}`}</span>
+              {card.finisherStub && (
+                <span className="inline-flex items-center gap-1 text-[var(--accent-text)]">
+                  <Ticket className="size-3.5" aria-hidden="true" />
+                  Finisher
+                </span>
+              )}
             </span>
           )}
         </span>
@@ -90,13 +95,17 @@ export function WallCard({
           </Avatar>
           <span className="truncate">{card.authorName}</span>
         </span>
-        {because && <p className="text-caption text-muted-foreground">{because}</p>}
-        {others && <p className="text-caption text-muted-foreground">{others}</p>}
-        <div className="mt-auto pt-1"><Reactions postId={card.postId} name={card.authorName} /></div>
+        {because && <p className="text-small text-[var(--accent-text)]">{because}</p>}
+        {others && <p className="text-small text-[var(--accent-text)]">{others}</p>}
+        {!card.mine && (
+          <div className="mt-auto pt-1">
+            <Reactions postId={card.postId} name={card.authorName} />
+          </div>
+        )}
       </div>
       {!card.mine &&
         (yoursStarted ? (
-          <p className="border-t border-dashed border-border px-3.5 py-3 text-caption text-muted-foreground">{WALL_COPY.yoursIsOn}</p>
+          <p className="border-t border-dashed border-border px-3.5 py-3 text-caption text-muted-foreground">{WALL_COPY.youStarted}</p>
         ) : (
           <div className="relative border-t border-dashed border-border" data-tear-off>
             <span aria-hidden="true" className="absolute -left-2 -top-2 size-4 rounded-full bg-[var(--wall-tint)]" />

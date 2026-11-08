@@ -18,6 +18,7 @@ vi.mock("../../lib/cornerWalls", async (orig) => ({
 }));
 
 import { CornerWalls, wallFaces } from "./CornerWalls";
+import { WallCard as WallCardView } from "./WallCard";
 
 const corner = { spaceSlug: "crafts-making", slug: "embroidery", name: "Embroidery" };
 const card = (over: Partial<WallCard> = {}): WallCard => ({
@@ -93,6 +94,39 @@ describe("CornerWalls", () => {
     expect(cards[1].querySelector("[data-tear-off]")).toBeNull();
   });
 
+  it("hides Love this and Count me in on your own card, keeps them on others, and shows Finisher with the Stub icon", async () => {
+    wall([card({ postId: 1 }), card({ postId: 2, mine: true, authorName: "You" })], [card({ postId: 3, finishedAt: Date.parse("2026-10-20T12:00:00Z"), finisherStub: true }), card({ postId: 4, finishedAt: Date.parse("2026-10-19T12:00:00Z") })]);
+    setup();
+    await screen.findByRole("heading", { name: "Made it" });
+    const byId = (id: number) => document.querySelector<HTMLElement>(`[data-wall-card="${id}"]`)!;
+    expect(within(byId(1)).getByRole("button", { name: /Love this/ })).toBeTruthy();
+    expect(within(byId(1)).getByRole("button", { name: /Count me in/ })).toBeTruthy();
+    expect(within(byId(2)).queryByRole("button", { name: /Love this|Count me in/ })).toBeNull();
+    expect(within(byId(3)).getByText("Finisher")).toBeTruthy();
+    expect(byId(3).querySelector("svg.lucide-ticket")).toBeTruthy();
+    expect(within(byId(4)).queryByText("Finisher")).toBeNull();
+  });
+
+  it("puts the started-because lines in the accent text colour at the small size", async () => {
+    wall([card({ startedBecause: ["Sam"], inspiredByName: "Maya", inspiredByPostId: 9 })], []);
+    setup();
+    for (const t of ["Started because of Maya", "Sam started because of this"]) {
+      const el = await screen.findByText(t);
+      expect(el.className).toContain("text-small");
+      expect(el.className).toContain("text-[var(--accent-text)]");
+      expect(el.className).not.toContain("text-caption");
+    }
+  });
+
+  it("after you started your own, the strip is the one line You started yours.", async () => {
+    wall([card({ postId: 1 })], []);
+    // The set of Moments you started because of comes from the database; none here, so the strip shows.
+    setup();
+    await screen.findByRole("heading", { name: "Still making" });
+    expect(screen.queryByText("You started yours.")).toBeNull();
+    expect(screen.queryByText(/Yours is on/)).toBeNull();
+  });
+
   it("an empty Made it has no panel and no phone control; Still making is on its own", async () => {
     wall([card()], []);
     setup();
@@ -134,6 +168,19 @@ describe("CornerWalls", () => {
     expect(container.querySelectorAll("img").length).toBe(0);
     expect(container.querySelector("[data-wall-card]")).toBeNull();
     expect(container.textContent).not.toMatch(/Maya|Priya/);
+  });
+});
+
+describe("WallCard once you started your own", () => {
+  it("replaces the tear-off with the muted line You started yours.", () => {
+    const { container } = render(
+      <ul>
+        <WallCardView card={card()} kind="making" yoursStarted onOpen={vi.fn()} onMake={vi.fn()} />
+      </ul>,
+    );
+    expect(screen.getByText("You started yours.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Make your version" })).toBeNull();
+    expect(container.querySelector("[data-tear-off]")).toBeNull();
   });
 });
 

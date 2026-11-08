@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cardsFromRows, chainsFromRows, seedFromCard, startedBecauseLine, startedBecauseOfLine, type PassedRow, type WallRow } from "./cornerWalls";
+import { cardsFromRows, chainsFromRows, clipTitle, seedFromCard, startedBecauseLine, startedBecauseOfLine, type PassedRow, type WallRow } from "./cornerWalls";
 
 const row = (over: Partial<WallRow> = {}): WallRow => ({
   wall: "making",
@@ -66,7 +66,7 @@ describe("chainsFromRows", () => {
   });
   it("builds the source chip with its title, then first names, and ends at the newest Moment", () => {
     const [c] = chainsFromRows([p(1, 2, "b", "Priya", null, 22), p(1, 1, "a", "Maya", "Embroider a jacket for the", 11)], "z");
-    expect(c.chips).toEqual(["Maya’s Embroider a jacket for t", "Priya"]);
+    expect(c.chips).toEqual(["Maya’s Embroider a jacket for…", "Priya"]);
     expect(c.lastPostId).toBe(22);
     expect(c.mine).toBe(false);
   });
@@ -83,5 +83,32 @@ describe("seedFromCard", () => {
     const seed = seedFromCard(card, { spaceSlug: "crafts-making", slug: "embroidery" });
     expect(seed).toMatchObject({ id: 7, hobbySlug: "crafts-making", subHobby: "embroidery", userId: "u1", creator: "Maya" });
     expect(seed.caption.split(".")[0]).toBe("First row done");
+  });
+});
+
+describe("clipTitle", () => {
+  it("leaves a short title alone", () => {
+    expect(clipTitle("Jacket")).toBe("Jacket");
+    expect(clipTitle("A title of 23 chars ok")).toBe("A title of 23 chars ok");
+  });
+  it("cuts a long title at a word boundary, adds …, and never goes past 24 characters", () => {
+    for (const t of ["Embroider a jacket for the whole winter", "Embroider a jacket for t", "Sourdough with a long rise time", "Learn to play the saxophone properly"]) {
+      const out = clipTitle(t);
+      expect(out.length).toBeLessThanOrEqual(24);
+      expect(out.endsWith("…")).toBe(true);
+      // Never mid-word: what is left is whole words from the start of the title.
+      const kept = out.slice(0, -1);
+      expect(t.startsWith(kept)).toBe(true);
+      expect(t[kept.length] === " " || t[kept.length] === undefined).toBe(true);
+    }
+    expect(clipTitle("Embroider a jacket for the whole winter")).toBe("Embroider a jacket for…");
+  });
+  it("drops punctuation left dangling before the …", () => {
+    expect(clipTitle("Jacket, scarf, hat and gloves, mittens")).toBe("Jacket, scarf, hat and…");
+  });
+  it("cuts a single very long word where it is, within the limit", () => {
+    const out = clipTitle("Supercalifragilisticexpialidocious");
+    expect(out.length).toBeLessThanOrEqual(24);
+    expect(out.endsWith("…")).toBe(true);
   });
 });

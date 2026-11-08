@@ -4,9 +4,6 @@ import { Check, Lock, Sparkle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
-import { PaperStamp, tilt } from "../components/corners/MomentStamp";
-import { formatDate } from "../lib/dates";
-import { momentAlt } from "../lib/momentCaption";
 import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 import { ErrorNotice } from "../components/StateViews";
@@ -15,8 +12,6 @@ import { ImageWithFallback } from "../components/ImageWithFallback";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
 import { PressLink } from "../components/common/PressLink";
-import { Reveal } from "../components/common/Reveal";
-import { MomentTile } from "../components/common/MomentTile";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { CornerWalls } from "../components/corners/CornerWalls";
@@ -35,7 +30,6 @@ import { cornerKey, homeCornersIn } from "../data/homeCorners";
 import { cornerGuide } from "../data/cornerGuides";
 import { cornerStyle } from "../lib/categoryStyle";
 import { cornerPhotoTransitionName } from "../components/discover/HeroCard";
-import { SnapCarousel } from "../components/ui/SnapCarousel";
 import { AvatarStack } from "../components/ui/AvatarStack";
 import { PillButton } from "../components/ui/PillButton";
 import { MakeItAPursuitSheet } from "../components/pursuit/MakeItAPursuitSheet";
@@ -263,17 +257,15 @@ function CornerBody({ corner }: { corner: CornerModel }) {
     };
   }, [corner, user?.id, restricted, liveAttempt]);
 
-  // People into this Corner: whoever shared a public Moment here most recently, newest first. No counts.
+  // The proof line under the hero: the three people who shared a public Moment here most recently. No counts.
   const ranked = useMemo(() => {
     const seen = new Set<string>();
-    const out: { id: string; latest?: Post }[] = [];
     for (const p of [...posts].sort((a, b) => b.createdAt - a.createdAt)) {
       if (!p.userId || seen.has(p.userId)) continue;
       seen.add(p.userId);
-      out.push({ id: p.userId, latest: p.type === "photo" ? p : posts.filter((q) => q.userId === p.userId && q.type === "photo").sort((a, b) => b.createdAt - a.createdAt)[0] });
-      if (out.length === 8) break;
+      if (seen.size === 3) break;
     }
-    return out;
+    return [...seen];
   }, [posts]);
 
   useEffect(() => {
@@ -282,7 +274,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
     supabase
       .from("profiles")
       .select("id, display_name, avatar_url, username")
-      .in("id", ranked.map((r) => r.id))
+      .in("id", ranked)
       .then(({ data }) => {
         if (!cancelled) setPeople(new Map((data ?? []).map((r) => [r.id as string, toPerson(r)])));
       });
@@ -316,16 +308,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
       .slice(0, 12);
   })();
 
-  // Your own Moments in this Corner (private ones too), newest first.
-  const mine = useMemo(
-    () =>
-      user && !restricted
-        ? myPosts.filter((p) => isInCorner(p, corner.spaceSlug, corner.slug)).sort((a, b) => b.createdAt - a.createdAt)
-        : [],
-    [myPosts, corner, user, restricted],
-  );
   // Who is into this Corner, from the people who shared a Moment here: a few faces and their names, never a count.
-  const proof = ranked.flatMap((r) => (people.get(r.id) ? [people.get(r.id)!] : [])).slice(0, 3);
+  const proof = ranked.flatMap((id) => (people.get(id) ? [people.get(id)!] : []));
   const proofLine =
     proof.length === 0
       ? ""
@@ -334,10 +318,6 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         : proof.length === 2 && ranked.length === 2
           ? `${proof[0].name.slice(0, 60)} and ${proof[1].name.slice(0, 60)} are into this`
           : `${proof[0].name.slice(0, 60)}, ${proof[1].name.slice(0, 60)} and others are into this`;
-  const showMoments = !restricted && posts.length > 0;
-  // Moments strip: square thumbnails of the Corner's public photo Moments. Hidden under 5 Moments.
-  const stripPosts = posts.filter((p) => p.type === "photo" && !!p.media).slice(0, 12);
-  const showStrip = !restricted && posts.length >= 5 && stripPosts.length >= 5;
   const isMember = (s: LiveSpace) => memberships.get(s.id)?.status === "active";
   const isPending = (s: LiveSpace) => memberships.get(s.id)?.status === "pending";
 

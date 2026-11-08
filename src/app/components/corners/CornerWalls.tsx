@@ -269,7 +269,7 @@ export function CornerWalls({
 
   const both = show.making && show.made;
   const renderCards = (kind: WallKind, wall: Wall) => (
-    <ul className={`grid gap-4 ${both ? "tab:grid-cols-2 desk:grid-cols-1" : "tab:grid-cols-2 desk:grid-cols-4"}`}>
+    <ul className={`grid gap-4 ${both ? "tab:grid-cols-2" : "tab:grid-cols-2 desk:grid-cols-4"}`}>
       {wall.cards.map((c) => (
         <WallCard key={`${kind}-${c.postId}`} card={c} kind={kind} yoursStarted={mineStarted.has(c.postId)} onOpen={() => onOpenMoment(c)} onMake={() => onMake(c)} />
       ))}
