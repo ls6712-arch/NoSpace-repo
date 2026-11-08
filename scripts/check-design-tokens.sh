@@ -185,6 +185,19 @@ while IFS= read -r hit; do
   report motion "inline duration; use var(--duration-fast|base) or the Tailwind duration tokens" "$file" "$n" "$text"
 done < <(mgrep --include='*.ts' --include='*.tsx' --include='*.css' -e '(^|[^A-Za-z0-9_.-])[0-9]*\.?[0-9]+m?s([^A-Za-z0-9_]|$)' | grep -E '(transition|animation|duration|delay)')
 
+# Springs, durations and curves written into components. Every animation takes
+# its value from src/app/lib/motionTokens.ts. Two places keep their own physics
+# on purpose: Stubby (a character) and the public landing page. `duration: 0`
+# (instant, for reduced motion) is allowed.
+while IFS= read -r hit; do
+  file="${hit%%:*}"; hit="${hit#*:}"; n="${hit%%:*}"; text="${hit#*:}"
+  case "$file" in
+    "$SRC/app/lib/motionTokens.ts" | "$SRC/app/components/stubby/Stubby.tsx" | "$SRC/app/landing/"*) continue ;;
+  esac
+  if is_ignored "$file" "$n" "$text"; then IGNORED=$((IGNORED + 1)); continue; fi
+  report motion "raw spring, duration or curve; use a value from lib/motionTokens.ts" "$file" "$n" "$text"
+done < <(mgrep --include='*.ts' --include='*.tsx' -e '(stiffness|damping|bounce|mass)[[:space:]]*:[[:space:]]*[0-9]' -e 'duration[[:space:]]*:[[:space:]]*([1-9]|0?\.[0-9])' -e 'ease[[:space:]]*:[[:space:]]*(\[[[:space:]]*[0-9]|"(ease|linear|circ|back|anticipate))')
+
 # ── the escape hatch itself ────────────────────────────────────────────────
 while IFS= read -r hit; do
   file="${hit%%:*}"; hit="${hit#*:}"; n="${hit%%:*}"; text="${hit#*:}"

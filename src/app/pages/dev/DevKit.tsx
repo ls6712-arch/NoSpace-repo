@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { notify } from "../../components/ui/toaster";
+import { announceChange } from "../../lib/undo";
 import { motion } from "motion/react";
 import { Flame, Plus, Minus } from "lucide-react";
 import { StubArt } from "../../components/stub/StubArt";
@@ -231,6 +233,17 @@ export function DevKit() {
           ))}
         </div>
         {stubReveal && <StubReveal face={stubReveal} onDone={() => setStubReveal(null)} onPin={async () => null} />}
+      </Section>
+
+      <Section title="Toasts">
+        <div className="flex flex-wrap gap-3">
+          <PillButton variant="outline" onClick={() => notify("Link copied")}>
+            Show a toast
+          </PillButton>
+          <PillButton variant="outline" onClick={() => announceChange("Plan cancelled", { undo: () => notify("Plan is back") })}>
+            Show an Undo toast
+          </PillButton>
+        </div>
       </Section>
 
       <Section title="Shared element">
