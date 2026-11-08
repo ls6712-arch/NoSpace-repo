@@ -8,6 +8,8 @@ import { PaperStamp, tilt } from "../components/corners/MomentStamp";
 import { formatDate } from "../lib/dates";
 import { momentAlt } from "../lib/momentCaption";
 import { Button } from "../components/ui/button";
+import { Skeleton } from "../components/ui/skeleton";
+import { ErrorNotice } from "../components/StateViews";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { HorizontalRow } from "../components/HorizontalRow";
@@ -108,6 +110,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   const navigate = useNavigate();
   const { publicFeed, myPosts } = useContent();
   const [live, setLive] = useState<CornerLive | null>(null);
+  const [liveFailed, setLiveFailed] = useState(false);
+  const [liveAttempt, setLiveAttempt] = useState(0);
   const [hosts, setHosts] = useState<Map<string, Person>>(new Map());
   const [memberships, setMemberships] = useState<Map<string, Membership>>(new Map());
   const [going, setGoing] = useState<Set<number>>(new Set());
@@ -161,6 +165,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   // Everything live about this Corner.
   useEffect(() => {
     let cancelled = false;
+    setLiveFailed(false);
     (async () => {
       const result = (await fetchCornersLive({ targets: [corner], full: !restricted, openOnly: restricted })).get(cornerKey(corner));
       if (cancelled || !result) return;
@@ -203,11 +208,14 @@ function CornerBody({ corner }: { corner: CornerModel }) {
         setGoing(new Set((rsvps.data ?? []).map((r) => r.event_id as number)));
         setStubSpaces(new Set((stubs.data ?? []).map((s) => s.space_id as string)));
       }
-    })();
+    })().catch(() => {
+      // The rest of the page is built in and still shows; only the live rows are missing.
+      if (!cancelled) setLiveFailed(true);
+    });
     return () => {
       cancelled = true;
     };
-  }, [corner, user?.id, restricted]);
+  }, [corner, user?.id, restricted, liveAttempt]);
 
   // People into this Corner: whoever shared a public Moment here most recently, newest first. No counts.
   const ranked = useMemo(() => {
@@ -470,6 +478,13 @@ function CornerBody({ corner }: { corner: CornerModel }) {
             </HorizontalRow>
           </section>
         )}
+
+        {!live && !liveFailed && (
+          <div className={SECTION_GAP} aria-busy="true" aria-hidden="true">
+            <Skeleton className="h-40 w-full rounded-card" />
+          </div>
+        )}
+        {liveFailed && <ErrorNotice className={SECTION_GAP} onRetry={() => setLiveAttempt((n) => n + 1)} />}
 
         {live && live.spaces.length > 0 && (
           <section id="spaces-section" className={`${SECTION_GAP} scroll-mt-24`} aria-labelledby="spaces-title">

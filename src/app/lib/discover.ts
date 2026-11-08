@@ -38,19 +38,24 @@ export function mapMomentRow(row: MomentRow): DiscoverMoment | null {
   return { postId, authorId, createdAt, cornerKey: text(row.corner_key) ?? "" };
 }
 
-export async function fetchDiscoverMoments(opts: { corner?: string | null; cursor?: string | null; limit?: number } = {}): Promise<DiscoverMoment[]> {
+/** Like fetchDiscoverMoments, but a failed load throws, so the feed can offer a retry instead of "nothing new". */
+export async function fetchDiscoverMomentsOrThrow(opts: { corner?: string | null; cursor?: string | null; limit?: number } = {}): Promise<DiscoverMoment[]> {
   if (!supabase) return [];
+  const { data, error } = await supabase.rpc("discover_moments", {
+    p_corner: opts.corner ?? null,
+    p_cursor: opts.cursor ?? null,
+    p_limit: opts.limit ?? 20,
+  });
+  if (error || !Array.isArray(data)) throw new Error("discover_moments failed");
+  return (data as MomentRow[]).flatMap((r) => {
+    const m = mapMomentRow(r);
+    return m ? [m] : [];
+  });
+}
+
+export async function fetchDiscoverMoments(opts: { corner?: string | null; cursor?: string | null; limit?: number } = {}): Promise<DiscoverMoment[]> {
   try {
-    const { data, error } = await supabase.rpc("discover_moments", {
-      p_corner: opts.corner ?? null,
-      p_cursor: opts.cursor ?? null,
-      p_limit: opts.limit ?? 20,
-    });
-    if (error || !Array.isArray(data)) return [];
-    return (data as MomentRow[]).flatMap((r) => {
-      const m = mapMomentRow(r);
-      return m ? [m] : [];
-    });
+    return await fetchDiscoverMomentsOrThrow(opts);
   } catch {
     return [];
   }

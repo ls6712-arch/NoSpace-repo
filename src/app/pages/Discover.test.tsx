@@ -52,7 +52,7 @@ vi.mock("../lib/discover", () => ({
   fetchDiscoverCorners: fetchers.corners,
   fetchDiscoverSpaces: fetchers.spaces,
   fetchPublicSpaces: fetchers.publicSpaces,
-  fetchDiscoverMoments: fetchers.moments,
+  fetchDiscoverMomentsOrThrow: fetchers.moments,
   fetchCornerAffinity: fetchers.affinity,
   fetchPassCornerMap: fetchers.passMap,
   logDiscoverEvent: fetchers.log,
@@ -246,6 +246,19 @@ describe("Discover fails one section at a time", () => {
     await settle();
     expect(screen.getByText("Nothing new nearby yet.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Log a Moment" }).getAttribute("href")).toBe("/create");
+  });
+
+  it("says it could not load, with Try again, when the feed fails, and retries", async () => {
+    fetchers.moments.mockRejectedValueOnce(new Error("down"));
+    show();
+    await settle();
+    expect(screen.queryByText("Nothing new nearby yet.")).toBeNull();
+    expect(screen.getByText("Couldn’t load this. Try again.")).toBeTruthy();
+    fetchers.moments.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await settle();
+    expect(fetchers.moments).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Nothing new nearby yet.")).toBeTruthy();
   });
 });
 
