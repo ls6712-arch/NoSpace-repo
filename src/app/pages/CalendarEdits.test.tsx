@@ -15,12 +15,10 @@ const extra = vi.hoisted(() => ({ value: { plans: [], stubs: [], failed: false }
 vi.mock("../lib/useCalendarData", () => ({ useCalendarData: () => extra.value }));
 
 const toasts = vi.hoisted(() => ({ calls: [] as { message: string; undo: () => void }[] }));
-vi.mock("sonner", () => ({
-  Toaster: () => null,
-  toast: Object.assign(
-    (message: string, opts?: { action?: { onClick: () => void } }) => void toasts.calls.push({ message, undo: () => opts?.action?.onClick() }),
-    { error: vi.fn() },
-  ),
+vi.mock("../lib/toasts", () => ({
+  // Errors were a separate call before; only confirmations are counted here.
+  showToast: (message: string, opts?: { tone?: string; action?: { onClick: () => void } }) =>
+    void (opts?.tone !== "error" && toasts.calls.push({ message, undo: () => opts?.action?.onClick() })),
 }));
 
 const remote = vi.hoisted(() => ({

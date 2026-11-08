@@ -1,4 +1,4 @@
-import { toast } from "sonner";
+import { showToast } from "./toasts";
 import { track } from "./analytics";
 
 /**
@@ -87,7 +87,7 @@ export function announceChange(message: string, handlers: { undo: () => void; co
     timer = setTimeout(() => send(false), UNDO_MS);
     if (handlers.persist) writeQueue([...readQueue(), { ...handlers.persist, key, dueAt: Date.now() + UNDO_MS }]);
   }
-  toast(message, {
+  showToast(message, {
     duration: UNDO_MS,
     action: {
       label: UNDO_LABEL,
