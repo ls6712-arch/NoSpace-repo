@@ -40,8 +40,7 @@
   padding: 0 16px;
   pointer-events: none;
   text-align: center;
-  /* design-token-ignore: the carousel's caption and counter motion, off with reduced motion */
-  animation: flex-carousel-reveal 900ms ease both;
+  animation: flex-carousel-reveal var(--duration-base) var(--ease-standard) both;
 }
 
 .flex-carousel__title {
@@ -53,8 +52,7 @@
   font-size: var(--text-body);
   font-weight: 600;
   line-height: 1.35;
-  /* design-token-ignore: the carousel's caption and counter motion, off with reduced motion */
-  animation: flex-carousel-title 520ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: flex-carousel-title var(--duration-base) var(--ease-standard);
 }
 
 .flex-carousel__subtitle {
@@ -70,33 +68,11 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
   opacity: 0.5;
-  /* design-token-ignore: the carousel's caption and counter motion, off with reduced motion */
-  transition: opacity 400ms ease;
+  transition: opacity var(--duration-base) var(--ease-standard);
 }
 
 .flex-carousel__count[data-hidden] {
   opacity: 0;
-}
-
-.flex-carousel__digits {
-  display: inline-flex;
-}
-
-.flex-carousel__digit {
-  display: inline-block;
-  height: 1em;
-  overflow: hidden;
-}
-
-.flex-carousel__reel {
-  display: flex;
-  flex-direction: column;
-  /* design-token-ignore: the carousel's caption and counter motion, off with reduced motion */
-  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.flex-carousel__reel span {
-  height: 1em;
 }
 
 .flex-carousel__slash {
@@ -139,9 +115,5 @@
   .flex-carousel__caption,
   .flex-carousel__title {
     animation: none;
-  }
-
-  .flex-carousel__reel {
-    transition: none;
   }
 }

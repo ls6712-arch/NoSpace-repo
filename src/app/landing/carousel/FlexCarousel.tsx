@@ -1,11 +1,14 @@
 /**
  * FlexCarousel, from React Bits (https://reactbits.dev, MIT). Ported to TypeScript
- * with the sample photos removed: callers always pass their own items. The WebGL
+ * with the sample photos removed: callers always pass their own items. The counter
+ * is the app's RollNumber and the caption uses the motion tokens, so it moves like
+ * the rest of Soosh; the canvas physics (scroll springs, bend, intro) are its own. The WebGL
  * work happens in one effect; React only renders the caption and the live region.
  */
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { Renderer, Program, Mesh, Triangle, Plane, Texture, RenderTarget } from 'ogl';
 
+import { RollNumber } from '../../components/ui/RollNumber';
 import './FlexCarousel.css';
 
 export interface FlexCarouselItem {
@@ -299,23 +302,6 @@ void main() {
   fragColor = color * uSceneAlpha;
 }
 `;
-
-const Digits = ({ value }: { value: number }) => (
-  <span className="flex-carousel__digits">
-    {String(value)
-      .padStart(2, '0')
-      .split('')
-      .map((digit, index) => (
-        <span key={index} className="flex-carousel__digit">
-          <span className="flex-carousel__reel" style={{ transform: `translateY(${-Number(digit) * 10}%)` }}>
-            {'0123456789'.split('').map(n => (
-              <span key={n}>{n}</span>
-            ))}
-          </span>
-        </span>
-      ))}
-  </span>
-);
 
 const FlexCarousel = ({
   items,
@@ -1326,9 +1312,9 @@ const FlexCarousel = ({
             {current.subtitle && <span className="flex-carousel__subtitle">{current.subtitle}</span>}
           </span>
           <span className="flex-carousel__count" data-hidden={focusOpen ? '' : undefined}>
-            <Digits value={active + 1} />
+            <RollNumber value={active + 1} />
             <span className="flex-carousel__slash">/</span>
-            <span>{String(list.length).padStart(2, '0')}</span>
+            <span>{list.length}</span>
           </span>
         </div>
       )}
