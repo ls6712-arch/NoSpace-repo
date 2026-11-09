@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ImagePlus, MoreHorizontal, X } from "lucide-react";
+import { AnimatePresence, motion, useScroll, useTransform } from "motion/react";
+import { ArrowDown, ImagePlus, MoreHorizontal, X } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCategories } from "../../context/CategoriesContext";
 import { useSocial } from "../../context/SocialContext";
@@ -17,6 +18,7 @@ import { isGif, mediaKindOf } from "../../lib/uploadMedia";
 import { ERROR_LINE, UPLOAD_COPY } from "../../lib/stateCopy";
 import { formatDate, formatTime } from "../../lib/dates";
 import { useMediaQuery, useWide } from "../../lib/useMediaQuery";
+import { PAGE_FROM, PAGE_TO, exit, page, pop } from "../../lib/motionTokens";
 import {
   CHAT_COPY,
   MAX_BODY,
@@ -39,13 +41,14 @@ interface Pending {
   preview: string;
 }
 
-/** The header line over the chat: who else is here now. Nothing when you are alone. Never a number. */
+/** The line in the card header: who else is here now. Nothing when you are alone. Never a number. */
 export function PresenceLine({ names }: { names: readonly string[] }) {
   const line = presenceLine(names);
   if (!line) return null;
   return (
-    <p role="status" className="truncate text-small text-muted-foreground">
-      {line}
+    <p role="status" className="flex min-w-0 items-center gap-1.5 text-small text-[color-mix(in_srgb,var(--success)_45%,var(--foreground))]">
+      <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-success" />
+      <span className="truncate">{line}</span>
     </p>
   );
 }
@@ -54,14 +57,21 @@ export function PresenceLine({ names }: { names: readonly string[] }) {
 export function TypingDots({ names }: { names: readonly string[] }) {
   if (names.length === 0) return null;
   return (
-    <p data-typing className="flex items-center gap-1.5 px-1 text-caption text-muted-foreground">
+    <motion.p
+      data-typing
+      initial={PAGE_FROM}
+      animate={PAGE_TO}
+      exit={{ opacity: 0 }}
+      transition={page}
+      className="flex items-center gap-1.5 px-1 text-caption text-muted-foreground"
+    >
       <span>{names.join(", ")}</span>
       <span aria-hidden="true" className="flex gap-0.5">
         {[0, 1, 2].map((i) => (
           <span key={i} className="size-1 rounded-full bg-current motion-safe:animate-pulse" style={{ animationDelay: `${i * 150}ms` }} />
         ))}
       </span>
-    </p>
+    </motion.p>
   );
 }
 
@@ -88,25 +98,44 @@ export function Composer({
   const fileRef = useRef<HTMLInputElement>(null);
   const canSend = !sending && (draft.trim().length > 0 || pending.length > 0);
   return (
-    <div className="border-t border-[var(--hairline)] p-3">
-      {pending.length > 0 && (
-        <ul className="mb-2 flex gap-2" aria-label="Photos to send">
-          {pending.map((p) => (
-            <li key={p.id} className="relative overflow-hidden rounded-card border border-border">
-              <ImageWithFallback src={p.preview} alt="" className="size-16" />
-              <button
-                type="button"
-                disabled={sending}
-                onClick={() => onRemove(p.id)}
-                aria-label="Remove attachment"
-                className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media disabled:opacity-50"
-              >
-                <X className="size-3" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="border-t border-[var(--hairline)] p-3 tab:px-5">
+      <AnimatePresence initial={false}>
+        {pending.length > 0 && (
+          <motion.ul
+            key="previews"
+            aria-label="Photos to send"
+            className="mb-2 flex gap-2 overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={exit}
+          >
+            <AnimatePresence initial={false}>
+              {pending.map((p) => (
+                <motion.li
+                  key={p.id}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={pop}
+                  className="relative overflow-hidden rounded-card border border-border"
+                >
+                  <ImageWithFallback src={p.preview} alt="" className="size-16" />
+                  <button
+                    type="button"
+                    disabled={sending}
+                    onClick={() => onRemove(p.id)}
+                    aria-label="Remove attachment"
+                    className="absolute right-1 top-1 flex size-5 items-center justify-center rounded-control bg-scrim-solid/70 text-on-media disabled:opacity-50"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </motion.ul>
+        )}
+      </AnimatePresence>
       {error && (
         <p role="alert" className="mb-2 text-caption text-[var(--accent-text)]">
           {error}
@@ -149,9 +178,9 @@ export function Composer({
               if (canSend) onSend();
             }
           }}
-          className="max-h-32 min-h-11 flex-1"
+          className="max-h-32 min-h-11 flex-1 bg-card"
         />
-        <PillButton disabled={!canSend} onClick={onSend} className="shrink-0">
+        <PillButton variant="light" disabled={!canSend} onClick={onSend} className="shrink-0">
           Send
         </PillButton>
       </div>
@@ -168,8 +197,13 @@ function MessageMenu({ name, canReport, canDelete, onReport, onDelete }: { name:
     const away = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", away);
-    return () => document.removeEventListener("mousedown", away);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", away);
+      document.removeEventListener("keydown", esc);
+    };
   }, [open]);
   if (!canReport && !canDelete) return null;
   return (
@@ -183,34 +217,43 @@ function MessageMenu({ name, canReport, canDelete, onReport, onDelete }: { name:
       >
         <MoreHorizontal className="size-4" />
       </button>
-      {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-card border border-border bg-popover shadow-overlay">
-          {canReport && (
-            <button
-              type="button"
-              className="block w-full px-3.5 py-2.5 text-left text-small transition-colors hover:bg-surface-muted"
-              onClick={() => {
-                setOpen(false);
-                onReport();
-              }}
-            >
-              Report
-            </button>
-          )}
-          {canDelete && (
-            <button
-              type="button"
-              className="block w-full px-3.5 py-2.5 text-left text-small text-[var(--accent-text)] transition-colors hover:bg-surface-muted"
-              onClick={() => {
-                setOpen(false);
-                onDelete();
-              }}
-            >
-              Delete
-            </button>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={pop}
+            style={{ transformOrigin: "top right" }}
+            className="absolute right-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-card border border-border bg-popover shadow-overlay"
+          >
+            {canReport && (
+              <button
+                type="button"
+                className="block w-full px-3.5 py-2.5 text-left text-small transition-colors hover:bg-surface-muted"
+                onClick={() => {
+                  setOpen(false);
+                  onReport();
+                }}
+              >
+                Report
+              </button>
+            )}
+            {canDelete && (
+              <button
+                type="button"
+                className="block w-full px-3.5 py-2.5 text-left text-small text-[var(--accent-text)] transition-colors hover:bg-surface-muted"
+                onClick={() => {
+                  setOpen(false);
+                  onDelete();
+                }}
+              >
+                Delete
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -233,11 +276,20 @@ function Photos({ paths, urls, mine }: { paths: string[]; urls: Map<string, stri
 }
 
 /**
- * Corner chat: the Chat tab of a Corner page, for approved members. The caller never renders it for a
- * visitor. Messages are grouped by day and then by sender, the composer stays at the bottom of the panel,
- * and the list loads the last 50 messages, then older ones when you scroll to the top. Links are plain text.
+ * Corner chat, the card from the Embroidery design: a "Corner chat" title, who is here now in the corner,
+ * messages as an avatar and a soft bubble ("Lena · Does anyone..."), and a composer with a black Send.
+ * For approved members only: the caller never renders it for a visitor. Messages are grouped by day and then
+ * by sender, the last 50 load first and older ones when you scroll to the top. Links are plain text.
+ *
+ * Motion (tokens only): a new message rises in, a removed one fades out, photo previews pop, the presence
+ * line and the typing names fade, and the header hairline fades in as you scroll. Scroll: day headings stick,
+ * the edges fade where there is more, a "latest" button appears when you are scrolled up (a dot when something
+ * new came in, never a number), and the view follows new messages only while you are at the bottom.
+ *
+ * `compact` is the card on the Walls tab (fixed height, beside Passed along); without it the card is the
+ * Chat tab (at most 720px on a desktop, the rest of the screen on a phone).
  */
-export function CornerChat({ corner }: { corner: { spaceSlug: string; slug: string; name: string } }) {
+export function CornerChat({ corner, compact = false }: { corner: { spaceSlug: string; slug: string; name: string }; compact?: boolean }) {
   const { user, profile } = useAuth();
   const { isAdmin } = useCategories();
   const social = useSocial();
@@ -249,21 +301,30 @@ export function CornerChat({ corner }: { corner: { spaceSlug: string; slug: stri
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [reporting, setReporting] = useState<ChatMessage | null>(null);
+  const [atTop, setAtTop] = useState(true);
+  const [atBottom, setAtBottom] = useState(true);
+  const [unseen, setUnseen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const prevHeight = useRef(0);
+  const newestId = useRef<number | null>(null);
+  const positioned = useRef(false);
+  const loadedNewest = useRef(Number.POSITIVE_INFINITY);
   const wide = useWide();
   const [phoneHeight, setPhoneHeight] = useState<number | null>(null);
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const { scrollY } = useScroll({ container: scrollRef });
+  const hairline = useTransform(scrollY, [0, 24], [0, 1]);
 
   const groups = groupMessages(chat.messages);
   const empty = chat.status === "ready" && groups.length === 0;
+  const line = presenceLine(chat.here.slice(0, 4));
 
-  // Phone: the chat fills the screen from where its panel starts down to the tab bar, and follows the visual
-  // viewport, so the composer stays in view when the keyboard opens.
+  // The Chat tab on a phone fills the screen from its top down to the tab bar, and follows the visual
+  // viewport, so the composer stays in view when the keyboard opens. The Walls card keeps its own height.
   useEffect(() => {
-    if (wide) {
+    if (compact || wide) {
       setPhoneHeight(null);
       return;
     }
@@ -287,26 +348,55 @@ export function CornerChat({ corner }: { corner: { spaceSlug: string; slug: stri
       window.removeEventListener("resize", measure);
       window.visualViewport?.removeEventListener("resize", measure);
     };
-  }, [wide, reducedMotion]);
+  }, [compact, wide, reducedMotion]);
 
-  // Stay at the bottom for new messages when you were already there; keep your place when older ones arrive.
+  // What counts as new: anything newer than the newest message that was there when the first page loaded.
+  useEffect(() => {
+    if (chat.status === "ready" && loadedNewest.current === Number.POSITIVE_INFINITY) {
+      loadedNewest.current = chat.messages.reduce((n, m) => Math.max(n, m.createdAt), 0);
+    }
+  }, [chat.status, chat.messages]);
+
+  // Scrolling: start at the bottom; follow new messages only while you are there; hold your place when an
+  // older page lands above; a dot on the latest button when something arrives while you read earlier ones.
   useLayoutEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
-    if (prevHeight.current && el.scrollHeight > prevHeight.current && !stickToBottom.current) {
-      // Older page added above: hold the view where it was.
-      if (el.scrollTop < 120) el.scrollTop += el.scrollHeight - prevHeight.current;
+    if (!el || chat.status !== "ready") return;
+    const newest = chat.messages.length ? chat.messages[chat.messages.length - 1] : null;
+    const arrived = newest != null && newestId.current != null && newest.id !== newestId.current;
+    if (!positioned.current) {
+      positioned.current = true;
+      el.scrollTop = el.scrollHeight;
+    } else if (arrived && stickToBottom.current) {
+      el.scrollTo({ top: el.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
+    } else if (arrived && newest && newest.userId !== myId) {
+      setUnseen(true);
+    } else if (!arrived && prevHeight.current && el.scrollHeight > prevHeight.current && el.scrollTop < 120) {
+      el.scrollTop += el.scrollHeight - prevHeight.current;
     } else if (stickToBottom.current) {
       el.scrollTop = el.scrollHeight;
     }
+    newestId.current = newest?.id ?? null;
     prevHeight.current = el.scrollHeight;
-  }, [chat.messages, chat.urls, chat.typing.length, pending.length, phoneHeight]);
+  }, [chat.status, chat.messages, chat.urls, chat.typing.length, pending.length, phoneHeight, myId, reducedMotion]);
 
   const onScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
-    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    stickToBottom.current = bottom;
+    setAtBottom(bottom);
+    setAtTop(el.scrollTop < 8);
+    if (bottom) setUnseen(false);
     if (el.scrollTop < 80 && chat.more && !chat.loadingOlder) void chat.loadOlder();
+  };
+
+  const jumpToLatest = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    stickToBottom.current = true;
+    setUnseen(false);
+    el.scrollTo({ top: el.scrollHeight, behavior: reducedMotion ? "auto" : "smooth" });
   };
 
   useEffect(
@@ -402,75 +492,134 @@ export function CornerChat({ corner }: { corner: { spaceSlug: string; slug: stri
   };
 
   const nameOf = (a: Author | undefined) => a?.name || "";
+  const edgeFade = `linear-gradient(to bottom, ${atTop ? "currentColor" : "transparent"} 0, currentColor 20px, currentColor calc(100% - 20px), ${atBottom ? "currentColor" : "transparent"} 100%)`;
 
   return (
     <div
       ref={panelRef}
       style={phoneHeight != null ? { height: phoneHeight } : undefined}
-      className="flex min-h-0 scroll-mt-16 flex-col overflow-hidden rounded-card border border-border bg-card tab:h-[min(720px,calc(100dvh-12rem))]"
+      className={`flex min-h-0 scroll-mt-16 flex-col overflow-hidden rounded-card border border-border bg-card ${
+        compact ? "h-[26rem]" : "tab:h-[min(720px,calc(100dvh-12rem))]"
+      }`}
     >
-      {chat.here.length > 0 && (
-        <div className="border-b border-[var(--hairline)] px-4 py-2.5">
-          <PresenceLine names={chat.here.slice(0, 4)} />
-        </div>
-      )}
+      <div className="relative flex min-h-12 flex-col items-start gap-0.5 px-4 pb-2.5 pt-4 tab:flex-row tab:items-center tab:justify-between tab:gap-3 tab:px-5">
+        <h3 className="whitespace-nowrap text-title">Corner chat</h3>
+        <AnimatePresence mode="wait" initial={false}>
+          {line && (
+            <motion.div key={line} initial={{ opacity: 0, y: 4 }} animate={PAGE_TO} exit={{ opacity: 0 }} transition={page} className="max-w-full min-w-0">
+              <PresenceLine names={chat.here.slice(0, 4)} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.span aria-hidden="true" style={{ opacity: hairline }} className="absolute inset-x-0 bottom-0 h-px bg-[var(--hairline)]" />
+      </div>
 
-      <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        {chat.loadingOlder && <Skeleton className="mx-auto h-4 w-24" />}
-        {chat.status === "loading" && (
-          <div className="space-y-3">
-            {["w-40", "w-56", "w-32"].map((w, i) => (
-              <Skeleton key={i} className={`h-9 ${w} rounded-card ${i === 1 ? "ml-auto" : ""}`} />
-            ))}
-          </div>
-        )}
-        {chat.status === "failed" && <ErrorNotice onRetry={chat.retry} />}
-        {empty && <p className="py-10 text-center text-body text-muted-foreground">{CHAT_COPY.empty}</p>}
+      <div className="relative min-h-0 flex-1">
+        <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          style={{ maskImage: edgeFade, WebkitMaskImage: edgeFade }}
+          className="h-full space-y-4 overflow-y-auto overscroll-contain px-4 pb-4 pt-2 tab:px-5"
+        >
+          {chat.loadingOlder && <Skeleton className="mx-auto h-4 w-24" />}
+          {chat.status === "loading" && (
+            <div className="space-y-3">
+              {["w-40", "w-56", "w-32"].map((w, i) => (
+                <Skeleton key={i} className={`h-9 ${w} rounded-card ${i === 1 ? "ml-auto" : ""}`} />
+              ))}
+            </div>
+          )}
+          {chat.status === "failed" && <ErrorNotice onRetry={chat.retry} />}
+          {empty && (
+            <motion.p initial={PAGE_FROM} animate={PAGE_TO} transition={page} className="py-10 text-center text-body text-muted-foreground">
+              {CHAT_COPY.empty}
+            </motion.p>
+          )}
 
-        {groups.map((day) => (
-          <section key={day.day} aria-label={formatDate(day.at)} className="space-y-3">
-            <h3 className="text-center text-caption text-muted-foreground">{formatDate(day.at)}</h3>
-            {day.runs.map((run) => {
-              const mine = run.userId === myId;
-              const author = chat.authors.get(run.userId);
-              const name = nameOf(author);
-              return (
-                <div key={run.messages[0].id} className={`flex gap-2.5 ${mine ? "flex-row-reverse" : ""}`}>
-                  {!mine && (
-                    <Avatar className="size-8 shrink-0 self-end">
-                      {author?.avatarUrl && <AvatarImage src={author.avatarUrl} alt="" />}
-                      <AvatarFallback className="text-caption">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className={`flex min-w-0 max-w-[78%] flex-col gap-1 ${mine ? "items-end" : "items-start"}`}>
-                    {!mine && name && <span className="px-1 text-caption text-muted-foreground">{name.split(/\s+/)[0]}</span>}
-                    {run.messages.map((m, i) => (
-                      <div key={m.id} className={`group flex items-end gap-1 ${mine ? "flex-row-reverse" : ""}`}>
-                        <div className={`flex min-w-0 flex-col gap-1.5 ${mine ? "items-end" : "items-start"}`}>
-                          <Photos paths={m.mediaPaths} urls={chat.urls} mine={mine} />
-                          {m.body && (
-                            <p className={`whitespace-pre-wrap break-words rounded-card px-3.5 py-2 text-small ${mine ? "bg-foreground text-background" : "bg-surface-muted"}`}>
-                              {m.body}
-                            </p>
-                          )}
-                          {i === run.messages.length - 1 && <span className="px-1 text-caption text-muted-foreground">{formatTime(m.createdAt)}</span>}
+          {chat.status === "ready" && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={page} className="space-y-4">
+              {groups.map((day) => (
+                <section key={day.day} aria-label={formatDate(day.at)} className="space-y-3">
+                  <h4 className="sticky top-0 z-10 mx-auto w-fit rounded-full border border-[var(--hairline)] bg-card px-3 py-0.5 text-caption text-muted-foreground">
+                    {formatDate(day.at)}
+                  </h4>
+                  {day.runs.map((run) => {
+                    const mine = run.userId === myId;
+                    const author = chat.authors.get(run.userId);
+                    const name = nameOf(author);
+                    const first = name.split(/\s+/)[0];
+                    return (
+                      <div key={run.messages[0].id} className={`flex gap-2.5 ${mine ? "flex-row-reverse" : ""}`}>
+                        {!mine && (
+                          <Avatar className="size-8 shrink-0 self-end">
+                            {author?.avatarUrl && <AvatarImage src={author.avatarUrl} alt="" />}
+                            <AvatarFallback className="text-caption">{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        )}
+                        <div className={`flex min-w-0 max-w-[82%] flex-col gap-1 ${mine ? "items-end" : "items-start"}`}>
+                          <AnimatePresence initial={false}>
+                            {run.messages.map((m, i) => {
+                              const fresh = m.createdAt > loadedNewest.current;
+                              const nameInBubble = !mine && i === 0 && !!first && !!m.body;
+                              return (
+                                <motion.div
+                                  key={m.id}
+                                  initial={fresh ? { opacity: 0, y: 10 } : false}
+                                  animate={PAGE_TO}
+                                  exit={{ opacity: 0, scale: 0.96 }}
+                                  transition={page}
+                                  className={`group flex items-end gap-1 ${mine ? "flex-row-reverse" : ""}`}
+                                >
+                                  <div className={`flex min-w-0 flex-col gap-1.5 ${mine ? "items-end" : "items-start"}`}>
+                                    {!mine && i === 0 && !!first && !m.body && <span className="px-1 text-caption text-muted-foreground">{first}</span>}
+                                    <Photos paths={m.mediaPaths} urls={chat.urls} mine={mine} />
+                                    {m.body && (
+                                      <p className={`whitespace-pre-wrap break-words rounded-card px-3.5 py-2 text-small ${mine ? "bg-foreground text-background" : "bg-surface-muted"}`}>
+                                        {nameInBubble && <span className="font-semibold">{first} · </span>}
+                                        {m.body}
+                                      </p>
+                                    )}
+                                    {i === run.messages.length - 1 && <span className="px-1 text-caption text-muted-foreground">{formatTime(m.createdAt)}</span>}
+                                  </div>
+                                  <MessageMenu
+                                    name={name || "this person"}
+                                    canReport={!mine}
+                                    canDelete={mine || isAdmin}
+                                    onReport={() => setReporting(m)}
+                                    onDelete={() => void remove(m)}
+                                  />
+                                </motion.div>
+                              );
+                            })}
+                          </AnimatePresence>
                         </div>
-                        <MessageMenu
-                          name={name || "this person"}
-                          canReport={!mine}
-                          canDelete={mine || isAdmin}
-                          onReport={() => setReporting(m)}
-                          onDelete={() => void remove(m)}
-                        />
                       </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </section>
-        ))}
-        <TypingDots names={chat.typing} />
+                    );
+                  })}
+                </section>
+              ))}
+            </motion.div>
+          )}
+          <AnimatePresence initial={false}>{chat.typing.length > 0 && <TypingDots key="typing" names={chat.typing} />}</AnimatePresence>
+        </div>
+
+        <AnimatePresence>
+          {!atBottom && chat.status === "ready" && (
+            <motion.button
+              type="button"
+              onClick={jumpToLatest}
+              aria-label="Latest"
+              initial={{ opacity: 0, y: 8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.9 }}
+              transition={pop}
+              className="absolute bottom-3 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-overlay"
+            >
+              <ArrowDown className="size-4" />
+              {unseen && <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-[var(--accent)]" />}
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
       <Composer

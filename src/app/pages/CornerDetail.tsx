@@ -460,6 +460,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
               onMakeFromChain={(c) => void makeFromChain(c)}
               onLogMoment={() => goTo(`/create?${cornerParams}`)}
               onDoWithPeople={doWithPeople}
+              chat={restricted ? undefined : <CornerChat corner={corner} compact />}
             />
           </div>
         )}
