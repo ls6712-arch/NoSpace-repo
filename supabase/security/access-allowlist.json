@@ -119,7 +119,7 @@
     "thoughts"
   ],
   "invoker_exempt_views": [],
-  "buckets": ["message-media", "moment-media", "post-media"],
+  "buckets": ["corner-chat", "message-media", "moment-media", "post-media"],
   "edgeFunctions": {
     "calendar-feed": {
       "auth": "token",

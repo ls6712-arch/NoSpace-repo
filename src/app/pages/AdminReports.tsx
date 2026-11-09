@@ -30,7 +30,7 @@ interface ReportRow {
   reporterName: string;
   targetUserId: string;
   targetName: string;
-  targetKind: "profile" | "message" | "moment" | "thought";
+  targetKind: "profile" | "message" | "moment" | "thought" | "corner_message";
   targetId: number | string | null;
   reason: string;
   note: string | null;
@@ -52,6 +52,8 @@ function targetLabel(r: ReportRow) {
       return "A Thought";
     case "message":
       return "A message";
+    case "corner_message":
+      return "A Corner chat message";
   }
 }
 
