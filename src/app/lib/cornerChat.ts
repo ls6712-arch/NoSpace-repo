@@ -249,3 +249,19 @@ export async function fetchAuthors(ids: string[]): Promise<Map<string, Author>> 
   }
   return out;
 }
+
+/** What an admin sees beside a reported Corner chat message: the live message, or the copy kept 30 days after its removal. */
+export interface AdminChatMessage {
+  body: string;
+  mediaPaths: string[];
+  removed: boolean;
+}
+
+/** Admins only (public.admin_corner_message). Null once a removed message's copy is past 30 days, or for anyone else. */
+export async function fetchAdminChatMessage(id: number): Promise<AdminChatMessage | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase.rpc("admin_corner_message", { p_id: id });
+  if (error) return null;
+  const row = ((data ?? []) as { body: string; media_paths: string[] | null; removed: boolean }[])[0];
+  return row ? { body: row.body, mediaPaths: row.media_paths ?? [], removed: row.removed } : null;
+}

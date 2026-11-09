@@ -121,6 +121,10 @@
   "invoker_exempt_views": [],
   "buckets": ["corner-chat", "message-media", "moment-media", "post-media"],
   "edgeFunctions": {
+    "purge-corner-chat": {
+      "auth": "token",
+      "why": "Called by pg_cron once a day with no input and no sign-in. It only removes audit copies of removed Corner chat messages that are already past 30 days, with their photos, so an early or repeated call does nothing."
+    },
     "calendar-feed": {
       "auth": "token",
       "why": "A calendar app can't send a JWT: a 43-character feed token is the key, and only its owner (a member or a Stubby account, never a guest) can make one through set_calendar_feed_token."

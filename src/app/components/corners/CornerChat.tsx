@@ -210,7 +210,7 @@ function MessageMenu({ name, canReport, canDelete, onReport, onDelete }: { name:
     <div className="relative" ref={ref}>
       <button
         type="button"
-        aria-label={`More about ${name}`}
+        aria-label={name ? `More about ${name}` : "More"}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="flex size-8 items-center justify-center rounded-control text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 max-tab:opacity-100"
@@ -487,8 +487,8 @@ export function CornerChat({ corner, compact = false }: { corner: { spaceSlug: s
       setError(removeError);
       return;
     }
+    // The photos stay in storage: the database keeps a copy of the message for 30 days, and its photos with it.
     chat.markRemoved(m.id);
-    void deleteChatPhotos(m.userId === myId ? m.mediaPaths : []);
   };
 
   const nameOf = (a: Author | undefined) => a?.name || "";
@@ -582,7 +582,7 @@ export function CornerChat({ corner, compact = false }: { corner: { spaceSlug: s
                                     {i === run.messages.length - 1 && <span className="px-1 text-caption text-muted-foreground">{formatTime(m.createdAt)}</span>}
                                   </div>
                                   <MessageMenu
-                                    name={name || "this person"}
+                                    name={name}
                                     canReport={!mine}
                                     canDelete={mine || isAdmin}
                                     onReport={() => setReporting(m)}
