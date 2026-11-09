@@ -81,10 +81,10 @@ function Panel({ kind, wall, tint, hidden, onMore, children }: { kind: WallKind;
 }
 
 /** "Passed along": up to 3 chains as chips with arrows, ending in a dashed You? that opens Make your version. */
-export function PassedAlong({ chains, onYou }: { chains: Chain[]; onYou: (chain: Chain) => void }) {
+export function PassedAlong({ chains, onYou, card = false }: { chains: Chain[]; onYou: (chain: Chain) => void; card?: boolean }) {
   if (chains.length === 0) return null;
   return (
-    <section className={SECTION_GAP} aria-labelledby="passed-title">
+    <section className={card ? "rounded-card border border-border bg-card p-4 tab:p-5" : SECTION_GAP} aria-labelledby="passed-title">
       <h3 id="passed-title" className="text-title">
         {WALL_COPY.passedAlong}
       </h3>
@@ -133,8 +133,11 @@ export function CornerWalls({
   onMakeFromChain,
   onLogMoment,
   onDoWithPeople,
+  chat,
 }: {
   corner: { spaceSlug: string; slug: string; name: string };
+  /** The Corner chat card, for approved members: it sits beside Passed along (full width when there is none). */
+  chat?: React.ReactNode;
   restricted: boolean;
   onOpenMoment: (card: Card) => void;
   onMake: (card: Card) => void;
@@ -263,11 +266,18 @@ export function CornerWalls({
             Do this with people
           </button>
         </div>
+        {chat && <div className={SECTION_GAP}>{chat}</div>}
       </div>
     );
   }
 
   const both = show.making && show.made;
+  const bottomRow = (
+    <div className={`${SECTION_GAP} grid items-start gap-6 ${chat && chains.length > 0 ? "desk:grid-cols-3" : ""}`}>
+      {chat && <div className={chains.length > 0 ? "desk:col-span-2" : undefined}>{chat}</div>}
+      <PassedAlong chains={chains} onYou={onMakeFromChain} card={!!chat} />
+    </div>
+  );
   const renderCards = (kind: WallKind, wall: Wall) => (
     <ul className={`grid gap-4 ${both ? "tab:grid-cols-2" : "tab:grid-cols-2 desk:grid-cols-4"}`}>
       {wall.cards.map((c) => (
@@ -302,7 +312,7 @@ export function CornerWalls({
           </Panel>
         )}
       </div>
-      <PassedAlong chains={chains} onYou={onMakeFromChain} />
+      {chat || chains.length > 0 ? (chat ? bottomRow : <PassedAlong chains={chains} onYou={onMakeFromChain} />) : null}
     </div>
   );
 }
