@@ -41,6 +41,10 @@ vi.mock("../lib/onboardingRemote", async (orig) => ({ ...(await orig<typeof impo
 vi.mock("../lib/tasteRemote", async (orig) => ({ ...(await orig<typeof import("../lib/tasteRemote")>()), fetchTaste: async () => ({ picks: ["crafts/pottery"], windows: [], budget: null }) }));
 
 import { Calendar } from "./Calendar";
+import { GRID_START_HOUR, HOUR_PX } from "../components/calendar/TimeGrid";
+
+/** How far down the day column an hour sits, in px (the grid starts at GRID_START_HOUR). */
+const rowAt = (hour: number) => (hour - GRID_START_HOUR) * HOUR_PX;
 
 const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
 const NOW = ny(10, 30, 12);
@@ -171,8 +175,7 @@ describe("empty hours", () => {
 
   it("opens the time sheet for the hour tapped, with the three choices", async () => {
     await show("/calendar?view=week");
-    // 7 AM at the top, 48px an hour: 288px down is 1 PM.
-    fireEvent.click(column(), { clientY: 288 });
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     expect(screen.getByRole("dialog", { name: "Friday, 1 PM" })).toBeTruthy();
     expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Make a plan" })).toBeTruthy();
@@ -182,7 +185,7 @@ describe("empty hours", () => {
 
   it("opens the plan form with the time filled in", async () => {
     await show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Make a plan" }));
     await flush();
@@ -195,7 +198,7 @@ describe("empty hours", () => {
 
   it("adds free time once or every week, and Undo takes it away", async () => {
     await show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "I’m free then" }));
     fireEvent.click(screen.getByRole("button", { name: "Every Friday" }));
@@ -209,7 +212,7 @@ describe("empty hours", () => {
 
   it("adds a block with an optional note and shows it, hatched, with the note", async () => {
     await show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.change(screen.getByLabelText("Note"), { target: { value: "Dentist" } });
@@ -222,7 +225,7 @@ describe("empty hours", () => {
 
   it("hides blocks when Your blocks is off", async () => {
     await show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.click(screen.getByRole("button", { name: "Just this once" }));
@@ -235,11 +238,10 @@ describe("empty hours", () => {
   it("selects a range by dragging across empty hours with a mouse", async () => {
     await show("/calendar?view=week");
     const col = column();
-    fireEvent.pointerDown(col, { button: 0, pointerType: "mouse", clientY: 240, clientX: 10, pointerId: 1 });
-    fireEvent.pointerMove(col, { pointerType: "mouse", clientY: 336, clientX: 10, pointerId: 1 });
-    fireEvent.pointerUp(col, { pointerType: "mouse", clientY: 336, clientX: 10, pointerId: 1 });
+    fireEvent.pointerDown(col, { button: 0, pointerType: "mouse", clientY: rowAt(12), clientX: 10, pointerId: 1 });
+    fireEvent.pointerMove(col, { pointerType: "mouse", clientY: rowAt(14), clientX: 10, pointerId: 1 });
+    fireEvent.pointerUp(col, { pointerType: "mouse", clientY: rowAt(14), clientX: 10, pointerId: 1 });
     await flush();
-    // 240px is 12 PM, 336px is 2 PM.
     expect(screen.getByRole("dialog", { name: "Friday, 12 PM" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.click(screen.getByRole("button", { name: "Just this once" }));
@@ -430,7 +432,7 @@ describe("dragging with a mouse", () => {
   it("changes a block's end by its bottom edge and moves it by dragging", async () => {
     await show("/calendar?view=week");
     const column = document.querySelectorAll<HTMLElement>(".cursor-cell")[0];
-    fireEvent.click(column, { clientY: 288 });
+    fireEvent.click(column, { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.click(screen.getByRole("button", { name: "Just this once" }));

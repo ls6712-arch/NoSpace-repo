@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   agendaDays,
   calendarDays,
+  anchorInYear,
   calendarRange,
+  rangeYears,
   canStep,
   clampAnchor,
   dateParam,
@@ -87,6 +89,17 @@ describe("the range", () => {
   it("starts this year when there is no sign-up date or it is in the future", () => {
     expect(calendarRange(NOW, null).minMs).toBe(ny(1, 1, 0));
     expect(calendarRange(NOW, NOW + 1e9).minMs).toBe(ny(1, 1, 0));
+  });
+
+  it("lists the years a person can open, oldest first", () => {
+    expect(rangeYears(range)).toEqual([2026, 2027]);
+    expect(rangeYears(calendarRange(NOW, ny(5, 2, 9, 2024)))).toEqual([2024, 2025, 2026, 2027]);
+  });
+
+  it("moves to the same month and day in another year, and keeps Feb 29 inside February", () => {
+    expect(dateParam(anchorInYear(ny(3, 14, 12), 2027, range))).toBe("2027-03-14");
+    const old = calendarRange(NOW, ny(5, 2, 9, 2024));
+    expect(dateParam(anchorInYear(ny(2, 29, 12, 2024), 2025, old))).toBe("2025-02-28");
   });
 
   it("goes back to the sign-up year, however long ago", () => {

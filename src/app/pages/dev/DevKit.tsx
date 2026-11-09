@@ -1,4 +1,9 @@
 import { useState } from "react";
+import { TimeGrid } from "../../components/calendar/TimeGrid";
+import { loadFilters } from "../../lib/calendarView";
+import { noopHandlers, sampleWeek } from "./sampleWeek";
+
+const ALL_FILTERS = loadFilters("week");
 import { notify } from "../../components/ui/toaster";
 import { announceChange } from "../../lib/undo";
 import { motion } from "motion/react";
@@ -233,6 +238,10 @@ export function DevKit() {
           ))}
         </div>
         {stubReveal && <StubReveal face={stubReveal} onDone={() => setStubReveal(null)} onPin={async () => null} />}
+      </Section>
+
+      <Section title="Week timeline">
+        <TimeGrid days={sampleWeek(Date.now())} now={Date.now()} filters={ALL_FILTERS} passes={[]} handlers={noopHandlers} />
       </Section>
 
       <Section title="Toasts">

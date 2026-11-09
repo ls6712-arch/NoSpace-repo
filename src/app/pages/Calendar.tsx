@@ -31,7 +31,9 @@ import { track } from "../lib/analytics";
 import {
   addDays,
   calendarDays,
+  anchorInYear,
   calendarRange,
+  rangeYears,
   canStep,
   clampAnchor,
   dateParam,
@@ -58,6 +60,7 @@ import {
   type FilterKey,
   type Filters,
 } from "../lib/calendarView";
+import { nyParts } from "../lib/homeWeek";
 import type { Owner } from "../lib/firstPlanRemote";
 import { WEEK_VIEW } from "../lib/homeCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
@@ -605,6 +608,9 @@ export function Calendar() {
         onView={onView}
         onShow={() => setShowOpen(true)}
         onMakePlan={() => open.makePlan()}
+        years={rangeYears(range)}
+        year={nyParts(anchor).y}
+        onYear={(y) => go({ anchor: anchorInYear(anchor, y, range) })}
       />
       {data.status === "loading" && <CalendarSkeleton />}
       {(data.status === "error" || actions.entriesFailed) && (
