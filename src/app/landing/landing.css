@@ -29,7 +29,7 @@
 .lp-nav-how { display: none; padding: 0 12px; background: transparent; border: 0; cursor: pointer; }
 .lp-btn { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 10px 22px; border: 1px solid transparent; border-radius: 999px; background: var(--accent); color: var(--accent-foreground); font-family: var(--font-body); font-size: var(--text-small); font-weight: 600; text-decoration: none; cursor: pointer; transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
 .lp-btn:hover { transform: translateY(-2px); }
-.lp-btn:active { transform: none; }
+.lp-btn:active { transform: scale(0.97); }
 .lp-btn-ink { background: var(--foreground); color: var(--background); }
 .lp-btn-ghost { background: transparent; color: var(--foreground); border-color: var(--border); }
 .lp-btn-ghost:hover { border-color: var(--foreground); }
@@ -136,7 +136,7 @@
 .lp-how { background: var(--card); }
 .lp-steps { display: grid; gap: 32px; counter-reset: steps; list-style: none; padding: 0; margin: 40px 0 0; }
 .lp-steps li { counter-increment: steps; }
-.lp-steps li::before { content: counter(steps); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-foreground); font-weight: 700; }
+.lp-step-n { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-foreground); font-weight: 700; }
 .lp-steps h3 { margin: 20px 0 12px; font-family: var(--font-display); font-size: var(--text-title); font-weight: 700; line-height: 1.2; }
 .lp-steps p { color: var(--muted-foreground); }
 .lp-preferences { display: grid; gap: 32px; margin-top: 48px; padding: 24px; border-radius: 20px; background: color-mix(in srgb, var(--cat-orange) 15%, var(--card)); }
@@ -363,3 +363,22 @@
 .lp-carousel { position: relative; width: 100%; height: clamp(420px, 62vw, 600px); margin-top: 24px; }
 .lp-carousel-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; }
 .lp-carousel-foot .lp-corner-link { justify-content: flex-start; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+
+/* Landing motion (Nov 9, 2026): the movements from motionTokens.ts, in step with the Corner carousel. */
+.lp-split-char { display: inline-block; will-change: transform; }
+.lp-hook > span, .lp-hook > em { will-change: transform, opacity; }
+.lp-ticker { overflow: hidden; padding-block: 18px; border-block: 1px solid var(--border); background: var(--foreground); color: var(--background); }
+.lp-ticker-track { display: flex; width: max-content; white-space: nowrap; }
+.lp-ticker-item { display: inline-flex; align-items: center; gap: 28px; padding-right: 28px; font-family: var(--font-display); font-size: clamp(1.5rem, 1rem + 2vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; }
+.lp-ticker-item svg { color: var(--accent); transform: rotate(-12deg); }
+.lp-step-n { font-variant-numeric: tabular-nums; }
+.lp-wall-card { transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard); }
+.lp-wall-strip { transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }
+.lp-guide-list a svg { transition: transform var(--duration-fast) var(--ease-standard); }
+@media (hover: hover) {
+  .lp[data-motion="on"] .lp-wall-card:hover { transform: translateY(-4px) rotate(-0.6deg); box-shadow: 0 12px 28px color-mix(in srgb, var(--foreground) 12%, transparent); }
+  .lp-wall-card:hover .lp-wall-strip { background: var(--accent); color: var(--accent-foreground); }
+  .lp[data-motion="on"] .lp-guide-list a:hover svg { transform: translate(3px, -3px); }
+  .lp[data-motion="on"] .lp-feature-grid article:hover svg { transform: rotate(-8deg) scale(1.08); }
+}
+.lp-feature-grid article svg { transition: transform var(--duration-base) var(--ease-standard); }
