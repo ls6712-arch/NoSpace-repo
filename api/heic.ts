@@ -7,7 +7,7 @@
 // 20261111000050_member_gate.sql; until it is applied, the old member rule (my_profile_private())
 // decides and 30 an hour are counted per instance, so members' iPhone photos keep working.
 import convert from "heic-convert";
-import { handleHeic, legacyMemberRow, type Claim } from "./heicCheck";
+import { handleHeic, legacyMemberRow, type Claim } from "./heicCheck.js";
 
 // The platform stops the function at 10 seconds too, if the converter never yields. Vercel reads
 // this object without running the file, so it must stay literal values (heicApi.test.ts checks
