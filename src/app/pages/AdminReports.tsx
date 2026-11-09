@@ -7,6 +7,8 @@ import { supabase } from "../../lib/supabase";
 import { Button } from "../components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { formatWhen } from "../lib/dates";
+import { fetchAdminChatMessage, signChatPaths, type AdminChatMessage } from "../lib/cornerChat";
+import { ImageWithFallback } from "../components/ImageWithFallback";
 import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { ERROR_LINE } from "../lib/stateCopy";
@@ -53,7 +55,7 @@ function targetLabel(r: ReportRow) {
     case "message":
       return "A message";
     case "corner_message":
-      return "A Corner chat message";
+      return "A message";
   }
 }
 
@@ -61,6 +63,44 @@ function targetHref(r: ReportRow) {
   const base = `/u/${encodeURIComponent(r.targetUserId)}`;
   if (r.targetKind === "moment" && r.targetId != null) return `${base}?moment=${r.targetId}`;
   return base;
+}
+
+/**
+ * The words and photos of a reported Corner chat message. A message its author already removed is read from
+ * the copy the database keeps for 30 days (admins only); "Message deleted" marks it, and after those 30
+ * days only that line is left.
+ */
+function ReportedChatMessage({ id }: { id: number }) {
+  const [msg, setMsg] = useState<AdminChatMessage | null | undefined>(undefined);
+  const [urls, setUrls] = useState<Map<string, string>>(new Map());
+  useEffect(() => {
+    let cancelled = false;
+    void fetchAdminChatMessage(id).then(async (m) => {
+      if (cancelled) return;
+      setMsg(m);
+      if (m && m.mediaPaths.length > 0) {
+        const signed = await signChatPaths(m.mediaPaths);
+        if (!cancelled) setUrls(signed);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+  if (msg === undefined) return null;
+  return (
+    <div className="mt-2 space-y-2 rounded-card border border-dashed border-[var(--hairline)] p-3 text-small">
+      {(msg === null || msg.removed) && <p className="italic text-muted-foreground">Message deleted</p>}
+      {msg?.body && <p className="whitespace-pre-wrap break-words">{msg.body}</p>}
+      {msg && msg.mediaPaths.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {msg.mediaPaths.map((p) => (
+            <ImageWithFallback key={p} src={urls.get(p)} alt="" aspect="1 / 1" className="size-24 overflow-hidden rounded-card bg-surface-muted" />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function AdminReports() {
@@ -150,6 +190,7 @@ export function AdminReports() {
             {r.reason} · {when(r.createdAt)}
           </p>
           {r.note && <p className="mt-1.5 text-caption italic text-muted-foreground">“{r.note}”</p>}
+          {r.targetKind === "corner_message" && r.targetId != null && <ReportedChatMessage id={Number(r.targetId)} />}
         </div>
         {r.status === "open" && (
           <div className="flex shrink-0 gap-1.5">

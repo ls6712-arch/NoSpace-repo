@@ -1,7 +1,7 @@
--- Soosh: Corner chat (20261124000000_corner_chat.sql).
+-- Soosh: Corner chat (20261124000000_corner_chat.sql and 20261125000000_corner_message_removals.sql).
 --
--- Not a migration, nothing here alters the schema. Run AFTER that migration.
--- Run before it, the script stops at the first check and says so ("NOT APPLIED").
+-- Not a migration, nothing here alters the schema. Run AFTER both migrations.
+-- Run before them, the script stops at the first check and says so ("NOT APPLIED").
 --
 -- One transaction, one do $$ ... $$ block, ending unconditionally in
 -- RAISE EXCEPTION 'RESULTS: ...', so results land in the error message and everything
@@ -12,7 +12,7 @@
 -- Fixed ids (…91xx): ME …9101, OTHER …9102, BLOCKED …9103 (blocked by ME), ADMIN …9104,
 -- PENDING …9105 (signed in, access pending, so not a member), RATE …9106 (rate limit only).
 -- Fixture Corner key 'vcheck-space:vcheck-corner'; every message body starts with 'vcheck-'.
--- Every count is scoped to that Corner key.
+-- Every count is scoped to that Corner key (or to the fixture's own message ids).
 
 begin;
 
@@ -35,6 +35,13 @@ declare
   v_body text;
   v_media text[];
   v_removed timestamptz;
+  v_bucket int;
+  v_live bigint;
+  v_reported bigint;
+  v_rm1 text;
+  v_rm2 text;
+  v_flag boolean;
+  v_paths text[];
 begin
   v_owner_role := current_user;
 
@@ -42,6 +49,14 @@ begin
      or to_regprocedure('public.remove_corner_message(bigint)') is null then
     raise exception 'RESULTS: NOT APPLIED (run 20261124000000_corner_chat.sql first, nothing was created)';
   end if;
+  if to_regclass('private.corner_message_removals') is null
+     or to_regprocedure('public.admin_corner_message(bigint)') is null
+     or to_regprocedure('public.corner_removals_due(integer)') is null then
+    raise exception 'RESULTS: NOT APPLIED (run 20261125000000_corner_message_removals.sql first, nothing was created)';
+  end if;
+
+  -- Read as the owner: storage.buckets has no read rule for the authenticated role.
+  v_bucket := (select count(*) from storage.buckets b where b.id = 'corner-chat' and b.public = false);
 
   perform set_config('request.jwt.claims', '{}', true);
 
@@ -271,12 +286,12 @@ begin
   -- 9. Storage: members write inside their own folder only; a pending account cannot read.
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_other), true);
   v_i := v_i + 1;
-  v_n := (select count(*) from storage.buckets b where b.id = 'corner-chat' and b.public = false);
-  results := array_append(results, case when v_n = 1 then format('%s PASS (the corner-chat bucket exists and is private)', v_i)
-                                        else format('%s FAIL (bucket rows %s)', v_i, v_n) end);
-  insert into storage.objects (bucket_id, name) values ('corner-chat', v_folder || '/' || v_other || '/vcheck-own.jpg');
+  results := array_append(results, case when v_bucket = 1 then format('%s PASS (the corner-chat bucket exists and is private)', v_i)
+                                        else format('%s FAIL (bucket rows %s)', v_i, v_bucket) end);
+  -- The 4 photo message from check 17 points at a.jpg, so a.jpg is a photo that is still in a live message.
+  insert into storage.objects (bucket_id, name) values ('corner-chat', v_folder || '/' || v_other || '/a.jpg');
   v_i := v_i + 1;
-  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_folder || '/' || v_other || '/vcheck-own.jpg');
+  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_folder || '/' || v_other || '/a.jpg');
   results := array_append(results, case when v_n = 1 then format('%s PASS (a member writes into their own folder)', v_i)
                                         else format('%s FAIL (%s)', v_i, v_n) end);
   v_i := v_i + 1;
@@ -289,12 +304,12 @@ begin
   end;
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_me), true);
   v_i := v_i + 1;
-  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_folder || '/' || v_other || '/vcheck-own.jpg');
-  results := array_append(results, case when v_n = 1 then format('%s PASS (another member reads the photo)', v_i)
+  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_folder || '/' || v_other || '/a.jpg');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (another member reads a photo that is in a live message)', v_i)
                                         else format('%s FAIL (%s)', v_i, v_n) end);
   perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_pending), true);
   v_i := v_i + 1;
-  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_folder || '/' || v_other || '/vcheck-own.jpg');
+  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_folder || '/' || v_other || '/a.jpg');
   results := array_append(results, case when v_n = 0 then format('%s PASS (a pending account cannot read the photo)', v_i)
                                         else format('%s FAIL (pending sees %s)', v_i, v_n) end);
 
@@ -316,7 +331,154 @@ begin
     when others then results := array_append(results, format('%s ERROR (%s %s)', v_i, sqlstate, sqlerrm));
   end;
 
-  -- 11. Structure, read-only: messages go with their author (cascade), live updates and presence are on.
+  -- 11. The audit copy of a removed message: kept for admins, photos held, purged after 30 days.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_other), true);
+  v_rm1 := v_folder || '/' || v_other || '/rm1.jpg';
+  v_rm2 := v_folder || '/' || v_other || '/rm2.jpg';
+  insert into storage.objects (bucket_id, name) values ('corner-chat', v_rm1), ('corner-chat', v_rm2);
+  insert into public.corner_messages (corner_key, body, media_paths) values (v_key, 'vcheck-reported', array[v_rm1, v_rm2]);
+  v_reported := (select cm.id from public.corner_messages cm where cm.corner_key = v_key and cm.body = 'vcheck-reported');
+  v_live := (select cm.id from public.corner_messages cm where cm.corner_key = v_key and cardinality(cm.media_paths) = 4);
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_me), true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_rm1);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (a member reads the photos of a live message)', v_i)
+                                        else format('%s FAIL (member sees %s)', v_i, v_n) end);
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_other), true);
+  perform public.remove_corner_message(v_reported);
+
+  perform set_config('role', v_owner_role, true);
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from private.corner_message_removals r
+          where r.message_id = v_reported and r.author_id = v_other and r.removed_by = v_other
+            and r.corner_key = v_key and r.body = 'vcheck-reported' and r.media_paths = array[v_rm1, v_rm2]);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (removing a message copies its text, photos, author and remover first)', v_i)
+                                        else format('%s FAIL (%s copies)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from private.corner_message_removals r where r.message_id = v_mine and r.removed_by = v_admin and r.author_id = v_me and r.body = 'vcheck-hello from me');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (an admin''s removal records the admin as remover)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.corner_messages cm where cm.id = v_reported and cm.body = '' and cardinality(cm.media_paths) = 0 and cm.removed_at is not null);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the live row is still cleared)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+
+  -- No client role reads the copies, directly or through the admin function, unless it is an admin.
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_other), true);
+  v_i := v_i + 1;
+  begin
+    v_n := (select count(*) from private.corner_message_removals r where r.message_id = v_reported);
+    results := array_append(results, format('%s FAIL (a member read the copies, %s rows)', v_i, v_n));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS (a member cannot read the copies directly, not even their own)', v_i));
+    when others then results := array_append(results, format('%s ERROR (%s %s)', v_i, sqlstate, sqlerrm));
+  end;
+  v_i := v_i + 1;
+  begin
+    v_n := (select count(*) from public.admin_corner_message(v_reported));
+    results := array_append(results, format('%s FAIL (a member called admin_corner_message, %s rows)', v_i, v_n));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS (a member cannot call admin_corner_message)', v_i));
+    when others then results := array_append(results, format('%s ERROR (%s %s)', v_i, sqlstate, sqlerrm));
+  end;
+
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_admin), true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.admin_corner_message(v_reported) a
+          where a.removed and a.body = 'vcheck-reported' and a.media_paths = array[v_rm1, v_rm2] and a.removed_by = v_other and a.author_id = v_other);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (an admin reads a removed message from its copy)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.admin_corner_message(v_live) a where not a.removed and a.removed_by is null and cardinality(a.media_paths) = 4);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (an admin reads a live message from the message itself)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+
+  -- Photos of a removed message: not for members, still for admins; nobody can remove a held one.
+  v_i := v_i + 1;
+  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name = v_rm1);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (an admin reads the photos of a removed message)', v_i)
+                                        else format('%s FAIL (admin sees %s)', v_i, v_n) end);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_me), true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from storage.objects o where o.bucket_id = 'corner-chat' and o.name in (v_rm1, v_rm2));
+  results := array_append(results, case when v_n = 0 then format('%s PASS (a member cannot read the photos of a removed message)', v_i)
+                                        else format('%s FAIL (member sees %s)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_flag := private.corner_chat_photo_held(v_rm1) and not private.corner_chat_photo_held(v_folder || '/' || v_other || '/a.jpg');
+  results := array_append(results, case when v_flag then format('%s PASS (a photo held by a copy is held; one in a live message is not)', v_i)
+                                        else format('%s FAIL (held check)', v_i) end);
+  perform set_config('role', v_owner_role, true);
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from pg_policies p
+          where p.schemaname = 'storage' and p.tablename = 'objects'
+            and p.policyname like 'members % their own Corner chat photos unless held'
+            and p.qual like '%corner_chat_photo_held%');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the own photo rule in storage excludes held photos)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+
+  -- The 30 days: not due now, due once backdated, and only the service role may ask or drop.
+  perform set_config('role', 'service_role', true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.corner_removals_due(1000) d where d.message_id in (v_reported, v_mine));
+  results := array_append(results, case when v_n = 0 then format('%s PASS (nothing of the fixture is due while it is new)', v_i)
+                                        else format('%s FAIL (%s due)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_n := public.corner_removals_purged(array[v_reported, v_mine]);
+  results := array_append(results, case when v_n = 0 then format('%s PASS (a copy that is not 30 days old is never dropped, whatever ids are passed)', v_i)
+                                        else format('%s FAIL (%s dropped)', v_i, v_n) end);
+  perform set_config('role', v_owner_role, true);
+  update private.corner_message_removals set removed_at = now() - interval '31 days' where private.corner_message_removals.message_id = v_reported;
+  perform set_config('role', 'service_role', true);
+  v_paths := (select d.media_paths from public.corner_removals_due(1000) d where d.message_id = v_reported);
+  v_i := v_i + 1;
+  results := array_append(results, case when v_paths = array[v_rm1, v_rm2] then format('%s PASS (a copy past 30 days is due, with its photo paths)', v_i)
+                                        else format('%s FAIL (paths %s)', v_i, v_paths) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from public.corner_removals_due(1000) d where d.message_id = v_mine);
+  results := array_append(results, case when v_n = 0 then format('%s PASS (a newer copy is not due)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_n := public.corner_removals_purged(array[v_reported, v_mine]);
+  results := array_append(results, case when v_n = 1 then format('%s PASS (only the copy past 30 days is dropped)', v_i)
+                                        else format('%s FAIL (%s dropped)', v_i, v_n) end);
+  perform set_config('role', v_owner_role, true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from private.corner_message_removals r where r.message_id in (v_reported, v_mine));
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the newer copy is still there)', v_i)
+                                        else format('%s FAIL (%s copies left)', v_i, v_n) end);
+  perform set_config('role', 'authenticated', true);
+  perform set_config('request.jwt.claims', format('{"sub":"%s"}', v_admin), true);
+  v_i := v_i + 1;
+  begin
+    v_n := (select count(*) from public.corner_removals_due(10));
+    results := array_append(results, format('%s FAIL (an admin called corner_removals_due)', v_i));
+  exception
+    when insufficient_privilege then results := array_append(results, format('%s PASS (not even an admin can call the purge functions)', v_i));
+    when others then results := array_append(results, format('%s ERROR (%s %s)', v_i, sqlstate, sqlerrm));
+  end;
+  perform set_config('role', v_owner_role, true);
+  perform set_config('request.jwt.claims', '{}', true);
+  v_i := v_i + 1;
+  v_n := (select count(*) from cron.job j
+          where j.jobname = 'purge-corner-message-removals' and j.schedule = '25 4 * * *'
+            and j.command like '%/functions/v1/purge-corner-chat%');
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the daily purge job is scheduled and calls purge-corner-chat)', v_i)
+                                        else format('%s FAIL (%s jobs)', v_i, v_n) end);
+  v_i := v_i + 1;
+  v_n := (select count(*) from pg_class c join pg_namespace n on n.oid = c.relnamespace
+          where n.nspname = 'private' and c.relname = 'corner_message_removals' and c.relrowsecurity
+            and not has_table_privilege('authenticated', c.oid, 'select')
+            and not has_table_privilege('anon', c.oid, 'select'));
+  results := array_append(results, case when v_n = 1 then format('%s PASS (the copies table has row security on and no grant to client roles)', v_i)
+                                        else format('%s FAIL (%s)', v_i, v_n) end);
+
+  -- 12. Structure, read-only: messages go with their author (cascade), live updates and presence are on.
   perform set_config('role', v_owner_role, true);
   perform set_config('request.jwt.claims', '{}', true);
   v_i := v_i + 1;
