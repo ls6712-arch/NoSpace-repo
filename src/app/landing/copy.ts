@@ -108,4 +108,23 @@ export const LANDING_COPY = {
   ],
   finalHeading: "Pick one thing. Do it this week.",
   finalLine: "Free to use. Go on your own or bring someone.",
+  footer: {
+    exploreLabel: "Explore",
+    explore: [
+      { label: "How it works", section: "how" },
+      { label: "Corners", section: "corners" },
+      { label: "Guides", section: "guides" },
+      { label: "Questions", section: "faq" },
+    ],
+    aboutLabel: "Who we are",
+    about: "Do the thing. Bring a friend. Keep the Stub.",
+    followLabel: "Follow",
+    wishLabel: `Tell us what you wish ${APP_NAME} did`,
+    wishPlaceholder: "I wish…",
+    wishSend: "Send",
+    wishSubject: `A wish for ${APP_NAME}`,
+    privacy: "Privacy Policy",
+    terms: "Terms",
+    contact: "Contact",
+  },
 } as const;
