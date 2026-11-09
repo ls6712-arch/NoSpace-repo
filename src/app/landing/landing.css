@@ -397,7 +397,7 @@
 .lp-foot-bottom { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; margin-top: 72px; align-items: end; }
 .lp-foot-legal p { margin: 0 0 8px; font-size: var(--text-small); color: color-mix(in srgb, var(--background) 70%, transparent); }
 .lp-foot-legal nav { display: flex; flex-wrap: wrap; gap: 0 20px; }
-.lp-foot-legal a { display: inline-flex; min-height: 44px; align-items: center; font-size: var(--text-small); color: color-mix(in srgb, var(--background) 70%, transparent); text-decoration: none; }
+.lp-foot-legal a { display: inline-flex; min-height: 44px; min-width: 44px; align-items: center; justify-content: center; font-size: var(--text-small); color: color-mix(in srgb, var(--background) 70%, transparent); text-decoration: none; }
 .lp-foot-pill { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 22px; border: 1px solid color-mix(in srgb, var(--background) 30%, transparent); border-radius: 999px; transition: border-color var(--duration-fast) var(--ease-standard); }
 .lp-foot-pill:focus-within { border-color: var(--background); }
 .lp-foot-pill input { flex: 1; width: 0; min-width: 0; min-height: 44px; border: 0; background: none; color: inherit; font: inherit; font-size: var(--text-body); outline: none; }
