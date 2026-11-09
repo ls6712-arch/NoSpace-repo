@@ -4,9 +4,13 @@ import { HOME_TZ } from "../lib/homeWeek";
 import { plural } from "../lib/plural";
 import type { StubFace } from "../lib/stubFace";
 import { LANDING_COPY as COPY } from "./copy";
+import { motion } from "motion/react";
+import { useEnter } from "./LandingReveal";
+import { shared } from "../lib/motionTokens";
 
 /** Editorial examples, never loaded from someone's private Shelf. */
 export function StubPreview() {
+  const enter = useEnter();
   const friday = formatWeekday("2026-11-06T17:00:00Z", "short", HOME_TZ);
   const saturday = formatWeekday("2026-11-07T17:00:00Z", "short", HOME_TZ);
   const examples: { face: StubFace; caption: string }[] = [
@@ -16,6 +20,6 @@ export function StubPreview() {
   ];
   return <section className="lp-section lp-stubs" aria-labelledby="stubs-heading"><div className="lp-wide">
     <p className="lp-eyebrow">{COPY.stubsExamples}</p><h2 className="lp-h2" id="stubs-heading">{COPY.stubsHeading}</h2><p className="lp-lede">{COPY.stubsLine}</p>
-    <ul className="lp-stub-grid" aria-label={COPY.stubsExamples} tabIndex={0}>{examples.map(({ face, caption }) => <li key={face.title}><figure><StubArt face={face} width={208}/><figcaption>{caption}</figcaption></figure></li>)}</ul>
+    <ul className="lp-stub-grid" aria-label={COPY.stubsExamples} tabIndex={0}>{examples.map(({ face, caption }, i) => <motion.li key={face.title} {...enter(i * 3, { from: { y: 40, rotate: (i - 1) * 8 }, to: { rotate: 0 }, transition: shared })}><figure><StubArt face={face} width={208}/><figcaption>{caption}</figcaption></figure></motion.li>)}</ul>
   </div></section>;
 }
