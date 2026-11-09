@@ -15,6 +15,8 @@ import { PressLink } from "../components/common/PressLink";
 import { MomentDetail } from "../components/MomentDetail";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { CornerWalls } from "../components/corners/CornerWalls";
+import { CornerChat } from "../components/corners/CornerChat";
+import { CHAT_COPY, cornerTabs, resolveTab, type CornerTab } from "../lib/cornerChat";
 import { WALL_COPY } from "../components/corners/WallCard";
 import { seedFromCard, type Chain, type WallCard } from "../lib/cornerWalls";
 import { POST_COLUMNS, rowToPost } from "../context/ContentContext";
@@ -67,7 +69,7 @@ import { CornerActivities } from "../components/corners/CornerActivities";
 /** Founder, Nov 7, 2026: events are not part of Soosh. Hidden here only; nothing behind them is removed. */
 const SHOW_EVENTS = false;
 
-type Tab = "walls" | "first";
+type Tab = CornerTab;
 const initials = (name: string) => name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
 type Person = { id: string; name: string; avatarUrl?: string; username?: string };
@@ -165,7 +167,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   }, [section]);
   const doWithPeople = () => (restricted ? navigate(`/login?redirect=${here}`) : setSheetOpen(true));
   const goTo = (path: string) => (restricted ? navigate(`/login?redirect=${encodeURIComponent(path)}`) : navigate(path));
-  const tab: Tab = chosenTab === "auto" ? (restricted ? "first" : "walls") : chosenTab;
+  // Chat is for approved members: a remembered "chat" never shows to a visitor.
+  const tab: Tab = resolveTab(chosenTab, restricted);
   const followKey = cornerFollowKey(corner.spaceSlug, corner.slug);
   const following = social.followedHobbies.includes(followKey);
   const toggleFollow = () => (user ? void social.toggleHobbyFollow(followKey, corner.name) : signIn());
@@ -431,7 +434,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
 
         {/* Walls · Your first time. Remembered through Back. */}
         <div role="tablist" aria-label="Corner" className="mb-6 flex gap-6 border-b border-border">
-          {([["walls", WALL_COPY.walls], ["first", "Your first time"]] as const).map(([id, label]) => (
+          {cornerTabs(restricted).map((id) => [id, { walls: WALL_COPY.walls, chat: CHAT_COPY.tab, first: "Your first time" }[id]] as const).map(([id, label]) => (
             <button
               key={id}
               type="button"
@@ -458,6 +461,12 @@ function CornerBody({ corner }: { corner: CornerModel }) {
               onLogMoment={() => goTo(`/create?${cornerParams}`)}
               onDoWithPeople={doWithPeople}
             />
+          </div>
+        )}
+
+        {tab === "chat" && !restricted && (
+          <div role="tabpanel" id="corner-panel-chat" aria-labelledby="corner-tab-chat">
+            <CornerChat corner={corner} />
           </div>
         )}
 
@@ -585,7 +594,8 @@ function CornerBody({ corner }: { corner: CornerModel }) {
       </div>
 
       {/* The one primary action; the other two are small links under it. Sits above the tab bar on a phone. */}
-      <div className="fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background desk:bottom-0">
+      {/* Not on the Chat tab: there the chat fills the screen down to the tab bar. */}
+      <div className={`${tab === "chat" ? "max-desk:hidden" : ""} fixed inset-x-0 bottom-[calc(72px+var(--safe-bottom))] z-30 border-t border-border bg-background desk:bottom-0`}>
         <div className="mx-auto w-full max-w-[calc(1040px+2rem)] tab:max-w-[calc(1040px+3rem)] desk:max-w-[calc(1040px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-col items-center gap-1 pt-3 pb-2">
           <PillButton className="w-full" onClick={doWithPeople}>
             Do this with people

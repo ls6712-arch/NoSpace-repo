@@ -134,7 +134,7 @@ export interface BlockedPerson {
   avatarUrl?: string;
 }
 
-export type ReportTargetKind = "profile" | "message" | "moment" | "thought";
+export type ReportTargetKind = "profile" | "message" | "moment" | "thought" | "corner_message";
 export type ReportReason = "spam" | "harassment" | "inappropriate" | "other";
 
 interface SocialContextType {
