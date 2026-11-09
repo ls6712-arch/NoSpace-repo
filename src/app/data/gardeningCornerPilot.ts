@@ -113,10 +113,10 @@ export const gardeningCornerPilot = {
   },
   {
     "id": "garden-14",
-    "title": "Keep a plant journal",
+    "title": "Keep a plant log",
     "collection": "creative",
-    "imagePath": "/gardening/14-plant-journal.webp",
-    "alt": "Gardening inspiration: keep a plant journal",
+    "imagePath": "/gardening/14-plant-log.webp",
+    "alt": "Gardening inspiration: keep a plant log",
     "action": "Start pursuit"
   },
   {
