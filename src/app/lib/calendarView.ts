@@ -81,6 +81,20 @@ export function calendarRange(now: number, signedUpAt?: number | null): Calendar
   return { minMs: nyTimeToMs(sp.y, 1, 1, 0), maxMs: nyTimeToMs(np.y + YEARS_AHEAD + 1, 1, 1, 0) };
 }
 
+/** The years a person can open, oldest first: their sign-up year to next year. */
+export function rangeYears(range: CalendarRange): number[] {
+  const first = nyParts(range.minMs).y;
+  const last = nyParts(range.maxMs - DAY_MS).y;
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+}
+
+/** The same month and day in another year (Feb 29 becomes Feb 28), at noon, pulled into the range. */
+export function anchorInYear(anchor: number, year: number, range: CalendarRange): number {
+  const { m, d } = nyParts(anchor);
+  const lastDay = new Date(Date.UTC(year, m, 0)).getUTCDate();
+  return clampAnchor(nyTimeToMs(year, m, Math.min(d, lastDay), 12), range);
+}
+
 /** Pulls any anchor day into the range (noon of the first or the last day). */
 export function clampAnchor(anchor: number, range: CalendarRange): number {
   if (anchor < range.minMs) return noonOf(range.minMs + DAY_MS / 2);

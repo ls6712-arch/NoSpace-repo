@@ -544,6 +544,20 @@ describe("Calendar, the year", () => {
     fireEvent.click(october);
     expect(where()).toBe("/calendar?view=month&date=2026-10-01");
   });
+  it("switches years from the Year switch, keeping the same month", async () => {
+    await at("/calendar?view=month&date=2026-03-14");
+    const years = screen.getByRole("group", { name: "Year" });
+    expect(within(years).getAllByRole("button").map((b) => b.textContent)).toEqual(["2026", "2027"]);
+    fireEvent.click(within(years).getByRole("button", { name: "2027" }));
+    expect(screen.getByRole("heading", { level: 1, name: "March 2027" })).toBeTruthy();
+    expect(within(screen.getByRole("group", { name: "Year" })).getByRole("button", { name: "2027" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("shows the Year switch in Month and Year only", async () => {
+    await at("/calendar?view=week");
+    expect(screen.queryByRole("group", { name: "Year" })).toBeNull();
+  });
+
   it("opens every month of a year the person can page into, none faded", async () => {
     setWide(false);
     await at("/calendar?view=year");
