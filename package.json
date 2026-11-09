@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/extract-gardening-images.mjs && vite build && node scripts/build-sitemap.ts",
+    "build": "vite build && node scripts/build-sitemap.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "npm run lint:tokens",
@@ -16,7 +16,7 @@
     "visual:pages": "node scripts/visual/page-shell.ts --out docs/qa/one-skin/pr5",
     "visual:search": "node scripts/visual/search.ts dist docs/qa/one-skin/search",
     "visual:pages:selftest": "node scripts/visual/page-shell.ts --selftest",
-    "build:app": "node scripts/extract-gardening-images.mjs && vite build",
+    "build:app": "vite build",
     "landing:screens": "node scripts/landing-screens/capture.mjs",
     "e2e:guest": "node scripts/e2e/guest-stubby.ts",
     "e2e:landing": "node scripts/e2e/landing.ts",
