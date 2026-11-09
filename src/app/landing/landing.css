@@ -161,9 +161,6 @@
 .lp-final-card .lp-h2 { max-width: 20ch; font-size: clamp(2rem, 1.5rem + 2vw, 3rem); }
 /* Explicit foreground tokens keep the orange panel readable in both themes. */
 .lp-final-card .lp-btn { background: var(--ink); color: var(--photo-text); }
-.lp-footer { padding: 24px; border-top: 1px solid var(--border); }
-.lp-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; }
-.lp-footer a { display: inline-flex; min-height: 44px; min-width: 44px; align-items: center; justify-content: center; color: var(--foreground); font-size: var(--text-small); text-underline-offset: 4px; }
 .lp-stubby { display: inline-block; line-height: 0; transform-origin: 50% 100%; }
 @media (min-width: 360px) { .lp-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 360px) and (max-width: 559px) {
@@ -340,8 +337,6 @@
 .lp-guide-list a:hover { color: var(--accent-text); }
 .lp-guide-list svg { flex: none; }
 .lp-guides-all { display: inline-flex; margin-top: 20px; }
-.lp-footer { overflow: hidden; }
-.lp-footer-mark { margin: 0 0 8px !important; text-align: center; font-family: var(--font-display); font-size: clamp(5rem, 24vw, 19rem); font-weight: 800; line-height: 0.8; letter-spacing: -0.07em; color: color-mix(in srgb, var(--foreground) 10%, transparent); user-select: none; }
 @media (min-width: 744px) {
   .lp-guide-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
   .lp-how .lp-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
