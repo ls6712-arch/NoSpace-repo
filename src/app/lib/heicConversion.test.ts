@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const convertMock = vi.fn();
+const nativeMock = vi.fn();
+vi.mock("./heicNative", () => ({ heicToJpegNative: (...args: unknown[]) => nativeMock(...args) }));
 vi.mock("./heicServer", () => ({ heicToJpegOnServer: (...args: unknown[]) => convertMock(...args) }));
 
 const { convertHeicIfNeeded, convertHeicFiles, isHeicFile } = await import("./heicConversion");
@@ -11,9 +13,19 @@ function makeFile(name: string, type: string): File {
 
 beforeEach(() => {
   convertMock.mockReset();
+  nativeMock.mockReset();
+  nativeMock.mockRejectedValue(new Error("no native decoder"));
 });
 
 describe("convertHeicIfNeeded", () => {
+  it("uses the browser's own decoder when it works, without calling the server", async () => {
+    nativeMock.mockResolvedValue(new Blob(["native"], { type: "image/jpeg" }));
+    const result = await convertHeicIfNeeded(makeFile("IMG_9.heic", "image/heic"));
+    expect(result.name).toBe("IMG_9.jpg");
+    expect(result.type).toBe("image/jpeg");
+    expect(convertMock).not.toHaveBeenCalled();
+  });
+
   it("passes a non-HEIC file through untouched, without calling the converter", async () => {
     const file = makeFile("mug.jpg", "image/jpeg");
     const result = await convertHeicIfNeeded(file);

@@ -1,3 +1,4 @@
+import { heicToJpegNative } from "./heicNative";
 import { heicToJpegOnServer } from "./heicServer";
 import { UPLOAD_COPY } from "./stateCopy";
 
@@ -49,7 +50,8 @@ export async function convertHeicIfNeeded(file: File): Promise<File> {
   try {
     // On the server (api/heic.ts): the browser converter needed 'unsafe-eval', which the Content
     // Security Policy refuses. A multi-image HEIC (a burst) comes back as its first frame.
-    const blob = await heicToJpegOnServer(file);
+    // Safari decodes HEIC itself: no upload, no size limit. Anything else, or any failure there, goes to the server.
+    const blob = await heicToJpegNative(file).catch(() => heicToJpegOnServer(file));
     const newName = file.name.replace(/\.(heic|heif)$/i, ".jpg");
     return new File([blob], newName, { type: "image/jpeg" });
   } catch (err) {
