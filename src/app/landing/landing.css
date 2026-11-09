@@ -367,10 +367,9 @@
 /* Landing motion (Nov 9, 2026): the movements from motionTokens.ts, in step with the Corner carousel. */
 .lp-split-char { display: inline-block; will-change: transform; }
 .lp-hook > span, .lp-hook > em { will-change: transform, opacity; }
-.lp-ticker { overflow: hidden; padding-block: 18px; border-block: 1px solid var(--border); background: var(--foreground); color: var(--background); }
-.lp-ticker-track { display: flex; width: max-content; white-space: nowrap; }
-.lp-ticker-item { display: inline-flex; align-items: center; gap: 28px; padding-right: 28px; font-family: var(--font-display); font-size: clamp(1.5rem, 1rem + 2vw, 2.6rem); font-weight: 800; letter-spacing: -0.03em; }
-.lp-ticker-item svg { color: var(--accent); transform: rotate(-12deg); }
+.lp-ribbon { position: relative; height: clamp(220px, 26vw, 340px); overflow: hidden; }
+.lp-ribbon-canvas, .lp-ribbon-canvas canvas { display: block; width: 100%; height: 100%; }
+.lp-ribbon-flat { position: absolute; inset: 50% 0 auto; transform: translateY(-50%) rotate(-2deg); margin: 0; padding: 14px 24px; overflow: hidden; white-space: nowrap; background: var(--foreground); color: var(--background); font-family: var(--font-display); font-size: var(--text-lead); font-weight: 800; }
 .lp-step-n { font-variant-numeric: tabular-nums; }
 .lp-wall-card { transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard); }
 .lp-wall-strip { transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }

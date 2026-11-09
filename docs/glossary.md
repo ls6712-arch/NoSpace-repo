@@ -1037,6 +1037,15 @@ More ways and the Log a Moment card are gone from Home (Discover, Corners and th
 | Soosh is better with your people / Bring a friend and start your first Pursuit together. / Invite on WhatsApp / Find contacts | Shown in place of From your people while it is empty. Reused from the old empty Home |
 | Make your version | On each Still making card; opens the same sheet as on a Corner page. Reused |
 
+## Landing ribbon words (founder request, Nov 9, 2026)
+
+The ten words on the satin ribbon between the landing hero and the Corner carousel, in this order,
+with " · " between them: Sooshmaxxing, Hobbymaxxing, Timemaxxing, Weekendmaxxing, Friendmaxxing,
+Lifemaxxing, Stubmaxxing, Offlinemaxxing, Funmaxxing, Sidequestmaxxing. Double x, one word each,
+sentence case. Brand voice for the landing page only (the 2026-09 blueprint kept "hobbymaxxing" out
+of the hero but allowed it elsewhere); not for in-app labels. Source: `LANDING_COPY.maxxing` in
+`src/app/landing/copy.ts`.
+
 ## Retired terms
 
 Never use these in UI copy.

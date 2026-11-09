@@ -9,6 +9,7 @@ export const LANDING_COPY = {
   signUp: "Sign up",
   logIn: "Log in",
   explore: "Explore Corners",
+  maxxing: ["Sooshmaxxing", "Hobbymaxxing", "Timemaxxing", "Weekendmaxxing", "Friendmaxxing", "Lifemaxxing", "Stubmaxxing", "Offlinemaxxing", "Funmaxxing", "Sidequestmaxxing"],
   heroLabel: "Hobby ideas and things to do with friends",
   heroLead: "Do the thing. Bring a friend.",
   heroTail: "Keep the Stub.",
