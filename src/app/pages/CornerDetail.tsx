@@ -47,6 +47,7 @@ import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
 import { CornerStarterContent } from "../components/corners/CornerStarterContent";
 import { CornerActivities } from "../components/corners/CornerActivities";
+import { GardeningInspiration } from "../components/corners/GardeningInspiration";
 
 /**
  * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
@@ -497,6 +498,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
           </div>
         )}
 
+        {corner.slug === "gardening" && <GardeningInspiration />}
         <CornerActivities cornerSlug={corner.slug} />
 
         <CornerStarterContent spaceSlug={corner.spaceSlug} slug={corner.slug} restricted={restricted}/>
