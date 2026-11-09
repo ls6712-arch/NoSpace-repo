@@ -76,6 +76,8 @@ try {
     const page = await context.newPage(); page.on("pageerror", e => report.errors.push(e.message));
     await page.goto(origin + "/#/corners/drawing", { waitUntil: "networkidle" });
     await page.getByRole("heading", { name: "Drawing", exact: true }).waitFor();
+    // A member lands on Walls; the starter content lives on Your first time.
+    await page.getByRole("tab", { name: "Your first time", exact: true }).click();
     const activities = page.locator("#corner-activities");
     const pursuits = page.locator("#corner-starter-pursuits");
     const resources = page.locator("#corner-resources");
