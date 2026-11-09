@@ -16,10 +16,10 @@ import { Stubby } from "../components/stubby/Stubby";
 import { StubPreview } from "./StubPreview";
 import { WallsPreview } from "./WallsPreview";
 import { CornerCarousel } from "./carousel/CornerCarousel";
-import { carouselCorners } from "./carousel/corners";
 import { motion } from "motion/react";
 import { page } from "../lib/motionTokens";
-import { CornerTicker, HookLine, SplitWord, StepNumber, useEnter } from "./LandingReveal";
+import { MaxxingRibbon } from "./ribbon/MaxxingRibbon";
+import { HookLine, SplitWord, StepNumber, useEnter } from "./LandingReveal";
 import { reducedMotion } from "./motion";
 import { LandingMotionProvider, useLandingMotion } from "./LandingMotion";
 import "./landing.css";
@@ -59,7 +59,6 @@ function LandingPage() {
   const visible = filtered.filter((item, i) => filtered.findIndex(other => other.corner[1] === item.corner[1]) === i);
   const icons = [Users, Layers, Lock];
   const enter = useEnter();
-  const tickerNames = carouselCorners().map(c => c.name);
   return <div className="lp" data-motion={enabled ? "on" : "off"}>
     <button type="button" className="lp-skip" onClick={() => document.getElementById("landing-heading")?.focus()}>Skip to content</button>
     <header className="lp-nav"><div className="lp-wide lp-nav-inner">
@@ -81,7 +80,7 @@ function LandingPage() {
       </div>
       <div ref={preview} className="lp-preview" id="activity-example"><ExamplePreview example={example} onChoose={choose} headingRef={exampleHeading}/></div>
     </div></section>
-    <CornerTicker names={tickerNames}/>
+    <MaxxingRibbon/>
     <CornerCarousel/>
     <section id="how" className="lp-section lp-how" aria-labelledby="how-heading"><div className="lp-wide">
       <p className="lp-eyebrow">{COPY.howLabel}</p><h2 id="how-heading" tabIndex={-1} className="lp-h2">{COPY.howHeading}</h2>
