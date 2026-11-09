@@ -1,6 +1,6 @@
 /** Editorial pilot for the Gardening Corner. Original Soosh copy; not user testimonials.
- * Images are intentionally not linked until the original assets are uploaded to
- * approved storage. Never substitute scraped Pinterest imagery.
+ * Image paths reference approved original assets in public/gardening. The images
+ * must be installed from the founder-supplied ZIP before deployment.
  */
 export const gardeningCornerPilot = {
   slug: "gardening",
@@ -11,160 +11,160 @@ export const gardeningCornerPilot = {
     "id": "garden-01",
     "title": "Start seeds in a tray",
     "collection": "start",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: start seeds in a tray",
+    "imagePath": "/gardening/01-start-seeds.webp",
+    "alt": "Gardening inspiration: start seeds in a tray",
     "action": "Start pursuit"
   },
   {
     "id": "garden-02",
     "title": "Build a balcony garden",
     "collection": "start",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: build a balcony garden",
+    "imagePath": "/gardening/02-balcony-garden.webp",
+    "alt": "Gardening inspiration: build a balcony garden",
     "action": "Start pursuit"
   },
   {
     "id": "garden-03",
-    "title": "Grow basil on your windowsill",
-    "collection": "start",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: grow basil on your windowsill",
+    "title": "Grow herbs on a windowsill",
+    "collection": "indoor",
+    "imagePath": "/gardening/03-indoor-herbs.webp",
+    "alt": "Gardening inspiration: grow herbs on a windowsill",
     "action": "Start pursuit"
   },
   {
     "id": "garden-04",
     "title": "Repot your first plant",
     "collection": "start",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: repot your first plant",
+    "imagePath": "/gardening/04-repot-refresh.webp",
+    "alt": "Gardening inspiration: repot your first plant",
     "action": "Start pursuit"
   },
   {
     "id": "garden-05",
-    "title": "Try container tomatoes",
-    "collection": "start",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: try container tomatoes",
+    "title": "Make a tiny terrarium",
+    "collection": "creative",
+    "imagePath": "/gardening/05-terrarium.webp",
+    "alt": "Gardening inspiration: make a tiny terrarium",
     "action": "Start pursuit"
   },
   {
     "id": "garden-06",
-    "title": "Propagate a pothos cutting",
-    "collection": "indoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: propagate a pothos cutting",
+    "title": "Grow your own food",
+    "collection": "edible",
+    "imagePath": "/gardening/06-grow-food.webp",
+    "alt": "Gardening inspiration: grow your own food",
     "action": "Start pursuit"
   },
   {
     "id": "garden-07",
-    "title": "Style a plant shelf",
+    "title": "Propagate plant cuttings",
     "collection": "indoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: style a plant shelf",
+    "imagePath": "/gardening/07-propagate-plants.webp",
+    "alt": "Gardening inspiration: propagate plant cuttings",
     "action": "Start pursuit"
   },
   {
     "id": "garden-08",
-    "title": "Make a tiny terrarium",
+    "title": "Choose low-maintenance plants",
     "collection": "indoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: make a tiny terrarium",
+    "imagePath": "/gardening/08-low-maintenance-plants.webp",
+    "alt": "Gardening inspiration: choose low-maintenance plants",
     "action": "Start pursuit"
   },
   {
     "id": "garden-09",
-    "title": "Build a vertical herb wall",
-    "collection": "indoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: build a vertical herb wall",
+    "title": "Build a raised bed garden",
+    "collection": "outdoor",
+    "imagePath": "/gardening/09-raised-bed.webp",
+    "alt": "Gardening inspiration: build a raised bed garden",
     "action": "Start pursuit"
   },
   {
     "id": "garden-10",
-    "title": "Grow microgreens",
-    "collection": "edible",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: grow microgreens",
+    "title": "Plant with friends",
+    "collection": "outdoor",
+    "imagePath": "/gardening/10-plant-with-friends.webp",
+    "alt": "Gardening inspiration: plant with friends",
     "action": "Start pursuit"
   },
   {
     "id": "garden-11",
-    "title": "Grow strawberries in pots",
-    "collection": "edible",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: grow strawberries in pots",
+    "title": "Paint terracotta pots",
+    "collection": "creative",
+    "imagePath": "/gardening/11-diy-pots.webp",
+    "alt": "Gardening inspiration: paint terracotta pots",
     "action": "Start pursuit"
   },
   {
     "id": "garden-12",
-    "title": "Create a pressed-flower journal",
+    "title": "Grow cut flowers",
     "collection": "creative",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: create a pressed-flower journal",
+    "imagePath": "/gardening/12-cut-flowers.webp",
+    "alt": "Gardening inspiration: grow cut flowers",
     "action": "Start pursuit"
   },
   {
     "id": "garden-13",
-    "title": "Sketch a botanical diary",
-    "collection": "creative",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: sketch a botanical diary",
+    "title": "Grow strawberries in pots",
+    "collection": "edible",
+    "imagePath": "/gardening/13-strawberries.webp",
+    "alt": "Gardening inspiration: grow strawberries in pots",
     "action": "Start pursuit"
   },
   {
     "id": "garden-14",
-    "title": "Arrange homegrown flowers",
+    "title": "Keep a plant journal",
     "collection": "creative",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: arrange homegrown flowers",
+    "imagePath": "/gardening/14-plant-journal.webp",
+    "alt": "Gardening inspiration: keep a plant journal",
     "action": "Start pursuit"
   },
   {
     "id": "garden-15",
-    "title": "Paint terracotta pots",
+    "title": "Create a seed library",
     "collection": "creative",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: paint terracotta pots",
+    "imagePath": "/gardening/15-seed-library.webp",
+    "alt": "Gardening inspiration: create a seed library",
     "action": "Start pursuit"
   },
   {
     "id": "garden-16",
-    "title": "Start a compost bin",
+    "title": "Plant a pollinator garden",
     "collection": "outdoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: start a compost bin",
+    "imagePath": "/gardening/16-pollinator-garden.webp",
+    "alt": "Gardening inspiration: plant a pollinator garden",
     "action": "Start pursuit"
   },
   {
     "id": "garden-17",
-    "title": "Grow a salad planter",
+    "title": "Start composting",
     "collection": "outdoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: grow a salad planter",
+    "imagePath": "/gardening/17-compost.webp",
+    "alt": "Gardening inspiration: start composting",
     "action": "Start pursuit"
   },
   {
     "id": "garden-18",
-    "title": "Plant pollinator-friendly flowers",
-    "collection": "outdoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: plant pollinator-friendly flowers",
+    "title": "Grow a citrus tree",
+    "collection": "edible",
+    "imagePath": "/gardening/18-citrus-tree.webp",
+    "alt": "Gardening inspiration: grow a citrus tree",
     "action": "Start pursuit"
   },
   {
     "id": "garden-19",
-    "title": "Garden with a friend",
-    "collection": "outdoor",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: garden with a friend",
+    "title": "Build a vertical garden",
+    "collection": "indoor",
+    "imagePath": "/gardening/19-vertical-garden.webp",
+    "alt": "Gardening inspiration: build a vertical garden",
     "action": "Start pursuit"
   },
   {
     "id": "garden-20",
-    "title": "Harvest your first herbs",
-    "collection": "edible",
-    "imagePath": null,
-    "alt": "Original Soosh gardening artwork: harvest your first herbs",
+    "title": "Create a garden nook",
+    "collection": "outdoor",
+    "imagePath": "/gardening/20-garden-nook.webp",
+    "alt": "Gardening inspiration: create a garden nook",
     "action": "Start pursuit"
   }
 ],
