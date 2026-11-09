@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { ArrowUpRight, Compass, Layers, Lock, Users } from "lucide-react";
-import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, TIKTOK_URL, stubbyAskEnabled } from "../config";
+import { APP_NAME, CONTACT_EMAIL, INSTAGRAM_URL, X_URL, TIKTOK_URL, stubbyAskEnabled } from "../config";
 import { humanOnboardingEnabled } from "../lib/personalization";
 import { QUESTION_TITLES } from "../components/settings/PreferenceFields";
 import { cornerPath } from "../lib/cornerPath";
@@ -115,6 +115,6 @@ function LandingPage() {
     </div></section>
     <section id="faq" className="lp-section" aria-labelledby="faq-heading"><div className="lp-wide lp-faq"><h2 id="faq-heading" className="lp-h2">{COPY.faqHeading}</h2><div className="lp-faq-list">{COPY.faq.map(f => <details key={f.q}><summary>{f.q}<span aria-hidden="true">+</span></summary><p>{f.a}</p></details>)}</div></div></section>
     <section className="lp-section lp-final" aria-labelledby="final-heading"><motion.div className="lp-wide lp-final-card" {...enter(0, { from: { scale: 0.97 }, to: { scale: 1 } })}><div><h2 id="final-heading" className="lp-h2">{COPY.finalHeading}</h2><p>{COPY.finalLine}</p></div>{tryLink("footer", "lp-btn lp-btn-lg lp-btn-ink")}</motion.div></section>
-    <footer className="lp-footer"><p className="lp-footer-mark" aria-hidden="true"><SplitWord text={APP_NAME} onView/></p><nav aria-label="Footer"><Link to="/privacy-policy">Privacy Policy</Link><Link to="/terms">Terms</Link>{CONTACT_EMAIL && <a href={`mailto:${CONTACT_EMAIL}`}>Contact</a>}{INSTAGRAM_URL && <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a>}{TIKTOK_URL && <a href={TIKTOK_URL} target="_blank" rel="noopener noreferrer">TikTok</a>}</nav></footer>
+    <footer className="lp-footer"><p className="lp-footer-mark" aria-hidden="true"><SplitWord text={APP_NAME} onView/></p><nav aria-label="Footer"><Link to="/privacy-policy">Privacy Policy</Link><Link to="/terms">Terms</Link>{CONTACT_EMAIL && <a href={`mailto:${CONTACT_EMAIL}`}>Contact</a>}{INSTAGRAM_URL && <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer">Instagram</a>}{X_URL && <a href={X_URL} target="_blank" rel="noopener noreferrer">X</a>}{TIKTOK_URL && <a href={TIKTOK_URL} target="_blank" rel="noopener noreferrer">TikTok</a>}</nav></footer>
   </div>;
 }
