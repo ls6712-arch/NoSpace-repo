@@ -77,8 +77,9 @@ export const suggestionLoggingEnabled = true;
 // value, so adding one later is a one-line change here and no layout work.
 // CONTACT_EMAIL is a bare address; the others are full URLs. A test keeps it set.
 // The Terms and Privacy Policy pages read CONTACT_EMAIL too.
-export const CONTACT_EMAIL = "sushmithalekkala@gmail.com";
-export const INSTAGRAM_URL = "";
+export const CONTACT_EMAIL = "info@onsoosh.com";
+export const INSTAGRAM_URL = "https://www.instagram.com/onsoosh";
+export const X_URL = "https://x.com/onsoosh";
 export const TIKTOK_URL = "";
 
 // How people reach support from inside the app (founder, Nov 3, 2026), wherever a message says

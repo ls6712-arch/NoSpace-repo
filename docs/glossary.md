@@ -304,7 +304,7 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | See who's on Soosh. | Real Shelves heading |
 | Join Soosh. | Sign-up section heading, a neutral placeholder to be rewritten ("Soosh is invite-only." is retired) |
 | Create an account to get started. | Sign-up section line, a neutral placeholder to be rewritten |
-| Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |
+| Privacy Policy / Terms | Footer links. Contact, Instagram, X and TikTok appear once set in `src/app/config.ts` |
 
 ## Core loop v1 (Oct 28, 2026)
 
@@ -1018,6 +1018,18 @@ The complete wording is in `src/app/landing/copy.ts`; the crawler copy in `index
 | Questions | FAQ heading. Replaces "Before you start". New questions: How do I find a new hobby?, What can I do with friends this week?, What is a Stub?, Is Soosh free?, Who can see what I post? |
 | Pick one thing. Do it this week. / Free to use. Go on your own or bring someone. | Final card |
 
+### Landing footer (founder, Nov 9, 2026)
+
+Rebuilt after the founder's reference screenshot. Website only. Wording is in `LANDING_COPY.footer`.
+
+| String | Where |
+|---|---|
+| Explore / How it works / Corners / Guides / Questions | Footer link column. Each scrolls to that landing section |
+| Who we are | Label over the hook line (reuses "Do the thing. Bring a friend. Keep the Stub.") |
+| Follow | Label over the X and Instagram icons (@onsoosh) |
+| Tell us what you wish Soosh did / I wish… / Send | The footer pill. "Wish" means an idea someone sends us for Soosh. Send opens the visitor's mail app addressed to `CONTACT_EMAIL` (info@onsoosh.com); nothing is stored |
+| © Soosh / Privacy Policy / Terms / Contact | Footer bottom row |
+
 ## Home v3: your Corners, right now (founder request, Nov 8, 2026; new strings for approval)
 
 Home was a planner card, four suggestions, a Log a Moment card and a feed of people you follow that was
@@ -1036,6 +1048,15 @@ More ways and the Log a Moment card are gone from Home (Discover, Corners and th
 | Your week / Open | Now one row; its count line or "Add when you’re usually free" sits beside it (under it on phones). Still the phone's way into the Calendar. Reused |
 | Soosh is better with your people / Bring a friend and start your first Pursuit together. / Invite on WhatsApp / Find contacts | Shown in place of From your people while it is empty. Reused from the old empty Home |
 | Make your version | On each Still making card; opens the same sheet as on a Corner page. Reused |
+
+## Landing ribbon words (founder request, Nov 9, 2026)
+
+The ten words on the satin ribbon between the landing hero and the Corner carousel, in this order,
+with " · " between them: Sooshmaxxing, Hobbymaxxing, Timemaxxing, Weekendmaxxing, Friendmaxxing,
+Lifemaxxing, Stubmaxxing, Offlinemaxxing, Funmaxxing, Sidequestmaxxing. Double x, one word each,
+sentence case. Brand voice for the landing page only (the 2026-09 blueprint kept "hobbymaxxing" out
+of the hero but allowed it elsewhere); not for in-app labels. Source: `LANDING_COPY.maxxing` in
+`src/app/landing/copy.ts`.
 
 ## Retired terms
 

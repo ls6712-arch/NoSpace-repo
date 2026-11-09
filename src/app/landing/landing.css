@@ -29,7 +29,7 @@
 .lp-nav-how { display: none; padding: 0 12px; background: transparent; border: 0; cursor: pointer; }
 .lp-btn { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 10px 22px; border: 1px solid transparent; border-radius: 999px; background: var(--accent); color: var(--accent-foreground); font-family: var(--font-body); font-size: var(--text-small); font-weight: 600; text-decoration: none; cursor: pointer; transition: transform var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
 .lp-btn:hover { transform: translateY(-2px); }
-.lp-btn:active { transform: none; }
+.lp-btn:active { transform: scale(0.97); }
 .lp-btn-ink { background: var(--foreground); color: var(--background); }
 .lp-btn-ghost { background: transparent; color: var(--foreground); border-color: var(--border); }
 .lp-btn-ghost:hover { border-color: var(--foreground); }
@@ -136,7 +136,7 @@
 .lp-how { background: var(--card); }
 .lp-steps { display: grid; gap: 32px; counter-reset: steps; list-style: none; padding: 0; margin: 40px 0 0; }
 .lp-steps li { counter-increment: steps; }
-.lp-steps li::before { content: counter(steps); display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-foreground); font-weight: 700; }
+.lp-step-n { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accent-foreground); font-weight: 700; }
 .lp-steps h3 { margin: 20px 0 12px; font-family: var(--font-display); font-size: var(--text-title); font-weight: 700; line-height: 1.2; }
 .lp-steps p { color: var(--muted-foreground); }
 .lp-preferences { display: grid; gap: 32px; margin-top: 48px; padding: 24px; border-radius: 20px; background: color-mix(in srgb, var(--cat-orange) 15%, var(--card)); }
@@ -161,9 +161,6 @@
 .lp-final-card .lp-h2 { max-width: 20ch; font-size: clamp(2rem, 1.5rem + 2vw, 3rem); }
 /* Explicit foreground tokens keep the orange panel readable in both themes. */
 .lp-final-card .lp-btn { background: var(--ink); color: var(--photo-text); }
-.lp-footer { padding: 24px; border-top: 1px solid var(--border); }
-.lp-footer nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 24px; }
-.lp-footer a { display: inline-flex; min-height: 44px; min-width: 44px; align-items: center; justify-content: center; color: var(--foreground); font-size: var(--text-small); text-underline-offset: 4px; }
 .lp-stubby { display: inline-block; line-height: 0; transform-origin: 50% 100%; }
 @media (min-width: 360px) { .lp-activity-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 360px) and (max-width: 559px) {
@@ -340,8 +337,6 @@
 .lp-guide-list a:hover { color: var(--accent-text); }
 .lp-guide-list svg { flex: none; }
 .lp-guides-all { display: inline-flex; margin-top: 20px; }
-.lp-footer { overflow: hidden; }
-.lp-footer-mark { margin: 0 0 8px !important; text-align: center; font-family: var(--font-display); font-size: clamp(5rem, 24vw, 19rem); font-weight: 800; line-height: 0.8; letter-spacing: -0.07em; color: color-mix(in srgb, var(--foreground) 10%, transparent); user-select: none; }
 @media (min-width: 744px) {
   .lp-guide-list { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; }
   .lp-how .lp-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -363,3 +358,55 @@
 .lp-carousel { position: relative; width: 100%; height: clamp(420px, 62vw, 600px); margin-top: 24px; }
 .lp-carousel-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 24px; }
 .lp-carousel-foot .lp-corner-link { justify-content: flex-start; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; }
+
+/* Landing motion (Nov 9, 2026): the movements from motionTokens.ts, in step with the Corner carousel. */
+.lp-split-char { display: inline-block; will-change: transform; }
+.lp-hook > span, .lp-hook > em { will-change: transform, opacity; }
+.lp-ribbon { position: relative; height: clamp(220px, 26vw, 340px); overflow: hidden; }
+.lp-ribbon-canvas, .lp-ribbon-canvas canvas { display: block; width: 100%; height: 100%; }
+.lp-ribbon-flat { position: absolute; inset: 50% 0 auto; transform: translateY(-50%) rotate(-2deg); margin: 0; padding: 14px 24px; overflow: hidden; white-space: nowrap; background: var(--foreground); color: var(--background); font-family: var(--font-display); font-size: var(--text-lead); font-weight: 800; }
+.lp-step-n { font-variant-numeric: tabular-nums; }
+.lp-wall-card { transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard); }
+.lp-wall-strip { transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }
+.lp-guide-list a svg { transition: transform var(--duration-fast) var(--ease-standard); }
+@media (hover: hover) {
+  .lp[data-motion="on"] .lp-wall-card:hover { transform: translateY(-4px) rotate(-0.6deg); box-shadow: 0 12px 28px color-mix(in srgb, var(--foreground) 12%, transparent); }
+  .lp-wall-card:hover .lp-wall-strip { background: var(--accent); color: var(--accent-foreground); }
+  .lp[data-motion="on"] .lp-guide-list a:hover svg { transform: translate(3px, -3px); }
+  .lp[data-motion="on"] .lp-feature-grid article:hover svg { transform: rotate(-8deg) scale(1.08); }
+}
+.lp-feature-grid article svg { transition: transform var(--duration-base) var(--ease-standard); }
+
+/* Footer (Nov 9, 2026): an inverted band after the reference layout. Labels stay
+   sentence case per the style guide; the letter spacing carries the look. */
+.lp-foot { margin-top: 48px; padding: 72px 24px 40px; background: var(--foreground); color: var(--background); border-radius: 32px 32px 0 0; }
+.lp-foot a, .lp-foot button { color: inherit; }
+.lp-foot-top { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; align-items: start; }
+.lp-foot-brand { display: flex; align-items: center; gap: 20px; text-decoration: none; }
+.lp-foot-disc { display: grid; place-items: center; width: clamp(72px, 18vw, 104px); height: clamp(72px, 18vw, 104px); flex: none; border-radius: 999px; background: var(--background); }
+.lp-foot-word { font-family: var(--font-display); font-size: clamp(2.75rem, 2rem + 3vw, 4.5rem); font-weight: 800; line-height: 0.9; letter-spacing: -0.04em; }
+.lp-foot-label { margin: 0 0 16px; font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.18em; color: color-mix(in srgb, var(--background) 60%, transparent); }
+.lp-foot-links { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.lp-foot-links button { min-height: 44px; padding: 0; border: 0; background: none; font-family: var(--font-display); font-size: var(--text-title); font-weight: 600; letter-spacing: -0.02em; text-align: left; cursor: pointer; }
+.lp-foot-links button:hover, .lp-foot-legal a:hover { text-decoration: underline; text-underline-offset: 6px; }
+.lp-foot-about { margin: 0; max-width: 18ch; font-family: var(--font-display); font-size: var(--text-title); font-weight: 600; line-height: 1.2; letter-spacing: -0.02em; }
+.lp-foot-socials { display: flex; gap: 8px; margin: 0 0 0 -12px; padding: 0; list-style: none; }
+.lp-foot-socials a { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; transition: background var(--duration-fast) var(--ease-standard); }
+.lp-foot-socials a:hover { background: color-mix(in srgb, var(--background) 12%, transparent); }
+.lp-foot-bottom { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px; margin-top: 72px; align-items: end; }
+.lp-foot-legal p { margin: 0 0 8px; font-size: var(--text-small); color: color-mix(in srgb, var(--background) 70%, transparent); }
+.lp-foot-legal nav { display: flex; flex-wrap: wrap; gap: 0 20px; }
+.lp-foot-legal a { display: inline-flex; min-height: 44px; min-width: 44px; align-items: center; justify-content: center; font-size: var(--text-small); color: color-mix(in srgb, var(--background) 70%, transparent); text-decoration: none; }
+.lp-foot-pill { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 22px; border: 1px solid color-mix(in srgb, var(--background) 30%, transparent); border-radius: 999px; transition: border-color var(--duration-fast) var(--ease-standard); }
+.lp-foot-pill:focus-within { border-color: var(--background); }
+.lp-foot-pill input { flex: 1; width: 0; min-width: 0; min-height: 44px; border: 0; background: none; color: inherit; font: inherit; font-size: var(--text-body); outline: none; }
+.lp-foot-pill input::placeholder { color: color-mix(in srgb, var(--background) 45%, transparent); }
+.lp-foot-pill button { min-height: 44px; padding: 0 24px; border: 0; border-radius: 999px; background: var(--background); color: var(--foreground) !important; font-weight: 600; font-size: var(--text-small); letter-spacing: 0.08em; cursor: pointer; }
+.lp-foot-pill button:disabled { opacity: 0.5; cursor: default; }
+@media (min-width: 744px) {
+  .lp-foot-top { grid-template-columns: 1.2fr 1fr 1fr; }
+  .lp-foot-bottom { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+@media (min-width: 1100px) {
+  .lp-foot-top { grid-template-columns: 1.4fr 1fr 1.2fr auto; }
+}
