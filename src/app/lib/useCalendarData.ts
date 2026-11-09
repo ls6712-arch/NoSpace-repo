@@ -26,8 +26,8 @@ const formatDay = (ms: number) => formatDate(ms, { timeZone: HOME_TZ });
 
 /**
  * What the calendar reads on top of the Week view's data: the person's plans in
- * whatever range is on screen (they page back to the month they joined and 3
- * months ahead) and their Stubs. The last answer stays on screen while the next
+ * whatever range is on screen (they page in whole years: from Jan 1 of the year
+ * they joined to the end of next year) and their Stubs. The last answer stays on screen while the next
  * one loads, so paging does not flash empty.
  */
 export function useCalendarData(

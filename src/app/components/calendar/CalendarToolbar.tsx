@@ -6,7 +6,7 @@ const ROUND = "inline-flex size-11 items-center justify-center rounded-full bord
 
 /**
  * The row under the title: Today, previous and next (44px, named for the period
- * they move by), the Day, Week, Month, List switch (the chosen one in the
+ * they move by), the Day, Week, Month, Year, List switch (the chosen one in the
  * foreground fill), and then Make a plan, the one coral fill on every screen size.
  * Below 1128px a Show button opens the Show panel as a sheet.
  */
@@ -53,7 +53,7 @@ export function CalendarToolbar({
             aria-pressed={v === view}
             onClick={() => onView(v)}
             className={cn(
-              "min-h-11 flex-1 rounded-full px-4 text-small font-semibold",
+              "min-h-11 flex-1 rounded-full px-2 text-small font-semibold tab:px-4",
               v === view ? "bg-foreground text-background" : "text-muted-foreground",
             )}
           >

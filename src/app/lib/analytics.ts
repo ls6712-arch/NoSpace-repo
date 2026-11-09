@@ -32,8 +32,8 @@ export type AnalyticsEvent =
   | { name: "home_suggestion_logged"; kind: string; position: number }
   | { name: "home_suggestion_invite"; kind: string; position: number }
   | { name: "home_suggestion_dismissed"; kind: string; position: number }
-  | { name: "calendar_opened"; view: "day" | "week" | "month" | "list" }
-  | { name: "calendar_view_changed"; view: "day" | "week" | "month" | "list" }
+  | { name: "calendar_opened"; view: "day" | "week" | "month" | "year" | "list" }
+  | { name: "calendar_view_changed"; view: "day" | "week" | "month" | "year" | "list" }
   | { name: "calendar_filter_changed"; row: string; on: boolean }
   | { name: "calendar_slot_tapped"; kind: "empty" | "plan" | "free" | "block" | "stub" }
   | { name: "plan_created_from_calendar" }
