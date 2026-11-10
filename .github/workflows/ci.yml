@@ -5,6 +5,13 @@ on:
   push:
     branches: [main, staging]
 
+# A new push to a pull request stops the run for the push before it: only the newest commit's result is
+# ever read, and each run costs Actions minutes. Runs on main and staging are never cancelled, because
+# every merge there is a deploy and each one needs its own result.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -87,7 +94,11 @@ jobs:
         run: node scripts/visual/run.ts --profiles --only "iPhone SE,iPhone 15,iPad" --strict --out visual-out
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
+          # Kept 7 days, not the default 90: these are for looking at a recent run. A refused upload
+          # (the Actions storage quota was hit on Nov 10, 2026) does not fail a job whose tests passed.
+          retention-days: 7
           name: visual-webkit
           path: visual-out
           if-no-files-found: ignore
@@ -116,14 +127,18 @@ jobs:
         run: npm run e2e:discover-library -- --out discover-library-e2e-out
       - uses: actions/upload-artifact@v4
         if: failure()
+        continue-on-error: true
         with:
+          retention-days: 7
           name: e2e-guest-stubby
           path: e2e-guest-stubby-failure.png
           if-no-files-found: ignore
 
       - uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
+          retention-days: 7
           name: landing-browser-evidence
           path: |
             landing-e2e-out
