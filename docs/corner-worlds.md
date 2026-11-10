@@ -1,6 +1,6 @@
 # Corner rooms
 
-A Corner can have a room: a 3D place that is what the Corner looks like. It is the Corner, not a separate thing with its own name (the Pottery room is "the Pottery Corner", never "the studio"). It draws what the list already shows (the Still making and Made it walls, Passed along, the Corner chat) and adds nothing of its own to the database. Pottery is the only Corner with one.
+A Corner can have a room: a 3D place that is what the Corner looks like. It is the Corner, not a separate thing with its own name (the Pottery room is "the Pottery Corner", never "the studio"). It draws what the list already shows (the Still making and Made it walls, Passed along, the Corner chat) and adds nothing of its own to the database. Four Corners have one: Pottery, Gardening, Reading and Board games.
 
 **One Corner, two ways to see it.** At `/corners/:slug`, a Corner with a room opens as the room for an approved member. The list (the page every other Corner has) is one tap away through **List**, and **Room** on the list goes back; the choice is remembered. Visitors, and devices that cannot draw the room, get the list. `CornerFace` in `src/app/pages/CornerDetail.tsx` decides, using `opensAsRoom` in `src/app/world/cornerWorlds.ts`.
 
@@ -29,7 +29,7 @@ Nothing about this is stored on a Moment. A Moment is on a Corner's finished wal
 
 | Where | What it is |
 |---|---|
-| `corners/` | One config per Corner (`pottery.ts`) and the list of them (`index.ts`). Plain data |
+| `corners/` | One config per Corner (`pottery.ts`, `gardening.ts`, `reading.ts`, `board-games.ts`) and the list of them (`index.ts`). Plain data |
 | `config.ts` | What a config may contain, and `checkConfig`, the rules every config keeps. Plain data |
 | `cornerWorlds.ts` | Which Corner has a room, the words every room shares, and the remembered settings. Small, so the Corner page can import it |
 | `layout.ts` | No 3D: which Moment goes where (`planRoom`), what its piece looks like (`pieceSpec`), which pairs get a thread |

@@ -1523,15 +1523,54 @@ The room reuses, unchanged, the approved Corner walls strings (Walls, Still maki
 | Music on / Music off | Top bar | Merged Nov 10 |
 | The Pottery Corner as a 3D room. Drag to look around. Everything in it is also in the Walls panel. | Screen reader description of the canvas | Changed Nov 10, proposed |
 
-What the characters say (each shown with the Character tag). Meera: "Oh hi! Grab a stool, the wheel's warm." / "Centre first. Everything else follows." / "Slow hands, fast wheel." / "Wet your hands again. Trust me." / "Ha. Collapsed. Again! Third time today." Arjun: "Wedge out the air bubbles first." / "Mine looked like a potato too. Keep going." / "You showed up. That's the hard part." Lena: "Nobody's first bowl is round." / "Glaze day is the best day." / "Dip, count to three, lift." Biscuit, the cat: "(Biscuit the cat is asleep. Purring.)"
+What the characters say (each shown with the Character tag). Meera: "Oh hi! Grab a stool, the wheel's warm." / "Centre first. Everything else follows." / "Slow hands, fast wheel." / "Wet your hands again. Trust me." / "Ha. Collapsed. Again! Third time today." Sid: "Wedge out the air bubbles first." / "Mine looked like a potato too. Keep going." / "You showed up. That's the hard part." Lena: "Nobody's first bowl is round." / "Glaze day is the best day." / "Dip, count to three, lift." Biscuit, the cat: "(Biscuit the cat is asleep. Purring.)"
 
 Retired on Nov 10, 2026 (the room is the Corner): "Enter the studio", "The Pottery studio", "Leave the studio", "The studio can't open on this device, so here is the Corner page.", and "studio" in any string a person reads.
 
 Wording from the first brief that is **not used**, because an approved string already covers it: "Tear off · make your version" (Make your version), "I'm in" (Count me in), "Keep going" as a reaction (retired; see `docs/moment-card-and-reactions-spec.md`), "Half-done, messy, in progress. The good part." (Half-done, messy, in progress.), "{N} here now" (the Corner chat's own presence line, which names up to three people).
 
+## Corner rooms: Gardening, Reading and Board games (founder, Nov 10, 2026)
+
+Gardening, Reading and Board games open as rooms, like Pottery. Each is **the Corner**, never a place with a name of its own: no "the garden", "the reading room" or "the game café" as a place (founder, Nov 10, 2026). Objects keep their names: seedling stand, reading cart, learning cart, your shelf. The button on every entry screen is **Enter the Corner**. Every string every room shares (Room, List, Your shelf, Empty for now, Got it, Character, the lights, Sound and Music) is the Pottery room's, unchanged.
+
+**Pottery's second character is Sid** (founder, Nov 10, 2026; was Arjun). His lines are unchanged.
+
+**The name label.** Hovering a character shows their name with the Character tag and nothing else. Tapping one shows their name, the tag and one of their lines, as before.
+
+Wall names are in "Corner rooms: wall labels" below. The words under a sign count pieces, never people.
+
+| String | Where | Status |
+|---|---|---|
+| {N} growing / {N} in bloom or picked | Gardening, under the Still growing and Made it signs | Proposed Nov 10 |
+| {N} open / {N} finished | Reading, under the Still reading and Read it signs | Proposed Nov 10 |
+| {N} learning / {N} played | Board games, under the Still learning and Played it signs | Proposed Nov 10 |
+| The greenhouse doors are open to the vegetable patch, someone's watering the big fern, and the seedling stand is full. Come grow something, sprouted or not. | Gardening entry screen. The reference began "Golden hour."; dropped, because the light follows the viewer's clock | Proposed Nov 10 |
+| The fire's lit, the shelves go up to the ceiling, and three readers are lost in their books. Pull up a chair, halfway through or just starting. | Reading entry screen | Proposed Nov 10 |
+| Dice are rolling, someone's thinking far too hard, and the shelves are full of games. Sit down and learn one, or play an old favourite. | Board games entry screen | Proposed Nov 10 |
+| Nothing yet. Log a Moment and your plant appears in the Corner: on the seedling stand while it's growing, on your shelf once it blooms or you pick something. | Gardening, Your shelf when empty | Proposed Nov 10 |
+| Plants that made it sit on your shelf. Ones still growing wait on the stand. | Gardening, Your shelf with pieces | Proposed Nov 10 |
+| Nothing yet. Log a Moment and your book appears in the Corner: open on the reading cart while you're reading it, on your shelf once you finish. | Reading, Your shelf when empty | Proposed Nov 10 |
+| Finished books stand on your shelf. Ones you're still reading lie open on the cart. | Reading, Your shelf with pieces | Proposed Nov 10 |
+| Nothing yet. Log a Moment and your game appears in the Corner: open on the learning cart while you're learning it, on your shelf once you've played it properly. | Board games, Your shelf when empty | Proposed Nov 10 |
+| Games you've played stand on your shelf. Ones you're learning sit open on the cart. | Board games, Your shelf with pieces | Proposed Nov 10 |
+| Tap a sign to see who's still growing, who made it, and your own shelf. | Gardening, the one-time hint | Proposed Nov 10 |
+| Tap a sign to see who's still reading, who read it, and your own shelf. | Reading, the one-time hint | Proposed Nov 10 |
+| Tap a sign to see who's still learning, who played it, and your own shelf. | Board games, the one-time hint | Proposed Nov 10 |
+| The Gardening Corner as a 3D room. Drag to look around. Everything in it is also in the Walls panel. | Screen reader description of the canvas. The same sentence for Reading and Board games, with the Corner's name | Proposed Nov 10 |
+
+What the characters say (each shown with the Character tag). Proposed Nov 10.
+
+Gardening. Rosa: "Hi! Mind the hose, everything else is fair game." / "Water the soil, not the leaves." / "Most plants want less water than you think." / "Talk to them. It can't hurt." Kofi: "Firm the soil, don't pack it." / "Hold them by the leaf, never the stem." / "Every gardener kills a few. Keep going." Noor: "Look, the first tomato is turning red." / "Weeding is basically meditation." / "Plant a few extra. Snails eat some." Ade: "Sun on your back, hands in the soil. Best feeling." / "The sunflowers were one seed each. One!" / "Outside beds forgive a lot. Just start." Pip, the cat: "(Pip is asleep in a patch of sun.)"
+
+Reading. Hana: "Oh, hello. The armchair by the fire is free." / "Just one more chapter." / "Abandoning a book is allowed, you know." / "Read the first page out loud. It helps." Ellie: "Rain is the best reading weather." / "I keep a pencil for lines I love." / "Ten pages counts. It really does." Omar: "I write one line about every book." / "Libraries are the best free thing there is." / "Swap a book with a friend. It's a gift that comes back." Moth, the cat: "(Moth is asleep on the rug, very much not reading.)"
+
+Board games. Theo: "Come on, double six." / "Rule one: whoever explains the rules goes first." / "Losing is how you learn the good games." Mira: "Hi! We're mid-game, but there's always room for one more." / "Your turn. Take your time. Not that much time." / "First game is always a practice game." / "Read the rules out loud together. It's faster." Sol: "Hmm. Hmm. Hmm." / "I'm not losing, I'm strategising." / "Short games first. Big ones once you're hooked." / "Yes! Did you see that?" Meeple, the cat: "(Meeple is asleep and has knocked over a pawn.)"
+
+Not used from the reference configs, because they name a place or belong to a later step: "Step into the garden", "Step into the reading room", "Pull up a chair" (Enter the Corner); the pet labels "Greenhouse cat", "Reading-room cat", "Café cat" (every character, pets included, carries the Character tag); and the composer, toast, Stubby, station, board and Pursuit strings, which wait for the step that ships them.
+
 ## Corner rooms: wall labels (founder, Nov 10, 2026)
 
-A Corner with a room may name its two walls itself. Nothing else about a wall changes: a Moment is on the finished wall when its Pursuit is finished, and on the in-progress wall otherwise. A Corner without a room says Still making and Made it. The labels are in `src/app/lib/cornerWallLabels.ts` and are used wherever the wall is named for that Corner: the list's panels and phone control, the room's signs and panel, and Log a Moment. A Corner's labels show once its room ships; until then it says Still making and Made it like every other Corner.
+A Corner with a room may name its two walls itself. Nothing else about a wall changes: a Moment is on the finished wall when its Pursuit is finished, and on the in-progress wall otherwise. A Corner without a room says Still making and Made it. The labels are in `src/app/lib/cornerWallLabels.ts` and are used wherever the wall is named for that Corner: the list's panels and phone control, the room's signs and panel, and Log a Moment. All four Corners have their rooms, so all four show their labels.
 
 | String | Where | Status |
 |---|---|---|

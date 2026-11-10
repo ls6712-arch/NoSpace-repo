@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { GLAZES, POT_SHAPES, ROOM_LIMITS, moodForHour, pieceSpec, planRoom, type RoomMoment } from "./layout";
 import { WORLD_COPY, cornerWorld, opensAsRoom, signLine } from "./cornerWorlds";
+import { CORNER_WORLDS } from "./corners";
 import { pottery } from "./corners/pottery";
 
 const m = (postId: number, o: Partial<RoomMoment> = {}): RoomMoment => ({ postId, mine: false, ...o });
@@ -114,7 +115,12 @@ describe("signs", () => {
 });
 
 describe("which Corners have a room", () => {
-  it("is Pottery only, and Ceramics because it was merged into Pottery", () => {
+  it("is Pottery, Gardening, Reading and Board games, and a Corner merged into one of them", () => {
+    expect(CORNER_WORLDS.map((w) => w.key)).toEqual(["crafts-making/pottery", "home-garden/gardening", "books-writing/reading", "gaming-tabletop/board-games"]);
+    expect(cornerWorld("home-garden", "gardening")?.setting).toBe("garden");
+    expect(cornerWorld("books-writing", "reading")?.setting).toBe("nook");
+    expect(cornerWorld("books-writing", "books")?.key).toBe("books-writing/reading");
+    expect(cornerWorld("gaming-tabletop", "board-games")?.setting).toBe("cafe");
     expect(cornerWorld("crafts-making", "pottery")?.key).toBe("crafts-making/pottery");
     expect(cornerWorld("art-creative", "ceramics")?.key).toBe("crafts-making/pottery");
     expect(cornerWorld("art-creative", "drawing")).toBeUndefined();
@@ -135,8 +141,10 @@ describe("how a Corner opens", () => {
   });
   it("is never called a studio in anything a person reads", () => {
     // Everything a person reads or hears read out. (`setting: "studio"` is the engine's name for the furniture and is never shown.)
-    const shown = JSON.stringify([WORLD_COPY, pottery.name, pottery.copy, pottery.characters.map((c) => [c.name, c.lines, c.collapseLine]), pottery.pet?.line, pottery.greeting]);
+    const shown = JSON.stringify([WORLD_COPY, CORNER_WORLDS.map((w) => [w.name, w.copy, w.characters.map((c) => [c.name, c.lines, c.collapseLine, c.cheerLine]), w.pet?.line, w.greeting])]);
     expect(shown).not.toMatch(/studio/i);
+    // A room is the Corner, never a place with a name of its own.
+    expect(shown).not.toMatch(/\b(the|in the|into the) (garden|reading room|game caf[eé]|caf[eé])\b/i);
   });
 });
 
@@ -175,20 +183,26 @@ describe("what ships", () => {
   it("keeps characters out of everything that holds real people, and out of the engine", () => {
     // A character's name and words live in its Corner's config and nowhere else: not in the engine (which draws
     // any Corner), not in the layout, the registry or the page (which hold real Moments and people).
-    const names = pottery.characters.map((c) => c.name).concat(pottery.pet ? [pottery.pet.name] : []);
-    expect(names).toEqual(["Arjun", "Meera", "Lena", "Biscuit"]);
-    for (const f of engine) for (const name of names) expect(f.text, `${name} in ${f.rel}`).not.toContain(name);
-    for (const name of names) expect(page).not.toContain(name);
+    const names = CORNER_WORLDS.flatMap((w) => w.characters.map((c) => c.name).concat(w.pet ? [w.pet.name] : []));
+    expect(names.slice(0, 4)).toEqual(["Sid", "Meera", "Lena", "Biscuit"]);
+    expect(new Set(names).size).toBe(names.length);
+    // As whole words: "Sid" is not "DoubleSide".
+    for (const name of names) {
+      const word = new RegExp(`\\b${name}\\b`);
+      for (const f of engine) expect(f.text, `${name} in ${f.rel}`).not.toMatch(word);
+      expect(page, name).not.toMatch(word);
+    }
     expect(page).toContain("WORLD_COPY.character");
     expect(WORLD_COPY.character).toBe("Character");
   });
 
   it("has no Corner's words in the engine", () => {
-    for (const f of engine) {
-      for (const c of pottery.characters) for (const line of c.lines) expect(f.text, f.rel).not.toContain(line);
-      expect(f.text, f.rel).not.toContain(pottery.copy.intro);
-      expect(f.text, f.rel).not.toContain(pottery.greeting[1]);
-    }
+    for (const f of engine)
+      for (const w of CORNER_WORLDS) {
+        for (const c of w.characters) for (const line of c.lines) expect(f.text, f.rel).not.toContain(line);
+        expect(f.text, f.rel).not.toContain(w.copy.intro);
+        expect(f.text, f.rel).not.toContain(w.greeting[1]);
+      }
   });
 
   it("loads three.js only inside the engine, as one file fetched when a room opens", () => {

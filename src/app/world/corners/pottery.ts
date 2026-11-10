@@ -1,7 +1,7 @@
 import type { CornerWorldConfig } from "../config";
 
 /**
- * The Pottery Corner's room. Meera, Arjun, Lena and Biscuit are characters, not people. Every word here is
+ * The Pottery Corner's room. Meera, Sid, Lena and Biscuit are characters, not people. Every word here is
  * in docs/glossary.md under "Corner room: Pottery".
  */
 export const pottery: CornerWorldConfig = {
@@ -23,7 +23,7 @@ export const pottery: CornerWorldConfig = {
   },
   characters: [
     {
-      name: "Arjun",
+      name: "Sid",
       pose: "standing",
       action: "press",
       at: [-1.6, -0.3],
