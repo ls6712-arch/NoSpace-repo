@@ -1054,19 +1054,20 @@ More ways and the Log a Moment card are gone from Home (Discover, Corners and th
 | Soosh is better with your people / Bring a friend and start your first Pursuit together. / Invite on WhatsApp / Find contacts | Shown in place of From your people while it is empty. Reused from the old empty Home |
 | Make your version | On each Still making card; opens the same sheet as on a Corner page. Reused |
 
-## Corners on Home and Discover (brief, Nov 10, 2026; two new headings for approval)
+## Corners on Home and Discover (brief, Nov 10, 2026; headings approved by the founder, Nov 10, 2026)
 
 Home has one more row, directly under Your week: Corners as square pictures, each with the Corner's
 name and its existing one line (`cornerAbout`). A Corner whose 3D world is switched on shows a still
 picture of it (`cornerPicture`, `src/app/lib/cornerPicture.ts`); every other Corner keeps its photo.
-The same still is the Corner's picture in Corners new to you on Discover and on `/corners`. Nothing
+The same still is the Corner's picture in Corners new to you on Discover and, in a 16:9 cut, on `/corners`.
+Group pages and the related Corners strip on a Corner page keep photos (founder, Nov 10, 2026). Nothing
 else on either page changed. A person never reads a word for the 3D world itself here: these are
 Corners.
 
 | String | Where |
 |---|---|
-| Corners for you | Heading of the row for someone who follows no Corners, and for a visitor: the Corners with a 3D world, onboarding picks first, then by affinity, then the rest. **New, for approval** |
-| Your Corners | Heading of the row for someone who follows Corners: only those, the most recently active first, up to 6. Already a section heading in Add to a Corner; **new on Home, for approval** |
+| Corners for you | Heading of the row for someone who follows no Corners, and for a visitor: the Corners with a 3D world, onboarding picks first, then by affinity, then the rest. Approved Nov 10, 2026 |
+| Your Corners | Heading of the row for someone who follows Corners: only those, the most recently active first, up to 6. Also a section heading in Add to a Corner. Approved for Home Nov 10, 2026 |
 | See all | Link beside the heading, to /corners. Reused |
 
 ## Landing ribbon words (founder request, Nov 9, 2026)

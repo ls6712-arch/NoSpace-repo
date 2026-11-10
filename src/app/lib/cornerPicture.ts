@@ -3,7 +3,8 @@ import { cornerPhoto, cornerPhotoAlt } from "./cornerPhoto";
 
 /**
  * The picture of a Corner on a card. A Corner whose 3D world is switched on has a still of it, made by
- * `node scripts/e2e/room-preview.ts --cards` (public/worlds/{slug}/card.webp: square, 800 by 800, golden hour).
+ * `node scripts/e2e/room-preview.ts --cards` in golden hour, in two shapes: public/worlds/{slug}/card.webp
+ * (square, 800 by 800) and card-wide.webp (16:9, 960 by 540, cut so the characters stay in frame on a wide card).
  * Every other Corner keeps the photo it has always had (cornerPhoto).
  *
  * This is the one place that knows which Corners have a still. The list is written out here, not read from the
@@ -30,10 +31,17 @@ export function cornerHasStill(spaceSlug: string, slug: string): boolean {
   return stillSlug(spaceSlug, slug) !== undefined;
 }
 
-/** The still of a Corner's 3D world when it has one, else exactly the photo the Corner has today. `width` only matters for a photo. */
-export function cornerPicture(spaceSlug: string, slug: string, width = 600): string | undefined {
+/** The shape of the box the picture goes in: a square, or a 16:9 card. */
+export type CornerPictureShape = "square" | "wide";
+const STILL_FILE: Record<CornerPictureShape, string> = { square: "card.webp", wide: "card-wide.webp" };
+
+/**
+ * The still of a Corner's 3D world when it has one, else exactly the photo the Corner has today.
+ * `width` only matters for a photo, and `shape` only for a still.
+ */
+export function cornerPicture(spaceSlug: string, slug: string, width = 600, shape: CornerPictureShape = "square"): string | undefined {
   const still = stillSlug(spaceSlug, slug);
-  return still ? `${import.meta.env.BASE_URL}worlds/${still}/card.webp` : cornerPhoto(spaceSlug, slug, width);
+  return still ? `${import.meta.env.BASE_URL}worlds/${still}/${STILL_FILE[shape]}` : cornerPhoto(spaceSlug, slug, width);
 }
 
 /** Alt text for cornerPicture: the Corner's name for a still, else what the photo's alt text is today. */

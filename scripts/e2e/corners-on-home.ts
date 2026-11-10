@@ -152,17 +152,31 @@ try {
 
       // ---------- The full Corner list ----------
       await page.goto(origin + "/#/corners", { waitUntil: "networkidle" });
+      // A row heading of the Corner list itself: Discover, which is still on screen for a moment, links to Corners too.
+      await page.locator('main h2[id^="row-"]').first().waitFor();
       await page.locator('main a[href="#/corners/pottery"]').first().waitFor();
       if (hasRow) {
         // Every card for a Corner with a 3D world shows its still, and no other card does.
-        const cards = await page.locator("main li a img").evaluateAll((imgs) => imgs.map((i) => ({ href: i.closest("a")!.getAttribute("href")!, still: !!i.getAttribute("src")?.includes("/worlds/") })));
+        const cards = await page.locator("main li a img").evaluateAll((imgs) => imgs.map((i) => ({ href: i.closest("a")!.getAttribute("href")!, still: !!i.getAttribute("src")?.includes("/worlds/"), wide: !!i.getAttribute("src")?.endsWith("/card-wide.webp"), src: i.getAttribute("src") })));
         const worlds = ["#/corners/board-games", "#/corners/gardening", "#/corners/pottery", "#/corners/reading"];
         for (const c of cards) assert.equal(c.still, worlds.includes(c.href), c.href);
+        // These cards are 16:9, so they use the 16:9 cut of the still.
+        for (const c of cards) assert.equal(c.wide, c.still, `${c.href} ${c.src}`);
         const shown = [...new Set(cards.filter((c) => c.still).map((c) => c.href))].sort();
         assert.ok(shown.length > 0);
-        pass(`${tag}: in the Corner list, ${shown.map((h) => h.slice(10)).join(" and ")} show a still and no other of its ${cards.length} cards does`);
+        pass(`${tag}: in the Corner list, ${shown.map((h) => h.slice(10)).join(" and ")} show the 16:9 still and no other of its ${cards.length} cards does`);
       }
       await shoot("corners");
+      if (hasRow) {
+        // Each of those cards on its own, once its picture has loaded (pictures further down load when scrolled to).
+        for (const slug of ["pottery", "gardening", "reading", "board-games"]) {
+          const card = page.locator(`main li a[href="#/corners/${slug}"]`, { has: page.locator('img[src$="/card-wide.webp"]') }).first();
+          await card.scrollIntoViewIfNeeded();
+          await card.locator("img").evaluate((img: HTMLImageElement) => img.complete || new Promise((done) => img.addEventListener("load", done, { once: true })));
+          await page.waitForTimeout(300);
+          await card.screenshot({ path: path.join(out, `${tag}-card-${slug}.png`) });
+        }
+      }
 
       // No part of a 3D world was fetched on any of these pages.
       const world = requested.filter((p) => /\/assets\/(scene|CornerWorld|town)-/.test(p));

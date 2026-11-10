@@ -13,16 +13,19 @@ describe("cornerPicture", () => {
     expect([...CORNER_STILL_KEYS].sort()).toEqual(CORNER_WORLDS.map((w) => w.key).sort());
   });
 
-  it("points at a file that is there: a WebP under 80 kB, 800 by 800", () => {
+  it("points at files that are there: WebP under 80 kB, a square of 800 and a 16:9 of 960 by 540", () => {
     for (const w of CORNER_WORLDS) {
       const [spaceSlug, slug] = w.key.split("/");
-      const src = cornerPicture(spaceSlug, slug)!;
-      expect(src).toBe(`/worlds/${w.slug}/card.webp`);
-      const bytes = fs.readFileSync(path.join(root, "public", src));
-      expect(bytes.length, src).toBeLessThan(80_000);
-      // A lossy WebP: "RIFF", the size, "WEBPVP8 ", then the frame header with both sides (14 bits each).
-      expect(bytes.toString("latin1", 0, 4) + bytes.toString("latin1", 8, 16), src).toBe("RIFFWEBPVP8 ");
-      expect([bytes.readUInt16LE(26) & 0x3fff, bytes.readUInt16LE(28) & 0x3fff], src).toEqual([800, 800]);
+      expect(cornerPicture(spaceSlug, slug)).toBe(`/worlds/${w.slug}/card.webp`);
+      for (const [shape, file, size] of [["square", "card.webp", [800, 800]], ["wide", "card-wide.webp", [960, 540]]] as const) {
+        const src = cornerPicture(spaceSlug, slug, 600, shape)!;
+        expect(src).toBe(`/worlds/${w.slug}/${file}`);
+        const bytes = fs.readFileSync(path.join(root, "public", src));
+        expect(bytes.length, src).toBeLessThan(80_000);
+        // A lossy WebP: "RIFF", the size, "WEBPVP8 ", then the frame header with both sides (14 bits each).
+        expect(bytes.toString("latin1", 0, 4) + bytes.toString("latin1", 8, 16), src).toBe("RIFFWEBPVP8 ");
+        expect([bytes.readUInt16LE(26) & 0x3fff, bytes.readUInt16LE(28) & 0x3fff], src).toEqual(size);
+      }
       expect(cornerPictureAlt(spaceSlug, slug, w.name)).toBe(w.name);
     }
   });
@@ -30,7 +33,8 @@ describe("cornerPicture", () => {
   it("gives a Corner without a 3D world exactly the photo and alt text it has today", () => {
     for (const [spaceSlug, slug] of [["crafts-making", "knitting"], ["food-drink", "baking"], ["no-such-space", "no-such-corner"]]) {
       expect(cornerHasStill(spaceSlug, slug)).toBe(false);
-      for (const width of [160, 600, 1600]) expect(cornerPicture(spaceSlug, slug, width)).toBe(cornerPhoto(spaceSlug, slug, width));
+      for (const width of [160, 600, 1600])
+        for (const shape of ["square", "wide"] as const) expect(cornerPicture(spaceSlug, slug, width, shape)).toBe(cornerPhoto(spaceSlug, slug, width));
       expect(cornerPictureAlt(spaceSlug, slug, "A name")).toBe(cornerPhotoAlt(slug));
     }
   });
@@ -41,7 +45,7 @@ describe("cornerPicture", () => {
       for (const e of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
         const rel = `${dir}/${e.name}`;
         if (e.isDirectory()) walk(rel);
-        else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && read(rel).includes("card.webp")) hits.push(rel);
+        else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name) && /card(-wide)?\.webp/.test(read(rel))) hits.push(rel);
       }
     };
     walk("src");

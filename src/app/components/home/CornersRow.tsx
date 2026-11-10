@@ -19,7 +19,7 @@ import { ImageWithFallback } from "../ImageWithFallback";
 import { Skeleton } from "../ui/skeleton";
 import { SectionHead } from "./YourCornersSections";
 
-/** The row's words (docs/glossary.md, Home v3). The two headings are new, for the founder's approval. */
+/** The row's words (docs/glossary.md, Corners on Home and Discover; approved Nov 10, 2026). */
 export const CORNERS_ROW_COPY = {
   forYou: "Corners for you",
   yours: "Your Corners",

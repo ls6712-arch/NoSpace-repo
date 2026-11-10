@@ -36,7 +36,7 @@ export function CornerCard({
         className="group relative block aspect-video overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:z-10 hover:shadow-glow focus-visible:shadow-glow"
       >
         <ImageWithFallback
-          src={still ? cornerPicture(corner.spaceSlug, corner.slug, 600) : cornerPhoto(corner.spaceSlug, corner.slug, 600)}
+          src={still ? cornerPicture(corner.spaceSlug, corner.slug, 600, "wide") : cornerPhoto(corner.spaceSlug, corner.slug, 600)}
           alt={still ? cornerPictureAlt(corner.spaceSlug, corner.slug, corner.name) : cornerPhotoAlt(corner.slug)}
           width={288}
           tint

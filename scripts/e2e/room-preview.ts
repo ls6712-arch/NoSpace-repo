@@ -3,7 +3,8 @@
 // to it, and to check an engine change did not change a room.
 //
 // Usage: node scripts/e2e/room-preview.ts [--out DIR] [--settings garden,nook,cafe] [--moods golden,night] [--views desktop,phone] [--frames 120]
-//        node scripts/e2e/room-preview.ts --cards   (writes public/worlds/{slug}/card.webp for every Corner in CORNER_WORLDS)
+//        node scripts/e2e/room-preview.ts --cards   (writes public/worlds/{slug}/card.webp and card-wide.webp for every Corner in CORNER_WORLDS;
+//                                                    --cards-out DIR writes them elsewhere, --lift N overrides how much each is brightened)
 // It builds scripts/e2e/room-preview (a test harness, never part of the app) and opens it in a headless
 // browser. No database, no network. Waits are counted in frames so two runs catch the same moment.
 import assert from "node:assert/strict";
@@ -26,12 +27,23 @@ const views = (arg("--views") ?? "desktop,phone").split(",");
 const frames = Number(arg("--frames") ?? 120);
 fs.mkdirSync(out, { recursive: true });
 
-// The still picture of a Corner (cornerPicture in src/app/lib/cornerPicture.ts): one square, 800 by 800, under 80 kB,
-// in golden hour, from the start pose on a wide screen. The frame is wider than it is tall, so the square is cut
-// from it where the setting is busiest (the characters and the shelves): 0 is the left edge of the frame, 1 the right.
+// The still pictures of a Corner (cornerPicture in src/app/lib/cornerPicture.ts), in golden hour, from the start pose
+// on a wide screen. Two shapes, each under 80 kB:
+//   card.webp       a square, 800 by 800, for square pictures (Home, Discover)
+//   card-wide.webp  16:9, 960 by 540, for the Corner list's cards
+// The frame is 1440 by 900, so each shape is cut from it where the setting is busiest (the characters and the
+// shelves). `x` and `y` say where the cut sits in the room it has to move: 0 is the left or top edge, 1 the right or bottom.
+// The wide cut is taken a little smaller than the frame so the characters are larger on a small card, and low in
+// the frame so they sit high on the card: the card's name is written over the bottom of the picture.
 const cards = args.includes("--cards");
-const CARD = { frame: { width: 1440, height: 900 }, side: 800, maxBytes: 80_000 };
-const CARD_CROP: Record<SettingName, number> = { studio: 0.62, garden: 1, nook: 0.3, cafe: 0.74 };
+const CARD = { frame: { width: 1440, height: 900 }, maxBytes: 80_000 };
+const CARD_SHAPES = [
+  { file: "card.webp", cut: { width: 900, height: 900 }, size: { width: 800, height: 800 }, x: { studio: 0.62, garden: 1, nook: 0.3, cafe: 0.74 }, y: { studio: 0, garden: 0, nook: 0, cafe: 0 } },
+  { file: "card-wide.webp", cut: { width: 1200, height: 675 }, size: { width: 960, height: 540 }, x: { studio: 0.75, garden: 1, nook: 0.25, cafe: 1 }, y: { studio: 0.8, garden: 0.7, nook: 1, cafe: 1 } },
+] as const satisfies readonly { file: string; cut: { width: number; height: number }; size: { width: number; height: number }; x: Record<SettingName, number>; y: Record<SettingName, number> }[];
+// The two lamp-lit settings are dark beside a light page, so their stills are lifted: each channel is raised to the
+// power 1/lift, which opens the shadows and leaves white as white. 1 leaves a still as the engine drew it.
+const CARD_LIFT: Record<SettingName, number> = { studio: 1, garden: 1, nook: 1.45, cafe: 1.45 };
 
 const dist = fs.mkdtempSync(path.join(os.tmpdir(), "soosh-room-preview-build-"));
 await build({ configFile: false, root: path.join(root, "scripts/e2e/room-preview"), base: "./", logLevel: "warn", build: { outDir: dist, emptyOutDir: true } });
@@ -46,7 +58,7 @@ const server = http.createServer((req, res) => {
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 const origin = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM || (fs.existsSync("/usr/bin/chromium") ? "/usr/bin/chromium" : undefined);
-const report = { scope: "The engine alone on a test harness page. No app, database or network.", shots: [] as { file: string; firstFrameMs: number }[], cards: [] as { file: string; bytes: number; pose: unknown }[], errors: [] as string[] };
+const report = { scope: "The engine alone on a test harness page. No app, database or network.", shots: [] as { file: string; firstFrameMs: number }[], cards: [] as { file: string; bytes: number; lift: number; pose: unknown }[], errors: [] as string[] };
 
 const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 try {
@@ -68,19 +80,28 @@ try {
       await page.evaluate((n) => new Promise<void>((done) => { let i = 0; const tick = () => (++i >= n ? done() : requestAnimationFrame(tick)); requestAnimationFrame(tick); }), frames);
       const frame = await page.screenshot();
       await page.close();
-      const left = Math.round((CARD.frame.width - CARD.frame.height) * CARD_CROP[corner.setting]);
-      const square = sharp(frame).extract({ left, top: 0, width: CARD.frame.height, height: CARD.frame.height }).resize(CARD.side, CARD.side);
-      let bytes = Buffer.alloc(0);
-      for (let quality = 82; quality >= 40; quality -= 6) {
-        bytes = await square.clone().webp({ quality, effort: 6 }).toBuffer();
-        if (bytes.length < CARD.maxBytes) break;
+      const lift = Number(arg("--lift") ?? CARD_LIFT[corner.setting]);
+      for (const shape of CARD_SHAPES) {
+        const left = Math.round((CARD.frame.width - shape.cut.width) * shape.x[corner.setting]);
+        const top = Math.round((CARD.frame.height - shape.cut.height) * shape.y[corner.setting]);
+        const { data, info } = await sharp(frame).extract({ left, top, ...shape.cut }).resize(shape.size.width, shape.size.height).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+        if (lift !== 1) {
+          const curve = Uint8Array.from({ length: 256 }, (_, v) => Math.round(255 * (v / 255) ** (1 / lift)));
+          for (let i = 0; i < data.length; i++) data[i] = curve[data[i]];
+        }
+        const picture = sharp(data, { raw: info });
+        let bytes = Buffer.alloc(0);
+        for (let quality = 82; quality >= 40; quality -= 6) {
+          bytes = await picture.clone().webp({ quality, effort: 6 }).toBuffer();
+          if (bytes.length < CARD.maxBytes) break;
+        }
+        assert.ok(bytes.length < CARD.maxBytes, `${corner.slug}: ${shape.file} must be under ${CARD.maxBytes} bytes`);
+        const file = path.join(arg("--cards-out") ? path.resolve(arg("--cards-out")!) : path.join(root, "public/worlds"), corner.slug, shape.file);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, bytes);
+        report.cards.push({ file: path.relative(root, file), bytes: bytes.length, lift, pose: corner.pose });
+        console.log("CARD", path.relative(root, file), bytes.length);
       }
-      assert.ok(bytes.length < CARD.maxBytes, `${corner.slug}: the still must be under ${CARD.maxBytes} bytes`);
-      const file = path.join(root, "public/worlds", corner.slug, "card.webp");
-      fs.mkdirSync(path.dirname(file), { recursive: true });
-      fs.writeFileSync(file, bytes);
-      report.cards.push({ file: path.relative(root, file), bytes: bytes.length, pose: corner.pose });
-      console.log("CARD", path.relative(root, file), bytes.length);
     }
     await context.close();
   }
