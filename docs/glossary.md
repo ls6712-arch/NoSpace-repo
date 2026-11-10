@@ -1076,6 +1076,13 @@ Never use these in UI copy.
 | That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |
 | Not this | Nov 2, 2026 (the label changes in Stubby plan PR 3) | Not now |
 | What are you after? | Nov 2, 2026 (the Ask Stubby field label) | What are you in the mood for? |
+| Do this (on a Moment) | Nov 10, 2026 (One Moment, brief v2) | Nothing. Save is the one "I want this" on a Moment. "Do this with people" on a Corner page is unchanged |
+| Count me in / You’re in (on a Moment) | Nov 10, 2026 (One Moment, brief v2) | Nothing on a Moment. A Pursuit session keeps "I’m in" and "You’re in" on the Pursuit page |
+| Try {corner} / See {Corner} | Nov 10, 2026 (One Moment, brief v2) | The Corner’s name in the Moment’s meta line, which links to the Corner |
+| Make your version / You started yours. | Nov 10, 2026 (One Moment, brief v2) | Nothing on a wall card. Still on the public landing page until its line is rewritten (founder to approve) |
+| Start a Pursuit inspired by this / Start a Pursuit with {name}? / Ask {name} to make it together? | Nov 10, 2026 (One Moment, brief v2) | Nothing. Removed from every Moment |
+| Quick react | Nov 10, 2026 (One Moment, brief v2) | Nothing. A double tap on the photo loves it |
+| Hobby (the label on a Moment) / Share this Moment / Not part of a Pursuit | Nov 10, 2026 (One Moment, brief v2) | The meta line; Copy link in the Moment’s menu |
 | Free tonight? Ask Stubby. | Nov 2, 2026 (the dock was removed) | Stubby's greeting on the Calendar stage |
 | Keep, for making a plan at once | Nov 2, 2026 (the in-slot label changes in Stubby plan PR 3) | Make it a plan. Keep means only shortlist, in the deck |
 
@@ -1548,3 +1555,27 @@ Log a Moment, on a Corner that has a room, asks whether the Moment is in progres
 | String | Where | Status |
 |---|---|---|
 | How far along | Screen reader name of the two-way choice in Log a Moment. Never shown | Approved Nov 10 |
+
+## One Moment, everywhere (brief v2, founder, Nov 10, 2026)
+
+A Moment is drawn by one set of parts (`src/app/components/moment/`) on every surface: Home, Discover, Spaces, Corner walls, Pursuit pages, profiles and the Moment itself. It has no action button. Save is the one "I want this". This section replaces what earlier sections say about buttons on a Moment ("Count me in", "See {Corner}", "Try {corner}", "Make your version"): those are retired above.
+
+| String | Where | Status |
+|---|---|---|
+| {Corner} · {place} · {when} | The one meta line under the maker’s name. The Corner’s name links to the Corner. {when} is the short form from `dates.ts`; a session that has not happened yet shows its day and time. Never a group name | Brief v2 |
+| Follow / Follow back / Requested | In a Moment’s header when it is not yours and you do not follow them yet. Requested stays, disabled | Reused |
+| More | Accessible name of the ⋯ button on a Moment and of its menu. Never shown | Reused (the rail’s More) |
+| Love this / Loved | Accessible name of the heart. Loved once you have | Reused |
+| Thoughts | Accessible name of the speech bubble, and the heading above a Moment’s thoughts. Opens the Moment at its thoughts | Reused |
+| Send to | Accessible name of the paper plane, and the title of its dialog. Hidden for an Only you Moment | Reused |
+| Share | Button in Send to that opens the phone’s share sheet, where there is one | Reused |
+| Save / Saved | Accessible name of the bookmark. Saved while it is, and the toast the first time someone saves on a device | Reused |
+| Love this, {n} / Thoughts, {n} / Saved, {n} | Accessible names on your own Moment, where each icon carries its count. Nobody else sees a number | Brief v2 |
+| more | After two lines of caption. Opens the rest in place. Lower case, as it continues the sentence | **New, for approval** |
+| See thoughts | Under the caption when the Moment has any. Opens the Moment at its thoughts | **New, for approval** |
+| Message {name} about this / Copy link / Report | The menu on someone else’s Moment, in this order | Reused |
+| Add details / Add to Pursuit / Move to another Pursuit / Change who sees this / Copy link / Delete | The menu on your own Moment, in this order | Reused |
+| Link copied | Toast after Copy link | Reused |
+| Everyone / Followers / Only you | At the end of the meta line on your own Moment, with its icon. Opens Change who sees this | Reused |
+| What you wrote / Replace photo | Fields in Add details when it is opened from a Moment’s menu (they were in the Moment’s old Edit form) | Reused |
+| Open {name}’s Moment | Accessible name of a grid tile. Never shown | Brief v2 |

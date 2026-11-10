@@ -6,7 +6,7 @@
  */
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { MomentCard } from "../app/components/MomentCard";
+import { Moment } from "../app/components/moment/Moment";
 import { useContent } from "../app/context/ContentContext";
 import { seedJournal, type Project } from "../app/lib/journal";
 import { Log } from "../app/pages/Log";
@@ -79,7 +79,7 @@ function PreviewMoment({ id }: { id: number }) {
   if (!post) return null;
   return (
     <div className="mx-auto w-full max-w-md px-4 pt-6">
-      <MomentCard post={post} surface="feed" />
+      <Moment post={post} />
     </div>
   );
 }

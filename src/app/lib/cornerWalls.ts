@@ -186,7 +186,19 @@ export async function fetchPassedAlong(corner: string, meId?: string): Promise<C
 }
 
 /**
- * The Moment "Make your version" starts from, built from a wall card: enough for
+ * A wall card as the Moment it is, so a wall draws it with the same parts as
+ * every other surface (components/moment). The wall RPC returns what a card
+ * needs and no more; opening the Moment loads the full row.
+ */
+export function postFromCard(card: WallCard, corner: { spaceSlug: string; slug: string }): Post {
+  return {
+    ...seedFromCard(card, corner),
+    type: card.photo ? "photo" : "written",
+  };
+}
+
+/**
+ * The Moment a new Pursuit starts from (the dashed You? on a chain), built from a wall card: enough for
  * PursuitDialog to pre-fill the title (the first sentence of the caption) and
  * to record the Moment as the one the new Pursuit started because of.
  */

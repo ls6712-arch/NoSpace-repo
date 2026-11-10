@@ -1,6 +1,9 @@
 import { Skeleton } from "./ui/skeleton";
 import { cn } from "./ui/utils";
-import { MOMENT_GRID, MOMENT_MEDIA } from "./MomentCard";
+import { MOMENT_MEDIA } from "./moment/MomentMedia";
+
+/** The older two-up grid (three from desktop width) that the Shelf and these skeletons use. */
+export const MOMENT_GRID = "grid grid-cols-2 gap-x-3 gap-y-8 tab:gap-x-5 desk:grid-cols-3";
 
 /**
  * Loading shapes for the app's repeated pieces. Each one copies the real

@@ -9,8 +9,8 @@ import { useAuth } from "../context/AuthContext";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { useJournal } from "../lib/journal";
 import { parseArchiveKey } from "../components/HobbyShelf";
-import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentGridTile, MOMENT_TILE_GRID } from "../components/moment/MomentGridTile";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { Button } from "../components/ui/button";
 import { formatDate, formatMonth, formatWhen } from "../lib/dates";
 import { plural } from "../lib/plural";
@@ -218,15 +218,9 @@ export function HobbyArchive() {
                 {byMonth.map(({ month, items }) => (
                   <section key={month}>
                     <h2 className="mb-3 text-small text-muted-foreground">{month}</h2>
-                    <div className={MOMENT_GRID}>
+                    <div className={MOMENT_TILE_GRID}>
                       {items.map((post) => (
-                        <MomentCard
-                          key={post.id}
-                          post={post}
-                          surface="archive"
-                          size="standard"
-                          onOpen={() => setOpen(post)}
-                        />
+                        <MomentGridTile key={post.id} post={post} onOpen={setOpen} />
                       ))}
                     </div>
                   </section>

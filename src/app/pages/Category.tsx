@@ -8,7 +8,7 @@ import { NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips } from "../comp
 import { DURATION_LIMITS } from "../data/curatedCorners";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/StateViews";
 import { HorizontalRow } from "../components/HorizontalRow";

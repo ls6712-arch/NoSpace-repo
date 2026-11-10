@@ -16,7 +16,7 @@ import { PillButton } from "../components/ui/PillButton";
 import { Skeleton } from "../components/ui/skeleton";
 import { notify } from "../components/ui/toaster";
 import { ErrorNotice } from "../components/StateViews";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { CornerChat } from "../components/corners/CornerChat";
 import { PassedAlong, wallFaces } from "../components/corners/CornerWalls";
@@ -35,8 +35,8 @@ import type { Frame, World } from "../world/core/scene";
  * counted or listed with people.
  *
  * Nothing here is new data. The walls come from corner_wall and
- * corner_passed_along, the chat is the Corner chat, and Make your version
- * opens the same sheet as on the Corner page. The room only draws them.
+ * corner_passed_along, the chat is the Corner chat, and the dashed You? on a
+ * chain opens the same sheet as on the Corner page. The room only draws them.
  *
  * The scene (three.js) is fetched when this page opens, as its own file. If
  * the browser cannot draw it, or the first frame takes too long, the person
@@ -122,7 +122,6 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [finishedPursuits, setFinishedPursuits] = useState<Set<string>>(new Set());
-  const [mineStarted, setMineStarted] = useState<Set<number>>(new Set());
 
   const load = useCallback(async () => {
     const [a, b, c] = await Promise.all([fetchWholeWall(key, "making"), fetchWholeWall(key, "made"), fetchPassedAlong(key, userId).catch(() => [] as Chain[])]);
@@ -176,20 +175,6 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
     };
   }, [minePursuitIds]);
   const myPieces = useMemo<MyPiece[]>(() => mine.map((post) => ({ post, finished: !!post.pursuitId && finishedPursuits.has(post.pursuitId) })), [mine, finishedPursuits]);
-
-  // Which of these Moments the viewer already started their own Pursuit because of.
-  const cardIds = useMemo(() => [...(making?.cards ?? []), ...(made?.cards ?? [])].map((c) => c.postId), [making, made]);
-  useEffect(() => {
-    if (!supabase || cardIds.length === 0) return;
-    let cancelled = false;
-    void (async () => {
-      const { data } = await supabase!.from("pursuits").select("inspired_by_post_id").eq("user_id", userId).in("inspired_by_post_id", cardIds);
-      if (!cancelled) setMineStarted(new Set((data ?? []).map((r) => r.inspired_by_post_id as number)));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [cardIds, userId]);
 
   const plan = useMemo(() => {
     const room = (c: Card): RoomMoment => ({ postId: c.postId, pursuitId: c.pursuitId, mine: c.mine, inspiredByPostId: c.inspiredByPostId });
@@ -336,7 +321,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
   };
   openWallRef.current = openWall;
 
-  // ── Moments, Make your version, logging ──────────────────────────────────
+  // ── Moments, starting from a chain, logging ──────────────────────────────────
   const [openPost, setOpenPost] = useState<Post | null>(null);
   const [seed, setSeed] = useState<Post | null>(null);
   const [makeOpen, setMakeOpen] = useState(false);
@@ -348,10 +333,6 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
     if (!data) return;
     const post = rowToPost(data, card.authorName);
     setOpenPost(resolvePostMedia(post, await signMomentPaths(post.mediaPaths ?? [])));
-  }
-  function makeFromCard(card: Card) {
-    setSeed(seedFromCard(card, corner));
-    setMakeOpen(true);
   }
   async function makeFromChain(chain: Chain) {
     const link = chain.links[chain.links.length - 1];
@@ -410,7 +391,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
     if (!data || data.cards.length === 0) return null;
     const title = kind === "making" ? wallNames.making : wallNames.made;
     return (
-      <section id={section} aria-labelledby={`${section}-title`} style={{ "--wall-tint": "var(--surface-muted)" } as React.CSSProperties} className="scroll-mt-4 rounded-card bg-[var(--wall-tint)] p-4">
+      <section id={section} aria-labelledby={`${section}-title`} className="scroll-mt-4">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h3 id={`${section}-title`} className="text-title">
@@ -420,9 +401,9 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
           </div>
           <AvatarStack people={wallFaces(data.cards)} size="size-8" />
         </div>
-        <ul className="grid gap-4">
+        <ul className="grid gap-2">
           {data.cards.slice(0, shown[kind]).map((c) => (
-            <WallCard key={c.postId} card={c} kind={kind} yoursStarted={mineStarted.has(c.postId)} onOpen={() => void openCard(c)} onMake={() => makeFromCard(c)} />
+            <WallCard key={c.postId} card={c} kind={kind} corner={corner} onOpen={() => void openCard(c)} />
           ))}
         </ul>
         {data.cards.length > shown[kind] && (

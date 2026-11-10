@@ -6,15 +6,15 @@ import { useContent } from "../context/ContentContext";
 import { useFeedInputs } from "../lib/useFeedInputs";
 import type { Post } from "../data/posts";
 import { buildFeed } from "../lib/homeFeed";
-import { FeedCard } from "../components/home/FeedCard";
-import { LIST_GRID, PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell";
+import { Moment } from "../components/moment/Moment";
+import { MomentListSkeleton } from "../components/moment/MomentSkeleton";
+import { PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell";
+import { MOMENT_LIST } from "../components/moment/Moment";
 import { YourWeekCard } from "../components/home/YourWeekCard";
 import { BestFitCard, type CardState } from "../components/home/BestFitCard";
 import { BringPeopleCard, HappeningSection, StillMakingSection } from "../components/home/YourCornersSections";
-import { PursuitDialog } from "../components/PursuitDialog";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { Loadable } from "../components/ui/skeleton";
-import { MomentGridSkeleton } from "../components/Skeletons";
 import { ErrorNotice } from "../components/StateViews";
 import { haptic, pop } from "../lib/motionTokens";
 import { Skeleton } from "../components/ui/skeleton";
@@ -30,7 +30,6 @@ import type { Owner } from "../lib/firstPlanRemote";
 import { useSocial } from "../context/SocialContext";
 import { useCorners } from "../context/CornersContext";
 import { fetchHomeEvents, fetchStillMaking, yourCorners, type HomeEvent, type HomeWallCard } from "../lib/homeYourCorners";
-import { seedFromCard } from "../lib/cornerWalls";
 import { cornerPath } from "../lib/cornerPath";
 
 const PULL_THRESHOLD = 64;
@@ -58,8 +57,6 @@ export function HomeFeed() {
   const { allCorners } = useCorners();
   const [wallCards, setWallCards] = useState<HomeWallCard[] | null>(null);
   const [events, setEvents] = useState<HomeEvent[]>([]);
-  const [seed, setSeed] = useState<Post | null>(null);
-  const [makeOpen, setMakeOpen] = useState(false);
   const mine = useMemo(
     () => yourCorners(social.followedHobbies, allCorners, publicFeed),
     [social.followedHobbies, allCorners, publicFeed],
@@ -139,11 +136,6 @@ export function HomeFeed() {
     if (known) open(known);
     else navigate(cornerPath(corner.spaceSlug, corner.slug));
   };
-  // Make your version: your own Pursuit, started because of this Moment (as on the Corner page).
-  const makeFromWall = ({ card, corner }: HomeWallCard) => {
-    setSeed(seedFromCard(card, corner));
-    setMakeOpen(true);
-  };
   const greetingName = firstName(profile?.display_name ?? "");
   const place = home.place.area || home.place.city;
   const subline = [place, formatDate(now, { weekday: "long", timeZone: HOME_TZ })].filter(Boolean).join(" · ");
@@ -208,10 +200,10 @@ export function HomeFeed() {
         </div>
       )}
 
-      <StillMakingSection cards={wallCards} fallback={mine.fallback} onOpen={openWallCard} onMake={makeFromWall} />
+      <StillMakingSection cards={wallCards} fallback={mine.fallback} onOpen={openWallCard} />
       <HappeningSection events={events} />
 
-      <Loadable loading={loading} skeleton={<MomentGridSkeleton count={2} />}>
+      <Loadable loading={loading} skeleton={<MomentListSkeleton />}>
         {postsStatus === "error" && feed.length === 0 ? (
           <ErrorNotice onRetry={reloadPosts} />
         ) : feed.length === 0 ? (
@@ -221,9 +213,9 @@ export function HomeFeed() {
             <h2 className="mb-3 mt-8 text-lead" style={{ fontFamily: "var(--font-display)" }}>
               From your people
             </h2>
-            <div className={`${LIST_GRID} items-start`}>
+            <div className={MOMENT_LIST}>
               {feed.map((item, i) => (
-                <FeedCard key={item.post.id} post={item.post} source={item.source} onOpen={open} priority={i === 0} />
+                <Moment key={item.post.id} post={item.post} onOpen={open} priority={i === 0} />
               ))}
             </div>
             <p className="mt-6 text-center text-small text-muted-foreground">You’re caught up</p>
@@ -237,7 +229,6 @@ export function HomeFeed() {
       </Loadable>
 
       <MomentDetail post={openPost} owned={false} onOpenChange={(o) => !o && close()} />
-      <PursuitDialog open={makeOpen} onOpenChange={setMakeOpen} seedPost={seed} />
     </PageShell>
   );
 }

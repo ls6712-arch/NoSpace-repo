@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { cornerFollowKey } from "../context/CornersContext";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
@@ -31,7 +31,6 @@ import { useInterests } from "../lib/interests";
 import { fetchPasses, fetchTaste, type Taste } from "../lib/tasteRemote";
 import type { Pass } from "../lib/tasteModel";
 import { fetchHomeSuggestions } from "../lib/homeSuggestions";
-import { follow } from "../lib/profileFollows";
 import { requestOrJoinSpace } from "../lib/spaces";
 import { ideasFor, type IdeaPills as Pills } from "../lib/ideaMatch";
 import { defaultPills, loosenSpend, passTagFor, type PassCorners } from "../lib/discoverIdeas";
@@ -307,17 +306,14 @@ export function Discover() {
     if (corner === null && posts.length > 0) setChips(feedCornerChips(posts, Date.now()));
   }, [posts, corner]);
 
-  const followAuthor = (post: Post) =>
-    needAccount(() => {
-      if (!user || !post.userId) return;
-      const authorId = post.userId;
-      void follow(user.id, authorId).then((ok) => {
-        if (!ok) return notifyError("Something went wrong. Try again.");
-        // Their Moments leave this page at once; Home shows them once the follow is accepted.
-        setFollowed((prev) => new Set(prev).add(authorId));
-        log("moment", String(post.id), 0, "followed", postCornerKey(post));
-      });
-    });
+  // The Moment's own Follow button has saved the request by now.
+  // Their Moments leave this page at once; Home shows them once the follow is accepted.
+  const followedAuthor = (post: Post) => {
+    if (!post.userId) return;
+    const authorId = post.userId;
+    setFollowed((prev) => new Set(prev).add(authorId));
+    log("moment", String(post.id), 0, "followed", postCornerKey(post));
+  };
 
   const openId = searchParams.get("m") ? Number(searchParams.get("m")) : null;
   const openPost = openId != null ? (publicFeed.find((p) => p.id === openId) ?? null) : null;
@@ -466,10 +462,8 @@ export function Discover() {
                 onRetry={() => void loadMoments(posts.length === 0)}
                 hasMore={!momentsDone}
                 onMore={() => void loadMoments(false)}
-                followed={followed}
-                onFollow={followAuthor}
+                onFollowed={followedAuthor}
                 onOpen={(post) => setOpen(post.id)}
-                onTry={(post, i) => log("moment", String(post.id), i, "tried", postCornerKey(post))}
                 onShown={(post, i) => log("moment", String(post.id), i, "shown", postCornerKey(post))}
               />
             </section>

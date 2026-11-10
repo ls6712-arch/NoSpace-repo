@@ -32,8 +32,8 @@ import { fetchPursuitById, mirrorPursuit, SharedPursuit } from "../lib/pursuitsR
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Button } from "../components/ui/button";
-import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
-import { MomentDetail } from "../components/MomentDetail";
+import { Moment, MOMENT_LIST } from "../components/moment/Moment";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { GoalDialog } from "../components/GoalDialog";
 import { GoalProgressTap } from "../components/GoalProgressTap";
 import { EndingDialog } from "../components/EndingDialog";
@@ -620,14 +620,14 @@ export function Pursuit() {
             {months.map((month) => (
               <section key={month.key}>
                 <MonthHeader label={month.label} moments={month.moments} />
-                <div className={MOMENT_GRID}>
+                <div className={MOMENT_LIST}>
                   {month.moments.map((m) => {
                     const measure = ownProject && hasMeasure(ownProject) ? ownProject.measure : undefined;
                     const amount = amountByKey.get(m.key);
                     return (
                       <div key={m.key}>
                         {m.post ? (
-                          <MomentCard post={m.post} surface="pursuit" size="standard" onOpen={() => setOpenPost(m.post!)} />
+                          <Moment post={m.post} onOpen={setOpenPost} />
                         ) : (
                           <PrivateMomentCard moment={m} />
                         )}

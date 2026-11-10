@@ -7,7 +7,7 @@ import { pursuitCorner } from "../lib/pursuitProgress";
 import { lastMomentText, pursuitMoments, startedLabel, TrailMoment } from "../lib/pursuitTrail";
 import { isOnlyYou } from "../lib/visibility";
 import { firstWords } from "../lib/text";
-import { MomentDetail } from "./MomentDetail";
+import { MomentDetail } from "./moment/MomentDetail";
 import { ProgressBar } from "./pursuit/ui";
 import { formatAmount, hasMeasure, summarize } from "../lib/pursuitProgress";
 import { useJournalSlice, ProgressEntry } from "../lib/journal";

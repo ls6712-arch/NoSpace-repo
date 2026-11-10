@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { supabase } from "../../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
 import { Skeleton } from "../ui/skeleton";
@@ -49,15 +48,14 @@ export function wallsToShow(making: readonly Card[], made: readonly Card[]): { m
   return { making: making.length > 0, made: made.length > 0 };
 }
 
-function Panel({ kind, wall, title, tint, hidden, onMore, children }: { kind: WallKind; wall: Wall; title: string; tint: string; hidden: boolean; onMore: () => void; children: React.ReactNode }) {
+function Panel({ kind, wall, title, hidden, onMore, children }: { kind: WallKind; wall: Wall; title: string; hidden: boolean; onMore: () => void; children: React.ReactNode }) {
   const line = kind === "making" ? WALL_COPY.stillMakingLine : WALL_COPY.madeItLine;
   const faces = wallFaces(wall.cards);
   return (
     <section
       aria-labelledby={`wall-${kind}`}
       data-wall={kind}
-      style={{ "--wall-tint": tint } as React.CSSProperties}
-      className={`${hidden ? "hidden desk:block" : ""} rounded-card bg-[var(--wall-tint)] p-4 tab:p-5`}
+      className={hidden ? "hidden desk:block" : ""}
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
@@ -80,7 +78,7 @@ function Panel({ kind, wall, title, tint, hidden, onMore, children }: { kind: Wa
   );
 }
 
-/** "Passed along": up to 3 chains as chips with arrows, ending in a dashed You? that opens Make your version. */
+/** "Passed along": up to 3 chains as chips with arrows, ending in a dashed You? that starts your own Pursuit from the chain's newest Moment. */
 export function PassedAlong({ chains, onYou, card = false }: { chains: Chain[]; onYou: (chain: Chain) => void; card?: boolean }) {
   if (chains.length === 0) return null;
   return (
@@ -129,7 +127,6 @@ export function CornerWalls({
   corner,
   restricted,
   onOpenMoment,
-  onMake,
   onMakeFromChain,
   onLogMoment,
   onDoWithPeople,
@@ -140,7 +137,6 @@ export function CornerWalls({
   chat?: React.ReactNode;
   restricted: boolean;
   onOpenMoment: (card: Card) => void;
-  onMake: (card: Card) => void;
   onMakeFromChain: (chain: Chain) => void;
   onLogMoment: () => void;
   onDoWithPeople: () => void;
@@ -153,7 +149,6 @@ export function CornerWalls({
   const [chains, setChains] = useState<Chain[]>([]);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [mineStarted, setMineStarted] = useState<Set<number>>(new Set());
   const [phoneWall, setPhoneWall] = useState<WallKind>("making");
 
   const load = useCallback(
@@ -187,21 +182,6 @@ export function CornerWalls({
     };
   }, [key, restricted, load, attempt, user?.id]);
 
-  // Which of these Moments the viewer already started their own Pursuit because of.
-  useEffect(() => {
-    if (restricted || !supabase || !user) return;
-    const ids = [...making.cards, ...made.cards].map((c) => c.postId);
-    if (ids.length === 0) return;
-    let cancelled = false;
-    void (async () => {
-      const { data } = await supabase!.from("pursuits").select("inspired_by_post_id").eq("user_id", user.id).in("inspired_by_post_id", ids);
-      if (!cancelled) setMineStarted(new Set((data ?? []).map((r) => r.inspired_by_post_id as number)));
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [making.cards, made.cards, restricted, user]);
-
   const more = async (kind: WallKind) => {
     const wall = kind === "making" ? making : made;
     const last = wall.cards[wall.cards.length - 1];
@@ -215,20 +195,12 @@ export function CornerWalls({
     }
   };
 
-  const tints = useMemo(
-    () => ({
-      making: "color-mix(in srgb, var(--cat, var(--accent)) 14%, var(--background))",
-      made: "color-mix(in srgb, var(--success) 12%, var(--background))",
-    }),
-    [],
-  );
-
   if (restricted) {
     return (
       <div style={cornerStyle(corner.spaceSlug, corner.slug)} className={SECTION_GAP}>
         <div className="relative">
-          <ul aria-hidden="true" className="grid gap-4 tab:grid-cols-2 desk:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => (
+          <ul aria-hidden="true" className="grid gap-x-6 gap-y-2 tab:grid-cols-2 desk:grid-cols-3">
+            {[0, 1, 2].map((i) => (
               <WallCardShape key={i} />
             ))}
           </ul>
@@ -280,9 +252,9 @@ export function CornerWalls({
     </div>
   );
   const renderCards = (kind: WallKind, wall: Wall) => (
-    <ul className={`grid gap-4 ${both ? "tab:grid-cols-2" : "tab:grid-cols-2 desk:grid-cols-4"}`}>
+    <ul className={`grid items-start gap-x-6 gap-y-2 tab:grid-cols-2 ${both ? "" : "desk:grid-cols-3"}`}>
       {wall.cards.map((c) => (
-        <WallCard key={`${kind}-${c.postId}`} card={c} kind={kind} yoursStarted={mineStarted.has(c.postId)} onOpen={() => onOpenMoment(c)} onMake={() => onMake(c)} />
+        <WallCard key={`${kind}-${c.postId}`} card={c} kind={kind} corner={corner} onOpen={() => onOpenMoment(c)} />
       ))}
     </ul>
   );
@@ -303,12 +275,12 @@ export function CornerWalls({
       )}
       <div className={`${SECTION_GAP} grid gap-6 ${both ? "desk:grid-cols-2" : ""}`}>
         {show.making && (
-          <Panel kind="making" wall={making} title={labels.making} tint={tints.making} hidden={both && phoneWall !== "making"} onMore={() => void more("making")}>
+          <Panel kind="making" wall={making} title={labels.making} hidden={both && phoneWall !== "making"} onMore={() => void more("making")}>
             {renderCards("making", making)}
           </Panel>
         )}
         {show.made && (
-          <Panel kind="made" wall={made} title={labels.made} tint={tints.made} hidden={both && phoneWall !== "made"} onMore={() => void more("made")}>
+          <Panel kind="made" wall={made} title={labels.made} hidden={both && phoneWall !== "made"} onMore={() => void more("made")}>
             {renderCards("made", made)}
           </Panel>
         )}

@@ -1,49 +1,27 @@
 import { Chip } from "../ui/Chip";
 import { EmptyState, ErrorNotice } from "../StateViews";
-import { Skeleton } from "../ui/skeleton";
-import { FeedCard } from "../home/FeedCard";
+import { Moment } from "../moment/Moment";
+import { MomentListSkeleton } from "../moment/MomentSkeleton";
 import type { Post } from "../../data/posts";
-import { cornerPath } from "../../lib/cornerPath";
 import { cornerName } from "../../lib/discoverCorners";
-import { postCornerKey } from "../../lib/discoverFeed";
 import { useLoadMore } from "../../lib/useLoadMore";
 import { useShownOnce } from "../../lib/useShownOnce";
 
 /** Approved Oct 31, 2026 (docs/glossary.md, Discover v2). */
 export const CITY_FEED_EMPTY_LINE = "Nothing new nearby yet";
 
-/** "Try pottery", but "Try D&D" and "Try 3D printing": the first letter drops to lower case only for an ordinary word. */
-export function tryName(name: string): string {
-  return /^[A-Z][a-z]/.test(name) ? name[0].toLowerCase() + name.slice(1) : name;
-}
-
 function ShownWrap({ children, onShown }: { children: React.ReactNode; onShown: () => void }) {
   const ref = useShownOnce<HTMLDivElement>(onShown);
   return <div ref={ref}>{children}</div>;
 }
 
-export function FeedSkeleton() {
-  return (
-    <div className="flex flex-col gap-6" aria-hidden="true">
-      {[0, 1].map((i) => (
-        <div key={i} className="flex flex-col gap-3 border-b border-border pb-5">
-          <div className="flex items-center gap-3">
-            <Skeleton className="size-10 rounded-full" />
-            <Skeleton className="h-10 flex-1 rounded-card" />
-          </div>
-          <Skeleton className="aspect-[4/3] w-full rounded-card" />
-          <Skeleton className="h-11 w-2/3 rounded-full" />
-        </div>
-      ))}
-    </div>
-  );
-}
+export const FeedSkeleton = MomentListSkeleton;
 
 /**
  * What {city} is making: Corner filter chips (All, then the busiest Corners today)
- * above Moments from people you do not follow yet. Home's own card, with a Follow
- * button on the author row and a Try pill next to Love this. More Moments load as
- * you scroll.
+ * above Moments from people you do not follow yet. The same Moment as everywhere
+ * else: its header carries Follow, since nobody here is followed yet. More Moments
+ * load as you scroll.
  */
 export function CityFeed({
   posts,
@@ -55,10 +33,8 @@ export function CityFeed({
   onRetry,
   hasMore,
   onMore,
-  followed,
-  onFollow,
+  onFollowed,
   onOpen,
-  onTry,
   onShown,
 }: {
   posts: readonly Post[];
@@ -71,11 +47,9 @@ export function CityFeed({
   onRetry?: () => void;
   hasMore: boolean;
   onMore: () => void;
-  /** Author ids the person has asked to follow from this page. */
-  followed: ReadonlySet<string>;
-  onFollow: (post: Post) => void;
+  /** After the person asks to follow a Moment's author from this page. */
+  onFollowed: (post: Post) => void;
   onOpen: (post: Post) => void;
-  onTry: (post: Post, position: number) => void;
   onShown: (post: Post, position: number) => void;
 }) {
   const sentinel = useLoadMore<HTMLDivElement>(onMore, hasMore && !loading);
@@ -102,32 +76,11 @@ export function CityFeed({
         <EmptyState line={CITY_FEED_EMPTY_LINE} action={{ label: "Log a Moment", to: "/create" }} />
       ) : (
         <div className="flex flex-col">
-          {posts.map((post, i) => {
-            const key = postCornerKey(post);
-            const [space, slug] = key.split("/");
-            const name = slug ? cornerName(slug) : "";
-            return (
-              <ShownWrap key={post.id} onShown={() => onShown(post, i)}>
-                <FeedCard
-                  post={post}
-                  source="discover"
-                  onOpen={onOpen}
-                  priority={i === 0}
-                  discover={
-                    name
-                      ? {
-                          following: post.userId && followed.has(post.userId) ? "requested" : "none",
-                          onFollow: () => onFollow(post),
-                          tryName: tryName(name),
-                          tryTo: cornerPath(space, slug),
-                          onTry: () => onTry(post, i),
-                        }
-                      : undefined
-                  }
-                />
-              </ShownWrap>
-            );
-          })}
+          {posts.map((post, i) => (
+            <ShownWrap key={post.id} onShown={() => onShown(post, i)}>
+              <Moment post={post} onOpen={onOpen} priority={i === 0} onFollowed={onFollowed} />
+            </ShownWrap>
+          ))}
           {loading && <FeedSkeleton />}
           {failed && <ErrorNotice onRetry={onRetry} />}
           <div ref={sentinel} aria-hidden="true" />

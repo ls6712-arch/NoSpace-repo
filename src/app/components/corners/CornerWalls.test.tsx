@@ -5,10 +5,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useHistoryState } from "../../lib/useHistoryState";
 import type { Chain, WallCard } from "../../lib/cornerWalls";
 
-const auth = { user: { id: "me" } as { id: string } | null };
-vi.mock("../../context/AuthContext", () => ({ useAuth: () => auth }));
+import type { MomentTestState } from "../moment/testSupport";
+
+const auth = vi.hoisted(() => ({ user: { id: "me" } }) as MomentTestState);
+vi.mock("../../context/AuthContext", async () => (await import("../moment/testSupport")).authMock(auth));
+vi.mock("../../context/ContentContext", async () => (await import("../moment/testSupport")).contentMock(auth));
+vi.mock("../../context/SocialContext", async () => (await import("../moment/testSupport")).socialMock(auth));
+vi.mock("../../context/PrivateLogsContext", async () => (await import("../moment/testSupport")).privateLogsMock());
+vi.mock("../../context/CornersContext", async () => (await import("../moment/testSupport")).cornersMock());
 vi.mock("../../../lib/supabase", () => ({ supabase: null }));
-vi.mock("../../lib/reactionState", () => ({ useReactionState: () => ({ mine: [], toggle: () => {} }) }));
 const fetchWall = vi.fn();
 const fetchPassedAlong = vi.fn();
 vi.mock("../../lib/cornerWalls", async (orig) => ({
@@ -18,7 +23,6 @@ vi.mock("../../lib/cornerWalls", async (orig) => ({
 }));
 
 import { CornerWalls, wallFaces } from "./CornerWalls";
-import { WallCard as WallCardView } from "./WallCard";
 
 const corner = { spaceSlug: "crafts-making", slug: "embroidery", name: "Embroidery" };
 const card = (over: Partial<WallCard> = {}): WallCard => ({
@@ -39,7 +43,7 @@ const chain: Chain = { links: [{ authorId: "u1", name: "Maya", pursuitId: "p1", 
 const setup = (restricted = false) =>
   render(
     <MemoryRouter>
-      <CornerWalls corner={corner} restricted={restricted} onOpenMoment={vi.fn()} onMake={vi.fn()} onMakeFromChain={vi.fn()} onLogMoment={vi.fn()} onDoWithPeople={vi.fn()} />
+      <CornerWalls corner={corner} restricted={restricted} onOpenMoment={vi.fn()} onMakeFromChain={vi.fn()} onLogMoment={vi.fn()} onDoWithPeople={vi.fn()} />
     </MemoryRouter>,
   );
 
@@ -75,52 +79,55 @@ describe("CornerWalls", () => {
     expect(screen.getByRole("radiogroup", { name: "Walls" })).toBeTruthy();
   });
 
-  it("has no digits in wall card text apart from the finished date", async () => {
+  it("has no digits in wall card text apart from its dates (the meta line and the finished date)", async () => {
     wall([card()], [card({ postId: 3, finishedAt: Date.parse("2026-10-20T12:00:00Z"), finisherStub: true })], [chain]);
     setup();
     await screen.findByRole("heading", { name: "Made it" });
-    const text = [...document.querySelectorAll("[data-wall-card]")].map((n) => n.textContent ?? "");
+    // The meta line is the same as in the feed and ends with when the Moment was shared; that is a date, not a count.
+    const text = [...document.querySelectorAll("[data-wall-card]")].map((n) => {
+      const copy = n.cloneNode(true) as HTMLElement;
+      copy.querySelector("[data-moment-meta]")?.remove();
+      return copy.textContent ?? "";
+    });
     for (const t of text) expect(t.replace(/Finished [A-Z][a-z]{2} \d{1,2}(, \d{4})?/, "")).not.toMatch(/\d/);
     expect(text.join(" ")).toMatch(/Finished /);
   });
 
-  it("puts the tear-off on other people's Moments and not on your own", async () => {
-    wall([card({ postId: 1 }), card({ postId: 2, mine: true, authorName: "You" })], []);
+  it("draws a wall card as the same Moment as the feed: no panel, no strip, no button with words", async () => {
+    wall([card({ postId: 1 }), card({ postId: 2, authorId: "me", mine: true, authorName: "You" })], []);
     setup();
     await screen.findByRole("heading", { name: "Still making" });
     const cards = [...document.querySelectorAll<HTMLElement>("[data-wall-card]")];
-    expect(within(cards[0]).getByRole("button", { name: "Make your version" })).toBeTruthy();
-    expect(within(cards[1]).queryByRole("button", { name: "Make your version" })).toBeNull();
-    expect(cards[1].querySelector("[data-tear-off]")).toBeNull();
+    for (const c of cards) {
+      expect(c.querySelector("[data-moment]")).toBeTruthy();
+      expect(c.querySelector("[data-moment-header]")).toBeTruthy();
+      expect(c.querySelector("[data-tear-off]")).toBeNull();
+    }
+    expect(document.querySelector("[data-wall]")!.getAttribute("style")).toBeNull();
+    // The icon row is the feed's: Love this, Thoughts, Send to, Save, and nothing with a label.
+    const icons = within(cards[0].querySelector<HTMLElement>("[data-moment-actions]")!).getAllByRole("button");
+    expect(icons.map((b) => b.getAttribute("aria-label"))).toEqual(["Love this", "Thoughts", "Send to", "Save"]);
+    for (const b of icons) expect(b.textContent).toBe("");
   });
 
-  it("hides Love this and Count me in on your own card, keeps them on others, and shows Finisher with the Stub icon", async () => {
-    wall([card({ postId: 1 }), card({ postId: 2, mine: true, authorName: "You" })], [card({ postId: 3, finishedAt: Date.parse("2026-10-20T12:00:00Z"), finisherStub: true }), card({ postId: 4, finishedAt: Date.parse("2026-10-19T12:00:00Z") })]);
+  it("has no Love or Save button on your own card, and shows Finisher with the Stub icon", async () => {
+    wall([card({ postId: 1 }), card({ postId: 2, authorId: "me", mine: true, authorName: "You" })], [card({ postId: 3, finishedAt: Date.parse("2026-10-20T12:00:00Z"), finisherStub: true }), card({ postId: 4, finishedAt: Date.parse("2026-10-19T12:00:00Z") })]);
     setup();
     await screen.findByRole("heading", { name: "Made it" });
     const byId = (id: number) => document.querySelector<HTMLElement>(`[data-wall-card="${id}"]`)!;
-    expect(within(byId(1)).getByRole("button", { name: /Love this/ })).toBeTruthy();
-    expect(within(byId(1)).getByRole("button", { name: /Count me in/ })).toBeTruthy();
-    expect(within(byId(2)).queryByRole("button", { name: /Love this|Count me in/ })).toBeNull();
+    expect(within(byId(1)).getByRole("button", { name: "Love this" })).toBeTruthy();
+    expect(within(byId(1)).getByRole("button", { name: "Save" })).toBeTruthy();
+    expect(within(byId(2)).queryByRole("button", { name: /^(Love this|Save)$/ })).toBeNull();
     expect(within(byId(3)).getByText("Finisher")).toBeTruthy();
     expect(byId(3).querySelector("svg.lucide-ticket")).toBeTruthy();
     expect(within(byId(4)).queryByText("Finisher")).toBeNull();
   });
 
-  it("keeps Love this and Count me in on one row that never wraps, each at least 44px tall", async () => {
+  it("links each card's Corner name to the Corner", async () => {
     wall([card({ postId: 1 })], []);
     setup();
     await screen.findByRole("heading", { name: "Still making" });
-    const row = document.querySelector<HTMLElement>("[data-reactions]")!;
-    expect(row.className).toContain("flex-nowrap");
-    expect(row.className).not.toContain("flex-wrap ");
-    const buttons = within(row).getAllByRole("button");
-    expect(buttons.map((b) => b.textContent)).toEqual(["Love this", "Count me in"]);
-    for (const b of buttons) {
-      expect(b.className).toContain("min-h-11");
-      expect(b.className).toContain("whitespace-nowrap");
-      expect(b.className).toContain("px-2");
-    }
+    expect(screen.getByRole("link", { name: "Embroidery" }).getAttribute("href")).toBe("/corners/embroidery");
   });
 
   it("puts the started-because lines in the accent text colour at the small size", async () => {
@@ -134,9 +141,8 @@ describe("CornerWalls", () => {
     }
   });
 
-  it("after you started your own, the strip is the one line You started yours.", async () => {
+  it("has no strip under a card, whether or not you started your own", async () => {
     wall([card({ postId: 1 })], []);
-    // The set of Moments you started because of comes from the database; none here, so the strip shows.
     setup();
     await screen.findByRole("heading", { name: "Still making" });
     expect(screen.queryByText("You started yours.")).toBeNull();
@@ -184,19 +190,6 @@ describe("CornerWalls", () => {
     expect(container.querySelectorAll("img").length).toBe(0);
     expect(container.querySelector("[data-wall-card]")).toBeNull();
     expect(container.textContent).not.toMatch(/Maya|Priya/);
-  });
-});
-
-describe("WallCard once you started your own", () => {
-  it("replaces the tear-off with the muted line You started yours.", () => {
-    const { container } = render(
-      <ul>
-        <WallCardView card={card()} kind="making" yoursStarted onOpen={vi.fn()} onMake={vi.fn()} />
-      </ul>,
-    );
-    expect(screen.getByText("You started yours.")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Make your version" })).toBeNull();
-    expect(container.querySelector("[data-tear-off]")).toBeNull();
   });
 });
 
