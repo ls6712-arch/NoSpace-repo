@@ -115,6 +115,8 @@ try {
   const id = String(first.body.id);
   const link = writes.findIndex((w) => w.method === "PATCH" && w.table === "posts" && w.body.pursuit_id === id);
   assert(link > writes.indexOf(first), "the Moment is linked to the Pursuit after the Pursuit exists");
+  const mark = writes.findIndex((w) => w.method === "PATCH" && w.table === "pursuits" && w.body.from_moment === true && w.query.includes(id));
+  assert(mark > writes.indexOf(first) && mark < link, "the Pursuit is marked as made from a Moment before the Moment is linked");
   assert.equal(writes.filter((w) => w.table === "stubs").length, 0);
   pass("Made it with no Pursuit saves one already-finished Pursuit titled from the Moment, then links the Moment");
 

@@ -137,5 +137,11 @@ describe("saving a finished Pursuit", () => {
     expect(fn).toContain("!project.finishedAt) return");
     expect(fn.indexOf("await mirrorPursuit(userId, project)")).toBeGreaterThan(-1);
     expect(fn.indexOf("await mirrorPursuit(userId, project)")).toBeLessThan(fn.indexOf('.update({ pursuit_id: project.id })'));
+    // Marked as made from a Moment after it exists and before the Moment points at it.
+    const mark = fn.indexOf(".update({ from_moment: true })");
+    expect(mark).toBeGreaterThan(fn.indexOf("await mirrorPursuit(userId, project)"));
+    expect(mark).toBeLessThan(fn.indexOf('.update({ pursuit_id: project.id })'));
+    // Nothing else in the app sets the mark.
+    expect(remote.match(/from_moment/g)).toHaveLength(1);
   });
 });
