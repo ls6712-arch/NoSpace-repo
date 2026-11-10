@@ -1,4 +1,5 @@
-import type { MoodName } from "./moods";
+import type { SoundBed } from "../config";
+import type { MoodName } from "../core/moods";
 
 /**
  * The room's sound, all made in the browser: a low room tone, the wheel's
@@ -27,7 +28,7 @@ const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 const CHORDS = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]];
 const PENTA = [72, 74, 76, 79, 81, 84];
 
-export function createSound(initial: { sound: boolean; music: boolean; mood: MoodName }): Sound {
+export function createSound(initial: { sound: boolean; music: boolean; mood: MoodName; beds: readonly SoundBed[] }): Sound {
   let ctx: AudioContext | null = null;
   let master: GainNode;
   let music: GainNode;
@@ -261,26 +262,29 @@ export function createSound(initial: { sound: boolean; music: boolean; mood: Moo
       white = noise(c, 3, false);
       brown = noise(c, 5, true);
       loopNoise(c, brown, [["lowpass", 360]], 0.22, amb);
-      const hum = c.createOscillator();
-      hum.type = "sawtooth";
-      hum.frequency.value = 46;
-      const hf = c.createBiquadFilter();
-      hf.type = "lowpass";
-      hf.frequency.value = 140;
-      const hg = c.createGain();
-      hg.gain.value = 0.045;
-      hum.connect(hf);
-      hf.connect(hg);
-      panTo(c, hg, 0.35, amb);
-      hum.start();
-      const wob = c.createOscillator();
-      wob.frequency.value = 0.5;
-      const wg = c.createGain();
-      wg.gain.value = 0.012;
-      wob.connect(wg);
-      wg.connect(hg.gain);
-      wob.start();
-      loopNoise(c, white, [["bandpass", 950, 0.9]], 0.01, amb, 0.35);
+      // The wheel bed: a low hum that wobbles, and a little grit.
+      if (initial.beds.includes("wheel")) {
+        const hum = c.createOscillator();
+        hum.type = "sawtooth";
+        hum.frequency.value = 46;
+        const hf = c.createBiquadFilter();
+        hf.type = "lowpass";
+        hf.frequency.value = 140;
+        const hg = c.createGain();
+        hg.gain.value = 0.045;
+        hum.connect(hf);
+        hf.connect(hg);
+        panTo(c, hg, 0.35, amb);
+        hum.start();
+        const wob = c.createOscillator();
+        wob.frequency.value = 0.5;
+        const wg = c.createGain();
+        wg.gain.value = 0.012;
+        wob.connect(wg);
+        wg.connect(hg.gain);
+        wob.start();
+        loopNoise(c, white, [["bandpass", 950, 0.9]], 0.01, amb, 0.35);
+      }
       rainG = loopNoise(c, white, [["highpass", 700], ["lowpass", 6000]], mood === "night" ? 0.18 : 0, amb, -0.5);
       delay = c.createDelay(1.5);
       delay.delayTime.value = 0.375;

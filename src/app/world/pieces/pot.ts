@@ -1,6 +1,6 @@
 import * as T from "three";
-import { rng, type PieceSpec, type PotShape } from "./layout";
-import { PI, mesh } from "./kit";
+import { rng, type PieceSpec, type PotShape } from "../layout";
+import { PI, mesh } from "../core/kit";
 
 /**
  * Pottery pieces. A piece is a profile spun round its axis. A finished one is

@@ -1,5 +1,5 @@
 import * as T from "three";
-import { rng } from "./layout";
+import { rng } from "../layout";
 
 /**
  * Small building blocks every Corner world shares: materials, boxes and

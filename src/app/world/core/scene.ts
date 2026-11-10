@@ -1,15 +1,19 @@
 import * as T from "three";
-import { pieceSpec, moodForHour, type RoomPlan, type Spot } from "./layout";
+import type { CornerWorldConfig } from "../config";
+import { pieceSpec, moodForHour, type RoomPlan, type Spot } from "../layout";
+import { buildCast } from "../characters";
+import { makePiece, pieceHeight } from "../pieces";
+import { SETTINGS } from "../settings";
+import type { Setting } from "../settings/types";
+import { createSound, type Sound } from "../sound";
 import { PI, disposeTree, dropRadialTex, glow, radialTex } from "./kit";
-import { PROFILES, pieceMesh } from "./pots";
 import { buildRoom } from "./room";
-import { buildStudio, type Setting } from "./studio";
 import { easeMood, moodState, type MoodChoice, type MoodName } from "./moods";
-import { createSound, type Sound } from "./sound";
 
 /**
- * One Corner world on a canvas: the room, the Corner's setting, the real
- * pieces and the threads between them, the camera, and the frame loop.
+ * The engine: one Corner's room on a canvas. It builds the shared room, the setting the Corner's config names,
+ * the config's characters, the real pieces and the threads between them, the camera, and the frame loop.
+ * Nothing in here is about any one Corner: everything that differs comes from `opts.config`.
  *
  * This file is loaded only when someone opens a world (it pulls in three.js),
  * so nothing here may be imported from a page that is not the world itself.
@@ -30,6 +34,8 @@ export interface Frame {
 }
 
 export interface WorldOptions {
+  /** The Corner's room: its setting, its kind of piece, its characters and their words. */
+  config: CornerWorldConfig;
   small: boolean;
   reducedMotion: boolean;
   /** The words on the three wooden tags in the room. */
@@ -72,7 +78,7 @@ const resolveMood = (m: MoodChoice): MoodName => (m === "clock" ? moodForHour(ne
 
 export function createWorld(container: HTMLElement, opts: WorldOptions): World {
   const started = performance.now();
-  const { small, reducedMotion } = opts;
+  const { small, reducedMotion, config } = opts;
   const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, small ? 1.5 : 2));
   renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -90,7 +96,8 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
   const scene = new T.Scene();
   const cam = new T.PerspectiveCamera(38, 1, 0.1, 80);
   const room = buildRoom(scene, { small, reducedMotion, anisotropy: renderer.capabilities.getMaxAnisotropy() });
-  const setting: Setting = buildStudio(scene, room, opts.labels);
+  const setting: Setting = SETTINGS[config.setting](scene, room, opts.labels);
+  const cast = buildCast(scene, config, setting.props);
 
   // Things in the room that answer a tap: a part of the room, or a character.
   const pickables: T.Object3D[] = [];
@@ -141,8 +148,8 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
       const base = setting.slots[p.spot][p.slot];
       if (!base) continue;
       const spec = pieceSpec(p.postId);
-      const m = pieceMesh(spec, p.glazed);
-      const height = PROFILES[spec.shape].h;
+      const m = makePiece(config.pieceKind, spec, p.glazed);
+      const height = pieceHeight(config.pieceKind, spec);
       const scale = Math.min(spec.scale, setting.headroom[p.spot] / height);
       m.position.copy(base);
       m.userData.spot = p.spot;
@@ -186,7 +193,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
   let moodName = resolveMood(opts.mood);
   const cur = moodState(moodName);
   let target = moodState(moodName);
-  const sound = createSound({ sound: opts.sound, music: opts.music, mood: moodName });
+  const sound = createSound({ sound: opts.sound, music: opts.music, mood: moodName, beds: config.sounds.bed });
   room.applyMood(cur, renderer);
   setting.applyMood(cur);
 
@@ -247,9 +254,9 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     if (!hit) return;
     if (hit.spot) return opts.onOpen(hit.spot);
     if (hit.character) {
-      const lines = setting.lines[hit.character] ?? [];
+      const lines = cast.lines[hit.character] ?? [];
       if (lines.length) opts.onSay(hit.character, lines[(Math.random() * lines.length) | 0]);
-      if (hit.character === "Biscuit") sound.purr();
+      if (hit.character === cast.pet) sound.purr();
     }
   };
   const onWheel = (e: WheelEvent) => {
@@ -320,7 +327,8 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     cam.lookAt(look);
 
     room.update(t, dt, cur);
-    setting.update(t, dt, k, { entered, reducedMotion }, hooks);
+    setting.update(t, dt, k, { entered, reducedMotion });
+    cast.update(t, dt, k, { entered, reducedMotion }, hooks);
 
     const now = performance.now();
     for (const piece of pieces.values()) {
@@ -365,9 +373,9 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
 
     // Characters speak in turn, now and then.
     if (entered && now > nextAuto) {
-      const who = setting.talkers[lineIdx % setting.talkers.length];
-      const lines = setting.lines[who] ?? [];
-      if (lines.length) opts.onSay(who, lines[Math.floor(lineIdx / setting.talkers.length) % lines.length]);
+      const who = cast.talkers[lineIdx % cast.talkers.length];
+      const lines = cast.lines[who] ?? [];
+      if (lines.length) opts.onSay(who, lines[Math.floor(lineIdx / cast.talkers.length) % lines.length]);
       lineIdx++;
       nextAuto = now + 7500;
     }
@@ -385,7 +393,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     const signs = {} as Record<Spot, ScreenPoint>;
     for (const spot of ["rack", "shelf", "yours"] as const) signs[spot] = project(setting.signs[spot]);
     const characters: Record<string, ScreenPoint> = {};
-    for (const c of setting.characters) {
+    for (const c of cast.characters) {
       c.anchor.getWorldPosition(v);
       v.y += c.lift;
       characters[c.name] = project(v);
@@ -403,7 +411,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
 
   return {
     firstFrameMs,
-    welcome: setting.welcome,
+    welcome: cast.welcome,
     setPlan,
     setMood(m) {
       moodName = resolveMood(m);

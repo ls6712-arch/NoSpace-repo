@@ -1,5 +1,5 @@
 import * as T from "three";
-import { PI, at, box, cyl, mat, mesh, sph } from "./kit";
+import { PI, at, box, cyl, mat, mesh, sph } from "../core/kit";
 
 /**
  * The animated figures that keep a Corner world alive. They are characters,
@@ -111,10 +111,10 @@ export interface CatRig {
   tail: T.Mesh;
 }
 
-export function buildCat(name: string): CatRig {
+export function buildCat(name: string, color: number, darkColor: number): CatRig {
   const root = new T.Group();
-  const fur = mat(0xc9803f, 0.85);
-  const dark = mat(0x8f5326, 0.85);
+  const fur = mat(color, 0.85);
+  const dark = mat(darkColor, 0.85);
   const body = sph(0.22, fur, 20, 14);
   body.scale.set(1.25, 0.62, 0.85);
   root.add(at(body, 0, 0.13, 0));

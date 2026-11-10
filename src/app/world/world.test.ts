@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { GLAZES, POT_SHAPES, ROOM_LIMITS, moodForHour, pieceSpec, planRoom, type RoomMoment } from "./layout";
 import { WORLD_COPY, cornerWorld, opensAsRoom, signLine } from "./cornerWorlds";
+import { pottery } from "./corners/pottery";
 
 const m = (postId: number, o: Partial<RoomMoment> = {}): RoomMoment => ({ postId, mine: false, ...o });
 
@@ -99,16 +100,16 @@ describe("the room plan", () => {
 
 describe("signs", () => {
   it("count pieces, never people", () => {
-    expect(signLine("rack", 2)).toBe("2 in progress");
-    expect(signLine("shelf", 3)).toBe("3 finished");
-    expect(signLine("yours", 0)).toBe("Empty for now");
-    expect(signLine("yours", 1)).toBe("1 piece");
-    expect(signLine("yours", 4)).toBe("4 pieces");
+    expect(signLine(pottery, "rack", 2)).toBe("2 in progress");
+    expect(signLine(pottery, "shelf", 3)).toBe("3 finished");
+    expect(signLine(pottery, "yours", 0)).toBe("Empty for now");
+    expect(signLine(pottery, "yours", 1)).toBe("1 piece");
+    expect(signLine(pottery, "yours", 4)).toBe("4 pieces");
   });
 
   it("show no number when the wall has more than was fetched", () => {
-    expect(signLine("rack", 120, false)).toBe("");
-    expect(signLine("shelf", 120, false)).toBe("");
+    expect(signLine(pottery, "rack", 120, false)).toBe("");
+    expect(signLine(pottery, "shelf", 120, false)).toBe("");
   });
 });
 
@@ -133,7 +134,8 @@ describe("how a Corner opens", () => {
     expect(opensAsRoom({ ...yes, unavailable: true })).toBe(false);
   });
   it("is never called a studio in anything a person reads", () => {
-    const shown = JSON.stringify([WORLD_COPY, cornerWorld("crafts-making", "pottery")]);
+    // Everything a person reads or hears read out. (`setting: "studio"` is the engine's name for the furniture and is never shown.)
+    const shown = JSON.stringify([WORLD_COPY, pottery.name, pottery.copy, pottery.characters.map((c) => [c.name, c.lines, c.collapseLine]), pottery.pet?.line, pottery.greeting]);
     expect(shown).not.toMatch(/studio/i);
   });
 });
@@ -150,34 +152,56 @@ describe("My clock", () => {
 
 describe("what ships", () => {
   const dir = __dirname;
-  const sources = [...fs.readdirSync(dir).filter((f) => /\.tsx?$/.test(f) && !/\.test\./.test(f)).map((f) => path.join(dir, f)), path.resolve(dir, "../pages/CornerWorld.tsx")];
-  const code = sources.map((f) => fs.readFileSync(f, "utf8")).join("\n");
+  /** Every source file of the world, by its path under this folder. */
+  const walk = (d: string): string[] => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : /\.tsx?$/.test(e.name) && !/\.test\./.test(e.name) ? [path.join(d, e.name)] : []));
+  const files = walk(dir).map((f) => ({ rel: path.relative(dir, f).split(path.sep).join("/"), text: fs.readFileSync(f, "utf8") }));
+  const page = fs.readFileSync(path.resolve(dir, "../pages/CornerWorld.tsx"), "utf8");
+  const code = [...files.map((f) => f.text), page].join("\n");
+  /** The engine: every file that is not a Corner's config. */
+  const engine = files.filter((f) => !f.rel.startsWith("corners/"));
+  /** The files with no 3D in them, which the Corner page may import without downloading the engine. */
+  const plain = files.filter((f) => f.rel.startsWith("corners/") || ["config.ts", "cornerWorlds.ts", "layout.ts"].includes(f.rel));
 
   // The prototype's example people, their example Moments and the scripted chat. None of it may ship.
   it("has none of the prototype's example people, Moments or chat", () => {
-    for (const name of ["Maya", "Alex", "Priya", "Jordan", "Ines", "Jun", "Sam"]) expect(code).not.toMatch(new RegExp(`\\b${name}\\b`));
+    for (const name of ["Maya", "Alex", "Priya", "Jordan", "Ines", "Jun", "Sam"]) {
+      // config.ts lists the names so it can refuse them; nowhere else may say them.
+      for (const f of files) if (f.rel !== "config.ts") expect(f.text, `${name} in ${f.rel}`).not.toMatch(new RegExp(`\\b${name}\\b`));
+      expect(page).not.toMatch(new RegExp(`\\b${name}\\b`));
+    }
     for (const text of ["lemon mug", "nesting bowls", "Example", "Wish me luck", "Welcome! Show us"]) expect(code).not.toContain(text);
   });
 
-  it("keeps characters out of everything that holds real people", () => {
-    // Characters live in the studio and nowhere else: the layout, the page's data and the registry never name them.
-    for (const file of ["layout.ts", "cornerWorlds.ts"]) {
-      const text = fs.readFileSync(path.join(dir, file), "utf8");
-      for (const name of ["Meera", "Arjun", "Lena", "Biscuit"]) expect(text).not.toContain(name);
-    }
-    const page = fs.readFileSync(path.resolve(dir, "../pages/CornerWorld.tsx"), "utf8");
-    for (const name of ["Meera", "Arjun", "Lena", "Biscuit"]) expect(page).not.toContain(name);
+  it("keeps characters out of everything that holds real people, and out of the engine", () => {
+    // A character's name and words live in its Corner's config and nowhere else: not in the engine (which draws
+    // any Corner), not in the layout, the registry or the page (which hold real Moments and people).
+    const names = pottery.characters.map((c) => c.name).concat(pottery.pet ? [pottery.pet.name] : []);
+    expect(names).toEqual(["Arjun", "Meera", "Lena", "Biscuit"]);
+    for (const f of engine) for (const name of names) expect(f.text, `${name} in ${f.rel}`).not.toContain(name);
+    for (const name of names) expect(page).not.toContain(name);
     expect(page).toContain("WORLD_COPY.character");
     expect(WORLD_COPY.character).toBe("Character");
   });
 
-  it("loads three.js only inside the world", () => {
-    expect(fs.readFileSync(path.join(dir, "cornerWorlds.ts"), "utf8")).not.toMatch(/from "three"|from "\.\/scene"/);
-    expect(fs.readFileSync(path.join(dir, "layout.ts"), "utf8")).not.toMatch(/from "three"/);
-    const page = fs.readFileSync(path.resolve(dir, "../pages/CornerWorld.tsx"), "utf8");
-    expect(page).toMatch(/import\("\.\.\/world\/scene"\)/);
-    expect(page).not.toMatch(/^import (?!type).*from "\.\.\/world\/scene"/m);
+  it("has no Corner's words in the engine", () => {
+    for (const f of engine) {
+      for (const c of pottery.characters) for (const line of c.lines) expect(f.text, f.rel).not.toContain(line);
+      expect(f.text, f.rel).not.toContain(pottery.copy.intro);
+      expect(f.text, f.rel).not.toContain(pottery.greeting[1]);
+    }
+  });
+
+  it("loads three.js only inside the engine, as one file fetched when a room opens", () => {
+    // The plain files import nothing that draws: not three, and not any engine folder.
+    for (const f of plain) {
+      expect(f.text, f.rel).not.toMatch(/from "three"/);
+      expect(f.text, f.rel).not.toMatch(/from "(\.\.?\/)+(core|settings|pieces|characters|sound)(\/|")/);
+    }
+    expect(page).toMatch(/import\("\.\.\/world\/core\/scene"\)/);
+    expect(page).not.toMatch(/^import (?!type).*from "\.\.\/world\/(core|settings|pieces|characters|sound)/m);
     expect(page).not.toMatch(/from "three"/);
+    // Every Corner goes through the same entry point: no Corner has engine code of its own.
+    expect(files.filter((f) => /createWorld\(/.test(f.text)).map((f) => f.rel)).toEqual(["core/scene.ts"]);
   });
 
   it("pins three to an exact version", () => {
