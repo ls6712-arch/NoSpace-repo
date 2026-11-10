@@ -103,6 +103,8 @@ describe("the garden on a phone", () => {
     // Outside is to the left of the room's left wall (x = -4.7).
     expect(first.look[0]).toBeLessThan(-4.7);
     expect(end.look[0]).toBeGreaterThan(-4.7);
+    // It ends on the walls framed exactly as a phone frames them in every other room, so the rack and signs are in view.
+    expect(end).toEqual(settledPose("studio", true));
     expect(glides("garden", phone)).toBe(true);
     expect(glidePose(first, end, 0)).toEqual(first);
     expect(glidePose(first, end, 1)).toEqual(end);

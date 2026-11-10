@@ -27,6 +27,8 @@ export interface StartPose {
   radius: number;
   /** The same, on a small upright screen. */
   radiusPhone: number;
+  /** Where a small upright screen settles, when that is not the pose above from further back. */
+  phone?: CameraPose;
   /**
    * A small upright screen is too narrow to show both the walls and what is beside them. Where this is set,
    * such a screen starts here, and once the person enters the camera glides to the pose above (walls and
@@ -51,6 +53,9 @@ export const START_POSES: Record<SettingName, StartPose> = {
     pitch: 0.32,
     radius: 11,
     radiusPhone: 12.4,
+    // Upright, the wide pose would leave the rack and the signs off the right edge: a phone settles on the walls,
+    // framed as in every other room.
+    phone: { look: INDOOR.look, yaw: INDOOR.yaw, pitch: INDOOR.pitch, radius: INDOOR.radiusPhone },
     arrivePhone: { look: [-7.3, 0.9, 0.3], yaw: 0.12, pitch: 0.3, radius: 9 },
   },
   nook: INDOOR,
@@ -60,6 +65,7 @@ export const START_POSES: Record<SettingName, StartPose> = {
 /** The pose the room settles on: what a wide screen shows from the start, and where a phone's glide ends. */
 export function settledPose(setting: SettingName, phone: boolean): CameraPose {
   const p = START_POSES[setting];
+  if (phone && p.phone) return p.phone;
   return { look: p.look, yaw: p.yaw, pitch: p.pitch, radius: phone ? p.radiusPhone : p.radius };
 }
 
@@ -79,7 +85,10 @@ export function glides(setting: SettingName, o: { phone: boolean; reducedMotion:
 
 /** The pose `u` of the way (0 to 1) from one pose to another, easing out of the first and into the second. */
 export function glidePose(from: CameraPose, to: CameraPose, u: number): CameraPose {
-  const c = Math.max(0, Math.min(1, u));
+  // The ends are exact, so the glide finishes on the settled pose to the last digit.
+  if (u <= 0) return from;
+  if (u >= 1) return to;
+  const c = u;
   const e = c * c * (3 - 2 * c);
   const mix = (a: number, b: number) => a + (b - a) * e;
   return {
