@@ -33,11 +33,11 @@ Nothing about this is stored on a Moment. A Moment is on a Corner's finished wal
 | `config.ts` | What a config may contain, and `checkConfig`, the rules every config keeps. Plain data |
 | `cornerWorlds.ts` | Which Corner has a room, the words every room shares, and the remembered settings. Small, so the Corner page can import it |
 | `layout.ts` | No 3D: which Moment goes where (`planRoom`), what its piece looks like (`pieceSpec`), which pairs get a thread |
-| `core/` | The engine: `scene.ts` (renderer, camera and drag, picking, pieces popping in, threads, the frame loop), `room.ts` (floor, walls, window, sun, dust, rain), `moods.ts` (Morning, Golden hour, Night rain), `kit.ts` (materials, boxes, textures) |
-| `settings/` | The furniture of a room. `studio.ts` is the only one so far. A setting says where pieces sit and where signs float, and hands the objects a character works on to the actions (`props`). It has no characters and no words |
-| `pieces/` | `makePiece(kind, spec, finished)`: what a Moment looks like. `pot.ts` is the only kind so far |
-| `characters/` | `rig.ts` (a figure and a cat), `actions.ts` (one function per action: `wheel`, `press`, `glaze`), `index.ts` (builds a room's characters from its config) |
-| `sound/` | All sound, made in the browser. No audio files. A config picks its background beds |
+| `core/` | The engine: `scene.ts` (renderer, camera and drag, picking, pieces popping in, threads, the frame loop), `room.ts` (floor, walls, window, sun, dust, rain), `themes.ts` (each setting's colours, window, shelves and lamps), `poses.ts` (where the camera starts in each setting), `moods.ts` (Morning, Golden hour, Night rain), `kit.ts` (materials, boxes, textures) |
+| `settings/` | The furniture of a room: `studio.ts` (pottery), `garden.ts` (a greenhouse open onto a garden), `nook.ts` (a reading room), `cafe.ts` (a game café), and `shared.ts` (the back wall and furniture the last three share). A setting says where pieces sit and where signs float, and hands the objects a character works on to the actions (`props`). It has no characters and no words |
+| `pieces/` | `makePiece(kind, spec, finished)`: what a Moment looks like. Four kinds: `pot` (bare clay, then glazed), `plant` (a seedling, then in flower), `book` (lying open, then standing), `game` (an open box, then boxed) |
+| `characters/` | `rig.ts` (a figure, seated, standing or kneeling, and a cat), `actions.ts` (one function per action: `wheel`, `press`, `glaze`, `water`, `dig`, `read`, `write`, `dice`, `move`, `think`), `index.ts` (builds a room's characters from its config) |
+| `sound/` | All sound, made in the browser. No audio files. A config picks its background beds: `wheel`, `birds`, `wind`, `fire`, `clock`, `cafe`. Nothing plays until the person taps Enter, and nothing at all with Sound off |
 
 `core/scene.ts` and everything it imports (three.js, every setting, piece and action) are one separately downloaded file shared by all rooms. Nothing outside the room page may import them, and a config may import nothing but its type. `world.test.ts` checks both.
 
@@ -55,14 +55,19 @@ Never put a Corner's words or data in the engine, and never add `wall`, `edges`,
 
 Only when a Corner truly needs something the engine lacks. Each of these is one new file or function plus one name in `config.ts`, and the test that compares the two lists fails until both are there.
 
-- **A setting:** a file in `settings/` exporting a `SettingBuilder`, added to `SETTINGS` in `settings/index.ts` and to `SETTING_NAMES`. Keep the shared footprint (shelves on the back wall, the rack, the window on the left) so signs and pieces line up.
+- **A setting:** a file in `settings/` exporting a `SettingBuilder`, added to `SETTINGS` in `settings/index.ts` and to `SETTING_NAMES`, with its look in `core/themes.ts` and its camera start in `core/poses.ts`. Build on `buildBackWall` in `settings/shared.ts` so the shelves, the rack and the signs stay where every other room has them.
 - **An action:** a function in `characters/actions.ts`, added to `ACTIONS` and to `ACTION_NAMES`. If it needs an object only one setting has, add that object to `SettingProps` and the pairing to `ACTION_NEEDS_SETTING`.
 - **A piece kind:** a maker in `pieces/`, added to `MAKERS` in `pieces/index.ts` and to `PIECE_KINDS`.
 - **A sound bed:** in `sound/index.ts`, added to `SOUND_BEDS`.
 
-After any engine change, look at every existing room again: `node scripts/e2e/corner-room-moods.ts` takes each light as a screenshot.
+After any engine change, look at every room again. `node scripts/e2e/corner-room-moods.ts` takes a Corner's room in each light, in the app. `node scripts/e2e/room-preview.ts` draws any setting with the engine alone, so a setting can be looked at before a Corner uses it.
+
+**Light.** The rooms were tuned before three.js moved to physical light units. Every light's intensity therefore carries a factor of PI (the sun and sky in `core/room.ts`, lamps and fires in the settings). Keep that when adding a light. A theme's `bright` scales the sun and sky for that setting.
+
+**The start pose.** `core/poses.ts` holds where the camera starts in each setting. Posters and loops are framed from it, so change a pose only together with that setting's posters and loops.
 
 ## Checking it
 
 - `npm test` runs `src/app/world/world.test.ts` (placement, threads, determinism, no prototype examples, characters and Corner words kept out of the engine, three.js kept out of the main bundle) and `cornerWorldConfigs.test.ts` (every config against the rules above, and that a made-up fifth Corner needs only a config).
+- `node scripts/e2e/room-preview.ts` screenshots the settings on their own (see above).
 - `node scripts/e2e/corner-world.ts` opens the production build in a real browser with fixture data: the Corner opening as its room, the scene arriving as its own file, signs, the panel, the chat tab, List and Room, and the no-WebGL fallback. It saves screenshots.

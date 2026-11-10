@@ -7,7 +7,9 @@ import { SETTINGS } from "../settings";
 import type { Setting } from "../settings/types";
 import { createSound, type Sound } from "../sound";
 import { PI, disposeTree, dropRadialTex, glow, radialTex } from "./kit";
+import { START_POSES } from "./poses";
 import { buildRoom } from "./room";
+import { THEMES } from "./themes";
 import { easeMood, moodState, type MoodChoice, type MoodName } from "./moods";
 
 /**
@@ -95,9 +97,9 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
 
   const scene = new T.Scene();
   const cam = new T.PerspectiveCamera(38, 1, 0.1, 80);
-  const room = buildRoom(scene, { small, reducedMotion, anisotropy: renderer.capabilities.getMaxAnisotropy() });
-  const setting: Setting = SETTINGS[config.setting](scene, room, opts.labels);
-  const cast = buildCast(scene, config, setting.props);
+  const room = buildRoom(scene, { small, reducedMotion, anisotropy: renderer.capabilities.getMaxAnisotropy(), theme: THEMES[config.setting] });
+  const setting: Setting = SETTINGS[config.setting](scene, room, opts.labels, config.pieceKind);
+  const cast = buildCast(scene, config, setting.props, reducedMotion);
 
   // Things in the room that answer a tap: a part of the room, or a character.
   const pickables: T.Object3D[] = [];
@@ -106,17 +108,20 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
   });
 
   // Real pieces and the threads between them.
-  const pieces = new Map<number, { mesh: T.Mesh; spot: Spot; glazed: boolean; top: T.Vector3; scale: number; born: number }>();
+  const pieces = new Map<number, { mesh: T.Object3D; spot: Spot; glazed: boolean; top: T.Vector3; scale: number; born: number }>();
   const threads: { mesh: T.Mesh<T.TubeGeometry, T.MeshBasicMaterial>; curve: T.CatmullRomCurve3; spark: T.Sprite; o: number }[] = [];
   const sparks: { points: T.Points<T.BufferGeometry, T.PointsMaterial>; vel: T.Vector3[]; born: number }[] = [];
   let firstPlan = true;
   let threadsBright = false;
 
+  // A piece may be one mesh (a pot) or several (a plant): every mesh of it answers a tap.
   const removeObject = (o: T.Object3D) => {
     scene.remove(o);
+    o.traverse((n) => {
+      const i = pickables.indexOf(n);
+      if (i >= 0) pickables.splice(i, 1);
+    });
     disposeTree(o);
-    const i = pickables.indexOf(o);
-    if (i >= 0) pickables.splice(i, 1);
   };
   const burst = (p: T.Vector3) => {
     const n = 46;
@@ -149,15 +154,18 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
       if (!base) continue;
       const spec = pieceSpec(p.postId);
       const m = makePiece(config.pieceKind, spec, p.glazed);
-      const height = pieceHeight(config.pieceKind, spec);
+      const height = pieceHeight(config.pieceKind, spec, p.glazed);
       const scale = Math.min(spec.scale, setting.headroom[p.spot] / height);
       m.position.copy(base);
-      m.userData.spot = p.spot;
+      m.traverse((n) => {
+        if (!(n as T.Mesh).isMesh) return;
+        n.userData.spot = p.spot;
+        pickables.push(n);
+      });
       // The first load is simply there. A piece that arrives later pops in.
       const born = firstPlan ? 0 : performance.now();
       m.scale.setScalar(born ? 0.0001 : scale);
       scene.add(m);
-      pickables.push(m);
       const top = base.clone();
       top.y += height * scale + 0.03;
       top.z += 0.04;
@@ -198,10 +206,12 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
   setting.applyMood(cur);
 
   // Camera: drag to look, wheel to move in and out, tap to pick.
-  const look = new T.Vector3(0.1, 1.0, -0.3);
-  let yaw = 0.42;
-  let pitch = 0.3;
-  let radius = small && window.innerWidth < window.innerHeight ? 9.6 : 7.4;
+  // Where the camera starts is fixed per setting (./poses): posters and loops are framed from the same pose.
+  const pose = START_POSES[config.setting];
+  const look = new T.Vector3(...pose.look);
+  let yaw = pose.yaw;
+  let pitch = pose.pitch;
+  let radius = small && window.innerWidth < window.innerHeight ? pose.radiusPhone : pose.radius;
   let camR = radius + 5.6;
   let dragging = false;
   let moved = 0;
@@ -307,7 +317,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     v.copy(p).project(cam);
     return { x: (v.x * 0.5 + 0.5) * width, y: (-v.y * 0.5 + 0.5) * height, visible: v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05 };
   };
-  const hooks = { say: opts.onSay, squish: sound.squish, thud: sound.thud };
+  const hooks = { say: opts.onSay, squish: sound.squish, thud: sound.thud, dig: sound.dig, page: sound.page, dice: sound.dice, clack: sound.clack, pour: sound.pour };
 
   function draw() {
     const t = clock.getElapsedTime();

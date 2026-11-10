@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import { ACTION_NAMES, PIECE_KINDS, SETTING_NAMES, checkConfig, type CornerWorldConfig } from "./config";
 import { CORNER_WORLDS } from "./corners";
 import { ACTIONS } from "./characters/actions";
-import { MADE_KINDS } from "./pieces";
+import { MADE_KINDS, pieceHeight } from "./pieces";
+import { START_POSES } from "./core/poses";
+import { THEMES } from "./core/themes";
+import { pieceSpec } from "./layout";
 import { SETTINGS } from "./settings";
 import { cornerWorld } from "./cornerWorlds";
 import { hobbies } from "../data/hobbies";
@@ -70,6 +73,41 @@ describe("the engine can build everything a config may ask for", () => {
   });
 });
 
+describe("every setting", () => {
+  it("has a theme and a camera start pose", () => {
+    expect(Object.keys(THEMES).sort()).toEqual([...SETTING_NAMES].sort());
+    expect(Object.keys(START_POSES).sort()).toEqual([...SETTING_NAMES].sort());
+  });
+
+  it("keeps the studio's look and start pose as they were", () => {
+    expect(THEMES.studio).toMatchObject({ open: false, floor: "wood", floorTint: 0xffffff, wallLeft: 0xead8bf, trim: 0x5a3b26, frame: 0x3f5a4c, shelf: 0x9b7a62, win: [-1.7, 0.7, 1.2, 3.2], tall: false, bright: 1 });
+    expect(THEMES.studio.wallBack).toEqual({ kind: "plaster", color: 0xe6d2b8 });
+    expect(START_POSES.studio).toEqual({ look: [0.1, 1.0, -0.3], yaw: 0.42, pitch: 0.3, radius: 7.4, radiusPhone: 9.6 });
+  });
+
+  it("only the garden is open, and its camera starts further left and further back to take the garden in", () => {
+    expect(SETTING_NAMES.filter((s) => THEMES[s].open)).toEqual(["garden"]);
+    expect(START_POSES.garden.look[0]).toBeLessThan(START_POSES.studio.look[0]);
+    expect(START_POSES.garden.radius).toBeGreaterThan(START_POSES.studio.radius);
+    expect(START_POSES.nook).toEqual(START_POSES.studio);
+    expect(START_POSES.cafe).toEqual(START_POSES.studio);
+  });
+});
+
+describe("every kind of piece", () => {
+  it("stands taller finished than in progress, and under the shelf above it", () => {
+    const spec = pieceSpec(4821);
+    for (const kind of PIECE_KINDS) {
+      const still = pieceHeight(kind, spec, false);
+      const made = pieceHeight(kind, spec, true);
+      expect(still, kind).toBeGreaterThan(0);
+      expect(made, kind).toBeGreaterThanOrEqual(still);
+      // The tallest piece at its largest (1.1) still fits the 0.6 of headroom on a shelf.
+      expect(made * 1.1, kind).toBeLessThan(0.6);
+    }
+  });
+});
+
 describe("the checks", () => {
   const broken = (change: (c: Loose) => void) => {
     const c = clone(pottery);
@@ -87,6 +125,12 @@ describe("the checks", () => {
     expect(broken((c) => (c.pieceKind = "sock"))).toContain("pieceKind must be one of");
     expect(broken((c) => (c.characters[0].action = "juggle"))).toContain("action must be one of");
     expect(broken((c) => (c.characters[0].pose = "flying"))).toContain("pose must be seated, standing or kneel");
+  });
+
+  it("refuse an action in a setting that lacks what it needs", () => {
+    expect(broken((c) => (c.characters[0].action = "dice"))).toContain('action "dice" only works in the cafe setting');
+    expect(broken((c) => (c.characters[0].action = "move"))).toContain('action "move" only works in the cafe setting');
+    expect(broken((c) => { c.setting = "garden"; })).toContain('action "wheel" only works in the studio setting');
   });
 
   it("refuse a station that points at nobody in the room", () => {

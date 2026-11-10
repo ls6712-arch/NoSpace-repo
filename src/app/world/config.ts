@@ -8,35 +8,37 @@
  */
 
 /** The settings the engine can build (./settings). */
-export const SETTING_NAMES = ["studio"] as const;
+export const SETTING_NAMES = ["studio", "garden", "nook", "cafe"] as const;
 export type SettingName = (typeof SETTING_NAMES)[number];
 
 /** What a Moment can look like in a room (./pieces). */
-export const PIECE_KINDS = ["pot"] as const;
+export const PIECE_KINDS = ["pot", "plant", "book", "game"] as const;
 export type PieceKind = (typeof PIECE_KINDS)[number];
 
 /** What a character can be doing (./characters/actions). */
-export const ACTION_NAMES = ["wheel", "press", "glaze"] as const;
+export const ACTION_NAMES = ["wheel", "press", "glaze", "water", "dig", "read", "write", "dice", "move", "think"] as const;
 export type ActionName = (typeof ACTION_NAMES)[number];
 
 export const POSES = ["seated", "standing", "kneel"] as const;
 export type Pose = (typeof POSES)[number];
 
 /** Background sound a room can have (./sound). Rain plays at night in every room. */
-export const SOUND_BEDS = ["wheel"] as const;
+export const SOUND_BEDS = ["wheel", "birds", "wind", "fire", "clock", "cafe"] as const;
 export type SoundBed = (typeof SOUND_BEDS)[number];
 
 /** An action that needs a prop only one setting has. */
-export const ACTION_NEEDS_SETTING: Partial<Record<ActionName, SettingName>> = { wheel: "studio" };
+export const ACTION_NEEDS_SETTING: Partial<Record<ActionName, SettingName>> = { wheel: "studio", dice: "cafe", move: "cafe" };
 
 /** Colours are numbers, 0xrrggbb: the colour of a 3D material, not a page colour, so not a theme token. */
 export interface CharacterLook {
   skin: number;
   shirt: number;
   pants: number;
-  apron: number;
+  /** No apron when left out. */
+  apron?: number;
   hair: number;
   bun?: boolean;
+  glasses?: boolean;
 }
 
 export interface CharacterConfig {
@@ -52,6 +54,10 @@ export interface CharacterConfig {
   lines: readonly string[];
   /** Said when the pot on the wheel collapses (the wheel action). */
   collapseLine?: string;
+  /** Said now and then when the dice land well (the think action). */
+  cheerLine?: string;
+  /** The cover of the book they hold (the read action). 0xrrggbb. */
+  bookColor?: number;
 }
 
 export interface PetConfig {
@@ -142,6 +148,7 @@ export function checkConfig(input: unknown): string[] {
     if (need && cfg.setting !== need) errs.push(`character ${c.name}: action "${c.action}" only works in the ${need} setting`);
     if (!c.lines?.length) errs.push(`character ${c.name} has nothing to say`);
     for (const [part, colour] of Object.entries(c.look ?? {})) if (typeof colour !== "boolean" && !isColor(colour)) errs.push(`character ${c.name}: look.${part} must be a colour, 0xrrggbb`);
+    if (c.bookColor !== undefined && !isColor(c.bookColor)) errs.push(`character ${c.name}: bookColor must be a colour, 0xrrggbb`);
   }
   if (cfg.pet) {
     if (names.has(cfg.pet.name)) errs.push(`the pet shares a name with a character`);

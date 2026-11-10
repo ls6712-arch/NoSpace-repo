@@ -150,6 +150,63 @@ export function plasterTexture(seed: number, base: number, anisotropy: number): 
   );
 }
 
+/** A wall of painted vertical planks. */
+export function plankTexture(base: number, anisotropy: number): T.CanvasTexture {
+  return canvasTex(
+    1024,
+    512,
+    (g, w, h) => {
+      const r = rng(5);
+      g.fillStyle = css(base);
+      g.fillRect(0, 0, w, h);
+      const pw = 64;
+      for (let x = 0; x < w; x += pw) {
+        g.fillStyle = css(r() < 0.5 ? 0xffffff : 0x000000, r() * 0.07);
+        g.fillRect(x, 0, pw, h);
+        g.fillStyle = css(0x1e281c, 0.35);
+        g.fillRect(x, 0, 3, h);
+        for (let k = 0; k < 8; k++) {
+          g.strokeStyle = css(0x282f23, 0.05 + r() * 0.08);
+          g.lineWidth = 1;
+          g.beginPath();
+          const xx = x + 6 + r() * (pw - 12);
+          g.moveTo(xx, 0);
+          g.lineTo(xx + Math.sin(k) * 4, h);
+          g.stroke();
+        }
+      }
+    },
+    undefined,
+    anisotropy,
+  );
+}
+
+/** A floor of terracotta tiles. */
+export function tileTexture(anisotropy: number): T.CanvasTexture {
+  return canvasTex(
+    1024,
+    1024,
+    (g, w, h) => {
+      const r = rng(9);
+      const n = 8;
+      const s = w / n;
+      g.fillStyle = css(0xd8cfc0);
+      g.fillRect(0, 0, w, h);
+      for (let i = 0; i < n; i++)
+        for (let j = 0; j < n; j++) {
+          g.fillStyle = `hsl(${18 + r() * 10},46%,${50 + r() * 10}%)`;
+          g.fillRect(i * s + 4, j * s + 4, s - 8, s - 8);
+          for (let k = 0; k < 40; k++) {
+            g.fillStyle = css(r() < 0.5 ? 0xfff0dc : 0x5a321e, r() * 0.12);
+            g.fillRect(i * s + 4 + r() * (s - 8), j * s + 4 + r() * (s - 8), 3, 3);
+          }
+        }
+    },
+    [3, 3],
+    anisotropy,
+  );
+}
+
 /** A small wooden tag with a few words on it, as hung on a shelf. */
 export function tagTexture(text: string, bg: number, fg: number): T.CanvasTexture {
   return canvasTex(512, 128, (g, w, h) => {

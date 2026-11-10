@@ -9,18 +9,24 @@ import { PI, at, box, cyl, mat, mesh, sph } from "../core/kit";
  */
 
 export interface PersonLook {
-  seated: boolean;
+  /** Standing when neither this nor `seated` is given. */
+  pose?: "seated" | "standing" | "kneel";
+  /** The older way to say seated or standing. `pose` wins when both are given. */
+  seated?: boolean;
   skin: number;
   shirt: number;
   pants: number;
-  apron: number;
+  /** No apron when left out. */
+  apron?: number;
   hair: number;
   bun?: boolean;
+  glasses?: boolean;
 }
 
 interface Arm {
   sh: T.Group;
   el: T.Group;
+  hand: T.Mesh;
 }
 
 export interface PersonRig {
@@ -32,15 +38,15 @@ export interface PersonRig {
 
 export function buildPerson(name: string, o: PersonLook): PersonRig {
   const m = (c: number) => mat(c, 0.82);
+  const pose = o.pose ?? (o.seated ? "seated" : "standing");
   const skin = m(o.skin);
   const shirt = m(o.shirt);
   const pants = m(o.pants);
-  const apron = m(o.apron);
   const hair = m(o.hair);
   const shoe = m(0x2b211b);
   const root = new T.Group();
   const hips = new T.Group();
-  hips.position.y = o.seated ? 0.56 : 0.95;
+  hips.position.y = pose === "standing" ? 0.95 : pose === "kneel" ? 0.5 : 0.56;
   root.add(hips);
   for (const s of [-1, 1]) {
     const th = new T.Group();
@@ -53,9 +59,12 @@ export function buildPerson(name: string, o: PersonLook): PersonRig {
     kn.add(sph(0.068, pants, 12, 10));
     kn.add(at(cyl(0.063, 0.05, 0.45, pants, 14), 0, -0.225, 0));
     kn.add(at(box(0.11, 0.07, 0.22, shoe), 0, -0.47, 0.05));
-    if (o.seated) {
+    if (pose === "seated") {
       th.rotation.x = -PI / 2;
       kn.rotation.x = PI / 2;
+    } else if (pose === "kneel") {
+      th.rotation.x = -0.15;
+      kn.rotation.x = PI / 2 + 0.15;
     }
   }
   const seat = sph(0.19, pants, 20, 14);
@@ -64,7 +73,7 @@ export function buildPerson(name: string, o: PersonLook): PersonRig {
   const spine = new T.Group();
   hips.add(spine);
   spine.add(at(cyl(0.17, 0.19, 0.55, shirt, 24), 0, 0.3, 0));
-  spine.add(at(box(0.31, 0.52, 0.035, apron), 0, 0.24, 0.18));
+  if (o.apron !== undefined) spine.add(at(box(0.31, 0.52, 0.035, m(o.apron)), 0, 0.24, 0.18));
   for (const s of [-1, 1]) spine.add(at(sph(0.095, shirt, 14, 10), s * 0.2, 0.55, 0));
   spine.add(at(cyl(0.05, 0.055, 0.1, skin, 12), 0, 0.64, 0));
   const head = new T.Group();
@@ -79,6 +88,10 @@ export function buildPerson(name: string, o: PersonLook): PersonRig {
   cap.rotation.x = -0.38;
   head.add(cap);
   if (o.bun) head.add(at(sph(0.075, hair, 14, 10), 0, 0.27, -0.1));
+  if (o.glasses) {
+    const rim = mat(0x2b2b33, 0.3, 0.6);
+    for (const s of [-1, 1]) head.add(at(mesh(new T.TorusGeometry(0.03, 0.005, 6, 16), rim), s * 0.048, 0.16, 0.135));
+  }
   const eye = mat(0x1b1410, 0.4);
   for (const s of [-1, 1]) head.add(at(sph(0.016, eye, 8, 6), s * 0.048, 0.16, 0.128));
   head.add(at(sph(0.022, skin, 8, 6), 0, 0.13, 0.14));
@@ -94,8 +107,9 @@ export function buildPerson(name: string, o: PersonLook): PersonRig {
     sh.add(el);
     el.add(sph(0.05, skin, 10, 8));
     el.add(at(cyl(0.05, 0.044, 0.27, skin, 12), 0, -0.135, 0));
-    el.add(at(sph(0.056, skin, 12, 10), 0, -0.29, 0));
-    return { sh, el };
+    const hand = sph(0.056, skin, 12, 10);
+    el.add(at(hand, 0, -0.29, 0));
+    return { sh, el, hand };
   };
   const arms = { L: arm(-1), R: arm(1) };
   root.traverse((n) => {
