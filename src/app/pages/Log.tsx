@@ -41,9 +41,10 @@ import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
 import { recordWorkflowMoment, removeWorkflowMoment } from "../lib/pursuitWorkflowStore";
 import { notifyError } from "../components/ui/toaster";
-import { addProgress, removeProgress, startProject, useJournal } from "../lib/journal";
+import { addProgress, dropProject, finishProject, removeProgress, resumeProject, startFinishedProject, startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
-import { attachPostToPursuit, deleteRemoteProgress, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
+import { attachPostToPursuit, deleteRemoteProgress, deleteRemotePursuit, mirrorFinishedPursuitWithMoment, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
+import { asksWallQuestion, finishedPursuitTitle, wallLabels, WALL_QUESTION_LABEL } from "../lib/cornerWallLabels";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
 import { AmountStepper, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { uploadMomentFile } from "../lib/momentMedia";
@@ -410,6 +411,23 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const [rowSheet, setRowSheet] = useState<null | "activity" | "counts" | "details">(null);
   type Circle = "group" | "friends" | "everyone" | "private";
   const circle: Circle = audience === "private" ? "private" : toGroup ? "group" : audience === "public" ? "everyone" : "friends";
+
+  // A Corner with a room asks one more thing: is this still in progress, or finished? The answer is not
+  // stored on the Moment. "Finished" finishes the Pursuit the Moment counts toward, or, with no Pursuit,
+  // makes one from the Moment that is finished from the start (startFinishedProject), which is what puts the
+  // Moment on the Corner's finished wall. Asked only for a Moment other people will see, and only when the
+  // Pursuit (if any) is the person's own solo one: a group's Pursuit is not one person's to finish from here.
+  const [wallAnswer, setWallAnswer] = useState<"making" | "made">("making");
+  const wallCorner = corner || subHobby;
+  const wallNames = wallLabels(hobbySlug, wallCorner);
+  const ownSoloPursuit =
+    !selectedProject ||
+    ((selectedProject.mode ?? "solo") === "solo" &&
+      !selectedProject.ownerId &&
+      selectedProject.role !== "member" &&
+      !selectedProject.measure?.workflow &&
+      !selectedProject.workflowPersonal);
+  const asksWall = spaceSet && asksWallQuestion(hobbySlug, wallCorner) && circle !== "private" && circle !== "group" && ownSoloPursuit;
   const chooseCircle = (c: Circle) => {
     audienceDecidedRef.current = true;
     setToGroup(c === "group");
@@ -451,6 +469,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     postId?: number;
     logId?: number;
     progressId?: string;
+    /** The Pursuit that "finished" finished with this Moment: made for it, or one that was already there. */
+    finished?: { pursuitId: string; created: boolean };
   }>(null);
   const [undoing, setUndoing] = useState(false);
   const [undoError, setUndoError] = useState<string | null>(null);
@@ -1109,11 +1129,33 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         }).id;
       }
 
+      const finishing = asksWall && wallAnswer === "made" && !entry.unsaved;
       if (linkTo) {
         const targetProject = journal.projects.find((p) => p.id === linkTo);
         void attachPostToPursuit(entry.id, linkTo);
-        if (targetProject?.finishedAt && user) {
+        if (targetProject?.finishedAt && user && !finishing) {
           void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
+        }
+      }
+      // "Finished" on a Corner with a room (see asksWall above).
+      let finished: { pursuitId: string; created: boolean } | undefined;
+      if (finishing) {
+        if (linkTo) {
+          const done = finishProject(linkTo);
+          if (done) {
+            if (user) void mirrorPursuit(user.id, done);
+            finished = { pursuitId: linkTo, created: false };
+          }
+        } else {
+          // Shared only when the Moment is for everyone: a shared Pursuit's title can be read by anyone, and
+          // it comes from this Moment's caption.
+          const made = startFinishedProject(
+            { title: finishedPursuitTitle(typedCaption, cornerLabel), hobbySlug, subHobby: wallCorner, shared: audience === "public" },
+            entry.id,
+          );
+          if (user) void mirrorFinishedPursuitWithMoment(user.id, made, entry.id);
+          linkTo = made.id;
+          finished = { pursuitId: made.id, created: true };
         }
       }
       // Same direct insert AddMomentToSpaceDialog uses for an existing
@@ -1126,7 +1168,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       }
       lastProgressId.current = undefined;
       setSavedProgressLine(await recordProgress(entry.id, undefined, typedCaption));
-      setUndoTarget({ postId: entry.id, progressId: lastProgressId.current });
+      setUndoTarget({ postId: entry.id, progressId: lastProgressId.current, finished });
       setUndoError(null);
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
@@ -1163,6 +1205,15 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     try {
       if (undoTarget.postId !== undefined) await deletePost(undoTarget.postId);
       else if (undoTarget.logId !== undefined) await removePrivateLog(undoTarget.logId);
+      // Taking the Moment back takes "finished" back with it: a Pursuit made for the Moment goes, and one
+      // that was already there is open again.
+      if (undoTarget.finished?.created) {
+        dropProject(undoTarget.finished.pursuitId);
+        if (user) void deleteRemotePursuit(undoTarget.finished.pursuitId);
+      } else if (undoTarget.finished) {
+        const reopened = resumeProject(undoTarget.finished.pursuitId);
+        if (reopened && user) void mirrorPursuit(user.id, reopened);
+      }
       if (undoTarget.progressId) {
         if (selectedProject?.measure?.workflow) await removeWorkflowMoment(selectedProject.id, undoTarget.progressId, !!user);
         else {
@@ -1197,6 +1248,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     setTags([]);
     setProjectTitle("");
     setProjectId(pursuitScoped ? initialPursuitId : "");
+    setWallAnswer("making");
     setFiles([]);
     setError(null);
     setSavedAs(null);
@@ -1830,6 +1882,17 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </span>
           </button>
+          {asksWall && (
+            <Segmented
+              label={WALL_QUESTION_LABEL}
+              value={wallAnswer}
+              onChange={setWallAnswer}
+              options={[
+                { value: "making", label: wallNames.making },
+                { value: "made", label: wallNames.made },
+              ]}
+            />
+          )}
           {countsPreview && (
             <div className="flex items-center gap-3 rounded-card bg-card px-4 py-3" role="status">
               <PunchHoles size="sm" done={countsPreview.done} total={countsPreview.total} next={countsPreview.next} />

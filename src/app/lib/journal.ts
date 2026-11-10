@@ -337,6 +337,27 @@ export function startProject(input: {
   return project;
 }
 
+/**
+ * A Pursuit that is finished from its first write, made around one Moment: what Log a Moment does when someone
+ * answers "finished" on a Moment that counts toward no Pursuit (a Corner with a room). Its start, its link to
+ * the Moment and its finish land in one commit, so it is never active, not even for a render: nothing that
+ * lists open Pursuits (Home, the Pursuit picker, check-ins, suggestions) ever sees it. It has no goal, no
+ * measure and no check-in.
+ */
+export function startFinishedProject(
+  input: { title: string; hobbySlug?: string; subHobby?: string; shared?: boolean },
+  postId: number | string,
+  now = Date.now(),
+): Project {
+  const project: Project = { ...newProject(input), startedAt: now, finishedAt: now, checkInDays: 0 };
+  commit({
+    ...state,
+    projects: [project, ...state.projects],
+    entryProject: { ...state.entryProject, [String(postId)]: project.id },
+  });
+  return project;
+}
+
 /** Sharing is set per Pursuit, on purpose — never a switch that publishes
  * everything you've ever started. */
 export function setProjectShared(projectId: string, shared: boolean) {

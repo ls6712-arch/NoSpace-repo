@@ -15,6 +15,14 @@ Code: `src/app/world/` and `src/app/pages/CornerWorld.tsx` (the `CornerRoom` com
 - **Everything in the room is also in the panel**, reachable with a keyboard and a screen reader. The canvas is decoration over the same data.
 - **Never a blank screen.** No WebGL, a lost graphics context, a failed download, or a first frame slower than 4 seconds all show the list with a short note, and the room is not tried again by itself until the tab is closed.
 
+## In progress or finished
+
+Nothing about this is stored on a Moment. A Moment is on a Corner's finished wall when its Pursuit is finished (`pursuits.finished_at`), and on the in-progress wall otherwise; `corner_wall` decides, as it does for every Corner.
+
+- **Labels.** A Corner with a room may name its two walls itself (`src/app/lib/cornerWallLabels.ts`, listed in `docs/glossary.md`). A Corner without a room says Still making and Made it.
+- **Log a Moment asks** on a Corner with a room, for a Moment other people will see: a two-way choice under the Corner row with that Corner's labels. The finished answer finishes the Pursuit the Moment counts toward. With no Pursuit it makes one that is finished in its first write (`startFinishedProject`, `mirrorFinishedPursuitWithMoment`), so it is never an open Pursuit anywhere and earns no Finisher Stub. It is shared only when the Moment is for everyone.
+- **Check:** `node scripts/e2e/corner-wall-question.ts`.
+
 ## How it is put together
 
 | File | What it is | Reusable? |
