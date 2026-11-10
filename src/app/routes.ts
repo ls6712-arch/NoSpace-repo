@@ -137,6 +137,8 @@ export const router = createHashRouter([
         },
         lazy: page(() => import("./pages/CornerDetail"), "CornerDetail"),
       },
+      // A Corner's 3D world, for the Corners that have one (src/app/world/cornerWorlds.ts). Any other Corner goes to its page.
+      { path: "corners/:slug/world", lazy: page(() => import("./pages/CornerWorld"), "CornerWorld") },
       { path: "browse/:slug", lazy: page(() => import("./pages/Category"), "CategoryPage") },
       { path: "pursuits/new", lazy: page(() => import("./pages/CreatePursuit"), "CreatePursuit") },
       { path: "join/:token", lazy: page(() => import("./pages/JoinPursuit"), "JoinPursuit") },

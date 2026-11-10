@@ -49,6 +49,7 @@ import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
 import { CornerStarterContent } from "../components/corners/CornerStarterContent";
 import { CornerActivities } from "../components/corners/CornerActivities";
+import { cornerWorld, worldPath } from "../world/cornerWorlds";
 
 /**
  * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
@@ -170,6 +171,7 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   // Chat is for approved members: a remembered "chat" never shows to a visitor.
   const tab: Tab = resolveTab(chosenTab, restricted);
   const followKey = cornerFollowKey(corner.spaceSlug, corner.slug);
+  const world = cornerWorld(corner.spaceSlug, corner.slug);
   const following = social.followedHobbies.includes(followKey);
   const toggleFollow = () => (user ? void social.toggleHobbyFollow(followKey, corner.name) : signIn());
 
@@ -379,14 +381,22 @@ function CornerBody({ corner }: { corner: CornerModel }) {
               {corner.name}
             </h1>
             {metaLine && <p className="text-body text-on-media/90">{metaLine}</p>}
-            <button
-              type="button"
-              onClick={toggleFollow}
-              aria-pressed={following}
-              className="mt-2 inline-flex min-h-11 items-center rounded-full border border-current px-5 text-small font-semibold"
-            >
-              {following ? "Following" : "Follow"}
-            </button>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={toggleFollow}
+                aria-pressed={following}
+                className="inline-flex min-h-11 items-center rounded-full border border-current px-5 text-small font-semibold"
+              >
+                {following ? "Following" : "Follow"}
+              </button>
+              {/* The Corner's world, where it has one. Members only: it shows the walls, which visitors do not see. */}
+              {world && !restricted && (
+                <Link to={worldPath(corner.slug)} className="inline-flex min-h-11 items-center rounded-full border border-current px-5 text-small font-semibold">
+                  {world.enter}
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </header>
