@@ -1,43 +1,29 @@
 import { canonicalCorner } from "../data/hobbies";
 import { plural } from "../lib/plural";
+import type { CornerWorldConfig } from "./config";
+import { CORNER_WORLDS } from "./corners";
 
 /**
- * Which Corners have a room, and the words a room shows. A Corner with a room
- * opens as the room: that is what the Corner looks like. The same Corner as a
- * list (the page every other Corner has) is one tap away, and is what visitors
- * and devices that cannot draw the room get.
+ * Which Corners have a room, and the words every room shares. A Corner with a room opens as the room: that is
+ * what the Corner looks like. The same Corner as a list (the page every other Corner has) is one tap away,
+ * and is what visitors and devices that cannot draw the room get.
  *
- * This file is small and has no 3D in it, so the Corner page can import it to
- * decide which to show. The scene itself (./scene, with three.js) is loaded
- * only when a room opens.
+ * This file is small and has no 3D in it, so the Corner page can import it to decide which to show. The
+ * engine itself (./core/scene, with three.js) is loaded only when a room opens.
  *
- * To give another Corner a world, see docs/corner-worlds.md.
+ * A room is a config: ./corners. To give another Corner a room, see docs/corner-worlds.md.
  */
 
-export interface CornerWorldDef {
-  /** The Corner, as `space-slug/corner-slug`. */
-  key: string;
-  /** The line on the entry screen, under the Corner's name. */
-  intro: string;
-  /** Read out for the canvas. */
-  stageLabel: string;
-}
+/** A Corner's room. The old name for a config, kept for the pages that take one. */
+export type CornerWorldDef = CornerWorldConfig;
 
-const WORLDS: CornerWorldDef[] = [
-  {
-    key: "crafts-making/pottery",
-    intro: "The wheel is spinning and three potters are at work. Come make something, finished or not.",
-    stageLabel: "The Pottery Corner as a 3D room. Drag to look around. Everything in it is also in the Walls panel.",
-  },
-];
-
-/** The world of a Corner, if it has one. A Corner merged into another uses the kept Corner's world. */
-export function cornerWorld(spaceSlug: string, slug: string): CornerWorldDef | undefined {
+/** The room of a Corner, if it has one. A Corner merged into another uses the kept Corner's room. */
+export function cornerWorld(spaceSlug: string, slug: string): CornerWorldConfig | undefined {
   const k = canonicalCorner(spaceSlug, slug);
-  return WORLDS.find((w) => w.key === `${k.spaceSlug}/${k.slug}`);
+  return CORNER_WORLDS.find((w) => w.key === `${k.spaceSlug}/${k.slug}`);
 }
 
-/** Proposed wording (brief of Nov 10, 2026), listed in docs/glossary.md for the founder's approval. */
+/** Words every room shares. A Corner's own words (its entry line, its wall names, its shelf notes) are in its config. */
 export const WORLD_COPY = {
   entryHint: "Best with sound on. Drag to look around.",
   enter: "Enter the Corner",
@@ -47,9 +33,6 @@ export const WORLD_COPY = {
   back: "Back",
   yourShelf: "Your shelf",
   yourShelfEmpty: "Empty for now",
-  yourShelfNothing: "Nothing yet. Log a Moment and your piece appears in the Corner: on the drying rack while you’re still making it, on your shelf once it’s done.",
-  yourShelfLine: "Finished pieces sit on your shelf. Pieces in progress dry on the rack.",
-  hint: "Tap a sign to see who’s still making, who made it, and your own shelf.",
   gotIt: "Got it",
   character: "Character",
   timeOfDay: "Time of day",
@@ -62,10 +45,10 @@ export const WORLD_COPY = {
 } as const;
 
 /** The line under a sign: how many pieces, never how many people. Nothing when the number is not known exactly. */
-export function signLine(spot: "rack" | "shelf" | "yours", count: number, exact = true): string {
+export function signLine(config: CornerWorldConfig, spot: "rack" | "shelf" | "yours", count: number, exact = true): string {
   if (spot === "yours") return count === 0 ? WORLD_COPY.yourShelfEmpty : plural(count, "piece");
   if (!exact) return "";
-  return spot === "rack" ? `${count} in progress` : `${count} finished`;
+  return `${count} ${spot === "rack" ? config.copy.walls.still.sub : config.copy.walls.made.sub}`;
 }
 
 /** Whether this browser can draw a world at all. */

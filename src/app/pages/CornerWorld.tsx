@@ -24,7 +24,7 @@ import { WALL_COPY, WallCard } from "../components/corners/WallCard";
 import { wallLabels } from "../lib/cornerWallLabels";
 import { planRoom, type RoomMoment, type Spot } from "../world/layout";
 import { WORLD_COPY, readWorldPrefs, signLine, webglAvailable, writeWorldPrefs, type CornerWorldDef, type WorldPrefs } from "../world/cornerWorlds";
-import type { Frame, World } from "../world/scene";
+import type { Frame, World } from "../world/core/scene";
 
 /**
  * A Corner as a room. For a Corner that has one, this is the Corner: it is what
@@ -252,11 +252,12 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
       // The one-time hint hangs under the first sign.
       place(hintRef.current, { ...f.signs.rack, y: f.signs.rack.y + 34 }, 0.5, 0, true);
     };
-    import("../world/scene")
+    import("../world/core/scene")
       .then(({ createWorld }) => {
         if (cancelled) return;
         const initial = readWorldPrefs(userId);
         world = createWorld(stage, {
+          config: def,
           small: Math.min(window.innerWidth, window.innerHeight) < 700,
           reducedMotion,
           labels: { rack: wallNames.making, shelf: wallNames.made, yours: WORLD_COPY.yourShelf },
@@ -437,7 +438,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
 
   return createPortal(
     <div className="fixed inset-0 z-50 overflow-hidden bg-background text-foreground" data-corner-world={corner.slug}>
-      <div ref={stageRef} role="img" aria-label={def.stageLabel} className="absolute inset-0" />
+      <div ref={stageRef} role="img" aria-label={def.copy.stageLabel} className="absolute inset-0" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_45%,transparent_55%,var(--scrim-solid)_100%)] opacity-50" />
 
       {/* Top bar: the way out, the time of day, sound, and the Walls panel. */}
@@ -487,7 +488,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
       {entered &&
         loaded &&
         SPOTS.map(({ spot, dot }) => {
-          const line = signLine(spot, counts[spot].n, counts[spot].exact);
+          const line = signLine(def, spot, counts[spot].n, counts[spot].exact);
           return (
             <button
               key={spot}
@@ -514,7 +515,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
         })}
       {showHint && (
         <div ref={hintRef} role="status" style={{ visibility: "hidden" }} className="absolute left-0 top-0 z-20 flex w-64 flex-col items-start gap-2 rounded-card border border-border bg-card p-3 text-small text-foreground shadow-overlay">
-          <span>{WORLD_COPY.hint}</span>
+          <span>{def.copy.hint}</span>
           <Button size="sm" onClick={() => updatePrefs({ hintSeen: true })}>
             {WORLD_COPY.gotIt}
           </Button>
@@ -586,12 +587,12 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
                 </h3>
                 {myPieces.length === 0 ? (
                   <div className="mt-2 flex flex-col items-start gap-3">
-                    <p className="text-small text-muted-foreground">{WORLD_COPY.yourShelfNothing}</p>
+                    <p className="text-small text-muted-foreground">{def.copy.yoursEmpty}</p>
                     <PillButton onClick={logMoment}>{WALL_COPY.logAMoment}</PillButton>
                   </div>
                 ) : (
                   <>
-                    <p className="mb-3 text-small text-muted-foreground">{WORLD_COPY.yourShelfLine}</p>
+                    <p className="mb-3 text-small text-muted-foreground">{def.copy.yoursNote}</p>
                     <ul className="flex flex-col gap-2">
                       {myPieces.map(({ post, finished }) => (
                         <li key={post.id}>
@@ -631,7 +632,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
         <div className="absolute inset-0 flex items-center justify-center bg-scrim-solid/60 px-4 backdrop-blur-sm">
           <div className="flex max-w-md flex-col items-center gap-4 text-center">
             <h1 className="text-display text-balance">{corner.name}</h1>
-            <p className="text-lead text-balance text-muted-foreground">{def.intro}</p>
+            <p className="text-lead text-balance text-muted-foreground">{def.copy.intro}</p>
             <PillButton onClick={enter} disabled={!ready}>
               {WORLD_COPY.enter}
             </PillButton>

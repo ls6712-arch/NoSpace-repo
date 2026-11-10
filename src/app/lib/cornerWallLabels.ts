@@ -1,4 +1,3 @@
-import { canonicalCorner } from "../data/hobbies";
 import { cornerWorld } from "../world/cornerWorlds";
 import { clipTitle } from "./cornerWalls";
 
@@ -18,7 +17,10 @@ export interface WallLabels {
 
 export const DEFAULT_WALL_LABELS: WallLabels = { making: "Still making", made: "Made it" };
 
-/** Keyed by `space-slug/corner-slug`. A Corner here uses its labels once it has a room (cornerWorlds.ts). */
+/**
+ * The labels the founder decided, keyed by `space-slug/corner-slug`. A Corner's room config must name its walls
+ * exactly like this (cornerWorldConfigs.test.ts checks), and a Corner shows them once it has a room.
+ */
 const ROOM_WALL_LABELS: Readonly<Record<string, WallLabels>> = {
   "crafts-making/pottery": { making: "Still making", made: "Made it" },
   "home-garden/gardening": { making: "Still growing", made: "Made it" },
@@ -36,9 +38,8 @@ export function roomWallLabels(key: string): WallLabels | undefined {
 
 /** The wall names this Corner shows. A Corner merged into another uses the kept Corner's. */
 export function wallLabels(spaceSlug: string, slug: string): WallLabels {
-  if (!cornerWorld(spaceSlug, slug)) return DEFAULT_WALL_LABELS;
-  const k = canonicalCorner(spaceSlug, slug);
-  return ROOM_WALL_LABELS[`${k.spaceSlug}/${k.slug}`] ?? DEFAULT_WALL_LABELS;
+  const room = cornerWorld(spaceSlug, slug);
+  return room ? { making: room.copy.walls.still.label, made: room.copy.walls.made.label } : DEFAULT_WALL_LABELS;
 }
 
 /** Whether Log a Moment asks "in progress or finished" for this Corner: only a Corner with a room. */

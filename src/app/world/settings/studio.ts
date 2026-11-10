@@ -1,58 +1,19 @@
 import * as T from "three";
-import { rng, GLAZES, POT_SHAPES, type Spot } from "./layout";
-import { PI, at, box, canvasTex, css, cyl, glow, mat, mesh, sph, tagTexture } from "./kit";
-import { PROFILES, glazedPot, potGeometry } from "./pots";
-import { buildCat, buildPerson } from "./characters";
-import type { MoodState } from "./moods";
-import type { Room } from "./room";
+import { rng, GLAZES, POT_SHAPES, type Spot } from "../layout";
+import { PI, at, box, canvasTex, css, cyl, glow, mat, mesh, sph, tagTexture } from "../core/kit";
+import { PROFILES, glazedPot, potGeometry } from "../pieces/pot";
+import type { MoodState } from "../core/moods";
+import type { Room } from "../core/room";
+import type { Setting } from "./types";
 
 /**
- * The pottery studio: everything that makes the shared room a place where
- * clay is thrown. Shelves, the drying rack, the wheel, a workbench, a glaze
- * table, the kiln, plants, lamps, three potters and a cat.
+ * The studio setting: everything that makes the shared room a place where clay is thrown. Shelves, the drying
+ * rack, the wheel, a workbench, a glaze table, the kiln, plants, lamps, a corkboard and a mug of tea.
  *
- * It also says where a Corner's real pieces go (`slots`) and where each
- * part's sign floats (`signs`). Another Corner would write a file like this
- * one with its own objects and characters; see docs/corner-worlds.md.
+ * It says where a Corner's real pieces go (`slots`), where each part's sign floats (`signs`), and hands the
+ * wheel's clay, the bench's clay and the glaze table's pot to the characters' actions (`props`). It has no
+ * characters and no words: those are in the Corner's config. See docs/corner-worlds.md.
  */
-
-/** What the potters say. Each line is shown with a "Character" tag. */
-export const STUDIO_LINES: Record<string, string[]> = {
-  Meera: ["Centre first. Everything else follows.", "Slow hands, fast wheel.", "Wet your hands again. Trust me."],
-  Arjun: ["Wedge out the air bubbles first.", "Mine looked like a potato too. Keep going.", "You showed up. That’s the hard part."],
-  Lena: ["Nobody’s first bowl is round.", "Glaze day is the best day.", "Dip, count to three, lift."],
-  Biscuit: ["(Biscuit the cat is asleep. Purring.)"],
-};
-export const STUDIO_WELCOME = { who: "Meera", text: "Oh hi! Grab a stool, the wheel’s warm." };
-const COLLAPSE_LINE = "Ha. Collapsed. Again! Third time today.";
-
-export interface SettingHooks {
-  say(who: string, text: string): void;
-  squish(pan: number, volume: number): void;
-  thud(): void;
-}
-
-export interface Setting {
-  /** Where the base of each piece sits, by part of the room, in slot order. */
-  slots: Record<Spot, T.Vector3[]>;
-  /** The tallest a piece may stand in each part. */
-  headroom: Record<Spot, number>;
-  /** Where each part's sign floats. */
-  signs: Record<Spot, T.Vector3>;
-  /** Centre and size of the soft glow shown when a part is pointed at: x, y, z, width. */
-  areas: Record<Spot, [number, number, number, number]>;
-  /** The characters, each with the point its speech bubble hangs from. */
-  characters: { name: string; anchor: T.Object3D; lift: number }[];
-  /** Characters who speak on their own every so often, in turn. */
-  talkers: string[];
-  lines: Record<string, string[]>;
-  /** What one of them says when the viewer walks in. */
-  welcome: { who: string; text: string };
-  applyMood(cur: MoodState): void;
-  update(t: number, dt: number, k: number, state: { entered: boolean; reducedMotion: boolean }, hooks: SettingHooks): void;
-}
-
-const damp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 export function buildStudio(scene: T.Scene, room: Room, labels: Record<Spot, string>): Setting {
   const wood = room.wood;
@@ -322,30 +283,6 @@ export function buildStudio(scene: T.Scene, room: Room, labels: Record<Spot, str
     steam.push({ sp, o: i / 8 });
   }
 
-  // The characters.
-  const meera = buildPerson("Meera", { seated: true, skin: 0x8d5a3b, shirt: 0xd9a441, pants: 0x3a3a44, apron: 0x3c5a7a, hair: 0x211612, bun: true });
-  const arjun = buildPerson("Arjun", { seated: false, skin: 0xc08a63, shirt: 0x6b7a3f, pants: 0x4a3b30, apron: 0xc9b79a, hair: 0x1c1310 });
-  const lena = buildPerson("Lena", { seated: true, skin: 0xe0b89a, shirt: 0xd98f8f, pants: 0x2f3a4a, apron: 0x4a4a4a, hair: 0x7a3b22, bun: true });
-  scene.add(at(meera.root, 1.3, 0, 0.2), at(arjun.root, -1.6, 0, -0.3));
-  at(lena.root, 2.95, 0, -1.6);
-  lena.root.rotation.y = -PI / 2;
-  scene.add(lena.root);
-  const brush = new T.Group();
-  brush.add(at(cyl(0.01, 0.012, 0.22, mat(0xb08a5a, 0.5), 8), 0, -0.08, 0), at(cyl(0.016, 0.004, 0.05, mat(0x2f4f86, 0.6), 8), 0, -0.21, 0));
-  brush.position.y = -0.3;
-  brush.rotation.x = 0.6;
-  brush.traverse((n) => {
-    n.userData.character = "Lena";
-  });
-  lena.arms.R.el.add(brush);
-  const cat = buildCat("Biscuit");
-  cat.root.rotation.y = -0.6;
-  scene.add(at(cat.root, -0.2, 0, 2.0));
-
-  let meeraCycle = -1;
-  let saidCollapse = false;
-  let lastPush = 0;
-  let lastSquish = 0;
   let mood: MoodState | null = null;
 
   // Made it fills the middle shelf from the middle outwards.
@@ -360,15 +297,7 @@ export function buildStudio(scene: T.Scene, room: Room, labels: Record<Spot, str
     headroom: { rack: 0.27, shelf: 0.6, yours: 0.6 },
     signs: { rack: new T.Vector3(0.2, 1.09, -3.58), shelf: new T.Vector3(-0.5, 2.38, -3.8), yours: new T.Vector3(1.68, 1.68, -3.8) },
     areas: { rack: [0.2, 0.6, -3.45, 2.7], shelf: [-0.5, 2.02, -3.7, 5.6], yours: [1.68, 1.32, -3.7, 1.8] },
-    characters: [
-      { name: "Meera", anchor: meera.head, lift: 0.42 },
-      { name: "Arjun", anchor: arjun.head, lift: 0.42 },
-      { name: "Lena", anchor: lena.head, lift: 0.42 },
-      { name: "Biscuit", anchor: cat.head, lift: 0.25 },
-    ],
-    talkers: ["Arjun", "Meera", "Lena"],
-    lines: STUDIO_LINES,
-    welcome: STUDIO_WELCOME,
+    props: { wheelPot, wedgeClay, glazingPot },
     applyMood(cur) {
       mood = cur;
       lamps.forEach((l, i) => {
@@ -377,112 +306,10 @@ export function buildStudio(scene: T.Scene, room: Room, labels: Record<Spot, str
         l.bulb.material.color.copy(bulbWarm).multiplyScalar(0.35 + cur.lamp * 0.45);
       });
     },
-    update(t, dt, k, state, hooks) {
-      // The wheel, and Meera throwing on it. Every third pot collapses.
+    update(t, dt, _k, state) {
+      // The wheel turns whether or not anyone is at it.
       wheelHead.rotation.y += dt * 9;
       wheelPot.rotation.y += dt * 9;
-      const cyc = Math.floor(t / 14);
-      const u = t % 14;
-      const collapse = cyc % 3 === 2;
-      if (cyc !== meeraCycle) {
-        meeraCycle = cyc;
-        wheelPot.rotation.z = 0;
-      }
-      let sy: number;
-      let sx: number;
-      let lean = 0.32;
-      let reach = 1.05;
-      let inward = 0.32;
-      let laugh = false;
-      if (u < 3) {
-        sy = 0.55;
-        sx = 1.28 + 0.04 * Math.sin(u * 6);
-      } else if (u < 10) {
-        const q = (u - 3) / 7;
-        const e = q * q * (3 - 2 * q);
-        sy = 0.55 + 0.85 * e;
-        sx = 1.28 - 0.42 * e;
-        reach = 1.05 + 0.28 * e;
-      } else {
-        sy = 1.4;
-        sx = 0.86;
-        reach = 1.3;
-        if (collapse && u > 10.4) {
-          sy = 0.42;
-          sx = 1.5;
-          lean = -0.08;
-          reach = 0.55;
-          inward = 0.1;
-          laugh = true;
-          wheelPot.rotation.z = damp(wheelPot.rotation.z, 0.35, k);
-        } else {
-          reach = 0.85;
-          lean = 0.1;
-        }
-      }
-      if (collapse && u > 10.4 && !saidCollapse) {
-        saidCollapse = true;
-        if (state.entered) {
-          hooks.thud();
-          hooks.say("Meera", COLLAPSE_LINE);
-        }
-      }
-      if (u < 1) saidCollapse = false;
-      wheelPot.scale.x = damp(wheelPot.scale.x, sx, k * 0.8);
-      wheelPot.scale.z = wheelPot.scale.x;
-      wheelPot.scale.y = damp(wheelPot.scale.y, sy, k * 0.8);
-      const press = u < 10 ? Math.sin(t * 4.4) * 0.06 : 0;
-      meera.spine.rotation.x = damp(meera.spine.rotation.x, lean + press * 0.4, k);
-      (["L", "R"] as const).forEach((s, i) => {
-        const a = meera.arms[s];
-        const sg = i ? -1 : 1;
-        a.sh.rotation.x = damp(a.sh.rotation.x, -(reach + press), k);
-        a.sh.rotation.z = damp(a.sh.rotation.z, sg * inward, k);
-        a.el.rotation.x = damp(a.el.rotation.x, laugh ? -1.2 : -0.55, k);
-      });
-      meera.head.rotation.x = damp(meera.head.rotation.x, laugh ? -0.25 : 0.25, k);
-      meera.head.rotation.z = laugh ? Math.sin(t * 16) * 0.08 : damp(meera.head.rotation.z, 0, k);
-      if (u < 10 && t - lastSquish > 1.4 + Math.random() * 0.6 && state.entered) {
-        lastSquish = t;
-        hooks.squish(0.35, 0.12);
-      }
-
-      // Arjun wedging clay, with a rest every 12 seconds.
-      const resting = t % 12 > 9;
-      const p = (Math.sin((t * 2 * PI) / 1.5) + 1) / 2;
-      arjun.spine.rotation.x = damp(arjun.spine.rotation.x, resting ? 0.04 : 0.22 + 0.3 * p, k);
-      (["L", "R"] as const).forEach((s, i) => {
-        const a = arjun.arms[s];
-        const sg = i ? -1 : 1;
-        a.sh.rotation.x = damp(a.sh.rotation.x, resting ? -0.15 : -(0.75 + 0.5 * p), k);
-        a.sh.rotation.z = damp(a.sh.rotation.z, resting ? sg * 0.08 : sg * 0.28, k);
-        a.el.rotation.x = damp(a.el.rotation.x, resting ? -0.3 : -0.35 - 0.25 * (1 - p), k);
-      });
-      arjun.head.rotation.y = damp(arjun.head.rotation.y, resting ? 0.55 : 0, k * 0.6);
-      arjun.head.rotation.x = damp(arjun.head.rotation.x, resting ? 0 : 0.35, k);
-      wedgeClay.scale.y = damp(wedgeClay.scale.y, resting ? 1 : 1 - 0.2 * p, k);
-      wedgeClay.scale.z = damp(wedgeClay.scale.z, resting ? 1 : 1 + 0.14 * p, k);
-      if (!resting && p > 0.97 && t - lastPush > 1 && state.entered) {
-        lastPush = t;
-        hooks.squish(-0.4, 0.16);
-      }
-
-      // Lena glazing a jar.
-      lena.spine.rotation.x = damp(lena.spine.rotation.x, 0.28, k);
-      lena.arms.R.sh.rotation.x = -1.05 + Math.sin(t * 2.6) * 0.08;
-      lena.arms.R.sh.rotation.z = -0.15 + Math.sin(t * 1.3) * 0.12;
-      lena.arms.R.el.rotation.x = -0.75;
-      lena.arms.L.sh.rotation.x = -0.85;
-      lena.arms.L.sh.rotation.z = 0.32;
-      lena.arms.L.el.rotation.x = -0.35;
-      lena.head.rotation.z = Math.sin(t * 0.5) * 0.1;
-      lena.head.rotation.x = 0.3;
-      glazingPot.rotation.y += dt * 0.25;
-
-      // The cat breathes.
-      cat.body.scale.y = 0.62 + Math.sin(t * 1.6) * 0.02;
-      cat.tail.rotation.z = Math.sin(t * 0.7) * 0.15;
-      cat.head.rotation.z = -0.2 + (Math.sin(t * 0.3) > 0.97 ? Math.sin(t * 30) * 0.05 : 0);
 
       lamps.forEach((l, i) => {
         l.arm.rotation.z = state.reducedMotion ? 0 : Math.sin(t * 0.6 + i) * 0.012;
