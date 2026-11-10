@@ -1,6 +1,6 @@
 import * as T from "three";
 import { PI, at, box, canvasTex, css, cyl, disposeTree, glow, mat, mesh, sph } from "./kit";
-import { buildPerson, type PersonRig } from "./characters";
+import { HAIR_TONES, SKIN_TONES, WARDROBE, loadCast, type Body, type Cast, type Character, type Look } from "./townCast";
 import { easeMood, moodState, type MoodName, type MoodState } from "./moods";
 import { rng } from "./layout";
 import { TOWN_CAMERAS, type TownCamera, type TownMotion, type TownView } from "./townViews";
@@ -23,6 +23,8 @@ export interface TownOptions {
   view: TownView;
   /** "light" uses morning light, "dark" golden hour. */
   theme: "light" | "dark";
+  /** Where the character models live (public/world/town). */
+  assetBase: string;
   onLost(): void;
 }
 
@@ -33,18 +35,8 @@ export interface Town {
   dispose(): void;
 }
 
-const SKIN = [0x8d5a3b, 0xc68a62, 0xe8b994, 0x5e3a26, 0xf1cba8, 0xa8704a];
-const HAIR = [0x2a1d16, 0x4a2e1e, 0x1b1b22, 0x8a5a2b, 0x3b2a20];
-const SHIRT = [0xc8332b, 0xf2b42a, 0x3b4c8a, 0x2e6e5e, 0xe6d8c3, 0xb85c8a, 0x6fa3c9, 0xd9773a];
-const PANTS = [0x2b3550, 0x3e3a36, 0x5a6b7d, 0x7a6650];
-
-interface Actor {
-  rig: PersonRig;
-  legs: [T.Object3D, T.Object3D];
-}
-
 /** Every animated part of the town is a function of time, so a still frame is just `tick(t)` once. */
-type Tick = (t: number) => void;
+type Tick = (t: number, dt: number) => void;
 
 /** Light pages get morning light; dark pages get golden hour, which keeps the park readable (full night is too dark to see). */
 const moodFor = (theme: "light" | "dark"): MoodName => (theme === "dark" ? "golden" : "morning");
@@ -141,54 +133,28 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
   ground.add(at(cyl(1.2, 1.2, 0.05, mat(0x7fb6d6, 0.2), 24), 0, 0.48, 0));
   ground.add(at(cyl(0.14, 0.2, 1.1, pave, 10), 0, 0.8, 0));
 
-  // ---- Characters ----
-  function person(name: string, o: { seated?: boolean; shirt?: number } = {}): Actor {
-    const shirt = o.shirt ?? pick(SHIRT);
-    const rig = buildPerson(name, { seated: !!o.seated, skin: pick(SKIN), shirt, pants: pick(PANTS), apron: shirt, hair: pick(HAIR), bun: r() > 0.6 });
-    const hips = rig.root.children[0];
-    scene.add(rig.root);
-    return { rig, legs: [hips.children[0], hips.children[1]] };
-  }
-  const place = (a: Actor, x: number, z: number, y = 0) => a.rig.root.position.set(x, y, z);
-  const face = (a: Actor, x: number, z: number) => {
-    const p = a.rig.root.position;
-    a.rig.root.rotation.y = Math.atan2(x - p.x, z - p.z);
-  };
-  const walk = (a: Actor, t: number, speed: number) => {
-    const s = Math.sin(t * speed) * 0.55;
-    a.legs[0].rotation.x = s;
-    a.legs[1].rotation.x = -s;
-    a.rig.arms.L.sh.rotation.x = -s * 0.8;
-    a.rig.arms.R.sh.rotation.x = s * 0.8;
-    a.rig.spine.position.y = Math.abs(Math.cos(t * speed)) * 0.04;
-  };
-  const stand = (a: Actor) => {
-    a.legs[0].rotation.x = 0;
-    a.legs[1].rotation.x = 0;
-    a.rig.spine.position.y = 0;
-  };
-  /** A laugh every few seconds: head back, a little shake. */
-  const laugh = (a: Actor, t: number, phase: number) => {
-    const k = Math.pow(Math.max(0, Math.sin(t * 0.9 + phase)), 6);
-    a.rig.head.rotation.x = -0.35 * k + Math.sin(t * 9) * 0.04 * k;
-    a.rig.spine.rotation.x = -0.08 * k;
-  };
-
-  // Picnic: three friends laughing on a blanket.
+  // ---- Props: built at once, so the park looks finished before anyone arrives ----
+  // Picnic table with a gingham cloth.
   const pic = { x: -6.2, z: 3.4 };
-  ground.add(at(box(3, 0.04, 2.2, mat(0xc8332b, 0.95)), pic.x, 0.03, pic.z));
-  ground.add(at(box(0.5, 0.35, 0.35, mat(0xb98a4e)), pic.x, 0.2, pic.z));
-  ([[-0.95, -0.55], [0.95, -0.45], [0, 0.75]] as const).forEach(([dx, dz], i) => {
-    const a = person("Picnic " + i, { seated: true });
-    place(a, pic.x + dx, pic.z + dz, -0.44);
-    face(a, pic.x, pic.z);
-    ticks.push((t) => {
-      laugh(a, t, i * 1.7);
-      (i % 2 ? a.rig.arms.R : a.rig.arms.L).sh.rotation.x = -0.5 - 0.2 * Math.sin(t * 0.7 + i);
-    });
+  const gingham = canvasTex(64, 64, (g) => {
+    g.fillStyle = css(0xfff8ec);
+    g.fillRect(0, 0, 64, 64);
+    g.fillStyle = css(WARDROBE.red, 0.55);
+    for (let i = 0; i < 8; i += 2) {
+      g.fillRect(i * 8, 0, 8, 64);
+      g.fillRect(0, i * 8, 64, 8);
+    }
   });
+  gingham.colorSpace = T.SRGBColorSpace;
+  ground.add(at(mesh(new T.BoxGeometry(2.4, 0.06, 1.1), new T.MeshStandardMaterial({ map: gingham, roughness: 0.95 })), pic.x, 0.76, pic.z));
+  for (const dx of [-1, 1]) ground.add(at(box(0.08, 0.74, 0.9, wood), pic.x + dx * 1, 0.37, pic.z));
+  for (const dz of [-1, 1]) {
+    ground.add(at(box(2.4, 0.07, 0.34, wood), pic.x, 0.45, pic.z + dz * 0.8));
+    for (const dx of [-1, 1]) ground.add(at(box(0.07, 0.42, 0.07, wood), pic.x + dx * 1, 0.21, pic.z + dz * 0.8));
+  }
+  ground.add(at(box(0.4, 0.26, 0.28, mat(0xb98a4e)), pic.x + 0.6, 0.92, pic.z));
 
-  // Chess at a small table.
+  // Chess table and stools.
   const ch = { x: 5.6, z: 4.2 };
   ground.add(at(cyl(0.55, 0.55, 0.06, wood, 16), ch.x, 0.75, ch.z));
   ground.add(at(cyl(0.08, 0.12, 0.75, wood, 8), ch.x, 0.37, ch.z));
@@ -199,20 +165,9 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
     }
   });
   ground.add(at(mesh(new T.BoxGeometry(0.6, 0.02, 0.6), new T.MeshStandardMaterial({ map: board, roughness: 0.8 })), ch.x, 0.79, ch.z));
-  [-1, 1].forEach((sd, i) => {
-    ground.add(at(cyl(0.22, 0.22, 0.45, wood, 10), ch.x + sd, 0.22, ch.z));
-    const a = person("Chess " + i, { seated: true });
-    place(a, ch.x + sd, ch.z, -0.1);
-    face(a, ch.x, ch.z);
-    ticks.push((t) => {
-      const k = Math.max(0, Math.sin(t * 0.5 + i * PI));
-      a.rig.arms.R.sh.rotation.x = -1.1 * k;
-      a.rig.head.rotation.x = 0.25;
-      if (i === 1) laugh(a, t, 2);
-    });
-  });
+  for (const sd of [-1, 1]) ground.add(at(cyl(0.22, 0.22, 0.45, wood, 10), ch.x + sd * 0.95, 0.22, ch.z));
 
-  // A painter at an easel.
+  // Easel.
   const pa = { x: -3.8, z: -6.6 };
   const easel = new T.Group();
   easel.position.set(pa.x, 0, pa.z);
@@ -231,126 +186,208 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
   });
   easel.add(at(mesh(new T.BoxGeometry(0.9, 1.1, 0.05), new T.MeshStandardMaterial({ map: art, roughness: 0.9 })), 0, 1.4, 0.05));
   ground.add(easel);
-  const painter = person("Painter", { shirt: 0xe6d8c3 });
-  place(painter, pa.x - 0.55, pa.z + 1.1);
-  face(painter, pa.x, pa.z);
-  ticks.push((t) => {
-    painter.rig.arms.R.sh.rotation.x = -1.25 + Math.sin(t * 1.6) * 0.15;
-    painter.rig.arms.R.sh.rotation.z = Math.sin(t * 1.1) * 0.15;
-    painter.rig.head.rotation.y = Math.sin(t * 0.3) * 0.2;
-  });
 
-  // Runners on the loop, a finish arch, and a friend who cheers them through.
+  // Finish arch on the running loop.
   const R = 9.2;
   const arch = new T.Group();
   arch.position.set(R, 0, 0);
-  arch.add(at(box(0.18, 2.8, 0.18, wood), 0, 1.4, -0.75), at(box(0.18, 2.8, 0.18, wood), 0, 1.4, 0.75), at(box(0.2, 0.45, 1.8, mat(0xf2b42a)), 0, 2.75, 0));
+  arch.add(at(box(0.18, 2.8, 0.18, wood), 0, 1.4, -0.75), at(box(0.18, 2.8, 0.18, wood), 0, 1.4, 0.75), at(box(0.2, 0.45, 1.8, mat(WARDROBE.yellow)), 0, 2.75, 0));
   ground.add(arch);
-  const runners = [person("Runner 1", { shirt: 0x3b4c8a }), person("Runner 2", { shirt: 0xd9773a })];
-  const fan = person("Friend at the finish", { shirt: 0x2e6e5e });
-  place(fan, R + 1.8, 1.6);
-  face(fan, R, 0);
-  let lastCheer = -99;
-  ticks.push((t) => {
-    runners.forEach((a, i) => {
-      const ang = t * 0.16 + i * 0.35;
-      const rr = R + (i ? 0.45 : -0.45);
-      place(a, Math.cos(ang) * rr, Math.sin(ang) * rr);
-      a.rig.root.rotation.y = Math.atan2(-Math.sin(ang), Math.cos(ang));
-      walk(a, t, 8.5);
-      if (Math.abs(Math.atan2(Math.sin(ang), Math.cos(ang))) < 0.18) {
-        a.rig.arms.L.sh.rotation.x = -2.8;
-        a.rig.arms.R.sh.rotation.x = -2.8;
-        lastCheer = t;
-      }
-    });
-    const k = Math.max(0, 1 - (t - lastCheer) / 2.5);
-    fan.rig.arms.L.sh.rotation.x = -2.6 * k + (k > 0 ? Math.sin(t * 10) * 0.2 : 0);
-    fan.rig.arms.R.sh.rotation.x = -2.6 * k + (k > 0 ? Math.sin(t * 10 + 1) * 0.2 : 0);
-    fan.rig.spine.position.y = k * Math.abs(Math.sin(t * 6)) * 0.14;
-  });
 
-  // Meeting up at the fountain: a friend walks a lap, comes back, waves, everyone laughs.
-  const ga = -2.2;
-  const GR = 2.9;
-  const group = [person("Friend 1"), person("Friend 2")];
-  group.forEach((a, i) => {
-    const ang = ga + (i ? 0.42 : -0.42);
-    place(a, Math.cos(ang) * (GR + 0.4), Math.sin(ang) * (GR + 0.4));
-    face(a, Math.cos(ga) * GR, Math.sin(ga) * GR);
-  });
-  const walker = person("Friend arriving", { shirt: 0xb85c8a });
-  ticks.push((t) => {
-    const u = (t % 18) / 18;
-    const walking = u < 0.7;
-    const ang = walking ? ga + 0.5 + (u / 0.7) * (PI * 2 - 1) : ga - 0.5 + PI * 2;
-    place(walker, Math.cos(ang) * GR, Math.sin(ang) * GR);
-    if (walking) {
-      walker.rig.root.rotation.y = Math.atan2(-Math.sin(ang), Math.cos(ang));
-      walk(walker, t, 6);
-      walker.rig.arms.R.sh.rotation.z = 0;
-    } else {
-      const p = group[0].rig.root.position;
-      face(walker, p.x, p.z);
-      stand(walker);
-      walker.rig.arms.L.sh.rotation.x = 0;
-      walker.rig.arms.R.sh.rotation.x = -2.7;
-      walker.rig.arms.R.sh.rotation.z = Math.sin(t * 7) * 0.3;
-      laugh(walker, t * 2.5, 2);
-    }
-    group.forEach((a, i) => {
-      const arm = i ? a.rig.arms.R : a.rig.arms.L;
-      if (!walking) {
-        laugh(a, t * 2.5, i);
-        arm.sh.rotation.x = -0.6;
-      } else {
-        a.rig.head.rotation.x = 0;
-        a.rig.spine.rotation.x = 0;
-        arm.sh.rotation.x = -0.3 * Math.max(0, Math.sin(t * 0.8 + i));
-      }
-    });
-  });
+  // Yoga mat.
+  const yo = { x: 6.4, z: -5.6 };
+  ground.add(at(box(0.8, 0.03, 1.9, mat(0x6fa3c9, 0.95)), yo.x, 0.02, yo.z));
 
-  // Yoga on a mat.
-  ground.add(at(box(0.8, 0.03, 1.9, mat(0x6fa3c9, 0.95)), 6.4, 0.02, -5.6));
-  const yogi = person("Yoga", { shirt: 0xf2b42a });
-  place(yogi, 6.4, -5.6);
-  yogi.rig.root.rotation.y = -0.6;
-  ticks.push((t) => {
-    const k = (Math.sin(t * 0.45) + 1) / 2;
-    yogi.rig.arms.L.sh.rotation.z = 0.2 + k * 2.6;
-    yogi.rig.arms.R.sh.rotation.z = -(0.2 + k * 2.6);
-  });
-
-  // Guitar on a bench, a friend listening.
+  // Guitar bench.
   const bench = new T.Group();
   bench.position.set(-9, 0, -2.8);
   bench.rotation.y = 1.2;
   bench.add(at(box(2.2, 0.1, 0.6, wood), 0, 0.45, 0), at(box(0.1, 0.45, 0.5, wood), -0.95, 0.22, 0), at(box(0.1, 0.45, 0.5, wood), 0.95, 0.22, 0));
   ground.add(bench);
-  const player = person("Guitar", { seated: true });
-  const listener = person("Listener", { seated: true });
-  [player, listener].forEach((a, i) => {
-    const off = new T.Vector3(i ? 0.5 : -0.5, 0, 0.05).applyAxisAngle(new T.Vector3(0, 1, 0), 1.2);
-    a.rig.root.position.copy(bench.position).add(off);
-    a.rig.root.position.y = -0.06;
-    a.rig.root.rotation.y = 1.2;
-  });
-  const guitar = new T.Group();
-  const body = cyl(0.2, 0.2, 0.09, mat(0xb98a4e), 16);
-  body.rotation.x = PI / 2;
-  const neck = box(0.06, 0.04, 0.6, mat(0x5a3a24));
-  guitar.add(body, at(neck, 0, 0, -0.38));
-  guitar.position.set(0, 0.22, 0.24);
-  guitar.rotation.y = 0.9;
-  player.rig.spine.add(guitar);
-  ticks.push((t) => {
-    player.rig.arms.R.sh.rotation.x = -0.9 + Math.sin(t * 5) * 0.18;
-    player.rig.arms.L.sh.rotation.x = -1.1;
-    player.rig.head.rotation.z = Math.sin(t * 1.2) * 0.08;
-    listener.rig.head.rotation.z = Math.sin(t * 1.2 + 0.8) * 0.12;
-    laugh(listener, t, 4);
-  });
+
+  // ---- Characters, once their models arrive ----
+  const actors: { update(dt: number): void }[] = [];
+  let disposed = false;
+  const W = WARDROBE;
+  const tops = [W.red, W.yellow, W.navy, W.sage, W.cream, W.denim, W.plum];
+  const bottoms = [W.navy, W.charcoal, W.denim, W.cream, W.sage];
+  const dress = (body: Body, o: Partial<Look> = {}): Look => ({ body, skin: pick(SKIN_TONES), top: pick(tops), bottom: pick(bottoms), hair: pick(HAIR_TONES), accent: pick([W.navy, W.charcoal, W.sage]), ...o });
+
+  function populate(cast: Cast) {
+    const add = <A extends { root: T.Group; update(dt: number): void }>(a: A): A => {
+      scene.add(a.root);
+      actors.push(a);
+      return a;
+    };
+    const facing = (o: T.Object3D, x: number, z: number) => {
+      o.rotation.y = Math.atan2(x - o.position.x, z - o.position.z);
+    };
+    /** Seats a character so their hips rest on a surface `seatY` high. */
+    const seat = (c: Character, x: number, z: number, seatY: number) => {
+      c.sit();
+      c.root.position.set(x, 0, z);
+      c.root.updateMatrixWorld(true);
+      const hips = c.bone("Hips");
+      const hy = hips ? hips.getWorldPosition(new T.Vector3()).y : 0.5;
+      c.root.position.y = seatY - hy + 0.12;
+    };
+    /** A laugh every few seconds: head back, a little shake. Applied on top of the move. */
+    const laugh = (c: Character, t: number, phase: number) => {
+      const head = c.bone("Head");
+      if (!head) return;
+      const k = Math.pow(Math.max(0, Math.sin(t * 0.9 + phase)), 6);
+      head.rotation.x -= 0.3 * k + Math.sin(t * 9) * 0.04 * k;
+    };
+
+    // Picnic: four friends at the table, a Shiba doing laps around them.
+    const diners = [
+      seatAt(dress("casual-female", { stub: true }), -0.55, -1),
+      seatAt(dress("casual2-male"), 0.55, -1),
+      seatAt(dress("oldclassy-female"), -0.55, 1),
+      seatAt(dress("casual3-male", { stub: true }), 0.55, 1),
+    ];
+    function seatAt(l: Look, dx: number, side: number) {
+      const c = add(cast.person(l));
+      seat(c, pic.x + dx, pic.z + side * 0.8, 0.49);
+      c.root.rotation.y = side > 0 ? PI : 0;
+      return c;
+    }
+    const shiba = add(cast.dog("shiba", { bandana: W.red }));
+    const shibaHome = { x: pic.x + 2.2, z: pic.z + 1.6 };
+    let shibaMode = "";
+    ticks.push((t) => {
+      diners.forEach((c, i) => laugh(c, t, i * 1.7));
+      const u = t % 22;
+      let mode: "Idle_2_HeadLow" | "Gallop" | "Eating";
+      if (u < 7) mode = "Idle_2_HeadLow";
+      else if (u < 13) mode = "Gallop";
+      else mode = "Eating";
+      if (mode !== shibaMode) {
+        shiba.play(mode, { fade: 0.5 });
+        shibaMode = mode;
+      }
+      if (mode === "Gallop") {
+        const a = ((u - 7) / 6) * PI * 2;
+        shiba.root.position.set(shibaHome.x - 1.8 + Math.cos(a) * 1.8, 0, shibaHome.z + Math.sin(a) * 1.8);
+        shiba.root.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a));
+      } else {
+        shiba.root.position.set(shibaHome.x, 0, shibaHome.z);
+        shiba.root.rotation.y = -0.6;
+      }
+    });
+
+    // Chess.
+    const players = [-1, 1].map((sd, i) => {
+      const c = add(cast.person(dress(i ? "oldclassy-male" : "casual3-female")));
+      seat(c, ch.x + sd * 0.95, ch.z, 0.45);
+      facing(c.root, ch.x, ch.z);
+      return c;
+    });
+    ticks.push((t) => laugh(players[1], t, 2));
+
+    // The painter.
+    const painter = add(cast.person(dress("casual2-female", { top: W.cream, stub: true })));
+    painter.root.position.set(pa.x - 0.55, 0, pa.z + 1.1);
+    facing(painter.root, pa.x, pa.z);
+    ticks.push((t) => {
+      const arm = painter.bone("UpperArm.R");
+      if (arm) arm.rotation.z += Math.sin(t * 1.6) * 0.12;
+    });
+
+    // Runners on the loop and a friend cheering at the finish.
+    const runners = [add(cast.person(dress("casual-male", { top: W.navy }))), add(cast.person(dress("casual3-female", { top: W.red })))];
+    runners.forEach((r) => r.play("Run"));
+    const fan = add(cast.person(dress("casual2-male", { top: W.sage, stub: true })));
+    fan.root.position.set(R + 1.8, 0, 1.6);
+    facing(fan.root, R, 0);
+    let lastCheer = -99;
+    let fanCheering = false;
+    ticks.push((t) => {
+      runners.forEach((r, i) => {
+        const ang = t * 0.16 + i * 0.35;
+        const rr = R + (i ? 0.45 : -0.45);
+        r.root.position.set(Math.cos(ang) * rr, 0, Math.sin(ang) * rr);
+        r.root.rotation.y = Math.atan2(-Math.sin(ang), Math.cos(ang));
+        if (Math.abs(Math.atan2(Math.sin(ang), Math.cos(ang))) < 0.15) lastCheer = t;
+      });
+      const cheering = t - lastCheer < 2.6;
+      if (cheering !== fanCheering) {
+        fan.play(cheering ? "Victory" : "Idle", { fade: 0.3 });
+        fanCheering = cheering;
+      }
+    });
+
+    // Meeting up at the fountain: a friend walks their husky round, comes back, and they all celebrate.
+    const ga = -2.2;
+    const GR = 2.9;
+    const friends = [add(cast.person(dress("casual-female"))), add(cast.person(dress("oldclassy-male")))];
+    friends.forEach((c, i) => {
+      const a = ga + (i ? 0.42 : -0.42);
+      c.root.position.set(Math.cos(a) * (GR + 0.4), 0, Math.sin(a) * (GR + 0.4));
+      facing(c.root, Math.cos(ga) * GR, Math.sin(ga) * GR);
+    });
+    const walker = add(cast.person(dress("casual3-male", { top: W.plum, stub: true })));
+    const husky = add(cast.dog("husky", { bandana: W.yellow }));
+    let met = false;
+    ticks.push((t) => {
+      const u = (t % 20) / 20;
+      const walking = u < 0.68;
+      const ang = walking ? ga + 0.5 + (u / 0.68) * (PI * 2 - 1) : ga - 0.5 + PI * 2;
+      walker.root.position.set(Math.cos(ang) * GR, 0, Math.sin(ang) * GR);
+      const dogAng = walking ? ang - 0.28 : ang - 0.35;
+      husky.root.position.set(Math.cos(dogAng) * (GR + 0.7), 0, Math.sin(dogAng) * (GR + 0.7));
+      if (walking) {
+        const heading = Math.atan2(-Math.sin(ang), Math.cos(ang));
+        walker.root.rotation.y = heading;
+        husky.root.rotation.y = heading;
+      } else {
+        facing(walker.root, friends[0].root.position.x, friends[0].root.position.z);
+        facing(husky.root, friends[1].root.position.x, friends[1].root.position.z);
+      }
+      if (walking === met) {
+        met = !walking;
+        walker.play(met ? "Victory" : "Walk", { fade: 0.4, speed: met ? 0.8 : 1 });
+        husky.play(met ? "Idle" : "Walk", { fade: 0.4 });
+        friends.forEach((c) => c.play(met ? "Victory" : "Idle", { fade: 0.4, speed: 0.8 }));
+      }
+      if (!met) friends.forEach((c, i) => laugh(c, t, i));
+    });
+
+    // Yoga: a slow arms-up stretch.
+    const yogi = add(cast.person(dress("casual-female", { top: W.yellow, bottom: W.charcoal })));
+    yogi.root.position.set(yo.x, 0.03, yo.z);
+    yogi.root.rotation.y = -0.6;
+    yogi.play("Victory", { speed: 0.3 });
+
+    // Guitar on a bench, a friend listening.
+    const along = new T.Vector3(1, 0, 0).applyAxisAngle(new T.Vector3(0, 1, 0), bench.rotation.y);
+    const duo = [-0.5, 0.5].map((d, i) => {
+      const c = add(cast.person(dress(i ? "oldclassy-female" : "casual2-male")));
+      seat(c, bench.position.x + along.x * d, bench.position.z + along.z * d, 0.5);
+      c.root.rotation.y = bench.rotation.y;
+      return c;
+    });
+    const guitar = new T.Group();
+    const body = cyl(0.2, 0.2, 0.09, mat(0xb98a4e), 16);
+    body.rotation.x = PI / 2;
+    guitar.add(body, at(box(0.06, 0.04, 0.6, mat(0x5a3a24)), 0.36, 0.02, 0));
+    guitar.position.set(0.05, 0.98, 0.3);
+    guitar.rotation.set(0, 0, 0.35);
+    duo[0].root.add(guitar);
+    ticks.push((t) => laugh(duo[1], t, 4));
+  }
+
+  loadCast(opts.assetBase)
+    .then((cast) => {
+      if (disposed) return;
+      populate(cast);
+      // A still frame shows everyone mid-move, not frozen at the first frame.
+      if (motion === "still") for (const a of actors) a.update(stillT);
+      draw(undefined, 0);
+    })
+    .catch(() => {
+      // The park still stands without its people.
+    });
 
   // ---- Camera ----
   const cam: TownCamera = structuredClone(TOWN_CAMERAS[opts.view]);
@@ -387,8 +424,9 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
   let last = 0;
   let raf = 0;
   let stillT = 6; // the moment a still frame shows: everyone mid-activity
-  function draw(t = motion === "still" ? stillT : (performance.now() - start) / 1000) {
-    for (const f of ticks) f(t);
+  function draw(t = motion === "still" ? stillT : (performance.now() - start) / 1000, dt = 0) {
+    for (const a of actors) a.update(dt);
+    for (const f of ticks) f(t, dt);
     placeCamera(t);
     renderer.render(scene, camera);
   }
@@ -402,7 +440,7 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
     easeCamera(1 - Math.exp(-dt * 1.6));
     easeMood(mood, moodTarget, 1 - Math.exp(-dt * 2));
     paintMood();
-    draw();
+    draw(undefined, dt);
   }
   function run() {
     if (!raf && motion === "calm" && !document.hidden) raf = requestAnimationFrame(frame);
@@ -443,6 +481,7 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
       } else run();
     },
     dispose() {
+      disposed = true;
       cancelAnimationFrame(raf);
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);

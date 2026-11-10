@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import { useCurrentTab } from "../lib/routeHandle";
-import { webglAvailable } from "../world/cornerWorlds";
 import { viewForTab, type TownMotion } from "../world/townViews";
 import type { Town } from "../world/town";
 
@@ -46,6 +45,7 @@ export function WorldBackdrop() {
             motion: m,
             view: v,
             theme,
+            assetBase: import.meta.env.BASE_URL + "world/town/",
             onLost: () => setFailed(true),
           });
           setReady(true);
@@ -71,6 +71,16 @@ export function WorldBackdrop() {
       <div className="world-backdrop__wash" />
     </div>
   );
+}
+
+/** Whether this browser can draw 3D at all. Kept here, not imported, so the shell pulls in nothing else. */
+function webglAvailable(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl2") || c.getContext("webgl"));
+  } catch {
+    return false;
+  }
 }
 
 /** "still" under reduced motion, "calm" otherwise; follows the setting live. */
