@@ -2,6 +2,7 @@ import { recordStartAction } from "../lib/startActions";
 import { activityFromParams } from "../lib/cornerActivities";
 import { PaperStamp } from "../components/corners/MomentStamp";
 import { formatDate, formatMonth, formatTime } from "../lib/dates";
+import { MOMENT_HOLD_MS } from "../lib/momentHold";
 import { plural } from "../lib/plural";
 import { afterLog, cornerKey, fetchLogProgress, pursuitPunch, readyToFinish, regularPunch, REGULAR_DAYS, type LogProgress } from "../lib/punchCards";
 import { PunchHoles } from "../components/log/PunchCard";
@@ -123,7 +124,6 @@ const AUDIENCE: {
 
 const THOUGHT_LIMIT = 300;
 /** posts.visible_at defaults to now() + 2 hours (20261030210601_profile_roles_and_planning.sql). */
-const MOMENT_HOLD_MS = 2 * 60 * 60 * 1000;
 const MAX_PHOTOS = 8;
 
 /**
@@ -388,8 +388,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // person picks Only you here.
   const initialAudience = (): Visibility | "private" => (defaultVisibilityLoaded && defaultVisibility === "public" ? "public" : "followers");
   const [audience, setAudience] = useState<Visibility | "private">(initialAudience);
-  // A Moment is held back from everyone else for 2 hours; this releases it at once.
-  const [shareNow, setShareNow] = useState(false);
+  // Others see a Moment right away; "Post in 2 hours" keeps it to its owner until then (safety: after you've left).
+  const [postLater, setPostLater] = useState(false);
   /** Posting to the Pursuit's group instead of to followers. Stored as visibility "just_me" with audience "group". */
   const [toGroup, setToGroup] = useState(false);
   // Sticks once the person (or a resumed draft, or "Reflect privately")
@@ -1067,7 +1067,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         city: circle === "private" || cityRemoved || !myCity.trim() ? null : myCity.trim(),
         // Taken off by the person: the database keeps no city key for this Moment either.
         cityHidden: cityRemoved || undefined,
-        shareNow: circle !== "private" && shareNow,
+        postLater: circle !== "private" && postLater,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
         // Made after seeing someone else's Moment (from the Start page). The database checks it.
@@ -1224,7 +1224,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     audienceDecidedRef.current = false;
     setToGroup(false);
     setAudience(initialAudience());
-    setShareNow(false);
+    setPostLater(false);
   };
 
   const requiresLogin =
@@ -1676,7 +1676,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               : undefined
           }
           place={locationName.trim() || undefined}
-          holdLine={!shareNow && circle !== "private" && postedAt ? `They see it at ${formatTime(postedAt + MOMENT_HOLD_MS)}.` : undefined}
+          holdLine={postLater && circle !== "private" && postedAt ? `They see it at ${formatTime(postedAt + MOMENT_HOLD_MS)}.` : undefined}
           punch={postedPunch}
           choices={postedPunch || corner || projectId ? [] : postedChoices}
           choicesLine={postedHasMedia ? "One tap punches a day." : undefined}
@@ -1905,12 +1905,14 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         {circle !== "private" && (
           <div className="mb-4 flex items-center justify-between gap-4 rounded-card bg-card px-4 py-3">
             <div>
-              <Label htmlFor="share-now" className="text-body font-semibold">Share now</Label>
-              <p id="share-now-help" className="text-caption text-muted-foreground">
-                {shareNow ? "Shows this Moment to others right away." : `Others see it at ${formatTime(Date.now() + MOMENT_HOLD_MS)}.`}
+              <Label htmlFor="post-later" className="text-body font-semibold">Post in 2 hours</Label>
+              <p id="post-later-help" className="text-caption text-muted-foreground">
+                {postLater
+                  ? `Others see it at ${formatTime(Date.now() + MOMENT_HOLD_MS)}, after you’ve left.`
+                  : "Still there? Turn this on so others see it after you’ve left."}
               </p>
             </div>
-            <Switch id="share-now" aria-describedby="share-now-help" checked={shareNow} onCheckedChange={setShareNow} />
+            <Switch id="post-later" aria-describedby="post-later-help" checked={postLater} onCheckedChange={setPostLater} />
           </div>
         )}
 
