@@ -94,8 +94,8 @@ try {
       if (await gotIt.waitFor({ timeout: 10000 }).then(() => true, () => false)) await gotIt.dispatchEvent("click");
       // Wait in frames, not seconds: the room advances at most a twentieth of a second per frame, and a
       // headless browser draws slowly, so a clock wait would catch the camera at a different point each run.
-      // 450 frames is long enough for the camera to settle and the light to finish easing.
-      await page.evaluate((frames) => new Promise<void>((done) => { let n = 0; const tick = () => (++n >= frames ? done() : requestAnimationFrame(tick)); requestAnimationFrame(tick); }), 450);
+      // 160 frames (8 seconds of room time) is long enough for the camera to settle and the light to finish easing.
+      await page.evaluate((frames) => new Promise<void>((done) => { let n = 0; const tick = () => (++n >= frames ? done() : requestAnimationFrame(tick)); requestAnimationFrame(tick); }), 160);
       // A character may be mid-sentence. Speech bubbles are not part of the room's look, so leave them out.
       await page.addStyleTag({ content: "[data-corner-world] div.pointer-events-none.will-change-transform { display: none !important; }" });
       await page.screenshot({ path: path.join(out, `${corner}-${view.name}-${mood}.png`) });
