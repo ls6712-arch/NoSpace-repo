@@ -13,6 +13,7 @@ import { formatBadgeCount } from "../lib/messageSync";
 import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
 import { PAGE_X } from "../lib/pageGrid";
+import { useCurrentTab, type TabKey } from "../lib/routeHandle";
 
 function initials(name: string) {
   return name
@@ -158,11 +159,11 @@ function AccountMenu() {
  */
 const PRIMARY_NAV = [
   { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
-    match: (p: string) => p.startsWith("/my-space") },
+    tab: "my-space" as TabKey },
   { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people") },
+    tab: "discover" as TabKey },
   { to: "/create", label: "Log a Moment", hint: "Share a Moment or start a Pursuit.", accent: true,
-    match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
+    tab: "create" as TabKey },
 ];
 
 /**
@@ -174,6 +175,7 @@ const PRIMARY_NAV = [
 export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
   const { openCart, cartCount } = useCart();
   const { pathname } = useLocation();
+  const currentTab = useCurrentTab();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
@@ -203,7 +205,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
               are reached through Discover rather than crowding the bar. */}
           <nav className="hidden desk:flex items-center gap-8" aria-label="Primary">
             {PRIMARY_NAV.map((item) => {
-              const active = item.match(pathname);
+              const active = item.tab === currentTab;
               // Step 3: "Log a Moment" opens the same two-tap sheet the
               // phone bar's Create tab does, rather than the full /create
               // form — see BottomTabBar.tsx's own comment on why. The full

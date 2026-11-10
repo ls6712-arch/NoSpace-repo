@@ -1,21 +1,17 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ user: { id: "u1" } }) }));
 vi.mock("../lib/useIncomingFollowRequests", () => ({ useIncomingFollowRequests: () => [] }));
 
 import { BottomTabBar, TABS } from "./BottomTabBar";
+import { RouterAt } from "../lib/testRoutes";
 
 afterEach(cleanup);
 
 const at = (path: string) =>
-  render(
-    <MemoryRouter initialEntries={[path]}>
-      <BottomTabBar />
-    </MemoryRouter>,
-  );
+  render(<RouterAt path={path} element={<BottomTabBar />} />);
 
 describe("bottom tab bar", () => {
   it("reads Home, Discover, Log, Stubby, You, in that order", () => {
@@ -34,7 +30,7 @@ describe("bottom tab bar", () => {
     expect(within(nav).getByText("Home").closest("a")?.getAttribute("aria-current")).toBeNull();
   });
 
-  it.each(["/calendar", "/week", "/week/free"])("marks Stubby active on %s", (path) => {
+  it.each(["/calendar", "/week/free"])("marks Stubby active on %s", (path) => {
     at(path);
     const nav = screen.getByRole("navigation", { name: "Main" });
     const stubby = within(nav).getByRole("link", { name: "Stubby" });

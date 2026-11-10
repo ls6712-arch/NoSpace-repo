@@ -11,6 +11,7 @@ import { GlobalSearchBox } from "./GlobalSearchBox";
 import { SEARCH_SHORTCUT_EVENT } from "../../lib/searchShortcut";
 import { RailItem } from "./RailItem";
 import { CALENDAR, DISCOVER, HOME, LOG, YOU } from "./navItems";
+import { useCurrentTab } from "../../lib/routeHandle";
 import { useChatsBadge } from "./useChatsBadge";
 
 /** Search gets the plain magnifier; Discover moved to the compass so the two never share a shape (founder, Oct 30, 2026). */
@@ -36,6 +37,7 @@ const initials = (name: string) =>
  */
 export function SideRail() {
   const { pathname } = useLocation();
+  const currentTab = useCurrentTab();
   const { profile } = useAuth();
   const chats = useChatsBadge();
   const [panel, setPanel] = useState<Panel>(null);
@@ -75,7 +77,7 @@ export function SideRail() {
   const toggle = (next: Exclude<Panel, null>) => setPanel((cur) => (cur === next ? null : next));
   const dest = (d: typeof HOME) => (
     <li>
-      <RailItem to={d.to} icon={d.icon} label={d.label} aria={d.aria} active={d.match(pathname)} accent={d.accent} />
+      <RailItem to={d.to} icon={d.icon} label={d.label} aria={d.aria} active={d.tab === currentTab} accent={d.accent} />
     </li>
   );
 
@@ -122,7 +124,7 @@ export function SideRail() {
           <RailItem
             to={YOU.to}
             label={YOU.label}
-            active={YOU.match(pathname)}
+            active={YOU.tab === currentTab}
             leading={
               <Avatar className="size-7">
                 {profile?.avatar_url && <AvatarImage src={profile.avatar_url} alt="" className="object-cover" />}

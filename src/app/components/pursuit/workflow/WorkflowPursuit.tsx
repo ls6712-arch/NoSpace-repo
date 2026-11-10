@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import {
-  ArrowLeft,
   Check,
   Heart,
   MessageCircle,
@@ -588,10 +587,8 @@ export function WorkflowPursuit({ project: initial }: { project: Project }) {
   return (
     <main className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 pb-32 pt-6 tab:px-6 desk:px-8">
       <div className="mb-4 flex items-center justify-between">
-        <Link to="/my-space" className={action}>
-          <ArrowLeft className="size-4" />
-          Back
-        </Link>
+        {/* Back is the shell's chevron. */}
+        <span aria-hidden="true" />
         <Button
           variant="ghost"
           aria-label="Pursuit options"

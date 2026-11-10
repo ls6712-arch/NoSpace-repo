@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
-import { ArrowLeft, ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Share2, Target, Wind } from "lucide-react";
+import { ArrowRight, Check, Lock, Moon, PenLine, Play, Plus, Share2, Target, Wind } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { PursuitShareDialog } from "../components/PursuitShareDialog";
@@ -357,13 +357,8 @@ export function Pursuit() {
   return (
     <div className="min-h-viewport bg-surface pb-44 desk:pb-24">
       <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 pt-8">
-        <Link
-          to={owner ? "/my-space" : "/discover"}
-          className="mb-6 inline-flex items-center gap-1.5 text-small text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Back
-        </Link>
+        {/* Back is the shell's chevron; this row keeps its height. */}
+        <div className="mb-6 h-5" aria-hidden="true" />
 
         <div className="mb-2 flex items-center gap-2.5">
           <Avatar className="size-7">

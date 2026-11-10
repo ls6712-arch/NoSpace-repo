@@ -222,7 +222,9 @@ export function CornersHome() {
   return (
     <div className="min-h-viewport pb-24">
       {/* Discover's tabs, with Corners selected: /corners is the Corners tab of Discover. */}
-      <div className={`${PAGE_X} pt-2 desk:pt-6`}>
+      <div className={`${PAGE_X} pt-2`}>
+        {/* The row the shell's back chevron sits in, as on every pushed page. */}
+        <div className="h-6" aria-hidden="true" />
         <DiscoverTabsBar />
       </div>
       {/* The billboard runs edge to edge. The space is held while the week's events load, so nothing jumps. */}
