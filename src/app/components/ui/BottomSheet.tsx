@@ -25,6 +25,7 @@ export function BottomSheet({
   children,
   className,
   focusContent = false,
+  hideTitle = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -36,6 +37,8 @@ export function BottomSheet({
   className?: string;
   /** Focus the sheet itself on open, not its first field, so a phone keyboard doesn't jump up over it. */
   focusContent?: boolean;
+  /** A sheet whose rows speak for themselves (a menu): the title is read out but not shown. */
+  hideTitle?: boolean;
 }) {
   const controls = useDragControls();
   const opener = useRef<HTMLElement | null>(null);
@@ -95,7 +98,7 @@ export function BottomSheet({
                 >
                   <span className="h-1 w-10 rounded-full bg-foreground/25" aria-hidden="true" />
                   <div className="w-full">
-                    <Dialog.Title className="font-[family-name:var(--font-display)] text-title font-bold">{title}</Dialog.Title>
+                    <Dialog.Title className={hideTitle ? "sr-only" : "font-[family-name:var(--font-display)] text-title font-bold"}>{title}</Dialog.Title>
                     {description ? (
                       <Dialog.Description className="text-small text-muted-foreground">{description}</Dialog.Description>
                     ) : (

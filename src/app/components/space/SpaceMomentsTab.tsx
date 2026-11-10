@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { rowToPost } from "../../context/ContentContext";
 import { useAuth } from "../../context/AuthContext";
-import { MomentCard, MOMENT_GRID } from "../MomentCard";
-import { MomentDetail } from "../MomentDetail";
+import { Moment, MOMENT_LIST } from "../moment/Moment";
+import { MomentDetail } from "../moment/MomentDetail";
 import type { SpaceRow } from "../../lib/spaces";
 import type { Post } from "../../data/posts";
 import { Loadable } from "../ui/skeleton";
-import { MomentGridSkeleton } from "../Skeletons";
+import { MomentListSkeleton } from "../moment/MomentSkeleton";
 import { EmptyState } from "../StateViews";
 import { orderSpaceMoments } from "../../lib/spaceMoments";
 
@@ -49,7 +49,7 @@ export function SpaceMomentsTab({ space, isActiveMember, hostIds = [] }: { space
 
   if (posts === "loading") {
     return (
-      <Loadable loading className="py-6" skeleton={<MomentGridSkeleton count={6} />}>
+      <Loadable loading className="py-6" skeleton={<MomentListSkeleton />}>
         {null}
       </Loadable>
     );
@@ -72,10 +72,10 @@ export function SpaceMomentsTab({ space, isActiveMember, hostIds = [] }: { space
 
   return (
     <div className="py-6">
-      <div className={MOMENT_GRID}>
+      <div className={MOMENT_LIST}>
         {/* Moments from members first, the hosts' own after. */}
         {orderSpaceMoments(posts, new Set(hostIds)).map((post) => (
-          <MomentCard key={post.id} post={post} surface="feed" onOpen={() => setOpenPost(post)} />
+          <Moment key={post.id} post={post} onOpen={setOpenPost} />
         ))}
       </div>
       <MomentDetail

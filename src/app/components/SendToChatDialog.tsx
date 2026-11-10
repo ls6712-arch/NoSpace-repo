@@ -26,12 +26,15 @@ export function SendToChatDialog({
   kind,
   postId,
   pursuitId,
+  share,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kind: "moment" | "pursuit";
   postId?: number | string;
   pursuitId?: string;
+  /** Also offer the phone's own share sheet for this link, where the browser has one. */
+  share?: { url: string; text?: string };
 }) {
   const social = useSocial();
   const { user } = useAuth();
@@ -131,7 +134,19 @@ export function SendToChatDialog({
           </ul>
         )}
         {error && <p className="text-caption text-[var(--accent-text)]">{error}</p>}
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          {share && typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Closing the system sheet without sharing rejects; that is not an error.
+                void navigator.share({ url: share.url, text: share.text?.slice(0, 200) || undefined }).catch(() => undefined);
+              }}
+            >
+              Share
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={close}>
             Done
           </Button>

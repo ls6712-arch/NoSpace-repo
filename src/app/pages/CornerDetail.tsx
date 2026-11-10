@@ -12,7 +12,7 @@ import { ImageWithFallback } from "../components/ImageWithFallback";
 import { HorizontalRow } from "../components/HorizontalRow";
 import { CornerCard } from "../components/corners/CornerCard";
 import { PressLink } from "../components/common/PressLink";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { PursuitDialog } from "../components/PursuitDialog";
 import { CornerWalls } from "../components/corners/CornerWalls";
 import { CornerChat } from "../components/corners/CornerChat";
@@ -60,7 +60,7 @@ import { WORLD_COPY, cornerWorld, opensAsRoom, readWorldPrefs, roomUnavailable, 
  * members see who's going.
  * Top to bottom: the hero (the Corner's photo, its name, a line with its category as a link, its length
  * and place, and Follow), who is into it, then two tabs. Walls (members' default): Still making and
- * Made it, each card with a Make your version tear-off, then Passed along. Your first time (the default
+ * Made it, each card the same Moment as in the feed, then Passed along. Your first time (the default
  * for visitors): How to start beside Why it's worth it, What you'll need, starter activities, Spaces in
  * the Corner and more Corners like it, then Create a Space.
  * Events are not shown on this page (founder, Nov 7, 2026); their code is untouched.
@@ -231,11 +231,6 @@ function CornerBody({ corner, onRoom }: { corner: CornerModel; onRoom?: () => vo
     if (!data) return;
     const post = rowToPost(data, card.authorName);
     setOpenPost(resolvePostMedia(post, await signMomentPaths(post.mediaPaths ?? [])));
-  }
-  // Make your version: your own Pursuit, started because of this Moment.
-  function makeFromCard(card: WallCard) {
-    setSeed(seedFromCard(card, corner));
-    setMakeOpen(true);
   }
   // The dashed You? on a chain starts from the chain's newest Moment.
   async function makeFromChain(chain: Chain) {
@@ -514,7 +509,6 @@ function CornerBody({ corner, onRoom }: { corner: CornerModel; onRoom?: () => vo
               corner={corner}
               restricted={restricted}
               onOpenMoment={(c) => void openCard(c)}
-              onMake={makeFromCard}
               onMakeFromChain={(c) => void makeFromChain(c)}
               onLogMoment={() => goTo(`/create?${cornerParams}`)}
               onDoWithPeople={doWithPeople}

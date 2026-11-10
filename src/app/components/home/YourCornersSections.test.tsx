@@ -2,7 +2,14 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
-vi.mock("../../lib/reactionState", () => ({ useReactionState: () => ({ mine: [], toggle: vi.fn() }) }));
+import type { MomentTestState } from "../moment/testSupport";
+const ctx = vi.hoisted(() => ({ user: { id: "me" } }) as MomentTestState);
+vi.mock("../../../lib/supabase", () => ({ supabase: null }));
+vi.mock("../../context/AuthContext", async () => (await import("../moment/testSupport")).authMock(ctx));
+vi.mock("../../context/ContentContext", async () => (await import("../moment/testSupport")).contentMock(ctx));
+vi.mock("../../context/SocialContext", async () => (await import("../moment/testSupport")).socialMock(ctx));
+vi.mock("../../context/PrivateLogsContext", async () => (await import("../moment/testSupport")).privateLogsMock());
+vi.mock("../../context/CornersContext", async () => (await import("../moment/testSupport")).cornersMock());
 import { HOME_V3_COPY, HappeningSection, StillMakingSection } from "./YourCornersSections";
 import type { HomeWallCard } from "../../lib/homeYourCorners";
 import type { WallCard } from "../../lib/cornerWalls";
@@ -18,22 +25,24 @@ const card = (postId: number): HomeWallCard => ({
 
 describe("Still making on Home", () => {
   it("is not shown when there is nothing to show", () => {
-    const { container } = render(<MemoryRouter><StillMakingSection cards={[]} fallback={false} onOpen={vi.fn()} onMake={vi.fn()} /></MemoryRouter>);
+    const { container } = render(<MemoryRouter><StillMakingSection cards={[]} fallback={false} onOpen={vi.fn()} /></MemoryRouter>);
     expect(container.innerHTML).toBe("");
   });
   it("names your Corners, or Soosh with a nudge to follow some", () => {
-    render(<MemoryRouter><StillMakingSection cards={[card(1)]} fallback={false} onOpen={vi.fn()} onMake={vi.fn()} /></MemoryRouter>);
+    render(<MemoryRouter><StillMakingSection cards={[card(1)]} fallback={false} onOpen={vi.fn()} /></MemoryRouter>);
     expect(screen.getByRole("heading", { name: HOME_V3_COPY.stillMakingYours })).toBeTruthy();
     cleanup();
-    render(<MemoryRouter><StillMakingSection cards={[card(1)]} fallback onOpen={vi.fn()} onMake={vi.fn()} /></MemoryRouter>);
+    render(<MemoryRouter><StillMakingSection cards={[card(1)]} fallback onOpen={vi.fn()} /></MemoryRouter>);
     expect(screen.getByRole("heading", { name: HOME_V3_COPY.stillMakingAll })).toBeTruthy();
     expect(screen.getByText(HOME_V3_COPY.followMore)).toBeTruthy();
   });
-  it("starts Make your version from the card it is on", () => {
-    const onMake = vi.fn();
-    render(<MemoryRouter><StillMakingSection cards={[card(7)]} fallback={false} onOpen={vi.fn()} onMake={onMake} /></MemoryRouter>);
-    fireEvent.click(screen.getByRole("button", { name: /Make your version/ }));
-    expect(onMake.mock.calls[0][0].card.postId).toBe(7);
+  it("opens the Moment at its thoughts from the card it is on, with no action button", () => {
+    const onOpen = vi.fn();
+    render(<MemoryRouter><StillMakingSection cards={[card(7)]} fallback={false} onOpen={onOpen} /></MemoryRouter>);
+    fireEvent.click(screen.getByRole("button", { name: "Thoughts" }));
+    expect(onOpen.mock.calls[0][0].card.postId).toBe(7);
+    const row = document.querySelector("[data-moment-actions]")!;
+    expect(row.textContent).toBe("");
   });
 });
 

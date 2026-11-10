@@ -8,8 +8,9 @@ import { useJournal } from "../../lib/journal";
 import { fetchFollowingIds } from "../../lib/profileFollows";
 import { rowToPost } from "../../context/ContentContext";
 import { rsvpToEvent, cancelRsvp, type SpaceRow, type SpaceEventRow } from "../../lib/spaces";
-import { MomentCard } from "../MomentCard";
-import { MomentDetail } from "../MomentDetail";
+import { Moment, MOMENT_LIST } from "../moment/Moment";
+import { MomentListSkeleton } from "../moment/MomentSkeleton";
+import { MomentDetail } from "../moment/MomentDetail";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 import type { Post } from "../../data/posts";
@@ -28,7 +29,6 @@ type SpaceMoment = Post & { featured: boolean; status: "approved" | "pending" };
 // built from a template) — alternating so adjacent cards never tilt the
 // same way, "pinned to a table" rather than a stack. motion-safe: only,
 // per prefers-reduced-motion.
-const TILTS = ["motion-safe:-rotate-2", "motion-safe:rotate-3", "motion-safe:-rotate-3", "motion-safe:rotate-2"];
 
 function initials(name: string) {
   return name.split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
@@ -538,13 +538,7 @@ export function SpaceHomeTab({
         <Loadable
           loading={moments === "loading"}
           skeleton={
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="overflow-hidden rounded-card border border-border bg-card">
-                  <MomentCardSkeleton />
-                </div>
-              ))}
-            </div>
+            <MomentListSkeleton className="mt-3" />
           }
         >
         {momentsError ? (
@@ -560,23 +554,21 @@ export function SpaceHomeTab({
             {pinnedMoments.length > 0 && (
               <p className="mt-4 ns-section-kicker text-muted-foreground">Host picks</p>
             )}
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3">
-              {pinnedMoments.map((post, i) => (
-                <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
+            <div className={`mt-3 ${MOMENT_LIST}`}>
+              {pinnedMoments.map((post) => (
+                <div key={post.id} className="min-w-0">
                   {isHost && (
                     <button
                       type="button"
                       disabled={pinBusyId === post.id}
                       onClick={() => togglePin(post)}
-                      className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-border bg-card/90 px-2 py-1 text-caption text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                      className="flex min-h-11 items-center gap-1 whitespace-nowrap text-caption text-muted-foreground hover:text-foreground disabled:opacity-50"
                     >
                       <PinOff className="size-3" />
                       Remove from host picks
                     </button>
                   )}
-                  <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-                    <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
-                  </div>
+                  <Moment post={post} onOpen={setOpenPost} />
                 </div>
               ))}
             </div>
@@ -585,23 +577,21 @@ export function SpaceHomeTab({
                 {pinnedMoments.length > 0 && (
                   <p className="mt-8 ns-section-kicker text-muted-foreground">Latest</p>
                 )}
-                <div className={`grid grid-cols-2 gap-x-4 gap-y-8 tab:grid-cols-3 ${pinnedMoments.length > 0 ? "mt-3" : "mt-3"}`}>
-                  {restMoments.map((post, i) => (
-                    <div key={post.id} className={`relative ${TILTS[i % TILTS.length]}`}>
+                <div className={`mt-3 ${MOMENT_LIST}`}>
+                  {restMoments.map((post) => (
+                    <div key={post.id} className="min-w-0">
                       {isHost && (
                         <button
                           type="button"
                           disabled={pinBusyId === post.id}
                           onClick={() => togglePin(post)}
-                          className="absolute left-2 top-2 z-10 flex items-center gap-1 whitespace-nowrap rounded-control border border-border bg-card/90 px-2 py-1 text-caption text-muted-foreground backdrop-blur hover:text-foreground disabled:opacity-50"
+                          className="flex min-h-11 items-center gap-1 whitespace-nowrap text-caption text-muted-foreground hover:text-foreground disabled:opacity-50"
                         >
                           <Pin className="size-3" />
                           Add to host picks
                         </button>
                       )}
-                      <div className="overflow-hidden rounded-card border border-border bg-card shadow-card">
-                        <MomentCard post={post} surface="feed" onOpen={() => setOpenPost(post)} />
-                      </div>
+                      <Moment post={post} onOpen={setOpenPost} />
                     </div>
                   ))}
                 </div>

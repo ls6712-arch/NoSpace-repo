@@ -4,7 +4,8 @@ import { useContent } from "../context/ContentContext";
 import { getHobby, hobbies, subHobbyLabel, titleCaseSlug } from "../data/hobbies";
 import { SubHobbyArt } from "./SubHobbyArt";
 import { PostMedia } from "./PostMedia";
-import { MOMENT_GRID, MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./MomentCard";
+import { MOMENT_MEDIA, TILE_CAPTION, tileTokenFor } from "./moment/MomentMedia";
+import { MOMENT_GRID } from "./Skeletons";
 import { formatWhen } from "../lib/dates";
 import { EmptyState } from "./StateViews";
 

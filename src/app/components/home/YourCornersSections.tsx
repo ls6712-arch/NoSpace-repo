@@ -40,20 +40,18 @@ function SectionHead({ id, title, link }: { id: string; title: string; link?: { 
 }
 
 /**
- * The newest Still making cards from your Corners, with Make your version on
- * each. Not shown at all when there is nothing to show; a loading wall shows
- * the card shapes.
+ * The newest Still making Moments from your Corners, each the same Moment as
+ * in the feed. Not shown at all when there is nothing to show; a loading wall
+ * shows the card shapes.
  */
 export function StillMakingSection({
   cards,
   fallback,
   onOpen,
-  onMake,
 }: {
   cards: HomeWallCard[] | null;
   fallback: boolean;
   onOpen: (c: HomeWallCard) => void;
-  onMake: (c: HomeWallCard) => void;
 }) {
   if (cards && cards.length === 0) return null;
   return (
@@ -63,12 +61,12 @@ export function StillMakingSection({
       <HorizontalRow name="home-still-making" label={fallback ? HOME_V3_COPY.stillMakingAll : HOME_V3_COPY.stillMakingYours}>
         {cards === null
           ? [0, 1, 2, 3].map((i) => (
-              <li key={i} aria-hidden="true" className="w-[260px] shrink-0 tab:w-[280px]">
+              <li key={i} aria-hidden="true" className="w-[300px] shrink-0 tab:w-[340px]">
                 <Skeleton className="h-[320px] w-full rounded-card" />
               </li>
             ))
           : cards.map((c) => (
-              <WallCard key={c.card.postId} card={c.card} kind="making" yoursStarted={false} onOpen={() => onOpen(c)} onMake={() => onMake(c)} className="w-[260px] shrink-0 snap-start tab:w-[280px]" />
+              <WallCard key={c.card.postId} card={c.card} kind="making" corner={c.corner} onOpen={() => onOpen(c)} className="w-[300px] shrink-0 snap-start tab:w-[340px]" />
             ))}
       </HorizontalRow>
     </section>

@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { Post } from "../data/posts";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
+import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
+import { usePrivateLogs } from "../context/PrivateLogsContext";
+import { supabase } from "../../lib/supabase";
+import { convertHeicIfNeeded, isHeicFile } from "../lib/heicConversion";
+import { uploadMomentFile } from "../lib/momentMedia";
+import { ImageWithFallback } from "./ImageWithFallback";
+import { Textarea } from "./ui/textarea";
 import { useCorners } from "../context/CornersContext";
 import { subHobbyLabel } from "../data/hobbies";
 import { MOMENT_VISIBILITY_OPTIONS } from "../lib/visibility";
@@ -9,7 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { ERROR_LINE, TOAST } from "../lib/stateCopy";
+import { ERROR_LINE, TOAST, UPLOAD_COPY } from "../lib/stateCopy";
 import { notify } from "./ui/toaster";
 
 /**
@@ -17,19 +24,31 @@ import { notify } from "./ui/toaster";
  * reflection, and audience no longer block Save — they live here instead,
  * offered right after a Moment is saved (skippable, swipe away) and always
  * reachable again from the Moment's own Edit screen (MomentDetail.tsx).
- * Never shown for a private-log stand-in — those are "only me" by
- * definition and were never a real `posts` row updatePost could patch.
+ * A private-log stand-in is "only me" by definition and was never a real
+ * `posts` row updatePost could patch, so it is never shown for one, except
+ * with `editWords`, where it offers the one thing a stand-in can change: what
+ * you wrote.
+ *
+ * `editWords` (the Moment's own ⋯ menu): also what you wrote and, on a photo
+ * Moment, a new photo. Off right after posting, when both were just chosen.
  */
 export function AddDetailsSheet({
   post,
   open,
   onOpenChange,
+  editWords = false,
 }: {
   post: Post | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editWords?: boolean;
 }) {
+  const { user } = useAuth();
   const { updatePost } = useContent();
+  const { update: updatePrivateLog } = usePrivateLogs();
+  const [caption, setCaption] = useState(post?.caption ?? "");
+  const [newPhoto, setNewPhoto] = useState<File | null>(null);
+  const [newPhotoPreview, setNewPhotoPreview] = useState<string | null>(null);
   const { resolveInterest } = useCorners();
   const [corner, setCorner] = useState(post ? subHobbyLabel(post.corner ?? "") ?? post.corner ?? "" : "");
   const [locationName, setLocationName] = useState(post?.locationName ?? "");
@@ -39,7 +58,8 @@ export function AddDetailsSheet({
   const [error, setError] = useState<string | null>(null);
   const [cornerBlocked, setCornerBlocked] = useState(false);
 
-  if (!post || post.isPrivateLog) return null;
+  if (!post || (post.isPrivateLog && !editWords)) return null;
+  const standIn = !!post.isPrivateLog;
 
   const save = async () => {
     if (saving) return;
@@ -47,6 +67,26 @@ export function AddDetailsSheet({
     setError(null);
     setCornerBlocked(false);
     try {
+      if (standIn) {
+        const saved = Boolean((await updatePrivateLog(post.privateLogId!, { note: caption })).data);
+        if (!saved) {
+          setError(ERROR_LINE);
+          return;
+        }
+        notify(TOAST.changesSaved);
+        onOpenChange(false);
+        return;
+      }
+      // A new photo goes to the private moment-media bucket first; the Moment keeps its old one if that fails.
+      let mediaPath: string | undefined;
+      if (editWords && newPhoto && supabase && user) {
+        const { path, error: uploadError } = await uploadMomentFile(user.id, newPhoto);
+        if (uploadError || !path) {
+          setError(UPLOAD_COPY.failed);
+          return;
+        }
+        mediaPath = path;
+      }
       let cornerSlug: string | undefined = post.corner;
       const trimmedCorner = corner.trim();
       if (trimmedCorner && trimmedCorner !== (subHobbyLabel(post.corner ?? "") ?? post.corner)) {
@@ -63,6 +103,8 @@ export function AddDetailsSheet({
         locationName: locationName.trim() || undefined,
         locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
         visibility: audience,
+        ...(editWords ? { caption } : {}),
+        ...(mediaPath ? { mediaPath } : {}),
       });
       if (!ok) {
         setError(ERROR_LINE);
@@ -83,6 +125,44 @@ export function AddDetailsSheet({
           <SheetDescription>Optional. Nothing here is needed to save this Moment.</SheetDescription>
         </SheetHeader>
         <div className="space-y-4 px-4 pb-4">
+          {editWords && (
+            <div>
+              <Label htmlFor="details-caption" className="mb-1.5 block text-caption">
+                What you wrote
+              </Label>
+              <Textarea id="details-caption" value={caption} onChange={(e) => setCaption(e.target.value)} />
+            </div>
+          )}
+          {editWords && !standIn && post.type === "photo" && (
+            <div>
+              <Label htmlFor="details-photo" className="mb-1.5 block text-caption">
+                Replace photo
+              </Label>
+              <input
+                id="details-photo"
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const raw = e.target.files?.[0] ?? null;
+                  e.target.value = "";
+                  if (!raw) return;
+                  // An iPhone's .heic photo is converted before it is uploaded, as in every other picker.
+                  const file = await convertHeicIfNeeded(raw);
+                  if (isHeicFile(file)) {
+                    setError(UPLOAD_COPY.heic);
+                    return;
+                  }
+                  setError(null);
+                  setNewPhoto(file);
+                  setNewPhotoPreview(URL.createObjectURL(file));
+                }}
+                className="block w-full text-body text-muted-foreground"
+              />
+              {newPhotoPreview && <ImageWithFallback src={newPhotoPreview} alt="New photo preview" className="mt-2 h-32 w-full rounded-card" />}
+            </div>
+          )}
+          {!standIn && (
+          <>
           <div>
             <Label htmlFor="details-corner" className="mb-1.5 block text-caption">
               Corner
@@ -160,6 +240,9 @@ export function AddDetailsSheet({
               })}
             </div>
           </div>
+
+          </>
+          )}
 
           {error && <p className="text-caption text-destructive">{error}</p>}
           <Button busy={saving} variant="coral" className="w-full" disabled={saving} onClick={save}>
