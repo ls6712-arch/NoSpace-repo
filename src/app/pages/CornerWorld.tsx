@@ -1,17 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Navigate, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ChevronRight, Music, Plus, Volume2, VolumeX, X } from "lucide-react";
+import { useNavigate } from "react-router";
+import { ArrowLeft, ChevronRight, LayoutList, Music, Plus, Volume2, VolumeX, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
-import { useAuth } from "../context/AuthContext";
 import { POST_COLUMNS, rowToPost, useContent } from "../context/ContentContext";
-import { useCorners } from "../context/CornersContext";
-import { hobbies } from "../data/hobbies";
-import { curatedBySlug } from "../data/curatedCorners";
 import type { Post } from "../data/posts";
-import { builtInCornerModel, curatedModel, plainModel, type CornerModel } from "../lib/cornerModel";
+import type { CornerModel } from "../lib/cornerModel";
 import { isInCorner } from "../lib/cornerAlias";
-import { cornerPath } from "../lib/cornerPath";
 import { CHAT_COPY } from "../lib/cornerChat";
 import { fetchPassedAlong, fetchWall, seedFromCard, sortAt, type Chain, type WallCard as Card, type WallKind } from "../lib/cornerWalls";
 import { resolvePostMedia, signMomentPaths } from "../lib/momentMedia";
@@ -27,12 +22,13 @@ import { CornerChat } from "../components/corners/CornerChat";
 import { PassedAlong, wallFaces } from "../components/corners/CornerWalls";
 import { WALL_COPY, WallCard } from "../components/corners/WallCard";
 import { planRoom, type RoomMoment, type Spot } from "../world/layout";
-import { WORLD_COPY, cornerWorld, readWorldPrefs, signLine, webglAvailable, writeWorldPrefs, type CornerWorldDef, type WorldPrefs } from "../world/cornerWorlds";
+import { WORLD_COPY, readWorldPrefs, signLine, webglAvailable, writeWorldPrefs, type CornerWorldDef, type WorldPrefs } from "../world/cornerWorlds";
 import type { Frame, World } from "../world/scene";
 
 /**
- * A Corner's world: a 3D room that shows the same things as the Corner page's
- * Walls tab. Still making is the drying rack, Made it is the shelves, and the
+ * A Corner as a room. For a Corner that has one, this is the Corner: it is what
+ * opens at /corners/:slug for a member (CornerDetail decides). It shows the same
+ * things as the list's Walls tab. Still making is the drying rack, Made it is the shelves, and the
  * viewer's own pieces sit on Your shelf. Every piece is a real Moment; the
  * potters and the cat are characters, always labelled so, and are never
  * counted or listed with people.
@@ -43,7 +39,7 @@ import type { Frame, World } from "../world/scene";
  *
  * The scene (three.js) is fetched when this page opens, as its own file. If
  * the browser cannot draw it, or the first frame takes too long, the person
- * lands on the ordinary Corner page with a short note.
+ * gets the list with a short note.
  */
 
 /** Longer than this to build and draw the first frame, and the device is not up to it. */
@@ -88,33 +84,14 @@ interface MyPiece {
   finished: boolean;
 }
 
-export function CornerWorld() {
-  const { slug = "" } = useParams();
-  const { user, profile, loading } = useAuth();
-  const { cornersFor } = useCorners();
-  const corner = useMemo<CornerModel | undefined>(() => {
-    const curated = curatedBySlug(slug);
-    if (curated) return curatedModel(curated);
-    for (const h of hobbies) {
-      const found = cornersFor(h.slug).find((c) => c.slug === slug);
-      if (found) return plainModel(found.spaceSlug, found.slug, found.name, found.description);
-    }
-    return builtInCornerModel(slug);
-  }, [slug, cornersFor]);
-  const def = corner ? cornerWorld(corner.spaceSlug, corner.slug) : undefined;
-  const home = cornerPath(undefined, slug);
-
-  if (loading) return null;
-  // No world for this Corner, or a visitor (the walls are for approved members): the Corner page.
-  if (!corner || !def || !user || profile?.access === "pending") return <Navigate to={home} replace />;
-  return <WorldBody key={corner.slug} corner={corner} def={def} userId={user.id} />;
-}
-
-function WorldBody({ corner, def, userId }: { corner: CornerModel; def: CornerWorldDef; userId: string }) {
+/**
+ * `onList` is the person choosing the list. `onUnavailable` is the room failing on this device: the caller
+ * shows the list and does not try the room again by itself.
+ */
+export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { corner: CornerModel; def: CornerWorldDef; userId: string; onList: () => void; onUnavailable: () => void }) {
   const navigate = useNavigate();
   const { publicFeed, myPosts } = useContent();
   const key = `${corner.spaceSlug}/${corner.slug}`;
-  const home = cornerPath(corner.spaceSlug, corner.slug);
   const reducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
 
   // The room is a dusk scene in every theme, so everything over it uses the dark tokens. They resolve on the
@@ -235,10 +212,14 @@ function WorldBody({ corner, def, userId }: { corner: CornerModel; def: CornerWo
   const sayTimers = useRef<Record<string, number>>({});
   const openWallRef = useRef<(spot: Spot) => void>(() => {});
 
+  const unavailableRef = useRef(onUnavailable);
+  unavailableRef.current = onUnavailable;
   const leaveWithNote = useCallback(() => {
     notify(WORLD_COPY.cantOpen);
-    navigate(home, { replace: true });
-  }, [navigate, home]);
+    unavailableRef.current();
+  }, []);
+  // Back goes where the person came from; opened from a link, to the list of Corners.
+  const goBack = () => (window.history.length > 1 ? navigate(-1) : navigate("/corners"));
 
   const say = useCallback((who: string, text: string) => {
     setSaid((s) => ({ ...s, [who]: { text, show: true } }));
@@ -458,14 +439,21 @@ function WorldBody({ corner, def, userId }: { corner: CornerModel; def: CornerWo
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_45%,transparent_55%,var(--scrim-solid)_100%)] opacity-50" />
 
       {/* Top bar: the way out, the time of day, sound, and the Walls panel. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-3 px-4 pt-[calc(var(--safe-top)+0.75rem)]">
-        <button type="button" onClick={() => navigate(home)} className={`${chip} pointer-events-auto max-tab:px-3.5`}>
-          <ArrowLeft className="size-4" aria-hidden="true" />
-          <span className="max-tab:sr-only">{WORLD_COPY.leave}</span>
-        </button>
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap items-start justify-between gap-2 px-4 pt-[calc(var(--safe-top)+0.75rem)]">
+        <div className="pointer-events-auto flex items-center gap-2">
+          <button type="button" onClick={goBack} aria-label={WORLD_COPY.back} className={`${chip} px-3.5`}>
+            <ArrowLeft className="size-4" aria-hidden="true" />
+          </button>
+          {/* The same Corner as a list: the page every other Corner has. */}
+          <button type="button" onClick={onList} className={chip}>
+            <LayoutList className="size-4" aria-hidden="true" />
+            {WORLD_COPY.list}
+          </button>
+        </div>
         {entered && (
-          <div className="pointer-events-auto flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2">
-            <div role="group" aria-label={WORLD_COPY.timeOfDay} className="flex gap-1 rounded-full border border-border bg-card/70 p-1 backdrop-blur-xl">
+          // On a phone the time of day takes its own row under the buttons, so nothing sits on top of anything.
+          <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2 max-tab:contents">
+            <div role="group" aria-label={WORLD_COPY.timeOfDay} className="flex gap-1 rounded-full max-tab:order-last max-tab:w-full max-tab:justify-between border border-border bg-card/70 p-1 backdrop-blur-xl">
               {(["morning", "golden", "night", "clock"] as const).map((m) => (
                 <button
                   key={m}
@@ -478,7 +466,7 @@ function WorldBody({ corner, def, userId }: { corner: CornerModel; def: CornerWo
                 </button>
               ))}
             </div>
-            <button type="button" aria-pressed={prefs.sound} onClick={toggleSound} className={chip}>
+            <button type="button" aria-pressed={prefs.sound} onClick={toggleSound} className={`${chip} max-tab:ml-auto`}>
               {prefs.sound ? <Volume2 className="size-4" aria-hidden="true" /> : <VolumeX className="size-4" aria-hidden="true" />}
               {prefs.sound ? WORLD_COPY.soundOn : WORLD_COPY.soundOff}
             </button>
@@ -640,10 +628,10 @@ function WorldBody({ corner, def, userId }: { corner: CornerModel; def: CornerWo
       {!entered && (
         <div className="absolute inset-0 flex items-center justify-center bg-scrim-solid/60 px-4 backdrop-blur-sm">
           <div className="flex max-w-md flex-col items-center gap-4 text-center">
-            <h1 className="text-display text-balance">{def.title}</h1>
+            <h1 className="text-display text-balance">{corner.name}</h1>
             <p className="text-lead text-balance text-muted-foreground">{def.intro}</p>
             <PillButton onClick={enter} disabled={!ready}>
-              {def.enter}
+              {WORLD_COPY.enter}
             </PillButton>
             <span className="text-caption text-muted-foreground">{WORLD_COPY.entryHint}</span>
           </div>

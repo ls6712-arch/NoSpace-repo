@@ -1,4 +1,4 @@
-// The Pottery Corner world, on the production build with the real CSP and fixture Supabase responses.
+// The Pottery Corner as a room, on the production build with the real CSP and fixture Supabase responses.
 // No live account or production data is used. The wall rows below are test fixtures for this script only;
 // nothing like them exists in src/ or in any database.
 import assert from "node:assert/strict";
@@ -88,15 +88,12 @@ try {
     const { browser, page } = await open(view);
     const scripts: string[] = [];
     page.on("response", (r) => { if (/\.js$/.test(new URL(r.url()).pathname)) scripts.push(path.basename(new URL(r.url()).pathname)); });
+    // The Corner opens as its room: no button to find first.
     await page.goto(origin + "/#/corners/pottery", { waitUntil: "networkidle" });
-    await page.getByRole("heading", { name: "Pottery", exact: true }).first().waitFor();
-    const before = [...scripts];
-    assert(!before.some((s) => /^scene-/.test(s)), "the 3D scene is not downloaded by the Corner page");
-    await page.getByRole("link", { name: "Enter the studio", exact: true }).click();
-    await page.waitForURL((url) => url.hash === "#/corners/pottery/world");
     const world = page.locator("[data-corner-world=pottery]");
     await world.waitFor();
-    const enter = world.getByRole("button", { name: "Enter the studio", exact: true });
+    await world.getByRole("heading", { name: "Pottery", exact: true }).waitFor();
+    const enter = world.getByRole("button", { name: "Enter the Corner", exact: true });
     await enter.waitFor();
     await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>("[data-corner-world] h1 ~ button")?.disabled, null, { timeout: 20000 });
     assert(scripts.some((s) => /^scene-/.test(s)), "the 3D scene arrives as its own file once the world opens");
@@ -148,7 +145,18 @@ try {
     await panel.getByRole("tab", { name: "Chat", exact: true }).click();
     await panel.getByPlaceholder("Message the Corner").waitFor();
     await page.keyboard.press("Escape");
-    pass(`${view.name}: entry from the Corner page, scene in its own file, signs with piece counts, walls and Passed along in the panel, characters kept apart, chat tab`);
+    assert(!/studio/i.test(await world.innerText()), "the room is the Corner, never a studio");
+
+    // The same Corner as a list, and back. The choice is remembered.
+    await world.getByRole("button", { name: "List", exact: true }).click();
+    await world.waitFor({ state: "detached" });
+    await page.getByRole("tab", { name: "Walls", exact: true }).waitFor();
+    await page.reload({ waitUntil: "networkidle" });
+    await page.getByRole("tab", { name: "Walls", exact: true }).waitFor();
+    assert.equal(await page.locator("[data-corner-world]").count(), 0, "the list stays chosen after a reload");
+    await page.getByRole("button", { name: "Room", exact: true }).click();
+    await page.locator("[data-corner-world=pottery]").waitFor();
+    pass(`${view.name}: the Corner opens as its room, scene in its own file, signs with piece counts, walls and Passed along in the panel, characters kept apart, chat tab, list and back`);
     await browser.close();
   }
 
@@ -157,24 +165,29 @@ try {
     const { browser, page } = await open({ name: "no-webgl", width: 390, height: 844, touch: true, webgl: false, reduced: true });
     const hasGl = await page.evaluate(() => { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); });
     assert.equal(hasGl, false, "this browser was started without WebGL");
+    // The room's first address goes to the Corner.
     await page.goto(origin + "/#/corners/pottery/world", { waitUntil: "networkidle" });
     await page.waitForURL((url) => url.hash === "#/corners/pottery");
     await page.getByRole("heading", { name: "Pottery", exact: true }).first().waitFor();
-    await page.getByText("The studio can’t open on this device, so here is the Corner page.", { exact: true }).waitFor();
+    await page.getByText("This device can’t open the room, so here is the list.", { exact: true }).waitFor();
+    await page.getByRole("tab", { name: "Walls", exact: true }).waitFor();
+    assert.equal(await page.locator("[data-corner-world]").count(), 0);
     await page.screenshot({ path: path.join(out, "no-webgl.png") });
-    pass("no WebGL: the Corner page loads with a note");
+    pass("no WebGL: the list loads with a note");
     await browser.close();
   }
 
   // A Corner with no world has no way in and its world address goes to its page.
   {
     const { browser, page } = await open({ name: "other-corner", width: 390, height: 844, touch: true, webgl: true, reduced: true });
+    const scripts: string[] = [];
+    page.on("response", (r) => { if (/\.js$/.test(new URL(r.url()).pathname)) scripts.push(path.basename(new URL(r.url()).pathname)); });
     await page.goto(origin + "/#/corners/drawing", { waitUntil: "networkidle" });
     await page.getByRole("heading", { name: "Drawing", exact: true }).first().waitFor();
-    assert.equal(await page.getByRole("link", { name: "Enter the studio" }).count(), 0);
-    await page.goto(origin + "/#/corners/drawing/world", { waitUntil: "networkidle" });
-    await page.waitForURL((url) => url.hash === "#/corners/drawing");
-    pass("a Corner without a world: no button, and its world address opens its page");
+    assert.equal(await page.getByRole("button", { name: "Room", exact: true }).count(), 0);
+    assert.equal(await page.locator("[data-corner-world]").count(), 0);
+    assert(!scripts.some((s) => /^(scene|CornerWorld)-/.test(s)), "a Corner without a room downloads none of the 3D code");
+    pass("a Corner without a room: the list, no Room button, no 3D code downloaded");
     await browser.close();
   }
   assert.deepEqual(report.errors, []);

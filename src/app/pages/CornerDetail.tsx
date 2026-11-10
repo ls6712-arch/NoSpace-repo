@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { Check, Lock, Sparkle } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -49,7 +49,7 @@ import { cancelRsvp, requestOrJoinSpace, rsvpToEvent } from "../lib/spaces";
 import { tieNumbers } from "../lib/typography";
 import { CornerStarterContent } from "../components/corners/CornerStarterContent";
 import { CornerActivities } from "../components/corners/CornerActivities";
-import { cornerWorld, worldPath } from "../world/cornerWorlds";
+import { WORLD_COPY, cornerWorld, opensAsRoom, readWorldPrefs, roomUnavailable, setRoomUnavailable, writeWorldPrefs } from "../world/cornerWorlds";
 
 /**
  * A single Corner (/corners/:slug), open to signed-out and not-yet-approved
@@ -110,10 +110,55 @@ export function CornerDetail() {
       </div>
     );
   }
-  return <CornerBody key={corner.slug} corner={corner} />;
+  return <CornerFace key={corner.slug} corner={corner} />;
 }
 
-function CornerBody({ corner }: { corner: CornerModel }) {
+// The room is fetched only when a Corner that has one opens as it.
+const CornerRoom = lazy(() => import("./CornerWorld").then((m) => ({ default: m.CornerRoom })));
+
+/**
+ * One Corner, two ways to see it. A Corner with a room (src/app/world/cornerWorlds.ts) opens as the room for
+ * an approved member; the list below is one tap away and remembered. Everyone else, every Corner without a
+ * room, and a device that cannot draw the room get the list.
+ */
+function CornerFace({ corner }: { corner: CornerModel }) {
+  const { user, profile, loading } = useAuth();
+  const def = cornerWorld(corner.spaceSlug, corner.slug);
+  const member = !!user && profile?.access !== "pending";
+  // What the person picks while this Corner is open. Until they pick, what they chose last time.
+  const [picked, setPicked] = useState<"room" | "list" | null>(null);
+  const [unavailable, setUnavailable] = useState(roomUnavailable);
+  const remembered = user ? readWorldPrefs(user.id).view : "room";
+  const choose = (view: "room" | "list") => {
+    if (user) writeWorldPrefs(user.id, { ...readWorldPrefs(user.id), view });
+    if (view === "room") {
+      setRoomUnavailable(false);
+      setUnavailable(false);
+    }
+    setPicked(view);
+  };
+  // Who is looking is not known yet: wait, so a member is not shown the list for a moment first.
+  if (def && loading) return null;
+  if (def && user && opensAsRoom({ hasRoom: true, member, view: picked ?? remembered, unavailable })) {
+    return (
+      <Suspense fallback={null}>
+        <CornerRoom
+          corner={corner}
+          def={def}
+          userId={user.id}
+          onList={() => choose("list")}
+          onUnavailable={() => {
+            setRoomUnavailable(true);
+            setUnavailable(true);
+          }}
+        />
+      </Suspense>
+    );
+  }
+  return <CornerBody corner={corner} onRoom={def && member ? () => choose("room") : undefined} />;
+}
+
+function CornerBody({ corner, onRoom }: { corner: CornerModel; onRoom?: () => void }) {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { publicFeed, myPosts } = useContent();
@@ -171,7 +216,6 @@ function CornerBody({ corner }: { corner: CornerModel }) {
   // Chat is for approved members: a remembered "chat" never shows to a visitor.
   const tab: Tab = resolveTab(chosenTab, restricted);
   const followKey = cornerFollowKey(corner.spaceSlug, corner.slug);
-  const world = cornerWorld(corner.spaceSlug, corner.slug);
   const following = social.followedHobbies.includes(followKey);
   const toggleFollow = () => (user ? void social.toggleHobbyFollow(followKey, corner.name) : signIn());
 
@@ -390,11 +434,11 @@ function CornerBody({ corner }: { corner: CornerModel }) {
               >
                 {following ? "Following" : "Follow"}
               </button>
-              {/* The Corner's world, where it has one. Members only: it shows the walls, which visitors do not see. */}
-              {world && !restricted && (
-                <Link to={worldPath(corner.slug)} className="inline-flex min-h-11 items-center rounded-full border border-current px-5 text-small font-semibold">
-                  {world.enter}
-                </Link>
+              {/* Back to the Corner as a room, where it has one. Members only: the room shows the walls. */}
+              {onRoom && (
+                <button type="button" onClick={onRoom} className="inline-flex min-h-11 items-center rounded-full border border-current px-5 text-small font-semibold">
+                  {WORLD_COPY.room}
+                </button>
               )}
             </div>
           </div>
