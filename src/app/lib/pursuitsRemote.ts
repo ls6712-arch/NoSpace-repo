@@ -233,6 +233,14 @@ export async function mirrorFinishedPursuitWithMoment(userId: string, project: P
   if (!supabase || !project.finishedAt) return;
   await mirrorPursuit(userId, project);
   try {
+    // The mark that lets corner_wall show this Moment as finished to everyone who can see the Moment, when
+    // the Pursuit itself is not shared (20261128000000_corner_wall_from_moment.sql). A write of its own, like
+    // the other later columns in mirrorPursuit: if the column is not there yet, only this write fails.
+    await supabase.from("pursuits").update({ from_moment: true }).eq("id", project.id);
+  } catch {
+    // Best effort: without the mark the Pursuit's owner still sees it finished.
+  }
+  try {
     await supabase.from("posts").update({ pursuit_id: project.id }).eq("id", postId);
   } catch {
     // Best effort: the local journal already links the two.

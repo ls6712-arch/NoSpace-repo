@@ -20,7 +20,7 @@ Code: `src/app/world/` and `src/app/pages/CornerWorld.tsx` (the `CornerRoom` com
 Nothing about this is stored on a Moment. A Moment is on a Corner's finished wall when its Pursuit is finished (`pursuits.finished_at`), and on the in-progress wall otherwise; `corner_wall` decides, as it does for every Corner.
 
 - **Labels.** A Corner with a room may name its two walls itself (`src/app/lib/cornerWallLabels.ts`, listed in `docs/glossary.md`). A Corner without a room says Still making and Made it.
-- **Log a Moment asks** on a Corner with a room, for a Moment other people will see: a two-way choice under the Corner row with that Corner's labels. The finished answer finishes the Pursuit the Moment counts toward. With no Pursuit it makes one that is finished in its first write (`startFinishedProject`, `mirrorFinishedPursuitWithMoment`), so it is never an open Pursuit anywhere and earns no Finisher Stub. It is shared only when the Moment is for everyone.
+- **Log a Moment asks** on a Corner with a room, for a Moment other people will see: a two-way choice under the Corner row with that Corner's labels. The finished answer finishes the Pursuit the Moment counts toward. With no Pursuit it makes one that is finished in its first write (`startFinishedProject`, `mirrorFinishedPursuitWithMoment`), so it is never an open Pursuit anywhere and earns no Finisher Stub. It is shared only when the Moment is for everyone, and it is marked `pursuits.from_moment`, so `corner_wall` shows the Moment as finished to everyone who can see the Moment even when the Pursuit is not shared (a Pursuit someone made themselves and kept private is not affected).
 - **Check:** `node scripts/e2e/corner-wall-question.ts`.
 
 ## How it is put together
