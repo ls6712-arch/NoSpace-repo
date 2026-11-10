@@ -78,7 +78,8 @@ try {
   for (const view of [{ name: "phone", width: 390, height: 844, touch: true }, { name: "desktop", width: 1440, height: 1000, touch: false }]) {
     for (const who of [
       { name: "follows-none", follows: [] as string[], heading: "Corners for you", first: ["reading", "pottery", "gardening", "board-games"] },
-      { name: "follows-two", follows: ["crafts-making:knitting", "crafts-making:pottery"], heading: "Your Corners", first: ["knitting", "pottery"] },
+      // Everyone sees the Corners with a 3D world. Pottery is followed, so it comes first; Knitting has no 3D world and is not in the row.
+      { name: "follows-two", follows: ["crafts-making:knitting", "crafts-making:pottery", "space:books-writing"], heading: "Corners for you", first: ["pottery", "reading", "gardening", "board-games"] },
     ]) {
       const context = await browser.newContext({ viewport: { width: view.width, height: view.height }, hasTouch: view.touch, reducedMotion: "reduce", colorScheme: "light", timezoneId: "America/New_York" });
       // One fixed moment, so a run before the change and a run after it hold the same rows.
@@ -128,8 +129,8 @@ try {
         const pictures = await section.locator("li img").evaluateAll((imgs) => imgs.map((i) => ({ src: i.getAttribute("src"), alt: i.getAttribute("alt"), loading: i.getAttribute("loading"), w: i.clientWidth, h: i.clientHeight })));
         for (const p of pictures) assert.equal(p.w, p.h, "a Corner picture is a square");
         assert.ok(pictures.every((p) => p.loading === "lazy" && p.alt));
-        assert.deepEqual(pictures.filter((p) => p.src?.includes("/worlds/")).map((p) => p.src), who.first.filter((s) => s !== "knitting").map((s) => `/worlds/${s}/card.webp`));
-        pass(`${tag}: square, lazy pictures with the Corner name as alt text; a Corner without a 3D world keeps its own photo`);
+        assert.deepEqual(pictures.map((p) => p.src), who.first.map((s) => `/worlds/${s}/card.webp`));
+        pass(`${tag}: square, lazy still pictures with the Corner name as alt text`);
         assert.equal(await section.getByRole("link", { name: "See all" }).getAttribute("href"), "#/corners");
         const order = await page.evaluate(() => ["home-corners-row", "home-still-making"].map((id) => document.getElementById(id)?.getBoundingClientRect().top ?? null));
         const week = await page.evaluate(() => [...document.querySelectorAll("main h2, main a")].find((e) => /your week/i.test(e.textContent ?? ""))?.getBoundingClientRect().bottom ?? null);

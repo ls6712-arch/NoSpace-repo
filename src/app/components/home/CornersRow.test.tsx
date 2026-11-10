@@ -52,14 +52,15 @@ describe("the Corners row on Home", () => {
     expect(screen.queryAllByRole("button").filter((b) => !b.getAttribute("aria-label")?.startsWith("Scroll"))).toEqual([]);
   });
 
-  it("shows someone who follows Corners only those, under Your Corners, a Corner without a 3D world with its usual photo", async () => {
-    state.followed = ["crafts-making:knitting", "crafts-making:pottery"];
-    state.taste = () => Promise.reject(new Error("not asked for"));
+  it("shows someone who follows Corners the same 3D Corners, the ones they follow first, under Corners for you", async () => {
+    // Knitting has no 3D world, so following it does not change the row; Reading is followed, so it comes first.
+    state.followed = ["crafts-making:knitting", "books-writing:reading"];
+    state.taste = async () => ({ picks: ["gaming-tabletop/board-games"], windows: [], budget: null });
     show();
-    expect(await screen.findByRole("heading", { name: CORNERS_ROW_COPY.yours })).toBeTruthy();
-    expect(names()).toEqual(["/corners/knitting", "/corners/pottery"]);
-    expect(screen.getByAltText("Pottery").getAttribute("src")).toBe("/worlds/pottery/card.webp");
-    expect(screen.getByAltText("Knitting").getAttribute("src")).not.toContain("/worlds/");
+    expect(await screen.findByRole("heading", { name: CORNERS_ROW_COPY.forYou })).toBeTruthy();
+    expect(names()).toEqual(["/corners/reading", "/corners/board-games", "/corners/pottery", "/corners/gardening"]);
+    expect(screen.queryByText("Knitting")).toBeNull();
+    for (const a of screen.getAllByRole("img")) expect(a.getAttribute("src")).toMatch(/^\/worlds\/[a-z-]+\/card\.webp$/);
   });
 
   it("treats someone who follows only Spaces as following no Corners, and never shows a Space as a Corner", async () => {

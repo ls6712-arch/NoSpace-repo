@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { useContent } from "../../context/ContentContext";
 import { useCorners } from "../../context/CornersContext";
 import { useSocial } from "../../context/SocialContext";
 import { cornerAbout } from "../../data/curatedCorners";
@@ -8,7 +7,7 @@ import { cornerStyle } from "../../lib/categoryStyle";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPicture } from "../../lib/cornerPicture";
 import { fetchCornerAffinity } from "../../lib/discover";
-import { followedCorners, homeCornersRow } from "../../lib/homeCornersRow";
+import { homeCornersRow } from "../../lib/homeCornersRow";
 import { logSuggestionEvent } from "../../lib/homeSuggestions";
 import type { HomeCorner } from "../../lib/homeYourCorners";
 import { fetchTaste, pickKey } from "../../lib/tasteRemote";
@@ -22,7 +21,6 @@ import { SectionHead } from "./YourCornersSections";
 /** The row's words (docs/glossary.md, Corners on Home and Discover; approved Nov 10, 2026). */
 export const CORNERS_ROW_COPY = {
   forYou: "Corners for you",
-  yours: "Your Corners",
   seeAll: "See all",
 } as const;
 
@@ -33,23 +31,20 @@ type Ranking = { status: "loading" } | { status: "ready"; picks: string[]; affin
 const NO_RANKING: Ranking = { status: "ready", picks: [], affinity: new Map() };
 
 /**
- * One row of Corners on Home: a square picture, the name and the Corner's one line. Someone who follows Corners
- * sees those ("Your Corners"); anyone else sees the Corners that have a 3D world ("Corners for you"), as a still
- * picture of it. A card opens the Corner's page, as a Corner does everywhere else. No counts, badges or buttons.
+ * One row of Corners on Home ("Corners for you"): the Corners that have a 3D world, each as a still picture of it
+ * with the name and the Corner's one line. Everyone sees the same Corners; the ones a person follows come first,
+ * then their picks. A card opens the Corner's page, as a Corner does everywhere else. No counts, badges or buttons.
  *
  * It stands alone: it reads what it needs itself, so moving it on Home is moving this one element. With nothing
  * to show, or when what it reads cannot be read, it renders nothing. It never shows an error or an empty box.
  */
 export function CornersRow() {
   const { user } = useAuth();
-  const { publicFeed } = useContent();
   const social = useSocial();
   const { allCorners } = useCorners();
-  // Only follows of real Corners count: a follow of a whole Space is not a Corner and puts nothing in the row.
-  const follows = useMemo(() => followedCorners(social.followedHobbies, allCorners).length > 0, [social.followedHobbies, allCorners]);
   const followsKnown = !user || social.loaded;
-  // Picks and affinity order the row only for a signed-in person who follows no Corners. Nobody else asks for them.
-  const needsRanking = !!user && followsKnown && !follows;
+  // Follows, picks and affinity only order the row, and only a signed-in person has any. A visitor asks for nothing.
+  const needsRanking = !!user;
   const [ranking, setRanking] = useState<Ranking>(NO_RANKING);
   useEffect(() => {
     if (!needsRanking || !user) {
@@ -69,15 +64,15 @@ export function CornersRow() {
   const row = useMemo(
     () =>
       ranking.status === "ready"
-        ? homeCornersRow({ followed: social.followedHobbies, known: allCorners, feed: publicFeed, picks: ranking.picks, affinity: ranking.affinity })
+        ? homeCornersRow({ followed: social.followedHobbies, known: allCorners, picks: ranking.picks, affinity: ranking.affinity })
         : null,
-    [ranking, social.followedHobbies, allCorners, publicFeed],
+    [ranking, social.followedHobbies, allCorners],
   );
 
   if (ranking.status === "failed") return null;
   const loading = !followsKnown || ranking.status === "loading" || !row;
-  if (!loading && row.corners.length === 0) return null;
-  const title = row?.yours ? CORNERS_ROW_COPY.yours : CORNERS_ROW_COPY.forYou;
+  if (!loading && row.length === 0) return null;
+  const title = CORNERS_ROW_COPY.forYou;
 
   return (
     <section aria-labelledby={loading ? undefined : "home-corners-row"} aria-hidden={loading || undefined} className="mt-8">
@@ -89,7 +84,7 @@ export function CornersRow() {
       ) : (
         <SectionHead id="home-corners-row" title={title} link={{ to: "/corners", label: CORNERS_ROW_COPY.seeAll }} />
       )}
-      <HorizontalRow name="home-corners-row" label={title} contentKey={row?.corners.map((c) => c.slug).join(",")}>
+      <HorizontalRow name="home-corners-row" label={title} contentKey={row?.map((c) => c.slug).join(",")}>
         {loading
           ? [0, 1, 2, 3].map((i) => (
               <li key={i} className={CARD_WIDTH}>
@@ -98,7 +93,7 @@ export function CornersRow() {
                 <Skeleton className="mt-1 h-8 w-full rounded-control" />
               </li>
             ))
-          : row.corners.map((c, i) => <CornerSquare key={c.slug} corner={c} position={i} log={!!user} />)}
+          : row.map((c, i) => <CornerSquare key={c.slug} corner={c} position={i} log={!!user} />)}
       </HorizontalRow>
     </section>
   );
