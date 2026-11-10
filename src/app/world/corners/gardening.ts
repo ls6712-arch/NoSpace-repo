@@ -1,7 +1,7 @@
 import type { CornerWorldConfig } from "../config";
 
 /**
- * The Gardening Corner's room: a greenhouse open onto a garden. Rosa, Kofi, Noor, Ade and Pip are characters,
+ * The Gardening Corner's room: a greenhouse open onto a garden. Rosa, Kofi, Noor, Ade, Pip and Jeremy are characters,
  * not people. Every word here is in docs/glossary.md under "Corner rooms: Gardening, Reading and Board games".
  */
 export const gardening: CornerWorldConfig = {
@@ -60,6 +60,7 @@ export const gardening: CornerWorldConfig = {
     },
   ],
   pet: { name: "Pip", at: [-0.7, 2.1], rot: -0.4, color: 0x3a3a3a, dark: 0x1f1f1f, line: "(Pip is asleep in a patch of sun.)" },
+  secondPet: { name: "Jeremy", kind: "dog", at: [-5.9, 0.75], rot: 1.25, color: 0xc8935a, dark: 0x8a5a2e, line: "(Jeremy is watching the trowel. Tail going.)" },
   greeting: ["Rosa", "Hi! Mind the hose, everything else is fair game."],
   sounds: { bed: ["birds", "wind"] },
 };

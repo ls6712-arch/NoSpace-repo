@@ -1,9 +1,9 @@
 import type * as T from "three";
 import { at } from "../core/kit";
-import type { CornerWorldConfig } from "../config";
+import { petsOf, type CornerWorldConfig } from "../config";
 import type { SettingProps } from "../settings/types";
 import { ACTIONS, type ActionHooks, type ActionState, type ActionUpdate } from "./actions";
-import { buildCat, buildPerson } from "./rig";
+import { buildCat, buildDog, buildPerson } from "./rig";
 
 /**
  * The characters of a room, built from the Corner's config. They are characters, not people: every mesh is
@@ -17,8 +17,8 @@ export interface Cast {
   talkers: string[];
   lines: Record<string, readonly string[]>;
   welcome: { who: string; text: string };
-  /** The pet's name, if the room has one. */
-  pet?: string;
+  /** The pets that purr when tapped: the cats. */
+  purrs: string[];
   update(t: number, dt: number, k: number, state: ActionState, hooks: ActionHooks): void;
 }
 
@@ -47,13 +47,30 @@ export function buildCast(scene: T.Scene, config: CornerWorldConfig, props: Sett
     updates.push(ACTIONS[c.action](rig, c, props, { scene, phase: i * 2.3, reducedMotion, cast: config.characters }));
   });
 
-  const pet = config.pet;
-  if (pet) {
+  const purrs: string[] = [];
+  for (const pet of petsOf(config)) {
+    lines[pet.name] = [pet.line];
+    if (pet.kind === "dog") {
+      const dog = buildDog(pet.name, pet.color, pet.dark);
+      dog.root.rotation.y = pet.rot;
+      scene.add(at(dog.root, pet.at[0], 0, pet.at[1]));
+      characters.push({ name: pet.name, anchor: dog.head, lift: 0.3 });
+      // Awake: it pants, wags, tilts its head now and then, and an ear twitches.
+      updates.push((t, _dt, _k, state) => {
+        dog.body.scale.y = 1.35 + Math.sin(t * 5.2) * 0.02;
+        dog.tail.rotation.y = state.reducedMotion ? 0 : Math.sin(t * 9) * 0.55;
+        const tilt = Math.sin(t * 0.37);
+        dog.head.rotation.z = tilt > 0.6 ? (tilt - 0.6) * 0.9 : 0;
+        dog.head.rotation.x = Math.sin(t * 0.9) * 0.04;
+        dog.ears[0].rotation.x = Math.sin(t * 0.23) > 0.96 ? Math.sin(t * 28) * 0.25 : 0;
+      });
+      continue;
+    }
     const cat = buildCat(pet.name, pet.color, pet.dark);
     cat.root.rotation.y = pet.rot;
     scene.add(at(cat.root, pet.at[0], 0, pet.at[1]));
     characters.push({ name: pet.name, anchor: cat.head, lift: 0.25 });
-    lines[pet.name] = [pet.line];
+    purrs.push(pet.name);
     // Asleep: it breathes, its tail moves, and now and then an ear twitches.
     updates.push((t) => {
       cat.body.scale.y = 0.62 + Math.sin(t * 1.6) * 0.02;
@@ -67,7 +84,7 @@ export function buildCast(scene: T.Scene, config: CornerWorldConfig, props: Sett
     talkers: config.characters.map((c) => c.name),
     lines,
     welcome: { who: config.greeting[0], text: config.greeting[1] },
-    pet: pet?.name,
+    purrs,
     update(t, dt, k, state, hooks) {
       for (const u of updates) u(t, dt, k, state, hooks);
     },

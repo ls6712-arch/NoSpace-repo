@@ -281,7 +281,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     if (hit.character) {
       const lines = cast.lines[hit.character] ?? [];
       if (lines.length) opts.onSay(hit.character, lines[(Math.random() * lines.length) | 0]);
-      if (hit.character === cast.pet) sound.purr();
+      if (cast.purrs.includes(hit.character)) sound.purr();
     }
   };
   const onWheel = (e: WheelEvent) => {

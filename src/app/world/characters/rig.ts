@@ -118,6 +118,66 @@ export function buildPerson(name: string, o: PersonLook): PersonRig {
   return { root, spine, head, arms };
 }
 
+export interface DogRig {
+  root: T.Group;
+  body: T.Mesh;
+  head: T.Group;
+  tail: T.Group;
+  ears: T.Mesh[];
+}
+
+/** A dog sitting up: chest high, front paws down, floppy ears, a tail that can wag. */
+export function buildDog(name: string, color: number, darkColor: number): DogRig {
+  const root = new T.Group();
+  const fur = mat(color, 0.85);
+  const dark = mat(darkColor, 0.85);
+  // Haunches on the floor, chest raised.
+  const haunch = sph(0.2, fur, 20, 14);
+  haunch.scale.set(1.05, 0.8, 1.15);
+  root.add(at(haunch, 0, 0.16, -0.08));
+  const body = sph(0.18, fur, 20, 14);
+  body.scale.set(0.95, 1.35, 0.95);
+  body.rotation.x = 0.45;
+  root.add(at(body, 0, 0.33, 0.07));
+  for (const s of [-1, 1]) {
+    root.add(at(cyl(0.04, 0.035, 0.3, fur, 10), s * 0.09, 0.15, 0.2));
+    root.add(at(sph(0.05, dark, 10, 8), s * 0.09, 0.03, 0.23));
+    const hind = sph(0.07, fur, 10, 8);
+    hind.scale.set(1, 0.55, 1.6);
+    root.add(at(hind, s * 0.17, 0.04, 0.02));
+  }
+  const head = new T.Group();
+  head.add(sph(0.13, fur, 18, 12));
+  const snout = sph(0.075, fur, 14, 10);
+  snout.scale.set(0.9, 0.8, 1.3);
+  head.add(at(snout, 0, -0.03, 0.12));
+  head.add(at(sph(0.025, mat(0x1b1410, 0.4), 8, 6), 0, -0.01, 0.21));
+  const eye = mat(0x1b1410, 0.4);
+  for (const s of [-1, 1]) head.add(at(sph(0.016, eye, 8, 6), s * 0.055, 0.04, 0.105));
+  const ears: T.Mesh[] = [];
+  for (const s of [-1, 1]) {
+    const ear = sph(0.06, dark, 10, 8);
+    ear.scale.set(0.45, 1.25, 0.8);
+    ear.position.set(s * 0.115, 0.01, -0.01);
+    ear.rotation.z = s * 0.35;
+    head.add(ear);
+    ears.push(ear);
+  }
+  head.position.set(0, 0.6, 0.17);
+  root.add(head);
+  // The tail pivots where it meets the body.
+  const tail = new T.Group();
+  const wag = cyl(0.03, 0.018, 0.26, dark, 8);
+  wag.rotation.x = -1.15;
+  tail.add(at(wag, 0, 0.05, -0.11));
+  tail.position.set(0, 0.14, -0.26);
+  root.add(tail);
+  root.traverse((n) => {
+    n.userData.character = name;
+  });
+  return { root, body, head, tail, ears };
+}
+
 export interface CatRig {
   root: T.Group;
   body: T.Mesh;

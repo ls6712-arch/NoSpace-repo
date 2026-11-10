@@ -14,7 +14,7 @@ const who = (name: string, pose: CharacterConfig["pose"], action: CharacterConfi
   name, pose, action, at, rot, look, lines: ["Hello."], ...extra,
 });
 
-const fixture = (setting: SettingName, pieceKind: PieceKind, characters: CharacterConfig[], pet: CornerWorldConfig["pet"], bed: CornerWorldConfig["sounds"]["bed"]): CornerWorldConfig => ({
+const fixture = (setting: SettingName, pieceKind: PieceKind, characters: CharacterConfig[], pet: CornerWorldConfig["pet"], bed: CornerWorldConfig["sounds"]["bed"], secondPet?: CornerWorldConfig["secondPet"]): CornerWorldConfig => ({
   key: `fixture/${setting}`,
   slug: setting,
   name: "Fixture",
@@ -30,6 +30,7 @@ const fixture = (setting: SettingName, pieceKind: PieceKind, characters: Charact
   },
   characters,
   pet,
+  ...(secondPet ? { secondPet } : {}),
   greeting: [characters[0].name, "Hello."],
   sounds: { bed },
 });
@@ -48,6 +49,7 @@ const ROOMS: Record<string, CornerWorldConfig> = {
     ],
     { name: "Pip", at: [-0.7, 2.1], rot: -0.4, color: 0x3a3a3a, dark: 0x1f1f1f, line: "Asleep." },
     ["birds", "wind"],
+    { name: "Jeremy", kind: "dog", at: [-5.9, 0.75], rot: 1.25, color: 0xc8935a, dark: 0x8a5a2e, line: "Awake." },
   ),
   nook: fixture(
     "nook",

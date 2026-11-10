@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { GLAZES, POT_SHAPES, ROOM_LIMITS, moodForHour, pieceSpec, planRoom, type RoomMoment } from "./layout";
 import { WORLD_COPY, cornerWorld, opensAsRoom, signLine } from "./cornerWorlds";
 import { CORNER_WORLDS } from "./corners";
+import { petsOf } from "./config";
 import { pottery } from "./corners/pottery";
 
 const m = (postId: number, o: Partial<RoomMoment> = {}): RoomMoment => ({ postId, mine: false, ...o });
@@ -141,7 +142,7 @@ describe("how a Corner opens", () => {
   });
   it("is never called a studio in anything a person reads", () => {
     // Everything a person reads or hears read out. (`setting: "studio"` is the engine's name for the furniture and is never shown.)
-    const shown = JSON.stringify([WORLD_COPY, CORNER_WORLDS.map((w) => [w.name, w.copy, w.characters.map((c) => [c.name, c.lines, c.collapseLine, c.cheerLine]), w.pet?.line, w.greeting])]);
+    const shown = JSON.stringify([WORLD_COPY, CORNER_WORLDS.map((w) => [w.name, w.copy, w.characters.map((c) => [c.name, c.lines, c.collapseLine, c.cheerLine]), petsOf(w).map((p) => p.line), w.greeting])]);
     expect(shown).not.toMatch(/studio/i);
     // A room is the Corner, never a place with a name of its own.
     expect(shown).not.toMatch(/\b(the|in the|into the) (garden|reading room|game caf[eé]|caf[eé])\b/i);
@@ -183,7 +184,7 @@ describe("what ships", () => {
   it("keeps characters out of everything that holds real people, and out of the engine", () => {
     // A character's name and words live in its Corner's config and nowhere else: not in the engine (which draws
     // any Corner), not in the layout, the registry or the page (which hold real Moments and people).
-    const names = CORNER_WORLDS.flatMap((w) => w.characters.map((c) => c.name).concat(w.pet ? [w.pet.name] : []));
+    const names = CORNER_WORLDS.flatMap((w) => w.characters.map((c) => c.name).concat(petsOf(w).map((p) => p.name)));
     expect(names.slice(0, 4)).toEqual(["Sid", "Meera", "Lena", "Biscuit"]);
     expect(new Set(names).size).toBe(names.length);
     // As whole words: "Sid" is not "DoubleSide".

@@ -60,8 +60,13 @@ export interface CharacterConfig {
   bookColor?: number;
 }
 
+export const PET_KINDS = ["cat", "dog"] as const;
+export type PetKind = (typeof PET_KINDS)[number];
+
 export interface PetConfig {
   name: string;
+  /** A cat when left out. */
+  kind?: PetKind;
   at: readonly [number, number];
   rot: number;
   color: number;
@@ -100,13 +105,20 @@ export interface CornerWorldConfig {
   /** In the order they take turns speaking. */
   characters: readonly CharacterConfig[];
   pet?: PetConfig;
+  /** A room may have two pets. */
+  secondPet?: PetConfig;
   /** Who says what when the viewer walks in. */
   greeting: readonly [string, string];
   sounds: { bed: readonly SoundBed[] };
 }
 
+/** A room's pets: none, one or two. */
+export function petsOf(config: Pick<CornerWorldConfig, "pet" | "secondPet">): PetConfig[] {
+  return [config.pet, config.secondPet].filter((p): p is PetConfig => !!p);
+}
+
 /** Top-level keys a config may have. The reference prototype's example people, Walls and chat never ship. */
-const ALLOWED_KEYS = ["key", "slug", "name", "setting", "pieceKind", "copy", "characters", "pet", "greeting", "reactions", "stations", "board", "sounds", "pursuit"];
+const ALLOWED_KEYS = ["key", "slug", "name", "setting", "pieceKind", "copy", "characters", "pet", "secondPet", "greeting", "reactions", "stations", "board", "sounds", "pursuit"];
 const PROTOTYPE_ONLY_KEYS = ["wall", "edges", "chat", "activities"];
 const PROTOTYPE_ONLY_COPY = ["pmeta", "chatHere"];
 /** Names used for example people in the reference prototype. None may appear in a config. */
@@ -150,10 +162,13 @@ export function checkConfig(input: unknown): string[] {
     for (const [part, colour] of Object.entries(c.look ?? {})) if (typeof colour !== "boolean" && !isColor(colour)) errs.push(`character ${c.name}: look.${part} must be a colour, 0xrrggbb`);
     if (c.bookColor !== undefined && !isColor(c.bookColor)) errs.push(`character ${c.name}: bookColor must be a colour, 0xrrggbb`);
   }
-  if (cfg.pet) {
-    if (names.has(cfg.pet.name)) errs.push(`the pet shares a name with a character`);
-    if (!isColor(cfg.pet.color) || !isColor(cfg.pet.dark)) errs.push("pet: color and dark must be colours, 0xrrggbb");
-    names.add(cfg.pet.name);
+  if (cfg.secondPet && !cfg.pet) errs.push("secondPet needs a pet: a room's one pet goes in pet");
+  for (const pet of petsOf(cfg as CornerWorldConfig)) {
+    if (names.has(pet.name)) errs.push(`the pet ${pet.name} shares a name with someone else in the room`);
+    if (!isColor(pet.color) || !isColor(pet.dark)) errs.push("pet: color and dark must be colours, 0xrrggbb");
+    if (pet.kind !== undefined && !(PET_KINDS as readonly string[]).includes(pet.kind)) errs.push(`pet ${pet.name}: kind must be one of ${PET_KINDS.join(", ")}`);
+    if (!pet.line) errs.push(`pet ${pet.name} has no line`);
+    names.add(pet.name);
   }
   if (!cfg.greeting || !characters.some((c) => c.name === cfg.greeting![0])) errs.push("greeting must be said by a character");
 
