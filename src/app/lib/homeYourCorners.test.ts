@@ -37,3 +37,11 @@ describe("mergeWalls", () => {
     expect(out.map((c) => c.card.postId)).toEqual([3, 1, 4]);
   });
 });
+
+describe("a follow of a whole Space is not a Corner", () => {
+  it("leaves out space:<slug> follows and empty keys, and falls back when nothing else is followed", () => {
+    const known = [{ spaceSlug: "crafts-making", slug: "pottery", name: "Pottery" }];
+    expect(yourCorners(["space:books-writing", "", "crafts-making:pottery"], known, []).corners).toEqual([known[0]]);
+    expect(yourCorners(["space:books-writing", ""], known, [])).toEqual({ corners: [], fallback: true });
+  });
+});

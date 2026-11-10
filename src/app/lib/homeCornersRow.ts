@@ -10,6 +10,16 @@ export const HOME_ROW_CORNERS = 6;
 type FeedPost = Pick<Post, "hobbySlug" | "subHobby" | "corner" | "createdAt">;
 
 /**
+ * The Corners a person follows that the app knows: each has a real name and a page. A follow of a whole Space
+ * (`space:<space-slug>`), an empty key, or a key for a Corner that is not in the catalog is not a card: the row
+ * never shows something that is not a Corner.
+ */
+export function followedCorners(followed: readonly string[], known: readonly HomeCorner[]): HomeCorner[] {
+  const isKnown = new Set(known);
+  return yourCorners(followed, known, [], Number.POSITIVE_INFINITY).corners.filter((c) => isKnown.has(c));
+}
+
+/**
  * Which Corners the Home row shows, and whether they are the person's own.
  *
  * Someone who follows Corners sees only those, the most recently active first (the newest public Moment in each,
@@ -29,7 +39,7 @@ export function homeCornersRow(o: {
   limit?: number;
 }): { corners: HomeCorner[]; yours: boolean } {
   const limit = o.limit ?? HOME_ROW_CORNERS;
-  const mine = yourCorners(o.followed, o.known, [], Number.POSITIVE_INFINITY);
+  const mine = { corners: followedCorners(o.followed, o.known) };
   if (mine.corners.length > 0) {
     const newest = new Map<string, number>();
     for (const post of o.feed) {

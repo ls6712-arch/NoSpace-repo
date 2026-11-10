@@ -46,6 +46,18 @@ describe("the Corners row on Home", () => {
     expect(slugs(r)).toEqual(["baking", "reading", "knitting"]);
   });
 
+  it("never shows a followed Space, an empty follow or an unknown Corner as a Corner", () => {
+    // What hobby_follows holds on the live site: whole-Space follows ("space:<slug>"), an empty key, older bare slugs.
+    const followed = ["space:books-writing", "space:home-garden", "", "no-space:no-such-corner", "crafts-making:pottery", "knitting"];
+    const r = homeCornersRow({ ...none, followed });
+    expect(r.yours).toBe(true);
+    expect(slugs(r)).toEqual(["pottery", "knitting"]);
+    // Someone who follows only Spaces follows no Corners: they get Corners for you, not a row of Space slugs.
+    const spacesOnly = homeCornersRow({ ...none, followed: ["space:books-writing", "space:home-garden", ""] });
+    expect(spacesOnly.yours).toBe(false);
+    expect(slugs(spacesOnly)).toEqual(["pottery", "gardening", "reading", "board-games"]);
+  });
+
   it("shows no more than six, and each Corner once", () => {
     const many = Array.from({ length: 9 }, (_, i) => c("s", `corner-${i}`, `Corner ${i}`));
     const r = homeCornersRow({ ...none, known: many, followed: [...many.map((x) => `s:${x.slug}`), "s:corner-0"] });

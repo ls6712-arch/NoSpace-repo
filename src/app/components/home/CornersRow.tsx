@@ -8,7 +8,7 @@ import { cornerStyle } from "../../lib/categoryStyle";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPicture } from "../../lib/cornerPicture";
 import { fetchCornerAffinity } from "../../lib/discover";
-import { homeCornersRow } from "../../lib/homeCornersRow";
+import { followedCorners, homeCornersRow } from "../../lib/homeCornersRow";
 import { logSuggestionEvent } from "../../lib/homeSuggestions";
 import type { HomeCorner } from "../../lib/homeYourCorners";
 import { fetchTaste, pickKey } from "../../lib/tasteRemote";
@@ -45,7 +45,8 @@ export function CornersRow() {
   const { publicFeed } = useContent();
   const social = useSocial();
   const { allCorners } = useCorners();
-  const follows = social.followedHobbies.length > 0;
+  // Only follows of real Corners count: a follow of a whole Space is not a Corner and puts nothing in the row.
+  const follows = useMemo(() => followedCorners(social.followedHobbies, allCorners).length > 0, [social.followedHobbies, allCorners]);
   const followsKnown = !user || social.loaded;
   // Picks and affinity order the row only for a signed-in person who follows no Corners. Nobody else asks for them.
   const needsRanking = !!user && followsKnown && !follows;

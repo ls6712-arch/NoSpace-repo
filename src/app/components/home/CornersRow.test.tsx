@@ -62,6 +62,15 @@ describe("the Corners row on Home", () => {
     expect(screen.getByAltText("Knitting").getAttribute("src")).not.toContain("/worlds/");
   });
 
+  it("treats someone who follows only Spaces as following no Corners, and never shows a Space as a Corner", async () => {
+    state.followed = ["space:books-writing", "space:home-garden", ""];
+    state.taste = async () => ({ picks: ["home-garden/gardening"], windows: [], budget: null });
+    show();
+    expect(await screen.findByRole("heading", { name: CORNERS_ROW_COPY.forYou })).toBeTruthy();
+    expect(names()).toEqual(["/corners/gardening", "/corners/pottery", "/corners/reading", "/corners/board-games"]);
+    expect(screen.queryByText("books-writing")).toBeNull();
+  });
+
   it("shows a visitor the Corners with a 3D world in catalog order, and records nothing", async () => {
     state.user = null;
     state.loaded = false;
