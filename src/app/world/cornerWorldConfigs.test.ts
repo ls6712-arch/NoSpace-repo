@@ -5,7 +5,7 @@ import { ACTION_NAMES, PIECE_KINDS, SETTING_NAMES, checkConfig, type CornerWorld
 import { CORNER_WORLDS } from "./corners";
 import { ACTIONS } from "./characters/actions";
 import { MADE_KINDS, pieceHeight } from "./pieces";
-import { START_POSES } from "./core/poses";
+import { GLIDE_SECONDS, START_POSES, firstPose, glidePose, glides, settledPose } from "./core/poses";
 import { THEMES } from "./core/themes";
 import { pieceSpec } from "./layout";
 import { SETTINGS } from "./settings";
@@ -91,6 +91,50 @@ describe("every setting", () => {
     expect(START_POSES.garden.radius).toBeGreaterThan(START_POSES.studio.radius);
     expect(START_POSES.nook).toEqual(START_POSES.studio);
     expect(START_POSES.cafe).toEqual(START_POSES.studio);
+  });
+});
+
+describe("the garden on a phone", () => {
+  const phone = { phone: true, reducedMotion: false };
+  it("starts on the garden outside, and ends at the walls", () => {
+    const first = firstPose("garden", phone);
+    const end = settledPose("garden", true);
+    expect(first).toEqual(START_POSES.garden.arrivePhone);
+    // Outside is to the left of the room's left wall (x = -4.7).
+    expect(first.look[0]).toBeLessThan(-4.7);
+    expect(end.look[0]).toBeGreaterThan(-4.7);
+    expect(glides("garden", phone)).toBe(true);
+    expect(glidePose(first, end, 0)).toEqual(first);
+    expect(glidePose(first, end, 1)).toEqual(end);
+    expect(glidePose(first, end, 7)).toEqual(end);
+    const mid = glidePose(first, end, 0.5);
+    expect(mid.look[0]).toBeGreaterThan(first.look[0]);
+    expect(mid.look[0]).toBeLessThan(end.look[0]);
+    expect(GLIDE_SECONDS).toBe(2);
+  });
+
+  it("with reduced motion starts at the walls and does not glide", () => {
+    const calm = { phone: true, reducedMotion: true };
+    expect(firstPose("garden", calm)).toEqual(settledPose("garden", true));
+    expect(glides("garden", calm)).toBe(false);
+  });
+
+  it("is the only glide: a wide screen, and every other setting, start where they stay", () => {
+    expect(glides("garden", { phone: false, reducedMotion: false })).toBe(false);
+    expect(firstPose("garden", { phone: false, reducedMotion: false })).toEqual(settledPose("garden", false));
+    for (const s of SETTING_NAMES.filter((x) => x !== "garden")) {
+      expect(glides(s, phone), s).toBe(false);
+      expect(firstPose(s, phone), s).toEqual(settledPose(s, true));
+    }
+  });
+
+  it("stops the glide the moment the screen is touched, and takes every pose from the one constants file", () => {
+    const scene = fs.readFileSync(path.join(__dirname, "core/scene.ts"), "utf8");
+    expect(scene).toMatch(/const onDown = \(e: PointerEvent\) => \{\n\s+gliding = false;/);
+    // The engine has no camera numbers of its own: the start comes from firstPose and the end from settledPose.
+    expect(scene).toContain("const first = firstPose(config.setting, { phone, reducedMotion });");
+    expect(scene).toContain("const settled = settledPose(config.setting, phone);");
+    expect(scene).not.toMatch(/let yaw = [0-9.]+;|let radius = [0-9.]+;|new T\.Vector3\(0\.1, 1\.0, -0\.3\)/);
   });
 });
 

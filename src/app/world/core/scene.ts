@@ -7,7 +7,7 @@ import { SETTINGS } from "../settings";
 import type { Setting } from "../settings/types";
 import { createSound, type Sound } from "../sound";
 import { PI, disposeTree, dropRadialTex, glow, radialTex } from "./kit";
-import { START_POSES } from "./poses";
+import { GLIDE_SECONDS, firstPose, glidePose, glides, settledPose } from "./poses";
 import { buildRoom } from "./room";
 import { THEMES } from "./themes";
 import { easeMood, moodState, type MoodChoice, type MoodName } from "./moods";
@@ -207,11 +207,17 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
 
   // Camera: drag to look, wheel to move in and out, tap to pick.
   // Where the camera starts is fixed per setting (./poses): posters and loops are framed from the same pose.
-  const pose = START_POSES[config.setting];
-  const look = new T.Vector3(...pose.look);
-  let yaw = pose.yaw;
-  let pitch = pose.pitch;
-  let radius = small && window.innerWidth < window.innerHeight ? pose.radiusPhone : pose.radius;
+  const phone = small && window.innerWidth < window.innerHeight;
+  const first = firstPose(config.setting, { phone, reducedMotion });
+  const settled = settledPose(config.setting, phone);
+  const look = new T.Vector3(...first.look);
+  let yaw = first.yaw;
+  let pitch = first.pitch;
+  let radius = first.radius;
+  // A phone that starts beside the walls (the open garden) glides to them once the person enters. Touching the
+  // screen stops the glide where it is: from then on the camera is the person's.
+  let glideFrom: number | null = null;
+  let gliding = false;
   let camR = radius + 5.6;
   let dragging = false;
   let moved = 0;
@@ -229,6 +235,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     return ray.intersectObjects(pickables, false)[0]?.object.userData as { spot?: Spot; character?: string } | undefined;
   };
   const onDown = (e: PointerEvent) => {
+    gliding = false;
     dragging = true;
     moved = 0;
     lx = e.clientX;
@@ -328,6 +335,15 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
     room.applyMood(cur, renderer);
     setting.applyMood(cur);
 
+    if (gliding && glideFrom !== null) {
+      const u = (t - glideFrom) / GLIDE_SECONDS;
+      const g = glidePose(first, settled, u);
+      look.set(...g.look);
+      yaw = g.yaw;
+      pitch = g.pitch;
+      radius = g.radius;
+      if (u >= 1) gliding = false;
+    }
     camR = damp(camR, entered ? radius : radius + 4, 1 - Math.exp(-dt * (entered ? 0.9 : 2)));
     const drift = reducedMotion ? 0 : Math.sin(t * 0.09) * 0.05;
     const nod = reducedMotion ? 0 : Math.sin(t * 0.13) * 0.02;
@@ -438,6 +454,10 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
       hover = spot;
     },
     enter() {
+      if (!entered && glides(config.setting, { phone, reducedMotion })) {
+        gliding = true;
+        glideFrom = clock.getElapsedTime();
+      }
       entered = true;
       nextAuto = performance.now() + 8000;
       sound.start();

@@ -102,5 +102,6 @@ world.setPlan(
     mine: [{ postId: 9010, mine: true, finished: false }, { postId: 9011, mine: true, finished: true }],
   }),
 );
-world.enter();
+// `enter=0` leaves the room as it is before the person taps Enter.
+if (params.get("enter") !== "0") world.enter();
 (window as unknown as { __firstFrameMs: number }).__firstFrameMs = world.firstFrameMs;
