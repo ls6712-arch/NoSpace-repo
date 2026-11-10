@@ -3,7 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useCurrentTab } from "../lib/routeHandle";
 import { viewForTab, type TownMotion } from "../world/townViews";
 import type { Town } from "../world/town";
-import { townBackdropOn } from "../world/townFlag";
+import { lowPowerDevice, townBackdropOn } from "../world/townFlag";
 
 /**
  * The 3D town that sits behind every page. Mounted once in the shell, so moving
@@ -90,7 +90,7 @@ function webglAvailable(): boolean {
   }
 }
 
-/** "still" under reduced motion, "calm" otherwise; follows the setting live. */
+/** "still" under reduced motion or on a low-power device, "calm" otherwise; follows the motion setting live. */
 function useMotion(): TownMotion {
   const query = "(prefers-reduced-motion: reduce)";
   const [reduce, setReduce] = useState(() => typeof window !== "undefined" && window.matchMedia?.(query).matches);
@@ -101,5 +101,6 @@ function useMotion(): TownMotion {
     mq.addEventListener("change", on);
     return () => mq.removeEventListener("change", on);
   }, []);
-  return reduce ? "still" : "calm";
+  const [lowPower] = useState(() => typeof navigator !== "undefined" && lowPowerDevice());
+  return reduce || lowPower ? "still" : "calm";
 }

@@ -11,8 +11,9 @@ import { TOWN_CAMERAS, type TownCamera, type TownMotion, type TownView } from ".
  * fountain. It is atmosphere, not content: nothing here is real people, and
  * nothing is counted, tapped or read by a screen reader.
  *
- * Built to stay out of the way. It caps itself at 30 frames a second, stops
- * when the tab is hidden, draws a single still frame under reduced motion, and
+ * Built to stay out of the way. It draws at about 20 frames a second, pauses
+ * while the person scrolls or types (and for a moment after), stops when the
+ * tab is hidden, draws a single still frame under reduced motion, and
  * drops shadows and resolution on small screens. Loaded only on demand, so
  * three.js never reaches the first download.
  */
@@ -564,6 +565,16 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
 
   const start = performance.now();
   let last = 0;
+  /** About 20 frames a second: smooth enough for strolling people, about a third of the work of 60. */
+  const FPS = 20;
+  /** The park pauses until this time; pushed forward by every scroll, key press or text input. */
+  let busyUntil = 0;
+  const QUIET_MS = 400;
+  const onBusy = () => {
+    busyUntil = performance.now() + QUIET_MS;
+  };
+  const busyEvents = ["scroll", "wheel", "touchmove", "keydown", "input"] as const;
+  for (const type of busyEvents) document.addEventListener(type, onBusy, { capture: true, passive: true });
   let raf = 0;
   let stillT = 6; // the moment a still frame shows: everyone mid-activity
   function draw(t = motion === "still" ? stillT : (performance.now() - start) / 1000, dt = 0) {
@@ -576,7 +587,12 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
     raf = 0;
     if (document.hidden || motion === "still") return;
     raf = requestAnimationFrame(frame);
-    if (now - last < 1000 / 30) return;
+    // Scrolling or typing: hold the last frame so the page gets the whole device.
+    if (now < busyUntil) {
+      last = now;
+      return;
+    }
+    if (now - last < 1000 / FPS) return;
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
     easeCamera(1 - Math.exp(-dt * 1.6));
@@ -627,6 +643,7 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
       cancelAnimationFrame(raf);
       ro.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
+      for (const type of busyEvents) document.removeEventListener(type, onBusy, { capture: true });
       canvas.removeEventListener("webglcontextlost", onLost);
       disposeTree(scene);
       skyTex.dispose();
