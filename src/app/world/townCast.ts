@@ -69,6 +69,31 @@ export interface Look {
   stub?: boolean;
 }
 
+/**
+ * The source pack draws people with big heads and short legs, which reads as
+ * children. These bone scales give adult proportions: a smaller head, a little
+ * more neck, longer and slimmer legs and arms. Bones point along their own y axis, so
+ * [1, k, 1] lengthens a bone; a child under a lengthened bone gets the inverse
+ * on y so it keeps its shape.
+ */
+const LIMB = 0.86; // slimmer arms and legs; hands and feet keep their size
+const ADULT: Record<string, [number, number, number]> = {
+  Head: [0.56, 0.56 / 1.35, 0.56],
+  Neck: [1, 1.35, 1],
+  "UpperLeg.L": [LIMB, 1.28, LIMB],
+  "UpperLeg.R": [LIMB, 1.28, LIMB],
+  "LowerLeg.L": [1, 1.18 / 1.28, 1],
+  "LowerLeg.R": [1, 1.18 / 1.28, 1],
+  "Foot.L": [1 / LIMB, 1 / 1.18, 1 / LIMB],
+  "Foot.R": [1 / LIMB, 1 / 1.18, 1 / LIMB],
+  "UpperArm.L": [LIMB, 1.18, LIMB],
+  "UpperArm.R": [LIMB, 1.18, LIMB],
+  "LowerArm.L": [1, 1.12 / 1.18, 1],
+  "LowerArm.R": [1, 1.12 / 1.18, 1],
+  "Fist.L": [1 / LIMB, 1 / 1.12, 1 / LIMB],
+  "Fist.R": [1 / LIMB, 1 / 1.12, 1 / LIMB],
+};
+
 /** Height of every person in world units, whatever the model's own scale. */
 const PERSON_HEIGHT = 1.75;
 const DOG_LENGTH = 1.05;
@@ -111,7 +136,15 @@ export async function loadCast(base: string): Promise<Cast> {
     ...PEOPLE_FILES.map((f) => loader.loadAsync(url(f))),
   ]);
   const bodyByName = new Map<Body, GLTF>(PEOPLE_FILES.map((f, i) => [f, bodies[i]]));
-  const humanClips = new Map(moves.animations.map((c) => [c.name, c]));
+  // The moves carry a scale key on every bone (always 1). Dropped, so the adult
+  // proportions below stay put while the moves turn the joints.
+  const humanClips = new Map(
+    moves.animations.map((c) => {
+      const clip = c.clone();
+      clip.tracks = clip.tracks.filter((track) => !track.name.endsWith(".scale"));
+      return [clip.name, clip] as const;
+    }),
+  );
   const dogs: Record<DogKind, GLTF> = { shiba, husky };
   const plantProtos = new Map<Plant, T.Object3D>();
   for (const [kind, spec] of Object.entries(PLANTS) as [Plant, (typeof PLANTS)[Plant]][]) {
@@ -251,11 +284,13 @@ export async function loadCast(base: string): Promise<Cast> {
         else if (name === "Hair") m.color.setHex(look.hair);
         else if ((name === "Hat" || name === "Detail") && look.accent !== undefined) m.color.setHex(look.accent);
       });
-      fit(model, PERSON_HEIGHT, "y");
       const bones = new Map<string, T.Bone>();
       model.traverse((n) => {
         if ((n as T.Bone).isBone) bones.set(n.name, n as T.Bone);
       });
+      for (const [name, [x, y, z]] of Object.entries(ADULT)) bones.get(name)?.scale.set(x, y, z);
+      model.updateMatrixWorld(true);
+      fit(model, PERSON_HEIGHT, "y");
       if (look.stub) attach(model, bones.get("Torso"), stubBadge(), new T.Vector3(0.06, -0.1, 0.16));
       const root = new T.Group();
       root.add(model);
