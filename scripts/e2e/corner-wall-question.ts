@@ -66,7 +66,7 @@ try {
     if (await textOnly.isVisible().catch(() => false)) await textOnly.click();
     await page.getByPlaceholder(/what happened/i).first().fill(line);
   };
-  const choice = (p: Page) => p.getByRole("radiogroup", { name: "Where it is at", exact: true });
+  const choice = (p: Page) => p.getByRole("radiogroup", { name: "How far along", exact: true });
   const post = async () => {
     await page.getByRole("button", { name: "Post", exact: true }).first().click();
     await page.getByText(/^Posted to /).first().waitFor();

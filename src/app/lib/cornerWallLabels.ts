@@ -47,7 +47,7 @@ export function asksWallQuestion(spaceSlug: string, slug: string): boolean {
 }
 
 /** The accessible name of the composer's two-way choice. */
-export const WALL_QUESTION_LABEL = "Where it is at";
+export const WALL_QUESTION_LABEL = "How far along";
 
 /**
  * The title of the Pursuit made when someone answers "finished" on a Moment that counts toward no Pursuit:

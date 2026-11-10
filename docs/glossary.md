@@ -1547,4 +1547,4 @@ Log a Moment, on a Corner that has a room, asks whether the Moment is in progres
 
 | String | Where | Status |
 |---|---|---|
-| Where it is at | Screen reader name of the two-way choice in Log a Moment. Never shown | New Nov 10, proposed |
+| How far along | Screen reader name of the two-way choice in Log a Moment. Never shown | Approved Nov 10 |
