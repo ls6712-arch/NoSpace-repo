@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router";
+import { WorldBackdrop } from "../components/WorldBackdrop";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { SideRail } from "../components/nav/SideRail";
@@ -225,6 +226,7 @@ function RootShell() {
   if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || location.pathname === "/reset-password" || (sooshOnboardingEnabled && location.pathname === "/login") || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
     return (
       <div className="min-h-viewport">
+        <WorldBackdrop />
         <NavProgress active={slowNavigation} />
         <PreviewBanner />
         <NetworkBanner />
@@ -246,6 +248,7 @@ function RootShell() {
 
   return (
     <div className="min-h-viewport">
+      <WorldBackdrop />
       <NavProgress active={slowNavigation} />
       {rail && <SkipLink />}
       {rail && <SideRail />}

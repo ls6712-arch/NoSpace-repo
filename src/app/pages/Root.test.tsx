@@ -13,6 +13,7 @@ vi.mock("../components/Header", () => ({ Header: ({ hideWithRail }: { hideWithRa
 vi.mock("../components/nav/SideRail", () => ({ SideRail: () => <nav data-testid="rail" /> }));
 vi.mock("../components/nav/SkipLink", () => ({ SkipLink: () => <a data-testid="skip" href="#main-content" /> }));
 vi.mock("../components/CartDrawer", () => ({ CartDrawer: () => null }));
+vi.mock("../components/WorldBackdrop", () => ({ WorldBackdrop: () => null }));
 vi.mock("../components/BadgeUnlockToast", () => ({ BadgeUnlockToast: () => null }));
 vi.mock("../components/AccountPrompts", () => ({ AccountPrompts: () => null }));
 vi.mock("../components/BottomTabBar", () => ({ BottomTabBar: ({ railEligible }: { railEligible?: boolean }) => <nav data-testid="tabbar" data-rail-eligible={String(!!railEligible)} /> }));
