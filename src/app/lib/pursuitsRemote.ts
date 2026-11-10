@@ -223,6 +223,32 @@ export async function attachPostToPursuit(postId: number | string, pursuitId: st
   }
 }
 
+/**
+ * Saves a Pursuit that is finished from its first write and links its one Moment to it, in that order
+ * (posts.pursuit_id references pursuits, so the Pursuit has to exist first). The Pursuit is inserted with
+ * finished_at already set: it is never an open row, and the Finisher Stub trigger, which only runs when
+ * finished_at changes on an existing row, does not run. Best effort, like every mirror here.
+ */
+export async function mirrorFinishedPursuitWithMoment(userId: string, project: Project, postId: number | string) {
+  if (!supabase || !project.finishedAt) return;
+  await mirrorPursuit(userId, project);
+  try {
+    await supabase.from("posts").update({ pursuit_id: project.id }).eq("id", postId);
+  } catch {
+    // Best effort: the local journal already links the two.
+  }
+}
+
+/** Removes a Pursuit's row (its owner only, by RLS). posts.pursuit_id is set to null by the database. Best effort. */
+export async function deleteRemotePursuit(pursuitId: string) {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuits").delete().eq("id", pursuitId);
+  } catch {
+    // Best effort.
+  }
+}
+
 /** One Pursuit by id, for its own page — visible per the table's RLS (the
  * owner always, anyone else only when it's marked shared). Returns null
  * rather than throwing when it doesn't exist, isn't shared, or Supabase

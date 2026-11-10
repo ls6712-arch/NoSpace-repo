@@ -1528,3 +1528,23 @@ What the characters say (each shown with the Character tag). Meera: "Oh hi! Grab
 Retired on Nov 10, 2026 (the room is the Corner): "Enter the studio", "The Pottery studio", "Leave the studio", "The studio can't open on this device, so here is the Corner page.", and "studio" in any string a person reads.
 
 Wording from the first brief that is **not used**, because an approved string already covers it: "Tear off · make your version" (Make your version), "I'm in" (Count me in), "Keep going" as a reaction (retired; see `docs/moment-card-and-reactions-spec.md`), "Half-done, messy, in progress. The good part." (Half-done, messy, in progress.), "{N} here now" (the Corner chat's own presence line, which names up to three people).
+
+## Corner rooms: wall labels (founder, Nov 10, 2026)
+
+A Corner with a room may name its two walls itself. Nothing else about a wall changes: a Moment is on the finished wall when its Pursuit is finished, and on the in-progress wall otherwise. A Corner without a room says Still making and Made it. The labels are in `src/app/lib/cornerWallLabels.ts` and are used wherever the wall is named for that Corner: the list's panels and phone control, the room's signs and panel, and Log a Moment. A Corner's labels show once its room ships; until then it says Still making and Made it like every other Corner.
+
+| String | Where | Status |
+|---|---|---|
+| Still making | Pottery, in progress. Unchanged | Approved |
+| Made it | Pottery and Gardening, finished. Unchanged for Pottery | Approved Nov 10 |
+| Still growing | Gardening, in progress | Approved Nov 10 |
+| Still reading | Reading, in progress | Approved Nov 10 |
+| Read it | Reading, finished. Not "Finished": a card on the wall already says Finished {date} | Approved Nov 10 |
+| Still learning | Board games, in progress | Approved Nov 10 |
+| Played it | Board games, finished | Approved Nov 10 |
+
+Log a Moment, on a Corner that has a room, asks whether the Moment is in progress or finished, as a two-way choice under the Corner row that uses the Corner's two labels (in progress is picked to start). It is asked only for a Moment other people will see, and not for a group's Pursuit. Choosing the finished label finishes the Pursuit the Moment counts toward. With no Pursuit, it makes one that is finished from the start, titled with the first line of the Moment (60 characters at most, cut at a word with …) or the Corner's name when nothing was written; that Pursuit is never active, so it is not in any list of Pursuits in progress, and it is shared only when the Moment is for everyone. Undo takes it back with the Moment.
+
+| String | Where | Status |
+|---|---|---|
+| Where it is at | Screen reader name of the two-way choice in Log a Moment. Never shown | New Nov 10, proposed |

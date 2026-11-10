@@ -21,6 +21,7 @@ import { PursuitDialog } from "../components/PursuitDialog";
 import { CornerChat } from "../components/corners/CornerChat";
 import { PassedAlong, wallFaces } from "../components/corners/CornerWalls";
 import { WALL_COPY, WallCard } from "../components/corners/WallCard";
+import { wallLabels } from "../lib/cornerWallLabels";
 import { planRoom, type RoomMoment, type Spot } from "../world/layout";
 import { WORLD_COPY, readWorldPrefs, signLine, webglAvailable, writeWorldPrefs, type CornerWorldDef, type WorldPrefs } from "../world/cornerWorlds";
 import type { Frame, World } from "../world/scene";
@@ -92,6 +93,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
   const navigate = useNavigate();
   const { publicFeed, myPosts } = useContent();
   const key = `${corner.spaceSlug}/${corner.slug}`;
+  const wallNames = wallLabels(corner.spaceSlug, corner.slug);
   const reducedMotion = useMemo(() => window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
 
   // The room is a dusk scene in every theme, so everything over it uses the dark tokens. They resolve on the
@@ -257,7 +259,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
         world = createWorld(stage, {
           small: Math.min(window.innerWidth, window.innerHeight) < 700,
           reducedMotion,
-          labels: { rack: WALL_COPY.stillMaking, shelf: WALL_COPY.madeIt, yours: WORLD_COPY.yourShelf },
+          labels: { rack: wallNames.making, shelf: wallNames.made, yours: WORLD_COPY.yourShelf },
           mood: initial.mood,
           sound: initial.sound,
           music: initial.music,
@@ -397,7 +399,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
     shelf: { n: made?.cards.length ?? 0, exact: !!made?.complete },
     yours: { n: myPieces.length, exact: true },
   };
-  const labels: Record<Spot, string> = { rack: WALL_COPY.stillMaking, shelf: WALL_COPY.madeIt, yours: WORLD_COPY.yourShelf };
+  const labels: Record<Spot, string> = { rack: wallNames.making, shelf: wallNames.made, yours: WORLD_COPY.yourShelf };
   const faces: Record<Spot, ReturnType<typeof wallFaces>> = { rack: wallFaces(making?.cards ?? []), shelf: wallFaces(made?.cards ?? []), yours: [] };
   const loaded = making !== null && made !== null;
   const showHint = hintDue && loaded && !prefs.hintSeen;
@@ -405,7 +407,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
 
   const wallSection = (kind: WallKind, data: WallData | null, section: string, line: string) => {
     if (!data || data.cards.length === 0) return null;
-    const title = kind === "making" ? WALL_COPY.stillMaking : WALL_COPY.madeIt;
+    const title = kind === "making" ? wallNames.making : wallNames.made;
     return (
       <section id={section} aria-labelledby={`${section}-title`} style={{ "--wall-tint": "var(--surface-muted)" } as React.CSSProperties} className="scroll-mt-4 rounded-card bg-[var(--wall-tint)] p-4">
         <div className="mb-4 flex items-start justify-between gap-3">
@@ -595,7 +597,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
                         <li key={post.id}>
                           <button type="button" onClick={() => setOpenPost(post)} className="flex min-h-11 w-full items-center justify-between gap-3 rounded-control border border-border px-3 py-2 text-left hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                             <span className="line-clamp-2 min-w-0 break-words text-small">{post.caption?.trim() || corner.name}</span>
-                            <span className="shrink-0 text-caption font-semibold text-muted-foreground">{finished ? WALL_COPY.madeIt : WALL_COPY.stillMaking}</span>
+                            <span className="shrink-0 text-caption font-semibold text-muted-foreground">{finished ? wallNames.made : wallNames.making}</span>
                           </button>
                         </li>
                       ))}

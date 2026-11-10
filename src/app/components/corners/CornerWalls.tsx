@@ -21,6 +21,7 @@ import {
   type WallKind,
 } from "../../lib/cornerWalls";
 import { WALL_COPY, WallCard, WallCardShape } from "./WallCard";
+import { wallLabels } from "../../lib/cornerWallLabels";
 
 interface Wall {
   cards: Card[];
@@ -48,8 +49,7 @@ export function wallsToShow(making: readonly Card[], made: readonly Card[]): { m
   return { making: making.length > 0, made: made.length > 0 };
 }
 
-function Panel({ kind, wall, tint, hidden, onMore, children }: { kind: WallKind; wall: Wall; tint: string; hidden: boolean; onMore: () => void; children: React.ReactNode }) {
-  const title = kind === "making" ? WALL_COPY.stillMaking : WALL_COPY.madeIt;
+function Panel({ kind, wall, title, tint, hidden, onMore, children }: { kind: WallKind; wall: Wall; title: string; tint: string; hidden: boolean; onMore: () => void; children: React.ReactNode }) {
   const line = kind === "making" ? WALL_COPY.stillMakingLine : WALL_COPY.madeItLine;
   const faces = wallFaces(wall.cards);
   return (
@@ -147,6 +147,7 @@ export function CornerWalls({
 }) {
   const { user } = useAuth();
   const key = `${corner.spaceSlug}/${corner.slug}`;
+  const labels = wallLabels(corner.spaceSlug, corner.slug);
   const [making, setMaking] = useState<Wall>(EMPTY);
   const [made, setMade] = useState<Wall>(EMPTY);
   const [chains, setChains] = useState<Chain[]>([]);
@@ -295,19 +296,19 @@ export function CornerWalls({
           value={phoneWall}
           onChange={setPhoneWall}
           options={[
-            { value: "making", label: WALL_COPY.stillMaking },
-            { value: "made", label: WALL_COPY.madeIt },
+            { value: "making", label: labels.making },
+            { value: "made", label: labels.made },
           ]}
         />
       )}
       <div className={`${SECTION_GAP} grid gap-6 ${both ? "desk:grid-cols-2" : ""}`}>
         {show.making && (
-          <Panel kind="making" wall={making} tint={tints.making} hidden={both && phoneWall !== "making"} onMore={() => void more("making")}>
+          <Panel kind="making" wall={making} title={labels.making} tint={tints.making} hidden={both && phoneWall !== "making"} onMore={() => void more("making")}>
             {renderCards("making", making)}
           </Panel>
         )}
         {show.made && (
-          <Panel kind="made" wall={made} tint={tints.made} hidden={both && phoneWall !== "made"} onMore={() => void more("made")}>
+          <Panel kind="made" wall={made} title={labels.made} tint={tints.made} hidden={both && phoneWall !== "made"} onMore={() => void more("made")}>
             {renderCards("made", made)}
           </Panel>
         )}

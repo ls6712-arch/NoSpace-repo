@@ -5,10 +5,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { useReactionState } from "../../lib/reactionState";
 import { formatDate } from "../../lib/dates";
 import { startedBecauseLine, startedBecauseOfLine, type WallCard as Card, type WallKind } from "../../lib/cornerWalls";
+import { DEFAULT_WALL_LABELS } from "../../lib/cornerWallLabels";
 
 export const WALL_COPY = {
-  stillMaking: "Still making",
-  madeIt: "Made it",
+  // The wall names of a Corner without a room. A Corner with one may name its walls itself: lib/cornerWallLabels.ts.
+  stillMaking: DEFAULT_WALL_LABELS.making,
+  madeIt: DEFAULT_WALL_LABELS.made,
   stillMakingLine: "Half-done, messy, in progress.",
   madeItLine: "Finished things, with the Moments that got them here.",
   makeYourVersion: "Make your version",
