@@ -127,6 +127,14 @@ export interface Cast {
 /** Loads every model the town needs. Rejects if any file is missing, so the town can carry on without people. */
 export async function loadCast(base: string): Promise<Cast> {
   const loader = new GLTFLoader();
+  // Textures inside a .glb become blob: URLs. By default the loader reads them
+  // with fetch(), which the site's CSP refuses (connect-src has no blob:). An
+  // <img> may load blob: (img-src allows it), so use the image-element loader.
+  loader.register((parser) => {
+    parser.textureLoader = new T.TextureLoader(parser.options.manager);
+    parser.textureLoader.setCrossOrigin(parser.options.crossOrigin);
+    return { name: "soosh_image_textures" };
+  });
   const url = (name: string) => base.replace(/\/?$/, "/") + name + ".glb";
   const [nature, moves, shiba, husky, ...bodies] = await Promise.all([
     loader.loadAsync(url("nature")),

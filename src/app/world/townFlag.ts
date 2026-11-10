@@ -9,13 +9,18 @@ import { PRODUCTION_HOSTNAMES } from "../config";
  * before the `#` (for example https://www.onsoosh.com/?town=on#/discover). The
  * browser remembers it; `?town=off` forgets it. To turn it on for everyone,
  * make this return true and ship.
+ *
+ * Always off under browser automation (end-to-end tests), so those runs see
+ * the app exactly as before and do not spend their CPU drawing a park.
  */
 const KEY = "soosh.town";
 
 export function townBackdropOn(
   loc: Pick<Location, "hostname" | "search"> = window.location,
   store: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null = safeStorage(),
+  automated: boolean = typeof navigator !== "undefined" && navigator.webdriver === true,
 ): boolean {
+  if (automated) return false;
   const asked = new URLSearchParams(loc.search).get("town");
   if (asked === "on") store?.setItem(KEY, "on");
   if (asked === "off") store?.removeItem(KEY);
