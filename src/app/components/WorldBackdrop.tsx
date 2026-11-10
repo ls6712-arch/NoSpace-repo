@@ -3,6 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { useCurrentTab } from "../lib/routeHandle";
 import { viewForTab, type TownMotion } from "../world/townViews";
 import type { Town } from "../world/town";
+import { townBackdropOn } from "../world/townFlag";
 
 /**
  * The 3D town that sits behind every page. Mounted once in the shell, so moving
@@ -16,6 +17,12 @@ import type { Town } from "../world/town";
  * never in the way of a tap.
  */
 export function WorldBackdrop() {
+  // Off for everyone on the live site until the founder turns it on; see townFlag.ts.
+  const [on] = useState(townBackdropOn);
+  return on ? <Town3D /> : null;
+}
+
+function Town3D() {
   const host = useRef<HTMLDivElement>(null);
   const town = useRef<Town | null>(null);
   const { resolvedTheme } = useTheme();
