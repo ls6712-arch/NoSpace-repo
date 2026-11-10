@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
-import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const chats = vi.hoisted(() => ({ n: 0 }));
@@ -20,6 +19,7 @@ vi.mock("../NotificationsMenu", () => ({
 }));
 
 import { SideRail } from "./SideRail";
+import { RouterAt } from "../../lib/testRoutes";
 import { SkipLink } from "./SkipLink";
 
 beforeEach(() => {
@@ -28,11 +28,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 const at = (path: string) =>
-  render(
-    <MemoryRouter initialEntries={[path]}>
-      <SideRail />
-    </MemoryRouter>,
-  );
+  render(<RouterAt path={path} element={<SideRail />} />);
 
 describe("the left rail", () => {
   it("lists every destination in order, with the same labels as the bottom bar", () => {

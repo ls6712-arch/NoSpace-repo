@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useBackChevronVariant } from "../components/nav/BackChevronContext";
 import { Link, useSearchParams } from "react-router";
 import { MapPin, Star } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -39,6 +40,8 @@ type FeaturedEventLite = { title: string; starts_at: string; timezone: string };
 const TABS = ["home", "moments", "events", "people", "manage"] as const;
 
 export function SpacePage({ space }: { space: SpaceRow }) {
+  // The shell's back chevron floats over the cover photo.
+  useBackChevronVariant("onMedia");
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const rawTab = searchParams.get("tab");

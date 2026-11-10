@@ -9,6 +9,9 @@ import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { AccountPrompts } from "../components/AccountPrompts";
 import { BottomTabBar } from "../components/BottomTabBar";
+import { BackChevron } from "../components/nav/BackChevron";
+import { BackChevronProvider } from "../components/nav/BackChevronContext";
+import { useRouteHandle } from "../lib/routeHandle";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
 import { AccountStatusBanner } from "../components/AccountStatusBanner";
@@ -88,8 +91,19 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   (import.meta.env.DEV && pathname === "/dev/kit");
 
 export function Root() {
+  return (
+    <BackChevronProvider>
+      <RootShell />
+    </BackChevronProvider>
+  );
+}
+
+function RootShell() {
   const { user, profile, loading, isConfigured } = useAuth();
   const location = useLocation();
+  // Every pushed page gets the one back chevron, drawn here; pages never draw their own (see BackChevron.tsx).
+  const handle = useRouteHandle().handle;
+  const showBack = handle?.kind === "page" && !handle.legacyBack;
   useTruncationReveal();
   useScrollMemory();
   const mainRef = useRef<HTMLElement>(null);
@@ -215,7 +229,8 @@ export function Root() {
         <PreviewBanner />
         <NetworkBanner />
         <AccountStatusBanner />
-        <main>
+        <main className="relative">
+          {showBack && <BackChevron />}
           <Outlet />
         </main>
         <SignUpReturnEffect />
@@ -240,7 +255,8 @@ export function Root() {
         <AccountStatusBanner />
       </div>
       <Header hideWithRail={rail} />
-      <main ref={mainRef} id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
+      <main ref={mainRef} id="main-content" tabIndex={-1} className={`relative outline-none ${railPad}`}>
+        {showBack && <BackChevron rail={rail} />}
         {under18 && !stubbyAccountMayOpen(location.pathname) ? <Under18Screen /> : stubbyAccount && !stubbyAccountMayOpen(location.pathname) ? <FinishSettingUp /> : <Outlet />}
       </main>
       <SignUpReturnEffect />

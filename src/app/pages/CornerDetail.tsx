@@ -31,6 +31,8 @@ import { hasHobbyPhoto } from "../data/hobbyPhotos";
 import { cornerKey, homeCornersIn } from "../data/homeCorners";
 import { cornerGuide } from "../data/cornerGuides";
 import { cornerStyle } from "../lib/categoryStyle";
+import { rememberCornerCategory } from "../lib/cornerParent";
+import { useBackChevronVariant } from "../components/nav/BackChevronContext";
 import { cornerPhotoTransitionName } from "../components/discover/HeroCard";
 import { AvatarStack } from "../components/ui/AvatarStack";
 import { PillButton } from "../components/ui/PillButton";
@@ -159,6 +161,7 @@ function CornerFace({ corner }: { corner: CornerModel }) {
 }
 
 function CornerBody({ corner, onRoom }: { corner: CornerModel; onRoom?: () => void }) {
+  useBackChevronVariant("onMedia");
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { publicFeed, myPosts } = useContent();
@@ -338,6 +341,8 @@ function CornerBody({ corner, onRoom }: { corner: CornerModel; onRoom?: () => vo
   const week = live ? thisWeek(events) : [];
   const photo = cornerPhotoCredit(corner.slug);
   const category = CORNER_CATEGORIES.find((c) => c.slug === corner.categorySlug);
+  // Back from a shared link goes to this group (see cornerParent.ts).
+  rememberCornerCategory(corner.slug, category?.slug);
   // "90 min · At home · Good with a friend": the length and place, and a note when it suits company.
   const together = cornerGuide(corner.spaceSlug, corner.slug)?.together;
   const metaLine = [corner.meta, together && together !== "solo" ? "Good with a friend" : ""].filter(Boolean).join(" · ");
@@ -417,9 +422,8 @@ function CornerBody({ corner, onRoom }: { corner: CornerModel; onRoom?: () => vo
           <div className="bg-hero-fade pointer-events-none absolute inset-0" aria-hidden="true" />
         </div>
         <div className={`${PAGE_X} relative flex flex-1 flex-col pb-5 pt-3`}>
-          <Link to={category ? `/browse/${category.slug}` : "/corners"} className="inline-flex min-h-11 items-center self-start text-small hover:underline">
-            {category ? `← ${category.name}` : "← Corners"}
-          </Link>
+          {/* The shell's chevron floats here; the group is a link in the meta line below. */}
+          <div className="min-h-11" aria-hidden="true" />
           <div className="mt-auto flex flex-col items-start gap-1">
             <h1 className="max-w-2xl text-display">
               {corner.name}
