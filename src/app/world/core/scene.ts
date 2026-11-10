@@ -1,7 +1,7 @@
 import * as T from "three";
 import type { CornerWorldConfig } from "../config";
 import { pieceSpec, moodForHour, type RoomPlan, type Spot } from "../layout";
-import { buildCast } from "../characters";
+import { buildCast } from "../characters/index";
 import { makePiece, pieceHeight } from "../pieces";
 import { SETTINGS } from "../settings";
 import type { Setting } from "../settings/types";

@@ -209,3 +209,18 @@ describe("what ships", () => {
     expect(pkg.dependencies.three).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
+
+describe("the old paths", () => {
+  // The page backdrop patch (built before the room became an engine) imports these four from the room's old paths.
+  it("still export what the backdrop patch imports", async () => {
+    const [kit, characters, moods, layout] = await Promise.all([import("./kit"), import("./characters"), import("./moods"), import("./layout")]);
+    for (const name of ["PI", "at", "box", "cyl", "sph", "mat", "mesh", "glow", "canvasTex", "css", "disposeTree"]) expect(kit, name).toHaveProperty(name);
+    expect(typeof characters.buildPerson).toBe("function");
+    expect(typeof characters.buildCat).toBe("function");
+    expect(typeof moods.moodState).toBe("function");
+    expect(typeof moods.easeMood).toBe("function");
+    expect(Object.keys(moods.MOODS).sort()).toEqual(["golden", "morning", "night"]);
+    expect(typeof layout.rng).toBe("function");
+    expect(layout.rng(42)()).toBe(layout.rng(42)());
+  });
+});
