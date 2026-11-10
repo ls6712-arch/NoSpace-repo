@@ -22,28 +22,30 @@ export interface Cast {
   update(t: number, dt: number, k: number, state: ActionState, hooks: ActionHooks): void;
 }
 
-export function buildCast(scene: T.Scene, config: CornerWorldConfig, props: SettingProps): Cast {
+export function buildCast(scene: T.Scene, config: CornerWorldConfig, props: SettingProps, reducedMotion: boolean): Cast {
   const characters: Cast["characters"] = [];
   const lines: Record<string, readonly string[]> = {};
   const updates: ActionUpdate[] = [];
 
-  for (const c of config.characters) {
+  config.characters.forEach((c, i) => {
     const rig = buildPerson(c.name, {
-      seated: c.pose === "seated",
+      pose: c.pose,
       skin: c.look.skin,
       shirt: c.look.shirt,
       pants: c.look.pants,
       apron: c.look.apron,
       hair: c.look.hair,
       bun: c.look.bun,
+      glasses: c.look.glasses,
     });
     at(rig.root, c.at[0], 0, c.at[1]);
     rig.root.rotation.y = c.rot;
     scene.add(rig.root);
     characters.push({ name: c.name, anchor: rig.head, lift: 0.42 });
     lines[c.name] = c.lines;
-    updates.push(ACTIONS[c.action](rig, c, props));
-  }
+    // Each character runs its loop a little out of step with the others.
+    updates.push(ACTIONS[c.action](rig, c, props, { scene, phase: i * 2.3, reducedMotion, cast: config.characters }));
+  });
 
   const pet = config.pet;
   if (pet) {

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { GLAZES, POT_SHAPES, ROOM_LIMITS, moodForHour, pieceSpec, planRoom, type RoomMoment } from "./layout";
 import { WORLD_COPY, cornerWorld, opensAsRoom, signLine } from "./cornerWorlds";
 import { pottery } from "./corners/pottery";
@@ -207,6 +207,58 @@ describe("what ships", () => {
   it("pins three to an exact version", () => {
     const pkg = JSON.parse(fs.readFileSync(path.resolve(dir, "../../../package.json"), "utf8"));
     expect(pkg.dependencies.three).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+describe("sound", () => {
+  it("makes nothing until the person enters, and nothing at all with Sound off", async () => {
+    const { createSound } = await import("./sound");
+    const made = vi.fn();
+    // A stand-in for the browser: the test only counts how many audio contexts get made.
+    vi.stubGlobal("window", {
+      AudioContext: function AudioContext() {
+        made();
+        throw new Error("stop here");
+      },
+    });
+    try {
+      // Every bed asked for. Building the sound makes no audio.
+      const quiet = createSound({ sound: false, music: true, mood: "golden", beds: ["wheel", "birds", "wind", "fire", "clock", "cafe"] });
+      expect(made).not.toHaveBeenCalled();
+      // Entering with Sound off still makes none: no bed can play.
+      quiet.start();
+      quiet.pour(true);
+      quiet.dig(0);
+      expect(made).not.toHaveBeenCalled();
+      // Entering with Sound on is the one thing that starts audio.
+      const loud = createSound({ sound: true, music: true, mood: "golden", beds: ["birds"] });
+      expect(made).not.toHaveBeenCalled();
+      expect(() => loud.start()).toThrow("stop here");
+      expect(made).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("starts every bed inside start(), behind the Sound setting", () => {
+    const text = fs.readFileSync(path.join(__dirname, "sound/index.ts"), "utf8");
+    const start = text.indexOf("    start() {");
+    const guard = text.indexOf("if (!soundOn) return;", start);
+    expect(start).toBeGreaterThan(-1);
+    expect(guard).toBeGreaterThan(start);
+    // Each looping bed is created after that guard; the scheduled ones run only while the audio is running.
+    for (const bed of ["wheel", "wind", "fire", "cafe"]) expect(text.indexOf(`if (beds.includes("${bed}")) `, guard) > guard || text.indexOf(`if (initial.beds.includes("${bed}")) `, guard) > guard, bed).toBe(true);
+    const schedule = text.slice(text.indexOf("const schedule = () => {"), start);
+    expect(schedule).toContain('if (!c || c.state !== "running") return;');
+    for (const bed of ["birds", "fire", "clock", "cafe"]) expect(schedule, bed).toContain(`beds.includes("${bed}")`);
+  });
+});
+
+describe("the preview harness", () => {
+  it("has none of the prototype's example people, Walls, threads or chat in its fixtures", () => {
+    const text = fs.readFileSync(path.resolve(__dirname, "../../../scripts/e2e/room-preview/main.ts"), "utf8");
+    for (const name of ["Maya", "Alex", "Priya", "Jordan", "Ines", "Jun", "Sam"]) expect(text).not.toMatch(new RegExp(`\\b${name}\\b`));
+    expect(text).not.toMatch(/\b(wall|edges|chat)\s*:/);
   });
 });
 

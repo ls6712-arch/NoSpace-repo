@@ -2,9 +2,9 @@ import type { SoundBed } from "../config";
 import type { MoodName } from "../core/moods";
 
 /**
- * The room's sound, all made in the browser: a low room tone, the wheel's
- * hum, rain at night, birds in the morning, a slow four-chord loop, and small
- * effects (wet clay, a thud, a purr). No audio files.
+ * The room's sound, all made in the browser: a low room tone, rain at night, birds in the morning, a slow
+ * four-chord loop, small effects (wet clay, a thud, a purr, a trowel, a page, dice), and the background beds
+ * a Corner's config asks for (the wheel's hum, birds, wind, a fire, a clock, a café). No audio files.
  *
  * Nothing plays until `start()` is called, and that only happens from a tap
  * (browsers refuse sound before one). It goes quiet when the tab is hidden.
@@ -21,6 +21,16 @@ export interface Sound {
   squish(pan: number, volume: number): void;
   thud(): void;
   purr(): void;
+  /** A trowel in soil. */
+  dig(pan: number): void;
+  /** A page turning. */
+  page(pan: number): void;
+  /** Dice landing on a table. */
+  dice(pan: number): void;
+  /** A game piece put down. */
+  clack(pan: number): void;
+  /** Water pouring from a can, on or off. */
+  pour(on: boolean): void;
   dispose(): void;
 }
 
@@ -35,6 +45,11 @@ export function createSound(initial: { sound: boolean; music: boolean; mood: Moo
   let sfx: GainNode;
   let amb: GainNode;
   let rainG: GainNode;
+  let pourG: GainNode | undefined;
+  const beds = initial.beds;
+  let nextCrack = 0;
+  let nextTick = 0;
+  let nextClink = 0;
   let delay: DelayNode;
   let white: AudioBuffer;
   let brown: AudioBuffer;
@@ -183,6 +198,24 @@ export function createSound(initial: { sound: boolean; music: boolean; mood: Moo
       o.stop(st + 0.15);
     }
   };
+  /** A short burst of filtered noise: the body of most small effects. */
+  const hit = (c: AudioContext, t: number, dest: AudioNode, type: BiquadFilterType, f: number, q: number, peak: number, dur: number, pan = 0) => {
+    const src = c.createBufferSource();
+    const b = c.createBiquadFilter();
+    const g = c.createGain();
+    src.buffer = white;
+    b.type = type;
+    b.frequency.value = f;
+    if (q) b.Q.value = q;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(b);
+    b.connect(g);
+    panTo(c, g, pan, dest);
+    src.start(t, Math.random() * 2, dur + 0.02);
+    return b;
+  };
   const schedule = () => {
     const c = ctx;
     if (!c || c.state !== "running") return;
@@ -199,9 +232,40 @@ export function createSound(initial: { sound: boolean; music: boolean; mood: Moo
       chord++;
       next += 4;
     }
-    if (mood === "morning" && c.currentTime > nextBird) {
+    const now = c.currentTime;
+    // Birds sing in the morning everywhere, and all day (never at night) where the config asks for them.
+    const birds = beds.includes("birds");
+    if ((birds ? mood !== "night" : mood === "morning") && now > nextBird) {
       bird(c);
-      nextBird = c.currentTime + 2 + Math.random() * 5;
+      nextBird = now + (birds ? 1.5 + Math.random() * 4 : 2 + Math.random() * 5);
+    }
+    if (beds.includes("fire") && now > nextCrack) {
+      for (let i = 0; i < 1 + Math.random() * 3; i++) hit(c, now + Math.random() * 0.3, amb, "bandpass", 1800 + Math.random() * 2500, 2, 0.05 + Math.random() * 0.08, 0.02 + Math.random() * 0.03, 0.6);
+      nextCrack = now + 0.2 + Math.random() * 0.9;
+    }
+    if (beds.includes("clock") && now > nextTick) {
+      const t = Math.ceil(now);
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.frequency.value = t % 2 ? 2200 : 1900;
+      env(g, t, 0.002, 0.012, 0.04);
+      o.connect(g);
+      panTo(c, g, -0.3, amb);
+      o.start(t);
+      o.stop(t + 0.06);
+      nextTick = t + 0.5;
+    }
+    if (beds.includes("cafe") && now > nextClink) {
+      const t = now + 0.05;
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.frequency.value = 2600 + Math.random() * 900;
+      env(g, t, 0.002, 0.03, 0.35);
+      o.connect(g);
+      panTo(c, g, Math.random() - 0.5, amb);
+      o.start(t);
+      o.stop(t + 0.4);
+      nextClink = now + 4 + Math.random() * 6;
     }
   };
 
@@ -285,6 +349,26 @@ export function createSound(initial: { sound: boolean; music: boolean; mood: Moo
         wob.start();
         loopNoise(c, white, [["bandpass", 950, 0.9]], 0.01, amb, 0.35);
       }
+      const lfo = (param: AudioParam, rate: number, depth: number) => {
+        const o = c.createOscillator();
+        const g = c.createGain();
+        o.frequency.value = rate;
+        g.gain.value = depth;
+        o.connect(g);
+        g.connect(param);
+        o.start();
+      };
+      // Wind: a soft band of noise that rises and falls.
+      if (beds.includes("wind")) lfo(loopNoise(c, brown, [["bandpass", 520, 0.6]], 0.06, amb, -0.6).gain, 0.07, 0.04);
+      // Fire: a low roar. The crackles are scheduled.
+      if (beds.includes("fire")) loopNoise(c, brown, [["lowpass", 140]], 0.16, amb, 0.6);
+      // Café: a murmur and a little clatter. The clinks are scheduled.
+      if (beds.includes("cafe")) {
+        lfo(loopNoise(c, brown, [["bandpass", 620, 0.8]], 0.09, amb).gain, 0.23, 0.035);
+        lfo(loopNoise(c, white, [["bandpass", 1400, 1.4]], 0.006, amb, 0.3).gain, 0.37, 0.004);
+      }
+      // Pouring water: silent until a watering can is tipped.
+      pourG = loopNoise(c, white, [["bandpass", 1300, 0.7], ["lowpass", 3500]], 0, sfx, 0.45);
       rainG = loopNoise(c, white, [["highpass", 700], ["lowpass", 6000]], mood === "night" ? 0.18 : 0, amb, -0.5);
       delay = c.createDelay(1.5);
       delay.delayTime.value = 0.375;
@@ -332,6 +416,44 @@ export function createSound(initial: { sound: boolean; music: boolean; mood: Moo
       o.start(t);
       o.stop(t + 0.4);
       squish(0.35, 0.35);
+    },
+    dig(pan) {
+      const c = ctx;
+      if (!c || c.state !== "running") return;
+      const t = c.currentTime;
+      hit(c, t, sfx, "bandpass", 1500, 0.8, 0.22, 0.16, pan);
+      hit(c, t + 0.05, sfx, "lowpass", 900, 0, 0.15, 0.2, pan);
+    },
+    page(pan) {
+      const c = ctx;
+      if (!c || c.state !== "running") return;
+      const t = c.currentTime;
+      const b = hit(c, t, sfx, "bandpass", 5000, 1.2, 0.09, 0.38, pan);
+      b.frequency.setValueAtTime(5200, t);
+      b.frequency.exponentialRampToValueAtTime(1600, t + 0.35);
+    },
+    dice(pan) {
+      const c = ctx;
+      if (!c || c.state !== "running") return;
+      const t = c.currentTime;
+      [0, 0.07, 0.13, 0.2, 0.27, 0.38, 0.46].forEach((d, i) => hit(c, t + d, sfx, "bandpass", 2600 + Math.random() * 900, 3, 0.28 * Math.pow(0.72, i), 0.02, pan));
+    },
+    clack(pan) {
+      const c = ctx;
+      if (!c || c.state !== "running") return;
+      const t = c.currentTime;
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.frequency.value = 720;
+      env(g, t, 0.002, 0.12, 0.09);
+      o.connect(g);
+      panTo(c, g, pan, sfx);
+      o.start(t);
+      o.stop(t + 0.12);
+      hit(c, t, sfx, "bandpass", 3000, 2, 0.1, 0.02, pan);
+    },
+    pour(on) {
+      if (ctx && pourG) pourG.gain.setTargetAtTime(on ? 0.13 : 0, ctx.currentTime, 0.15);
     },
     purr() {
       const c = ctx;

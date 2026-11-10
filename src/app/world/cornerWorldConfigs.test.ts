@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import { ACTION_NAMES, PIECE_KINDS, SETTING_NAMES, checkConfig, type CornerWorldConfig } from "./config";
 import { CORNER_WORLDS } from "./corners";
 import { ACTIONS } from "./characters/actions";
-import { MADE_KINDS } from "./pieces";
+import { MADE_KINDS, pieceHeight } from "./pieces";
+import { GLIDE_SECONDS, START_POSES, firstPose, glidePose, glides, settledPose } from "./core/poses";
+import { THEMES } from "./core/themes";
+import { pieceSpec } from "./layout";
 import { SETTINGS } from "./settings";
 import { cornerWorld } from "./cornerWorlds";
 import { hobbies } from "../data/hobbies";
@@ -70,6 +73,87 @@ describe("the engine can build everything a config may ask for", () => {
   });
 });
 
+describe("every setting", () => {
+  it("has a theme and a camera start pose", () => {
+    expect(Object.keys(THEMES).sort()).toEqual([...SETTING_NAMES].sort());
+    expect(Object.keys(START_POSES).sort()).toEqual([...SETTING_NAMES].sort());
+  });
+
+  it("keeps the studio's look and start pose as they were", () => {
+    expect(THEMES.studio).toMatchObject({ open: false, floor: "wood", floorTint: 0xffffff, wallLeft: 0xead8bf, trim: 0x5a3b26, frame: 0x3f5a4c, shelf: 0x9b7a62, win: [-1.7, 0.7, 1.2, 3.2], tall: false, bright: 1 });
+    expect(THEMES.studio.wallBack).toEqual({ kind: "plaster", color: 0xe6d2b8 });
+    expect(START_POSES.studio).toEqual({ look: [0.1, 1.0, -0.3], yaw: 0.42, pitch: 0.3, radius: 7.4, radiusPhone: 9.6 });
+  });
+
+  it("only the garden is open, and its camera starts further left and further back to take the garden in", () => {
+    expect(SETTING_NAMES.filter((s) => THEMES[s].open)).toEqual(["garden"]);
+    expect(START_POSES.garden.look[0]).toBeLessThan(START_POSES.studio.look[0]);
+    expect(START_POSES.garden.radius).toBeGreaterThan(START_POSES.studio.radius);
+    expect(START_POSES.nook).toEqual(START_POSES.studio);
+    expect(START_POSES.cafe).toEqual(START_POSES.studio);
+  });
+});
+
+describe("the garden on a phone", () => {
+  const phone = { phone: true, reducedMotion: false };
+  it("starts on the garden outside, and ends at the walls", () => {
+    const first = firstPose("garden", phone);
+    const end = settledPose("garden", true);
+    expect(first).toEqual(START_POSES.garden.arrivePhone);
+    // Outside is to the left of the room's left wall (x = -4.7).
+    expect(first.look[0]).toBeLessThan(-4.7);
+    expect(end.look[0]).toBeGreaterThan(-4.7);
+    // It ends on the walls framed exactly as a phone frames them in every other room, so the rack and signs are in view.
+    expect(end).toEqual(settledPose("studio", true));
+    expect(glides("garden", phone)).toBe(true);
+    expect(glidePose(first, end, 0)).toEqual(first);
+    expect(glidePose(first, end, 1)).toEqual(end);
+    expect(glidePose(first, end, 7)).toEqual(end);
+    const mid = glidePose(first, end, 0.5);
+    expect(mid.look[0]).toBeGreaterThan(first.look[0]);
+    expect(mid.look[0]).toBeLessThan(end.look[0]);
+    expect(GLIDE_SECONDS).toBe(2);
+  });
+
+  it("with reduced motion starts at the walls and does not glide", () => {
+    const calm = { phone: true, reducedMotion: true };
+    expect(firstPose("garden", calm)).toEqual(settledPose("garden", true));
+    expect(glides("garden", calm)).toBe(false);
+  });
+
+  it("is the only glide: a wide screen, and every other setting, start where they stay", () => {
+    expect(glides("garden", { phone: false, reducedMotion: false })).toBe(false);
+    expect(firstPose("garden", { phone: false, reducedMotion: false })).toEqual(settledPose("garden", false));
+    for (const s of SETTING_NAMES.filter((x) => x !== "garden")) {
+      expect(glides(s, phone), s).toBe(false);
+      expect(firstPose(s, phone), s).toEqual(settledPose(s, true));
+    }
+  });
+
+  it("stops the glide the moment the screen is touched, and takes every pose from the one constants file", () => {
+    const scene = fs.readFileSync(path.join(__dirname, "core/scene.ts"), "utf8");
+    expect(scene).toMatch(/const onDown = \(e: PointerEvent\) => \{\n\s+gliding = false;/);
+    // The engine has no camera numbers of its own: the start comes from firstPose and the end from settledPose.
+    expect(scene).toContain("const first = firstPose(config.setting, { phone, reducedMotion });");
+    expect(scene).toContain("const settled = settledPose(config.setting, phone);");
+    expect(scene).not.toMatch(/let yaw = [0-9.]+;|let radius = [0-9.]+;|new T\.Vector3\(0\.1, 1\.0, -0\.3\)/);
+  });
+});
+
+describe("every kind of piece", () => {
+  it("stands taller finished than in progress, and under the shelf above it", () => {
+    const spec = pieceSpec(4821);
+    for (const kind of PIECE_KINDS) {
+      const still = pieceHeight(kind, spec, false);
+      const made = pieceHeight(kind, spec, true);
+      expect(still, kind).toBeGreaterThan(0);
+      expect(made, kind).toBeGreaterThanOrEqual(still);
+      // The tallest piece at its largest (1.1) still fits the 0.6 of headroom on a shelf.
+      expect(made * 1.1, kind).toBeLessThan(0.6);
+    }
+  });
+});
+
 describe("the checks", () => {
   const broken = (change: (c: Loose) => void) => {
     const c = clone(pottery);
@@ -87,6 +171,12 @@ describe("the checks", () => {
     expect(broken((c) => (c.pieceKind = "sock"))).toContain("pieceKind must be one of");
     expect(broken((c) => (c.characters[0].action = "juggle"))).toContain("action must be one of");
     expect(broken((c) => (c.characters[0].pose = "flying"))).toContain("pose must be seated, standing or kneel");
+  });
+
+  it("refuse an action in a setting that lacks what it needs", () => {
+    expect(broken((c) => (c.characters[0].action = "dice"))).toContain('action "dice" only works in the cafe setting');
+    expect(broken((c) => (c.characters[0].action = "move"))).toContain('action "move" only works in the cafe setting');
+    expect(broken((c) => { c.setting = "garden"; })).toContain('action "wheel" only works in the studio setting');
   });
 
   it("refuse a station that points at nobody in the room", () => {

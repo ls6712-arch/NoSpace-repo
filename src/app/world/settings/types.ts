@@ -1,4 +1,5 @@
 import type * as T from "three";
+import type { PieceKind } from "../config";
 import type { Spot } from "../layout";
 import type { MoodState } from "../core/moods";
 import type { Room } from "../core/room";
@@ -28,10 +29,13 @@ export interface Setting {
 export interface SettingProps {
   /** The lump of clay on the wheel, which the wheel action raises and collapses. */
   wheelPot?: T.Mesh;
-  /** The block of clay on the bench, which the press action squashes. */
+  /** What is pressed on the bench: a block of clay, a mound of soil. The press action squashes it. */
   wedgeClay?: T.Mesh;
   /** The pot on the glaze table, which the glaze action turns. */
   glazingPot?: T.Mesh;
+  /** The café table: its two dice, the pawn that moves, and the middle of the board. */
+  table?: { dice: T.Mesh[]; pawn: T.Group; board: T.Vector3 };
 }
 
-export type SettingBuilder = (scene: T.Scene, room: Room, labels: Record<Spot, string>) => Setting;
+/** `kind` is the Corner's kind of piece, which is what the room's own shelves are stocked with. */
+export type SettingBuilder = (scene: T.Scene, room: Room, labels: Record<Spot, string>, kind: PieceKind) => Setting;

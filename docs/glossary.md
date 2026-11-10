@@ -1519,7 +1519,7 @@ The room reuses, unchanged, the approved Corner walls strings (Walls, Still maki
 | Character | The tag on anything a potter or the cat says | Merged Nov 10 |
 | Time of day | Screen reader name of the four choices below | Merged Nov 10 |
 | Morning / Golden hour / Night rain / My clock | The light in the room. My clock follows the viewer's own hour and is the default | Merged Nov 10 |
-| Sound on / Sound off | Top bar | Merged Nov 10 |
+| Sound on / Sound off | Top bar, and (founder, Nov 10, 2026) a small button on the entry screen beside "Best with sound on. Drag to look around.", so sound can be turned off before going in. One setting: the two buttons always agree. Nothing plays before Enter either way | Merged Nov 10 |
 | Music on / Music off | Top bar | Merged Nov 10 |
 | The Pottery Corner as a 3D room. Drag to look around. Everything in it is also in the Walls panel. | Screen reader description of the canvas | Changed Nov 10, proposed |
 
