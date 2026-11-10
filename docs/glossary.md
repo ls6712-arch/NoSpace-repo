@@ -387,7 +387,7 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Activity / Pick one | Retired (Nov 2, 2026). The Corner is now a chip in Counts toward (see Log a Moment: punch cards) |
 | Counts toward / Nothing | Retired as a row (Nov 2, 2026). Counts toward is now the optional chip row; the sheet behind its More keeps the title Counts toward |
 | With | Row listing the other people in the chosen Pursuit. Read only. Hidden when it is a Pursuit for one |
-| Details / Add | Row for tags, "This is something happening" and Where |
+| Details / Add | Retired (Nov 9, 2026). Tags are gone from Log; "This is something happening" and Where moved to the Something happening row |
 | Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Followers, Everyone, Only you. The same four words are used on every screen |
 | People in your Pursuit can see this. / People who follow you can see this. / Anyone can find this in {Corner}. / Only you can see this. | The line under the picker |
 | Post / Keep it private | The one fixed button. Every row above it is optional with a default, so a photo posts in one tap. It reads Keep it private when Only you is picked |
@@ -662,8 +662,13 @@ New, for approval. Logging has no required step: tap Log, then Post. What a Mome
 
 | Term | Meaning |
 |---|---|
-| Counts toward · Optional | Label over the chip row on Log: up to 2 Pursuits (with a flag) then up to 3 Corners. Tapping the chip that is on clears it |
-| More | Last chip-row link: opens the Counts toward sheet (Pursuit, then Corner) |
+| Counts toward · Optional / More | Retired on Log (Nov 9, 2026): replaced by the Corner row. Still used on Posted (below) |
+| Corner / Add | Row on Log a Moment: where the Moment goes. Shows the picked Pursuit (with a flag) or Corner, else Add. Opens Add to a Corner. New, for approval |
+| Add to a Corner | Full-height sheet behind the Corner row: a search box, then Your Pursuits, Your Corners and All Corners as one scrolling list. A tap picks and closes. New, for approval |
+| Search Corners | Placeholder and label of its search box. New, for approval |
+| Your Pursuits / Your Corners / All Corners / Corners | Section headings in Add to a Corner ("Corners" while searching). New, for approval |
+| No Corner matches that. | Add to a Corner when a search finds nothing. New, for approval |
+| Something happening / Add / Added | Row on Log a Moment for an Activity (a time, and optionally a place, that people can join). A place is saved only for an Activity. New, for approval |
 | New: {title} | Replaces More while a new Pursuit is being named in that sheet |
 | Optional. A Pursuit, a Corner, or both. / Pursuit / Corner | The sheet's description and its two headings |
 | This makes {n} of {N} days in {Corner} | Line under the chips, with the holes, when the Moment would punch a Corner's card |

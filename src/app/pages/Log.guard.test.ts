@@ -19,10 +19,11 @@ describe("Log does not write exact place or time for Moments", () => {
     expect(code(log)).not.toMatch(/\blocation_name\b|\bstarts_at\b|set_post_private|setPostPrivate|\bplace_name\b|\boccurred_at\b/);
   });
 
-  it("passes a start time only for an Activity, and one place field", () => {
+  it("passes a start time and a place only for an Activity", () => {
     expect(log.match(/startsAt: isActivity && startsAt \?/g)).toHaveLength(1);
     expect(log.match(/startsAt:/g)).toHaveLength(1);
-    expect(log.match(/locationName: locationName\.trim\(\) \? locationName\.trim\(\) : undefined/g)).toHaveLength(1);
+    expect(log.match(/locationName: isActivity && locationName\.trim\(\) \? locationName\.trim\(\) : undefined/g)).toHaveLength(1);
+    expect(log.match(/locationName:/g)).toHaveLength(1);
   });
 
   it("keeps the pointer to the ticket next to that line", () => {
