@@ -1489,3 +1489,37 @@ On a Corner's page, a section of things to do from `data/corner_activities.csv` 
 
 In the composer, from "Try this": a small block above the thought shows the activity's title and its Moment prompt (content, no new label). The Moment saves the activity (`posts.activity_id`) and earns the normal Stub.
 
+
+## Corner world: Pottery (brief of Nov 10, 2026; proposed, waiting for the founder's approval)
+
+The Pottery Corner has a 3D studio, reached from its Corner page. It shows the same walls as the Corner page: Still making is the drying rack, Made it is the shelves, and your own pieces are Your shelf. Every piece is a real Moment. The potters and the cat are characters, tagged "Character" wherever they speak, and are never counted or listed with people. No member or follower counts; a sign counts pieces.
+
+Every string below is new and is **not approved yet**. The world reuses, unchanged, the approved Corner walls strings (Walls, Still making, Made it, their two lines, Make your version, You started yours., Passed along, You?, Love this, Count me in, Log a Moment) and the Corner chat strings (Chat, Message the Corner).
+
+| String | Where |
+|---|---|
+| Enter the studio | The button on the Pottery Corner page, beside Follow, for members. Also the button on the world's entry screen |
+| The Pottery studio | Entry screen heading |
+| The wheel is spinning and three potters are at work. Come make something, finished or not. | Entry screen line. The brief's "Golden hour." and "the drying rack is full" are left out: the room opens at the viewer's own time of day, and the rack holds only real Moments, so either could be untrue |
+| Best with sound on. Drag to look around. | Under the entry button |
+| Leave the studio | The way back to the Corner page |
+| Your shelf | The viewer's own pieces: a sign in the room, a wooden tag on the shelf and a section of the panel |
+| {N} in progress | Under the Still making sign: how many Moments are on that wall. Not shown when the wall has more than the room fetched |
+| {N} finished | Under the Made it sign, same rule |
+| {N} piece / {N} pieces | Under the Your shelf sign and beside its heading, through `plural()` |
+| Empty for now | Under the Your shelf sign when the viewer has no Moments in the Corner |
+| Nothing yet. Log a Moment and your piece appears in the studio: on the drying rack while you're still making it, on your shelf once it's done. | Your shelf, when empty |
+| Finished pieces sit on your shelf. Pieces in progress dry on the rack. | Your shelf, when it has pieces |
+| Tap a sign to see who's still making, who made it, and your own shelf. | The one-time hint under the first sign |
+| Got it | Closes the hint |
+| Character | The tag on anything a potter or the cat says |
+| Time of day | Screen reader name of the four choices below |
+| Morning / Golden hour / Night rain / My clock | The light in the room. My clock follows the viewer's own hour and is the default |
+| Sound on / Sound off | Top bar |
+| Music on / Music off | Top bar |
+| The studio can't open on this device, so here is the Corner page. | Shown on the Corner page when the browser cannot draw the room |
+| A pottery studio in 3D. Drag to look around. Everything in it is also in the Walls panel. | Screen reader description of the canvas |
+
+What the characters say (each shown with the Character tag). Meera: "Oh hi! Grab a stool, the wheel's warm." / "Centre first. Everything else follows." / "Slow hands, fast wheel." / "Wet your hands again. Trust me." / "Ha. Collapsed. Again! Third time today." Arjun: "Wedge out the air bubbles first." / "Mine looked like a potato too. Keep going." / "You showed up. That's the hard part." Lena: "Nobody's first bowl is round." / "Glaze day is the best day." / "Dip, count to three, lift." Biscuit, the cat: "(Biscuit, the studio cat, is asleep. Purring.)"
+
+Wording from the brief that is **not used**, because an approved string already covers it: "Tear off · make your version" (Make your version), "I'm in" (Count me in), "Keep going" as a reaction (retired; see `docs/moment-card-and-reactions-spec.md`), "Half-done, messy, in progress. The good part." (Half-done, messy, in progress.), "{N} here now" (the Corner chat's own presence line, which names up to three people).
