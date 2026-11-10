@@ -47,7 +47,8 @@ Nothing about this is stored on a Moment. A Moment is on a Corner's finished wal
 2. **List it** in `corners/index.ts`. The Corner then opens as its room for members. Nothing else needs wiring.
 3. **Words.** Its wall labels must be the ones decided in `src/app/lib/cornerWallLabels.ts`. Every other new string, characters' lines included, goes in `docs/glossary.md` for approval.
 4. **Run `npm test`.** `cornerWorldConfigs.test.ts` runs `checkConfig` on every config: required fields, a known setting, piece kind and actions, an action only in a setting that has its prop, stations that point at real characters, a greeting said by a character, both walls named, no em or en dashes, and none of the prototype's example people, Walls, threads, chat or activities.
-5. **Posters and loops** come with the loading work (a later PR).
+5. **Its still picture.** Run `node scripts/e2e/room-preview.ts --cards`: it writes `public/worlds/<slug>/card.webp` (square, 800 by 800) and `card-wide.webp` (16:9, 960 by 540, for the cards on `/corners`) for every Corner listed in `corners/index.ts`: each under 80 kB, golden hour, the wide-screen start pose from `firstPose`, cut to the busiest part of the setting. A lamp-lit setting is brightened so it sits on a light page (`CARD_LIFT` in the script); look at the result beside a light page before committing it. Then add the Corner's key to the list in `src/app/lib/cornerPicture.ts`. That still is the Corner's picture on Home, on Discover and on `/corners`; `cornerPicture.test.ts` fails until the list and the files match the Corners that have a room.
+6. **Posters and loops** come with the loading work (a later PR).
 
 Never put a Corner's words or data in the engine, and never add `wall`, `edges`, `chat` or `activities` to a config: those were the prototype's example people. Walls, Passed along and chat always come from the database.
 
@@ -69,5 +70,6 @@ After any engine change, look at every room again. `node scripts/e2e/corner-room
 ## Checking it
 
 - `npm test` runs `src/app/world/world.test.ts` (placement, threads, determinism, no prototype examples, characters and Corner words kept out of the engine, three.js kept out of the main bundle) and `cornerWorldConfigs.test.ts` (every config against the rules above, and that a made-up fifth Corner needs only a config).
-- `node scripts/e2e/room-preview.ts` screenshots the settings on their own (see above).
+- `node scripts/e2e/room-preview.ts` screenshots the settings on their own (see above). With `--cards` it makes the still pictures instead.
+- `node scripts/e2e/corners-on-home.ts` opens Home, Discover and `/corners` on the production build with fixture data: the Corners row on Home, the stills on Corner cards, and that no 3D file is fetched on any of them. With `--before DIR` it also checks that everything that was on those pages is the same size and in the same place.
 - `node scripts/e2e/corner-world.ts` opens the production build in a real browser with fixture data: the Corner opening as its room, the scene arriving as its own file, signs, the panel, the chat tab, List and Room, and the no-WebGL fallback. It saves screenshots.

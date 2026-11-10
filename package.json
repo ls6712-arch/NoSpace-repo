@@ -24,6 +24,8 @@
     "e2e:corner-world": "node scripts/e2e/corner-world.ts",
     "e2e:corner-wall-question": "node scripts/e2e/corner-wall-question.ts",
     "e2e:room-preview": "node scripts/e2e/room-preview.ts",
+    "e2e:corner-cards": "node scripts/e2e/room-preview.ts --cards",
+    "e2e:corners-on-home": "node scripts/e2e/corners-on-home.ts",
     "e2e:corner-room-moods": "node scripts/e2e/corner-room-moods.ts",
     "e2e:discover-library": "node scripts/e2e/discover-library.ts",
     "test:pursuits:db": "node scripts/check-pursuit-workflow-db.mjs",
