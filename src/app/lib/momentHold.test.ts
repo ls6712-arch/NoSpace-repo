@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { withShareNow } from "./momentHold";
+import { MOMENT_HOLD_MS, withHold } from "./momentHold";
 
-describe("withShareNow", () => {
+describe("withHold", () => {
   const row = { caption: "hi", visibility: "public" };
-  it("leaves the row alone by default, so the 2 hour hold applies", () => {
-    expect(withShareNow(row, undefined)).toBe(row);
-    expect(withShareNow(row, false)).toBe(row);
-    expect("visible_at" in withShareNow(row, false)).toBe(false);
+  const now = Date.UTC(2026, 10, 9, 23, 0);
+  it("shows the Moment to others right away by default", () => {
+    expect(withHold(row, undefined, now)).toEqual({ ...row, visible_at: "2026-11-09T23:00:00.000Z" });
+    expect(withHold(row, false, now)).toEqual({ ...row, visible_at: "2026-11-09T23:00:00.000Z" });
   });
-  it("asks to be visible now when Share now is on", () => {
-    expect(withShareNow(row, true, Date.UTC(2026, 9, 30, 12))).toEqual({ ...row, visible_at: "2026-10-30T12:00:00.000Z" });
+  it("asks for 2 hours later when Post in 2 hours is on", () => {
+    expect(withHold(row, true, now)).toEqual({ ...row, visible_at: "2026-11-10T01:00:00.000Z" });
+    expect(MOMENT_HOLD_MS).toBe(2 * 60 * 60 * 1000);
   });
 });

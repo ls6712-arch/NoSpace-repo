@@ -1,4 +1,4 @@
-import { withShareNow } from "../lib/momentHold";
+import { withHold } from "../lib/momentHold";
 import {
   createContext,
   useContext,
@@ -74,8 +74,8 @@ export interface ForSaleInput {
 }
 
 export interface NewPostInput {
-  /** Release this Moment to others now instead of after the 2 hour hold. */
-  shareNow?: boolean;
+  /** "Post in 2 hours": keep this Moment to its owner for 2 hours. Off means others see it right away. */
+  postLater?: boolean;
   /** The Space, or "" when nothing was picked (saved with no Space). */
   hobbySlug: string;
   /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
@@ -767,8 +767,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       };
       // posts.audience only exists once its migration has run; without it the
       // Moment is saved with its visibility alone, as before.
-      // "Share now" asks for a visible_at at the moment of posting (see lib/momentHold.ts).
-      const held = withShareNow(row, input.shareNow);
+      // Visible to others right away, or 2 hours later with "Post in 2 hours" (see lib/momentHold.ts).
+      const held = withHold(row, input.postLater);
       // posts.city is the same: sent only when set, and dropped when its column is missing.
       const withAudience = input.audience ? { ...held, audience: input.audience } : held;
       const withCityShown = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;

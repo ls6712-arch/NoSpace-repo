@@ -2,6 +2,7 @@ import { recordStartAction } from "../lib/startActions";
 import { activityFromParams } from "../lib/cornerActivities";
 import { PaperStamp } from "../components/corners/MomentStamp";
 import { formatDate, formatMonth, formatTime } from "../lib/dates";
+import { MOMENT_HOLD_MS } from "../lib/momentHold";
 import { plural } from "../lib/plural";
 import { afterLog, cornerKey, fetchLogProgress, pursuitPunch, readyToFinish, regularPunch, REGULAR_DAYS, type LogProgress } from "../lib/punchCards";
 import { PunchHoles } from "../components/log/PunchCard";
@@ -72,9 +73,6 @@ import {
 } from "../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { TagsField } from "../components/TagsField";
-import { CornerTagField } from "../components/CornerTagField";
-import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
 import { page } from "../lib/motionTokens";
@@ -82,6 +80,7 @@ import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { BottomSheet } from "../components/ui/BottomSheet";
+import { CornerPickerSheet } from "../components/log/CornerPickerSheet";
 import { Switch } from "../components/ui/switch";
 import { PillButton } from "../components/ui/PillButton";
 import { Segmented } from "../components/ui/Segmented";
@@ -123,7 +122,6 @@ const AUDIENCE: {
 
 const THOUGHT_LIMIT = 300;
 /** posts.visible_at defaults to now() + 2 hours (20261030210601_profile_roles_and_planning.sql). */
-const MOMENT_HOLD_MS = 2 * 60 * 60 * 1000;
 const MAX_PHOTOS = 8;
 
 /**
@@ -388,8 +386,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // person picks Only you here.
   const initialAudience = (): Visibility | "private" => (defaultVisibilityLoaded && defaultVisibility === "public" ? "public" : "followers");
   const [audience, setAudience] = useState<Visibility | "private">(initialAudience);
-  // A Moment is held back from everyone else for 2 hours; this releases it at once.
-  const [shareNow, setShareNow] = useState(false);
+  // Others see a Moment right away; "Post in 2 hours" keeps it to its owner until then (safety: after you've left).
+  const [postLater, setPostLater] = useState(false);
   /** Posting to the Pursuit's group instead of to followers. Stored as visibility "just_me" with audience "group". */
   const [toGroup, setToGroup] = useState(false);
   // Sticks once the person (or a resumed draft, or "Reflect privately")
@@ -1067,7 +1065,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         city: circle === "private" || cityRemoved || !myCity.trim() ? null : myCity.trim(),
         // Taken off by the person: the database keeps no city key for this Moment either.
         cityHidden: cityRemoved || undefined,
-        shareNow: circle !== "private" && shareNow,
+        postLater: circle !== "private" && postLater,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
         // Made after seeing someone else's Moment (from the Start page). The database checks it.
@@ -1079,8 +1077,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         // do not add an exact place or time for a plain Moment until that ticket is done.
         // Log.guard.test.ts fails if this changes.
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
-        locationName: locationName.trim() ? locationName.trim() : undefined,
-        locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
+        // A place is saved only with "Something happening" (docs/tickets/posts-column-privacy.md).
+        locationName: isActivity && locationName.trim() ? locationName.trim() : undefined,
+        locationPrivacy: isActivity && locationName.trim() ? locationPrivacy : undefined,
         forSale: forSale
           ? {
               name: saleTitle.trim() || caption.slice(0, 40),
@@ -1224,7 +1223,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     audienceDecidedRef.current = false;
     setToGroup(false);
     setAudience(initialAudience());
-    setShareNow(false);
+    setPostLater(false);
   };
 
   const requiresLogin =
@@ -1676,7 +1675,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               : undefined
           }
           place={locationName.trim() || undefined}
-          holdLine={!shareNow && circle !== "private" && postedAt ? `They see it at ${formatTime(postedAt + MOMENT_HOLD_MS)}.` : undefined}
+          holdLine={postLater && circle !== "private" && postedAt ? `They see it at ${formatTime(postedAt + MOMENT_HOLD_MS)}.` : undefined}
           punch={postedPunch}
           choices={postedPunch || corner || projectId ? [] : postedChoices}
           choicesLine={postedHasMedia ? "One tap punches a day." : undefined}
@@ -1704,10 +1703,6 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       { value: "private" as const, label: "Only you" },
     ];
     const rowClass = "flex min-h-14 w-full items-center justify-between gap-3 rounded-card bg-card px-4 py-3 text-left";
-    const chipClass = (on: boolean) =>
-      `inline-flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-small ${
-        on ? "border-foreground bg-foreground font-semibold text-background" : "border-border bg-card font-medium text-foreground"
-      }`;
     return (
       <SheetShell bare={!!onboarding}>
         <header className="grid grid-cols-[1fr_auto_1fr] items-center py-3">
@@ -1826,42 +1821,39 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           )}
         </div>
 
-        <section aria-labelledby="counts-toward" className="mb-4 flex flex-col gap-2">
-          <h2 id="counts-toward" className="text-small text-muted-foreground">
-            Counts toward <span className="font-normal">· Optional</span>
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {pursuitOptions.map((p) => {
-              const on = projectId === p.id;
-              return (
-                <button key={`p-${p.id}`} type="button" aria-pressed={on} onClick={() => pickPursuit(p)} className={chipClass(on)}>
-                  {on ? <Check className="size-3.5 text-[var(--coral)]" aria-hidden="true" /> : <Flag className="size-3.5" aria-hidden="true" />}
-                  <span className="max-w-[12rem] truncate" title={p.title}>{p.title}</span>
-                </button>
-              );
-            })}
-            {cornerOptions.map((c) => {
-              const on = !projectId && corner === c.slug && hobbySlug === c.spaceSlug;
-              return (
-                <button key={`c-${c.spaceSlug}/${c.slug}`} type="button" aria-pressed={on} onClick={() => pickCorner(c)} className={chipClass(on)}>
-                  {on && <Check className="size-3.5 text-[var(--coral)]" aria-hidden="true" />}
-                  {c.name}
-                </button>
-              );
-            })}
-            <button type="button" onClick={() => setRowSheet("counts")} className="inline-flex min-h-11 items-center px-2 text-small font-semibold text-[var(--accent-text)]">
-              {projectTitle.trim() && !projectId ? `New: ${projectTitle.trim().slice(0, 30)}` : "More"}
-            </button>
-          </div>
+        <div className="mb-4 flex flex-col gap-2">
+          <button type="button" className={rowClass} onClick={() => setRowSheet("counts")}>
+            <span className="text-small text-muted-foreground">Corner</span>
+            <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
+              {selectedProject && <Flag className="size-3.5 shrink-0" aria-hidden="true" />}
+              <span className="truncate">{selectedProject?.title || (corner ? cornerLabel : "") || "Add"}</span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </span>
+          </button>
           {countsPreview && (
             <div className="flex items-center gap-3 rounded-card bg-card px-4 py-3" role="status">
               <PunchHoles size="sm" done={countsPreview.done} total={countsPreview.total} next={countsPreview.next} />
               <span className="text-small font-semibold">{countsPreview.text}</span>
             </div>
           )}
-        </section>
-
-        <div className="mb-4 flex flex-col gap-2">
+          {selectedMeasure && selectedProject && (
+            <SoftPanel>
+              <p className="text-small">How much did this move it forward?</p>
+              <div className="mt-3">
+                <AmountStepper
+                  value={amount}
+                  onChange={setAmount}
+                  step={stepFor(selectedMeasure)}
+                  unit={unitFor(selectedMeasure, amount)}
+                  allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
+                <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
+              </div>
+            </SoftPanel>
+          )}
           {withNames.length > 0 && (
             <div className={rowClass}>
               <span className="text-small text-muted-foreground">With</span>
@@ -1869,9 +1861,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </div>
           )}
           <button type="button" className={rowClass} onClick={() => setRowSheet("details")}>
-            <span className="text-small text-muted-foreground">Details</span>
+            <span className="text-small text-muted-foreground">Something happening</span>
             <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
-              <span className="truncate">{[tags[0], locationName.trim(), isActivity ? "Something happening" : ""].filter(Boolean).join(" · ") || "Add"}</span>
+              <span className="truncate">{isActivity ? "Added" : "Add"}</span>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </span>
           </button>
@@ -1905,12 +1897,14 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         {circle !== "private" && (
           <div className="mb-4 flex items-center justify-between gap-4 rounded-card bg-card px-4 py-3">
             <div>
-              <Label htmlFor="share-now" className="text-body font-semibold">Share now</Label>
-              <p id="share-now-help" className="text-caption text-muted-foreground">
-                {shareNow ? "Shows this Moment to others right away." : `Others see it at ${formatTime(Date.now() + MOMENT_HOLD_MS)}.`}
+              <Label htmlFor="post-later" className="text-body font-semibold">Post in 2 hours</Label>
+              <p id="post-later-help" className="text-caption text-muted-foreground">
+                {postLater
+                  ? `Others see it at ${formatTime(Date.now() + MOMENT_HOLD_MS)}, after you’ve left.`
+                  : "Still there? Turn this on so others see it after you’ve left."}
               </p>
             </div>
-            <Switch id="share-now" aria-describedby="share-now-help" checked={shareNow} onCheckedChange={setShareNow} />
+            <Switch id="post-later" aria-describedby="post-later-help" checked={postLater} onCheckedChange={setPostLater} />
           </div>
         )}
 
@@ -1928,97 +1922,23 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           </div>
         </div>
 
-        {/* Counts toward: the Pursuit, and how much it moves it forward. */}
-        <BottomSheet open={rowSheet === "counts"} onOpenChange={(o) => !o && setRowSheet(null)} title="Counts toward" description="Optional. A Pursuit, a Corner, or both.">
-          <div className="flex flex-col gap-4 pt-2">
-            <h3 className="text-small font-semibold">Pursuit</h3>
-            <PursuitField
-              projects={openProjects}
-              projectId={projectId}
-              projectTitle={projectTitle}
-              onSelectExisting={(id) => {
-                setProjectId(id);
-                setProjectTitle("");
-                const picked = journal.projects.find((p) => p.id === id);
-                // Choosing a Pursuit that has a Corner counts as picking that
-                // Corner, unless one was already picked on the Activity row.
-                if (picked?.subHobby && !corner) {
-                  setCorner(picked.subHobby);
-                  if (picked.hobbySlug) {
-                    setHobbySlug(picked.hobbySlug);
-                    setSpaceSet(true);
-                  }
-                }
-              }}
-              onCreateNew={(title) => {
-                setProjectTitle(title);
-                setProjectId("");
-              }}
-              onClear={() => {
-                setProjectId("");
-                setProjectTitle("");
-              }}
-            />
-            {selectedMeasure && selectedProject && (
-              <SoftPanel>
-                <p className="text-small">How much did this move it forward?</p>
-                <div className="mt-3">
-                  <AmountStepper
-                    value={amount}
-                    onChange={setAmount}
-                    step={stepFor(selectedMeasure)}
-                    unit={unitFor(selectedMeasure, amount)}
-                    allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
-                  />
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
-                  <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
-                </div>
-              </SoftPanel>
-            )}
-            <h3 className="mt-2 text-small font-semibold">Corner</h3>
-            <CornerTagField
-              spaceSlug={spaceSet ? hobbySlug : undefined}
-              value={corner}
-              onChange={(slug, _name, resolvedSpaceSlug) => {
-                setCorner(slug);
-                if (slug) {
-                  setHobbySlug(resolvedSpaceSlug);
-                  setSpaceSet(true);
-                } else if (!projectId && !hobbyParam) {
-                  setHobbySlug("");
-                  setSpaceSet(false);
-                }
-              }}
-            />
-          </div>
-        </BottomSheet>
+        {/* Where it goes: one scrolling list of your Pursuits and every Corner. */}
+        <CornerPickerSheet
+          open={rowSheet === "counts"}
+          onOpenChange={(o) => setRowSheet(o ? "counts" : null)}
+          pursuits={openProjects.filter((p) => !p.plan).map((p) => ({ id: p.id, title: p.title }))}
+          yourCorners={cornerOptions}
+          pickedPursuitId={projectId}
+          pickedCorner={corner && spaceSet ? `${hobbySlug}/${corner}` : ""}
+          onPickPursuit={(id) => {
+            const p = openProjects.find((x) => x.id === id);
+            if (p) pickPursuit(p);
+          }}
+          onPickCorner={pickCorner}
+        />
 
-        {/* Details: tags, something happening, and where. */}
-        <BottomSheet open={rowSheet === "details"} onOpenChange={(o) => !o && setRowSheet(null)} title="Details">
+        <BottomSheet open={rowSheet === "details"} onOpenChange={(o) => !o && setRowSheet(null)} title="Something happening">
           <div className="flex flex-col gap-6 pt-2">
-            <div>
-              <h2 className="mb-2 text-small">
-                <label htmlFor="tags">What is it about?</label>
-              </h2>
-              <TagsField
-                value={tags}
-                onChange={(next) => {
-                  setTags(next);
-                  for (const t of next) {
-                    const match = findSpaceForInterest(t);
-                    if (match) {
-                      setHobbySlug(match.hobbySlug);
-                      setSubHobby(match.slug);
-                      setSpaceSet(true);
-                      break;
-                    }
-                  }
-                }}
-              />
-            </div>
-
             <div className="rounded-card bg-card px-4 py-3.5">
               <button
                 type="button"
@@ -2035,36 +1955,37 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                 </span>
               </button>
               {isActivity && (
-                <div className="mt-4">
-                  <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
-                    When
-                  </Label>
-                  <Input id="startsAt" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-card bg-card px-4 py-3.5">
-              <Label htmlFor="place" className="mb-1.5 block text-caption">
-                Where (optional)
-              </Label>
-              <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. the park by your place" />
-              {locationName.trim() && (
-                <div className="mt-3">
-                  <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
-                  <Select value={locationPrivacy} onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOCATION_PRIVACY.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}: {o.copy}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="mt-1.5 text-caption text-muted-foreground">Neighborhood by default.</p>
+                <div className="mt-4 flex flex-col gap-4">
+                  <div>
+                    <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
+                      When
+                    </Label>
+                    <Input id="startsAt" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="place" className="mb-1.5 block text-caption">
+                      Where (optional)
+                    </Label>
+                    <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. the park by your place" />
+                    {locationName.trim() && (
+                      <div className="mt-3">
+                        <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
+                        <Select value={locationPrivacy} onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LOCATION_PRIVACY.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}: {o.copy}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="mt-1.5 text-caption text-muted-foreground">Neighborhood by default.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

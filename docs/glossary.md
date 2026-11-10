@@ -387,7 +387,7 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Activity / Pick one | Retired (Nov 2, 2026). The Corner is now a chip in Counts toward (see Log a Moment: punch cards) |
 | Counts toward / Nothing | Retired as a row (Nov 2, 2026). Counts toward is now the optional chip row; the sheet behind its More keeps the title Counts toward |
 | With | Row listing the other people in the chosen Pursuit. Read only. Hidden when it is a Pursuit for one |
-| Details / Add | Row for tags, "This is something happening" and Where |
+| Details / Add | Retired (Nov 9, 2026). Tags are gone from Log; "This is something happening" and Where moved to the Something happening row |
 | Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Followers, Everyone, Only you. The same four words are used on every screen |
 | People in your Pursuit can see this. / People who follow you can see this. / Anyone can find this in {Corner}. / Only you can see this. | The line under the picker |
 | Post / Keep it private | The one fixed button. Every row above it is optional with a default, so a photo posts in one tap. It reads Keep it private when Only you is picked |
@@ -638,21 +638,21 @@ The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string,
 | Add when you’re usually free to get plan suggestions. · Not now | One-time prompt on Your planning while no availability is set |
 | GIFs can’t be added here. Choose a photo. | Shown when a GIF is picked for a Moment. Moments take photos only, because video and GIF files carry GPS and creation time the app can’t strip |
 | Your Moments show up here. | Caption under the first-run Moments grid. **Changed Oct 30, 2026:** it used to continue "Friends see the day and neighborhood, never the exact time." That line is held back until exact times are really private (`docs/tickets/posts-column-privacy.md`), because the old columns can still be read directly. Restore it when that ticket ships |
-| Visible to others at 7:42 pm | Owner-only label on a Moment inside its 2 hour delay |
+| Visible to others at 7:42 pm | Owner-only label on a Moment held with Post in 2 hours |
 | This profile is private. | Shown to a stranger on a private profile, with the name, the level name and Follow |
 | Add your neighborhood and a short bio | The link on your profile while both are empty |
 | Private profile | Settings > Profile switch: people who don’t follow you see only your name and level |
 
-### The 2 hour hold on new Moments
+### Post in 2 hours (opt-in hold)
 
-New, for approval. A new Moment is visible only to its owner for 2 hours (everywhere in the app, not only on the profile), unless the owner shares it now.
+Changed Nov 9, 2026 (founder): a new Moment is visible to others right away, like every other social app. Holding it is opt-in: "Post in 2 hours" keeps it visible only to its owner (everywhere in the app) until 2 hours after posting, so a Moment taken somewhere you still are shows up after you have left. Replaces the default 2 hour hold and its "Share now" switch. New wording, for approval.
 
 | Term | Meaning |
 |---|---|
-| Share now | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment. Also the confirm button below |
-| Shows this Moment to others right away. | Helper text under Share now while it is on |
-| Others see it at {time}. | Helper text under Share now while it is off: when the hold ends (`formatTime`). New, for approval |
-| They see it at {time}. | Under the first line of Posted while the Moment is held. New, for approval |
+| Post in 2 hours | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment |
+| Still there? Turn this on so others see it after you’ve left. | Helper text under Post in 2 hours while it is off |
+| Others see it at {time}, after you’ve left. | Helper text under Post in 2 hours while it is on: when the hold ends (`formatTime`) |
+| They see it at {time}. | Under the first line of Posted while the Moment is held |
 | Share now? | Title of the confirm that appears when you send a still-held Moment into a chat, or add it to a Space (Add from my Moments) |
 | Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel, or a failed release, leaves the Moment held and shares nothing; Share now shows it to others, then sends it. A Space's hosts are told about an approval share only after the release |
 
@@ -662,8 +662,13 @@ New, for approval. Logging has no required step: tap Log, then Post. What a Mome
 
 | Term | Meaning |
 |---|---|
-| Counts toward · Optional | Label over the chip row on Log: up to 2 Pursuits (with a flag) then up to 3 Corners. Tapping the chip that is on clears it |
-| More | Last chip-row link: opens the Counts toward sheet (Pursuit, then Corner) |
+| Counts toward · Optional / More | Retired on Log (Nov 9, 2026): replaced by the Corner row. Still used on Posted (below) |
+| Corner / Add | Row on Log a Moment: where the Moment goes. Shows the picked Pursuit (with a flag) or Corner, else Add. Opens Add to a Corner. New, for approval |
+| Add to a Corner | Full-height sheet behind the Corner row: a search box, then Your Pursuits, Your Corners and All Corners as one scrolling list. A tap picks and closes. New, for approval |
+| Search Corners | Placeholder and label of its search box. New, for approval |
+| Your Pursuits / Your Corners / All Corners / Corners | Section headings in Add to a Corner ("Corners" while searching). New, for approval |
+| No Corner matches that. | Add to a Corner when a search finds nothing. New, for approval |
+| Something happening / Add / Added | Row on Log a Moment for an Activity (a time, and optionally a place, that people can join). A place is saved only for an Activity. New, for approval |
 | New: {title} | Replaces More while a new Pursuit is being named in that sheet |
 | Optional. A Pursuit, a Corner, or both. / Pursuit / Corner | The sheet's description and its two headings |
 | This makes {n} of {N} days in {Corner} | Line under the chips, with the holes, when the Moment would punch a Corner's card |
@@ -985,7 +990,7 @@ A Corner page shows what people are making, finished or not, and lets you start 
 | Finished things, with the Moments that got them here. | The line under the Made it heading |
 | Finished {date} | On a Made it card, with the date from `dates.ts` |
 | Make your version | The tear-off strip on a wall card (not on your own Moment). Starts your own Pursuit inspired by that Moment. Different from Count me in, which leads to doing it together |
-| You started yours. | Replaces the strip on the source card as soon as you start your own Pursuit because of that Moment. The hold of about 2 hours (the 2 hour hold on new Moments) only delays your own card appearing on Still making, once you post a Moment to it. Replaces "Yours is on Still making." (founder, Nov 8, 2026) |
+| You started yours. | Replaces the strip on the source card as soon as you start your own Pursuit because of that Moment. A Moment held with Post in 2 hours only delays your own card appearing on Still making, once you post a Moment to it. Replaces "Yours is on Still making." (founder, Nov 8, 2026) |
 | Finisher | On a Made it card, with the Stub icon, when the Pursuit's owner holds its Finisher Stub |
 | Started because of {Name} | On a card whose Pursuit started because of another person's Moment you may see, in the accent text colour at the small text size. Shown only when you can open that Moment |
 | {A} started because of this / {A} and {B} started because of this / {A}, {B} and others started because of this | On a card whose Moment other people started a Pursuit because of. Never a number |
