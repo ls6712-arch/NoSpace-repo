@@ -25,8 +25,9 @@ export const HOME_WALL_CARDS = 4;
 export const HOME_EVENTS = 6;
 
 /**
- * The Corners you follow (`space:slug` keys, or bare slugs from older follows),
- * resolved against the known Corners. With none, the Corners of the newest
+ * The Corners you follow (`<space-slug>:<corner-slug>` keys from cornerFollowKey, or bare
+ * Corner slugs from older follows), resolved against the known Corners. A follow of a whole
+ * Space (the literal key `space:<space-slug>`) is not a Corner and is left out. With none, the Corners of the newest
  * public Moments on Soosh, so Home is never empty for someone who has not
  * followed anything yet. `fallback` says which one it is.
  */
@@ -44,6 +45,8 @@ export function yourCorners(
     out.push(c);
   };
   for (const key of followed) {
+    // "space:<slug>" is a follow of a whole Space (BePart), not of a Corner, and an empty key is nothing.
+    if (!key || key.startsWith("space:")) continue;
     const [a, b] = key.includes(":") ? key.split(":") : [undefined, key];
     add(known.find((c) => c.slug === b && (!a || c.spaceSlug === a)) ?? (a && b ? { spaceSlug: a, slug: b, name: b } : undefined));
   }
