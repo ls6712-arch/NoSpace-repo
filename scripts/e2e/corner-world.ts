@@ -98,8 +98,22 @@ try {
     await page.waitForFunction(() => !document.querySelector<HTMLButtonElement>("[data-corner-world] h1 ~ button")?.disabled, null, { timeout: 20000 });
     assert(scripts.some((s) => /^scene-/.test(s)), "the 3D scene arrives as its own file once the world opens");
     assert.equal(await world.locator("canvas").count(), 1);
+    // Sound can be turned off before going in: one setting, shared with the button in the room.
+    const entrySound = world.locator("[data-entry-sound]");
+    assert.equal((await entrySound.innerText()).trim(), "Sound on");
+    assert.equal(await entrySound.getAttribute("aria-pressed"), "true");
+    await entrySound.click();
+    assert.equal((await entrySound.innerText()).trim(), "Sound off");
+    assert.equal(await entrySound.getAttribute("aria-pressed"), "false");
+    assert((await entrySound.boundingBox())!.height >= 44, "the entry sound button is at least 44px tall");
     await page.screenshot({ path: path.join(out, `${view.name}-entry.png`) });
     await enter.click();
+    // The room's own button shows the same choice from its first second, and turning it back on works there.
+    const roomSound = world.getByRole("button", { name: "Sound off", exact: true });
+    await roomSound.waitFor();
+    assert.equal(await world.locator("[data-entry-sound]").count(), 0);
+    await roomSound.click();
+    await world.getByRole("button", { name: "Sound on", exact: true }).waitFor();
 
     // Signs: counts of pieces, taken from the real walls. Never a count of people.
     const still = world.getByRole("button", { name: "Still making, 2 in progress", exact: true });

@@ -636,7 +636,20 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
             <PillButton onClick={enter} disabled={!ready}>
               {WORLD_COPY.enter}
             </PillButton>
-            <span className="text-caption text-muted-foreground">{WORLD_COPY.entryHint}</span>
+            {/* Sound can be turned off before going in. It is the same setting as the button in the room. */}
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+              <span className="text-caption text-muted-foreground">{WORLD_COPY.entryHint}</span>
+              <button
+                type="button"
+                data-entry-sound
+                aria-pressed={prefs.sound}
+                onClick={toggleSound}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card/70 px-3 text-caption font-semibold text-foreground hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {prefs.sound ? <Volume2 className="size-4" aria-hidden="true" /> : <VolumeX className="size-4" aria-hidden="true" />}
+                {prefs.sound ? WORLD_COPY.soundOn : WORLD_COPY.soundOff}
+              </button>
+            </div>
           </div>
         </div>
       )}
