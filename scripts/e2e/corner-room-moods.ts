@@ -1,7 +1,7 @@
 // A Corner's room in each light (Morning, Golden hour, Night rain), as screenshots, on the production build
 // with fixture Supabase responses. No live account or production data is used.
 //
-// Usage: node scripts/e2e/corner-room-moods.ts [--out DIR] [--dist DIR] [--corner pottery]
+// Usage: node scripts/e2e/corner-room-moods.ts [--out DIR] [--dist DIR] [--corner pottery] [--moods morning,golden,night] [--views desktop,phone]
 // Used to compare the room before and after a change to the engine: run it on both and look at the pairs.
 // Motion is reduced and every wait is counted in frames, so two runs differ only by where the characters are
 // in their loops.
@@ -68,11 +68,21 @@ const rpcReplies = {
   corner_passed_along: () => CHAIN,
 };
 const corner = arg("--corner") ?? "pottery";
-const MOODS = [["morning", "Morning"], ["golden", "Golden hour"], ["night", "Night rain"]] as const;
+const wanted = (arg("--moods") ?? "morning,golden,night").split(",");
+const views = (arg("--views") ?? "desktop,phone").split(",");
+const MOODS = ([["morning", "Morning"], ["golden", "Golden hour"], ["night", "Night rain"]] as const).filter(([m]) => wanted.includes(m));
+// Who is in each room. Characters, never people: the name label must show one of these with the Character tag.
+const CAST: Record<string, string[]> = {
+  pottery: ["Meera", "Sid", "Lena", "Biscuit"],
+  gardening: ["Rosa", "Kofi", "Noor", "Ade", "Pip"],
+  reading: ["Hana", "Ellie", "Omar", "Moth"],
+  "board-games": ["Theo", "Mira", "Sol", "Meeple"],
+};
 
 const browser = await chromium.launch({ ...(executablePath ? { executablePath } : {}), args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"] });
 try {
-  for (const view of [{ name: "desktop", width: 1440, height: 900 }, { name: "phone", width: 390, height: 844 }]) {
+  let labelShot = false;
+  for (const view of [{ name: "desktop", width: 1440, height: 900 }, { name: "phone", width: 390, height: 844 }].filter((v) => views.includes(v.name))) {
     const context = await browser.newContext({ viewport: { width: view.width, height: view.height }, hasTouch: view.name === "phone", reducedMotion: "reduce", colorScheme: "light", timezoneId: "America/New_York" });
     await installSupabaseMock(context, buildFixtures(new Date()), path.join(root, "scripts/visual/database.types.ts"), { rpcReplies });
     await context.route("**/*", (route) => { const url = new URL(route.request().url()); return url.origin === origin || url.origin === FIXTURE_ORIGIN ? route.fallback() : route.abort(); });
@@ -97,9 +107,33 @@ try {
       // 160 frames (8 seconds of room time) is long enough for the camera to settle and the light to finish easing.
       await page.evaluate((frames) => new Promise<void>((done) => { let n = 0; const tick = () => (++n >= frames ? done() : requestAnimationFrame(tick)); requestAnimationFrame(tick); }), 160);
       // A character may be mid-sentence. Speech bubbles are not part of the room's look, so leave them out.
-      await page.addStyleTag({ content: "[data-corner-world] div.pointer-events-none.will-change-transform { display: none !important; }" });
+      const hide = await page.addStyleTag({ content: "[data-corner-world] div.pointer-events-none.will-change-transform { display: none !important; }" });
       await page.screenshot({ path: path.join(out, `${corner}-${view.name}-${mood}.png`) });
       pass(`${corner} ${view.name} ${label}`);
+      // Once per run, with a mouse: hovering a character shows their name with the Character tag, and no line.
+      if (view.name === "desktop" && !labelShot && CAST[corner]) {
+        await hide.evaluate((el) => el.remove());
+        const tag = world.locator("[data-character-name]:visible");
+        let found = "";
+        scan: for (let y = 300; y <= 780; y += 24)
+          for (let x = 120; x <= 1320; x += 24) {
+            await page.mouse.move(x, y);
+            await page.waitForTimeout(90);
+            if ((await tag.count()) > 0) {
+              // Rest on the character a moment so the label has faded in.
+              await page.waitForTimeout(700);
+              found = ((await tag.first().innerText()) ?? "").replace(/\s+/g, " ").trim();
+              if (found) break scan;
+            }
+          }
+        assert(found, `${corner}: hovering a character shows a name label`);
+        const [who, ...rest] = found.split(" ");
+        assert(CAST[corner].includes(who), `${corner}: the label names a character of this room, got "${found}"`);
+        assert.equal(rest.join(" "), "Character", `${corner}: the label carries the Character tag and nothing else, got "${found}"`);
+        await page.screenshot({ path: path.join(out, `${corner}-desktop-name-label.png`) });
+        pass(`${corner}: hovering shows "${found}"`);
+        labelShot = true;
+      }
       await page.close();
     }
     await context.close();

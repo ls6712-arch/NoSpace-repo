@@ -52,6 +52,8 @@ export interface WorldOptions {
   onOpen(spot: Spot): void;
   /** The pointer is over a part of the room, or none. */
   onHover(spot: Spot | null): void;
+  /** The pointer is over a character, or none. The page shows that character's name. */
+  onHoverCharacter?(who: string | null): void;
   /** The canvas lost its graphics context and cannot draw any more. */
   onLost(): void;
 }
@@ -226,6 +228,7 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
   let lastHover = 0;
   let entered = false;
   let hover: Spot | null = null;
+  let hoverWho: string | null = null;
   const ray = new T.Raycaster();
   const ptr = new T.Vector2();
   const hitAt = (e: PointerEvent) => {
@@ -252,6 +255,11 @@ export function createWorld(container: HTMLElement, opts: WorldOptions): World {
         canvas.style.cursor = hit ? "pointer" : "grab";
         const spot = hit?.spot ?? null;
         if (spot !== hover) opts.onHover(spot);
+        const who = hit?.character ?? null;
+        if (who !== hoverWho) {
+          hoverWho = who;
+          opts.onHoverCharacter?.(who);
+        }
       }
       return;
     }

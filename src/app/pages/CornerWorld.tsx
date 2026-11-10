@@ -208,6 +208,8 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
   const [entered, setEntered] = useState(false);
   const [hover, setHover] = useState<Spot | null>(null);
   const [said, setSaid] = useState<Record<string, { text: string; show: boolean }>>({});
+  // The character under the pointer: their name shows, with the Character tag, without them saying anything.
+  const [named, setNamed] = useState<string | null>(null);
   const signRefs = useRef<Partial<Record<Spot, HTMLButtonElement | null>>>({});
   const bubbleRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const hintRef = useRef<HTMLDivElement>(null);
@@ -268,6 +270,7 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
           onSay: say,
           onOpen: (spot) => openWallRef.current(spot),
           onHover: setHover,
+          onHoverCharacter: setNamed,
           onLost: leaveWithNote,
         });
         if (world.firstFrameMs > FIRST_FRAME_LIMIT_MS) {
@@ -523,7 +526,12 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
       )}
 
       {/* What a character says. Always tagged as a character. */}
-      {Object.entries(said).map(([who, { text, show }]) => (
+      {[...new Set([...Object.keys(said), ...(named ? [named] : [])])].map((who) => {
+        const speaking = said[who]?.show ?? false;
+        const show = speaking || named === who;
+        // Hovering shows the name alone. A line that has just been said stays while its bubble fades.
+        const text = !speaking && named === who ? "" : (said[who]?.text ?? "");
+        return (
         <div
           key={who}
           ref={(el) => {
@@ -533,13 +541,14 @@ export function CornerRoom({ corner, def, userId, onList, onUnavailable }: { cor
           style={{ visibility: "hidden" }}
           className={`pointer-events-none absolute left-0 top-0 z-10 max-w-52 rounded-card border border-border bg-card px-3 py-2 text-small shadow-overlay transition-opacity duration-base will-change-transform ${show ? "opacity-100" : "opacity-0"}`}
         >
-          <span className="mb-1 flex items-center gap-2 text-caption text-muted-foreground">
+          <span data-character-name className={`${text ? "mb-1 " : ""}flex items-center gap-2 text-caption text-muted-foreground`}>
             {who}
             <span className="rounded-full border border-border px-2">{WORLD_COPY.character}</span>
           </span>
           {text}
         </div>
-      ))}
+        );
+      })}
 
       {entered && !(panelOpen && !wide) && (
         <div className={`pointer-events-none absolute inset-x-0 bottom-[calc(var(--safe-bottom)+1rem)] flex justify-center transition-[padding] duration-base ${panelOpen && wide ? "pr-[436px]" : ""}`}>

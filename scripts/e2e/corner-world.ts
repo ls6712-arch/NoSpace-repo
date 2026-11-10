@@ -65,7 +65,7 @@ const rpcReplies = {
 };
 // Names from the prototype that must never ship.
 const EXAMPLE_PEOPLE = ["Maya", "Alex", "Priya", "Jordan", "Ines", "Jun", "Sam"];
-const CHARACTERS = ["Meera", "Arjun", "Lena", "Biscuit"];
+const CHARACTERS = ["Meera", "Sid", "Lena", "Biscuit"];
 
 async function open(view: { name: string; width: number; height: number; touch: boolean; webgl: boolean; reduced: boolean }) {
   // SwiftShader draws the scene without a GPU. --disable-gpu with no software fallback is how WebGL is switched off.
