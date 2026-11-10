@@ -274,7 +274,7 @@ export function CornersHome() {
             </div>
             <ul className="grid grid-cols-2 gap-3 tab:grid-cols-3 tab:gap-4 desk:grid-cols-4">
               {shown.map((c) => (
-                <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} fluid />
+                <CornerCard key={cornerKey(c)} corner={c} still subline={cornerSubline(c, live?.get(cornerKey(c)))} fluid />
               ))}
             </ul>
           </section>
@@ -288,7 +288,7 @@ export function CornersHome() {
               </h2>
               <HorizontalRow name="corners.row.week" label="Happening this week" contentKey={week.map(cornerKey).join(",")}>
                 {week.map((c) => (
-                  <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
+                  <CornerCard key={cornerKey(c)} corner={c} still subline={cornerSubline(c, live?.get(cornerKey(c)))} />
                 ))}
               </HorizontalRow>
             </section>
@@ -307,7 +307,7 @@ export function CornersHome() {
               </div>
               <HorizontalRow name={`corners.row.${cat.slug}`} label={cat.name} contentKey={corners.map(cornerKey).join(",")}>
                 {corners.map((c) => (
-                  <CornerCard key={cornerKey(c)} corner={c} subline={cornerSubline(c, live?.get(cornerKey(c)))} />
+                  <CornerCard key={cornerKey(c)} corner={c} still subline={cornerSubline(c, live?.get(cornerKey(c)))} />
                 ))}
               </HorizontalRow>
             </section>

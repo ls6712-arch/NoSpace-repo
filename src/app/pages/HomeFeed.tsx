@@ -12,6 +12,7 @@ import { PAGE_GRID, PageShell, SPAN_GRID } from "../components/layout/PageShell"
 import { MOMENT_LIST } from "../components/moment/Moment";
 import { YourWeekCard } from "../components/home/YourWeekCard";
 import { BestFitCard, type CardState } from "../components/home/BestFitCard";
+import { CornersRow } from "../components/home/CornersRow";
 import { BringPeopleCard, HappeningSection, StillMakingSection } from "../components/home/YourCornersSections";
 import { MomentDetail } from "../components/moment/MomentDetail";
 import { Loadable } from "../components/ui/skeleton";
@@ -200,6 +201,7 @@ export function HomeFeed() {
         </div>
       )}
 
+      <CornersRow />
       <StillMakingSection cards={wallCards} fallback={mine.fallback} onOpen={openWallCard} />
       <HappeningSection events={events} />
 

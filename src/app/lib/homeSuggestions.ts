@@ -17,7 +17,8 @@ const isReason = (v: unknown): v is ReasonCode => typeof v === "string" && (REAS
 /** What the server ranks. A friend's Pursuit is not offered yet. */
 export type SuggestionKind = "event" | "open_pursuit";
 /** What the log records, which adds the at-home rows the app fills in. */
-export type LoggedKind = SuggestionKind | "friend_pursuit" | "at_home";
+/** "corner" is a Corner in the Corners row on Home (already an allowed kind in suggestion_events). */
+export type LoggedKind = SuggestionKind | "friend_pursuit" | "at_home" | "corner";
 /** "start" is a tap on Start (the Start page opened); "going" is a plan made; "logged" is a Moment posted from the Start page. */
 export type SuggestionAction = "shown" | "opened" | "start" | "going" | "invite" | "dismissed" | "logged";
 

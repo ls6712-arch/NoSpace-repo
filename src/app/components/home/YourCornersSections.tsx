@@ -23,7 +23,7 @@ export const HOME_V3_COPY = {
 
 const INVITE_TEXT = "I'm using Soosh to try new things with friends. Come along?";
 
-function SectionHead({ id, title, link }: { id: string; title: string; link?: { to: string; label: string } }) {
+export function SectionHead({ id, title, link }: { id: string; title: string; link?: { to: string; label: string } }) {
   return (
     <div className="mb-3 flex items-baseline justify-between gap-4">
       <h2 id={id} className="text-lead" style={{ fontFamily: "var(--font-display)" }}>

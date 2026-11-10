@@ -9,6 +9,8 @@ import { createWorld } from "../../../src/app/world/core/scene";
 import type { MoodName } from "../../../src/app/world/core/moods";
 import { planRoom } from "../../../src/app/world/layout";
 import { pottery } from "../../../src/app/world/corners/pottery";
+import { CORNER_WORLDS } from "../../../src/app/world/corners";
+import { firstPose } from "../../../src/app/world/core/poses";
 
 const who = (name: string, pose: CharacterConfig["pose"], action: CharacterConfig["action"], at: [number, number], rot: number, look: CharacterConfig["look"], extra: Partial<CharacterConfig> = {}): CharacterConfig => ({
   name, pose, action, at, rot, look, lines: ["Hello."], ...extra,
@@ -74,10 +76,13 @@ const ROOMS: Record<string, CornerWorldConfig> = {
 };
 
 const params = new URLSearchParams(location.search);
-const config = ROOMS[params.get("setting") ?? "garden"];
+// `corner=<slug>` draws a Corner's own config (its own characters), as the still pictures need. Otherwise a setting's fixture.
+const config = CORNER_WORLDS.find((w) => w.slug === params.get("corner")) ?? ROOMS[params.get("setting") ?? "garden"];
 const problems = checkConfig({ ...config, key: config.key.replace("fixture/", "fixture-space/") });
 // The harness page says so loudly if a fixture breaks the config rules.
 (window as unknown as { __problems: string[] }).__problems = problems;
+// For `--cards`: every Corner with a config, and the pose its still picture is framed from (a wide screen's start pose).
+(window as unknown as { __cards: unknown }).__cards = CORNER_WORLDS.map((w) => ({ slug: w.slug, setting: w.setting, pose: firstPose(w.setting, { phone: false, reducedMotion: true }) }));
 
 const stage = document.getElementById("stage")!;
 const world = createWorld(stage, {

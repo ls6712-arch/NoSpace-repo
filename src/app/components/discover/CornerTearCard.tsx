@@ -7,7 +7,7 @@ import { cornerStyle } from "../../lib/categoryStyle";
 import { ArrowUpRight } from "lucide-react";
 
 /**
- * A Corner card with its existing thumbnail, full name and two-line description.
+ * A Corner card with its picture (a still of its 3D world when it has one, else its existing thumbnail), full name and two-line description.
  * Follow and the three activity tabs retain their original actions. Each tab
  * links to the Corner page on that section. A tab with nothing
  * there is left out, so the row never shows an empty invitation.
@@ -33,7 +33,7 @@ export function CornerTearCard({
       <div className="bg-[color-mix(in_srgb,var(--cat)_8%,var(--card))] p-5">
         <div className="flex items-start justify-between gap-4">
           <Link to={`/corners/${model.slug}`} onClick={() => onOpen(model, position)} aria-label={model.name} className="shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            <SuggestionPhoto corner={model} className="size-20 rounded-control" width={80} />
+            <SuggestionPhoto corner={model} still={{ name: model.name }} className="size-20 rounded-control" width={80} />
           </Link>
           <PillButton variant="outline" className="shrink-0" onClick={() => onFollow(model, position)}>
             Follow

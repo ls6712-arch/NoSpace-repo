@@ -2,6 +2,7 @@ import { PressLink } from "../common/PressLink";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
+import { cornerPicture, cornerPictureAlt } from "../../lib/cornerPicture";
 import { cornerStyle } from "../../lib/categoryStyle";
 import { cornerAbout } from "../../data/curatedCorners";
 
@@ -18,11 +19,14 @@ export function CornerCard({
   corner,
   subline,
   fluid = false,
+  still = false,
 }: {
   corner: { spaceSlug: string; slug: string; name: string };
   subline: string;
   /** Fill the width it is given (a grid cell) instead of the fixed width a row uses. */
   fluid?: boolean;
+  /** Show the still of the Corner's 3D world when it has one (cornerPicture). The full Corner list does; nothing else changes. */
+  still?: boolean;
 }) {
   const about = cornerAbout(corner.spaceSlug, corner.slug);
   return (
@@ -32,8 +36,8 @@ export function CornerCard({
         className="group relative block aspect-video overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:z-10 hover:shadow-glow focus-visible:shadow-glow"
       >
         <ImageWithFallback
-          src={cornerPhoto(corner.spaceSlug, corner.slug, 600)}
-          alt={cornerPhotoAlt(corner.slug)}
+          src={still ? cornerPicture(corner.spaceSlug, corner.slug, 600) : cornerPhoto(corner.spaceSlug, corner.slug, 600)}
+          alt={still ? cornerPictureAlt(corner.spaceSlug, corner.slug, corner.name) : cornerPhotoAlt(corner.slug)}
           width={288}
           tint
           className="absolute inset-0 size-full"
