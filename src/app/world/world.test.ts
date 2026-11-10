@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { GLAZES, POT_SHAPES, ROOM_LIMITS, moodForHour, pieceSpec, planRoom, type RoomMoment } from "./layout";
-import { WORLD_COPY, cornerWorld, signLine, worldPath } from "./cornerWorlds";
+import { WORLD_COPY, cornerWorld, opensAsRoom, signLine } from "./cornerWorlds";
 
 const m = (postId: number, o: Partial<RoomMoment> = {}): RoomMoment => ({ postId, mine: false, ...o });
 
@@ -112,13 +112,29 @@ describe("signs", () => {
   });
 });
 
-describe("which Corners have a world", () => {
+describe("which Corners have a room", () => {
   it("is Pottery only, and Ceramics because it was merged into Pottery", () => {
-    expect(cornerWorld("crafts-making", "pottery")?.enter).toBe("Enter the studio");
+    expect(cornerWorld("crafts-making", "pottery")?.key).toBe("crafts-making/pottery");
     expect(cornerWorld("art-creative", "ceramics")?.key).toBe("crafts-making/pottery");
     expect(cornerWorld("art-creative", "drawing")).toBeUndefined();
     expect(cornerWorld("food-cooking", "coffee")).toBeUndefined();
-    expect(worldPath("pottery")).toBe("/corners/pottery/world");
+  });
+});
+
+describe("how a Corner opens", () => {
+  const yes = { hasRoom: true, member: true, view: "room" as const, unavailable: false };
+  it("is the room for a member, when the Corner has one", () => {
+    expect(opensAsRoom(yes)).toBe(true);
+  });
+  it("is the list for a Corner without a room, a visitor, someone who chose the list, or a device that cannot draw it", () => {
+    expect(opensAsRoom({ ...yes, hasRoom: false })).toBe(false);
+    expect(opensAsRoom({ ...yes, member: false })).toBe(false);
+    expect(opensAsRoom({ ...yes, view: "list" })).toBe(false);
+    expect(opensAsRoom({ ...yes, unavailable: true })).toBe(false);
+  });
+  it("is never called a studio in anything a person reads", () => {
+    const shown = JSON.stringify([WORLD_COPY, cornerWorld("crafts-making", "pottery")]);
+    expect(shown).not.toMatch(/studio/i);
   });
 });
 

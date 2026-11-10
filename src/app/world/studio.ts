@@ -21,7 +21,7 @@ export const STUDIO_LINES: Record<string, string[]> = {
   Meera: ["Centre first. Everything else follows.", "Slow hands, fast wheel.", "Wet your hands again. Trust me."],
   Arjun: ["Wedge out the air bubbles first.", "Mine looked like a potato too. Keep going.", "You showed up. That’s the hard part."],
   Lena: ["Nobody’s first bowl is round.", "Glaze day is the best day.", "Dip, count to three, lift."],
-  Biscuit: ["(Biscuit, the studio cat, is asleep. Purring.)"],
+  Biscuit: ["(Biscuit the cat is asleep. Purring.)"],
 };
 export const STUDIO_WELCOME = { who: "Meera", text: "Oh hi! Grab a stool, the wheel’s warm." };
 const COLLAPSE_LINE = "Ha. Collapsed. Again! Third time today.";
