@@ -46,10 +46,13 @@ As the cards on `/corners`, on a desktop (top) and on a phone (bottom):
 
 ## Home
 
-| | Before | After, follows no Corners | After, follows Knitting and Pottery |
+Everyone sees the Corners with a 3D world, under "Corners for you". The ones a person follows come first,
+then their picks (founder, Nov 10, 2026).
+
+| | Before | After, follows no Corners (Reading is a pick) | After, follows Knitting and Pottery |
 |---|---|---|---|
-| Phone | ![](before-phone-home.png) | ![](after-phone-home.png) | ![](after-phone-home-your-corners.png) |
-| Desktop | ![](before-desktop-home.png) | ![](after-desktop-home.png) | ![](after-desktop-home-your-corners.png) |
+| Phone | ![](before-phone-home.png) | ![](after-phone-home.png) | ![](after-phone-home-follows.png) |
+| Desktop | ![](before-desktop-home.png) | ![](after-desktop-home.png) | ![](after-desktop-home-follows.png) |
 
 ## Discover
 
@@ -63,7 +66,7 @@ As the cards on `/corners`, on a desktop (top) and on a phone (bottom):
 `report.json` lists all 36 checks. In short, on a phone and on a desktop, for someone who follows no Corners
 and for someone who follows two:
 
-- Home shows the right heading and Corners, as square, lazy pictures with the Corner name as alt text.
+- Home shows "Corners for you" with the four 3D Corners in the right order (followed first, then picks), as square, lazy still pictures with the Corner name as alt text. A followed Corner without a 3D world, and a followed Space, are not in the row.
 - A card opens the Corner's page.
 - On Discover and on `/corners`, only Corners with a 3D world show a still, at the size the tile always was. The cards on `/corners` use the 16:9 still.
 - No 3D file (scene, CornerWorld or town) is fetched on Home, Discover or `/corners`.

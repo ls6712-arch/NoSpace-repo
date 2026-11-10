@@ -1056,18 +1056,20 @@ More ways and the Log a Moment card are gone from Home (Discover, Corners and th
 
 ## Corners on Home and Discover (brief, Nov 10, 2026; headings approved by the founder, Nov 10, 2026)
 
-Home has one more row, directly under Your week: Corners as square pictures, each with the Corner's
-name and its existing one line (`cornerAbout`). A Corner whose 3D world is switched on shows a still
-picture of it (`cornerPicture`, `src/app/lib/cornerPicture.ts`); every other Corner keeps its photo.
+Home has one more row, directly under Your week: the Corners whose 3D world is switched on, as square
+still pictures of it (`cornerPicture`, `src/app/lib/cornerPicture.ts`), each with the Corner's name and
+its existing one line (`cornerAbout`). Everyone sees the same Corners: the ones a person follows come
+first, then their onboarding picks, then by affinity, then the rest (founder, Nov 10, 2026; the first
+version showed a person who followed Corners only those, which hid the 3D Corners from them).
 The same still is the Corner's picture in Corners new to you on Discover and, in a 16:9 cut, on `/corners`.
-Group pages and the related Corners strip on a Corner page keep photos (founder, Nov 10, 2026). Nothing
-else on either page changed. A person never reads a word for the 3D world itself here: these are
+Group pages and the related Corners strip on a Corner page keep photos (founder, Nov 10, 2026).
+Nothing else on either page changed. A person never reads a word for the 3D world itself here: these are
 Corners.
 
 | String | Where |
 |---|---|
-| Corners for you | Heading of the row for someone who follows no Corners, and for a visitor: the Corners with a 3D world, onboarding picks first, then by affinity, then the rest. Approved Nov 10, 2026 |
-| Your Corners | Heading of the row for someone who follows Corners: only those, the most recently active first, up to 6. Also a section heading in Add to a Corner. Approved for Home Nov 10, 2026 |
+| Corners for you | Heading of the row, for everyone. Approved Nov 10, 2026 |
+| Your Corners | No longer a heading on Home (Nov 10, 2026). Still a section heading in Add to a Corner |
 | See all | Link beside the heading, to /corners. Reused |
 
 ## Landing ribbon words (founder request, Nov 9, 2026)
