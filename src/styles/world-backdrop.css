@@ -1,0 +1,36 @@
+/* The 3D town behind every page (WorldBackdrop.tsx). It sits under #root's
+   content (#root is its own stacking context, so -1 lands above the body
+   background and below everything else) and never takes a tap. */
+.world-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity calc(var(--duration-base) * 5) ease;
+}
+.world-backdrop[data-ready] {
+  opacity: 1;
+}
+.world-backdrop__town {
+  position: absolute;
+  inset: 0;
+}
+/* A wash in the page colour so text and cards on top stay readable. Lighter
+   at the edges, where the town shows, heavier in the middle, where content is.
+   Pages tune it with --world-wash (0 to 100). */
+.world-backdrop__wash {
+  --world-wash: 62;
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 75% 70% at 50% 45%,
+    color-mix(in srgb, var(--background) calc(var(--world-wash) * 1% + 18%), transparent),
+    color-mix(in srgb, var(--background) calc(var(--world-wash) * 1% - 22%), transparent)
+  );
+}
+@media (prefers-reduced-motion: reduce) {
+  .world-backdrop {
+    transition: none;
+  }
+}
