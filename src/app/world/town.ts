@@ -1,6 +1,6 @@
 import * as T from "three";
 import { PI, at, box, canvasTex, css, cyl, disposeTree, glow, mat, mesh, sph } from "./kit";
-import { HAIR_TONES, SKIN_TONES, WARDROBE, loadCast, type Body, type Cast, type Character, type Look } from "./townCast";
+import { HAIR_TONES, SKIN_TONES, WARDROBE, loadCast, type Body, type Cast, type Character, type Look, type Plant } from "./townCast";
 import { easeMood, moodState, type MoodName, type MoodState } from "./moods";
 import { rng } from "./layout";
 import { TOWN_CAMERAS, type TownCamera, type TownMotion, type TownView } from "./townViews";
@@ -116,11 +116,14 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
   const ring = mesh(new T.RingGeometry(8.6, 9.8, 64), path);
   ring.rotation.x = -PI / 2;
   ground.add(at(ring, 0, 0.035, 0));
-  const trees: [number, number][] = [[-12, -6], [-11, 4], [-9, 9], [-3, 12.5], [4, 12.5], [11, 7], [12.5, -3], [10, -9], [3, -12.5], [-5, -12], [-12.8, -1], [0, -13.5]];
+  // Simple trees stand in until the real ones arrive with the characters.
+  const simpleTrees = new T.Group();
+  ground.add(simpleTrees);
+  const trees: [number, number][] = [[-12.5, -5], [-10, -9], [-5.5, -12.5], [-1, -13.5], [3.5, -13], [7.5, -11.5], [12.5, -3.5], [10.6, -9.6], [-7.8, -11.4], [-13, 2], [-12, 8.5]];
   trees.forEach(([x, z], i) => {
-    ground.add(at(cyl(0.16, 0.22, 1.4, wood, 6), x, 0.7, z));
+    simpleTrees.add(at(cyl(0.16, 0.22, 1.4, wood, 6), x, 0.7, z));
     const crown = mesh(new T.IcosahedronGeometry(1 + (i % 3) * 0.25, 0), leaves[i % 2]);
-    ground.add(at(crown, x, 2.1 + (i % 3) * 0.2, z));
+    simpleTrees.add(at(crown, x, 2.1 + (i % 3) * 0.2, z));
   });
   for (const [x, z] of [[4, 4.6], [-4.4, -4.2], [6.4, -3], [-6.6, 1]] as const) {
     ground.add(at(cyl(0.05, 0.07, 2.4, mat(0x2b3550, 0.6), 8), x, 1.2, z));
@@ -152,7 +155,24 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
     ground.add(at(box(2.4, 0.07, 0.34, wood), pic.x, 0.45, pic.z + dz * 0.8));
     for (const dx of [-1, 1]) ground.add(at(box(0.07, 0.42, 0.07, wood), pic.x + dx * 1, 0.21, pic.z + dz * 0.8));
   }
-  ground.add(at(box(0.4, 0.26, 0.28, mat(0xb98a4e)), pic.x + 0.6, 0.92, pic.z));
+  // Lunch: a basket, plates, fruit, bread, lemonade, and a game of cards mid-hand.
+  const top = 0.79;
+  ground.add(at(box(0.4, 0.26, 0.28, mat(0xb98a4e)), pic.x + 0.9, top + 0.13, pic.z));
+  const plate = mat(0xf7f2e8, 0.6);
+  for (const [dx, dz] of [[-0.55, -0.3], [0.55, -0.3], [-0.55, 0.3], [0.55, 0.3]] as const) ground.add(at(cyl(0.13, 0.11, 0.02, plate, 16), pic.x + dx, top + 0.01, pic.z + dz));
+  ground.add(at(cyl(0.16, 0.1, 0.08, mat(0x8a5e3c, 0.7), 16), pic.x - 0.05, top + 0.04, pic.z));
+  ([[0xc8332b, -0.08, 0.02], [0xf2b42a, 0.03, -0.04], [0x7fa96a, 0.05, 0.05], [0xd9773a, -0.02, -0.06]] as const).forEach(([c, dx, dz]) => ground.add(at(sph(0.05, mat(c, 0.5), 10, 8), pic.x - 0.05 + dx, top + 0.11, pic.z + dz)));
+  const loaf = sph(0.12, mat(0xc99a55, 0.8), 14, 10);
+  loaf.scale.set(1.6, 0.6, 0.8);
+  ground.add(at(loaf, pic.x + 0.35, top + 0.05, pic.z + 0.02));
+  ground.add(at(cyl(0.05, 0.06, 0.26, mat(0xf2d27a, 0.2), 12), pic.x - 0.35, top + 0.13, pic.z - 0.05));
+  for (const [dx, dz] of [[-0.3, -0.22], [0.25, 0.24]] as const) ground.add(at(cyl(0.035, 0.03, 0.09, mat(0xffffff, 0.3), 10), pic.x + dx, top + 0.045, pic.z + dz));
+  const cardMat = mat(0xfff8ec, 0.7);
+  for (let i = 0; i < 5; i++) {
+    const card = box(0.07, 0.004, 0.1, cardMat);
+    card.rotation.y = (i - 2) * 0.35;
+    ground.add(at(card, pic.x + 0.2 + i * 0.03, top + 0.003 + i * 0.002, pic.z - 0.05));
+  }
 
   // Chess table and stools.
   const ch = { x: 5.6, z: 4.2 };
@@ -239,7 +259,7 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
       head.rotation.x -= 0.3 * k + Math.sin(t * 9) * 0.04 * k;
     };
 
-    // Picnic: four friends at the table, a Shiba doing laps around them.
+    // Picnic: four friends at the table, lunch and a game of cards.
     const diners = [
       seatAt(dress("casual-female", { stub: true }), -0.55, -1),
       seatAt(dress("casual2-male"), 0.55, -1),
@@ -252,29 +272,7 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
       c.root.rotation.y = side > 0 ? PI : 0;
       return c;
     }
-    const shiba = add(cast.dog("shiba", { bandana: W.red }));
-    const shibaHome = { x: pic.x + 2.2, z: pic.z + 1.6 };
-    let shibaMode = "";
-    ticks.push((t) => {
-      diners.forEach((c, i) => laugh(c, t, i * 1.7));
-      const u = t % 22;
-      let mode: "Idle_2_HeadLow" | "Gallop" | "Eating";
-      if (u < 7) mode = "Idle_2_HeadLow";
-      else if (u < 13) mode = "Gallop";
-      else mode = "Eating";
-      if (mode !== shibaMode) {
-        shiba.play(mode, { fade: 0.5 });
-        shibaMode = mode;
-      }
-      if (mode === "Gallop") {
-        const a = ((u - 7) / 6) * PI * 2;
-        shiba.root.position.set(shibaHome.x - 1.8 + Math.cos(a) * 1.8, 0, shibaHome.z + Math.sin(a) * 1.8);
-        shiba.root.rotation.y = Math.atan2(-Math.sin(a), Math.cos(a));
-      } else {
-        shiba.root.position.set(shibaHome.x, 0, shibaHome.z);
-        shiba.root.rotation.y = -0.6;
-      }
-    });
+    ticks.push((t) => diners.forEach((c, i) => laugh(c, t, i * 1.7)));
 
     // Chess.
     const players = [-1, 1].map((sd, i) => {
@@ -285,14 +283,158 @@ export function createTown(container: HTMLElement, opts: TownOptions): Town {
     });
     ticks.push((t) => laugh(players[1], t, 2));
 
-    // The painter.
+    const handPos = (c: Character, out: T.Vector3) => {
+      const fist = c.bone("Fist.R");
+      return fist ? fist.getWorldPosition(out) : out.copy(c.root.position).setY(1.1);
+    };
+    const tmpA = new T.Vector3();
+    const tmpB = new T.Vector3();
+
+    // Fetch: someone throws a ball, the Shiba races out, brings it back, and they go again.
+    const thrower = add(cast.person(dress("casual-male", { top: W.yellow, stub: true })));
+    const fetchHome = new T.Vector3(-9.6, 0, 6.8);
+    const fetchTarget = new T.Vector3(-4.8, 0, 9.8);
+    thrower.root.position.copy(fetchHome);
+    facing(thrower.root, fetchTarget.x, fetchTarget.z);
+    const shiba = add(cast.dog("shiba", { bandana: W.red }));
+    const dogHome = fetchHome.clone().add(new T.Vector3(0.9, 0, 0.5));
+    const ball = sph(0.07, mat(W.yellow, 0.5), 12, 10);
+    scene.add(ball);
+    const ballRest = dogHome.clone().add(new T.Vector3(-0.4, 0.07, 0.1));
+    const toward = (from: T.Vector3, to: T.Vector3) => Math.atan2(to.x - from.x, to.z - from.z);
+    ticks.push((t) => {
+      const k = t % 10;
+      // The person.
+      if (k < 0.7) thrower.play("Punch", { fromStart: true, fade: 0.15, speed: 1.2 });
+      else if (k > 5.6 && k < 6.9) thrower.play("PickUp", { fromStart: true, fade: 0.25 });
+      else thrower.play("Idle", { fade: 0.3 });
+      // The dog.
+      const out = (a: number, b: number) => Math.min(1, Math.max(0, (k - a) / (b - a)));
+      if (k < 0.6 || k >= 5.3) {
+        shiba.play("Idle_2_HeadLow", { fade: 0.4 });
+        shiba.root.position.copy(dogHome);
+        shiba.root.rotation.y = toward(dogHome, fetchTarget);
+      } else if (k < 2.6) {
+        shiba.play("Gallop", { fade: 0.25 });
+        shiba.root.position.lerpVectors(dogHome, fetchTarget, out(0.6, 2.6));
+        shiba.root.rotation.y = toward(dogHome, fetchTarget);
+      } else if (k < 3.3) {
+        shiba.play("Eating", { fade: 0.2 });
+        shiba.root.position.copy(fetchTarget);
+      } else {
+        shiba.play("Gallop", { fade: 0.25 });
+        shiba.root.position.lerpVectors(fetchTarget, dogHome, out(3.3, 5.3));
+        shiba.root.rotation.y = toward(fetchTarget, dogHome);
+      }
+      // The ball.
+      if (k < 0.45 || k > 6.4) ball.position.copy(handPos(thrower, tmpA));
+      else if (k < 1.45) {
+        const f = out(0.45, 1.45);
+        handPos(thrower, tmpA);
+        ball.position.lerpVectors(tmpA, tmpB.copy(fetchTarget).setY(0.07), f);
+        ball.position.y += Math.sin(f * PI) * 2.4;
+      } else if (k < 2.9) ball.position.copy(fetchTarget).setY(0.07);
+      else if (k < 5.3) {
+        const fwd = new T.Vector3(Math.sin(shiba.root.rotation.y), 0, Math.cos(shiba.root.rotation.y));
+        ball.position.copy(shiba.root.position).addScaledVector(fwd, 0.48).setY(0.32);
+      } else ball.position.copy(ballRest);
+    });
+
+    // Frisbee on the lawn.
+    const flyers = [add(cast.person(dress("casual2-female", { top: W.denim }))), add(cast.person(dress("casual3-male", { top: W.red })))];
+    flyers[0].root.position.set(-1.6, 0, 11.6);
+    flyers[1].root.position.set(4.6, 0, 11);
+    facing(flyers[0].root, 4.6, 11);
+    facing(flyers[1].root, -1.6, 11.6);
+    const disc = cyl(0.15, 0.15, 0.025, mat(W.yellow, 0.4), 20);
+    scene.add(disc);
+    const HALF = 2.8;
+    ticks.push((t) => {
+      const u = t % (HALF * 2);
+      const from = flyers[u < HALF ? 0 : 1];
+      const to = flyers[u < HALF ? 1 : 0];
+      const k = u % HALF;
+      from.play(k < 0.6 ? "Punch" : "Idle", { fromStart: k < 0.6, fade: 0.15, speed: 1.2 });
+      to.play(k > 1.35 && k < 2.1 ? "Victory" : "Idle", { fromStart: k > 1.35 && k < 2.1, fade: 0.2, speed: 1.4 });
+      if (k < 0.35) disc.position.copy(handPos(from, tmpA));
+      else if (k < 1.6) {
+        const f = (k - 0.35) / 1.25;
+        handPos(from, tmpA);
+        handPos(to, tmpB);
+        disc.position.lerpVectors(tmpA, tmpB, f);
+        disc.position.y = 1.3 + Math.sin(f * PI) * 1.3;
+        disc.rotation.y += 0.5;
+      } else disc.position.copy(handPos(to, tmpA));
+    });
+
+    // Two painters: one at the easel by the path, one seated out on the grass.
+    const brush = () => {
+      const g = new T.Group();
+      g.add(at(cyl(0.012, 0.012, 0.24, mat(0x8a5e3c, 0.6), 6), 0, 0.06, 0));
+      g.add(at(cyl(0.016, 0.006, 0.05, mat(W.red, 0.6), 6), 0, 0.2, 0));
+      return g;
+    };
+    const palette = () => {
+      const g = new T.Group();
+      const board = cyl(0.13, 0.13, 0.012, mat(0xd9b58a, 0.7), 18);
+      board.scale.z = 0.75;
+      g.add(board);
+      ([[W.red, -0.06, 0.02], [W.yellow, 0, -0.04], [0x6fa3c9, 0.06, 0.02], [0x7fa96a, 0.02, 0.05]] as const).forEach(([c, x, z]) => g.add(at(sph(0.022, mat(c, 0.4), 8, 6), x, 0.012, z)));
+      g.rotation.x = PI / 2;
+      return g;
+    };
     const painter = add(cast.person(dress("casual2-female", { top: W.cream, stub: true })));
     painter.root.position.set(pa.x - 0.55, 0, pa.z + 1.1);
     facing(painter.root, pa.x, pa.z);
+    painter.hold("Fist.R", brush());
+    painter.hold("Fist.L", palette());
+    const easel2 = easel.clone();
+    easel2.position.set(10.6, 0, -6.4);
+    easel2.rotation.y = -2.4;
+    scene.add(easel2);
+    const stool = cyl(0.2, 0.2, 0.45, wood, 10);
+    scene.add(at(stool, 11.3, 0.22, -5.6));
+    const painter2 = add(cast.person(dress("oldclassy-male", { top: W.sage })));
+    seat(painter2, 11.3, -5.6, 0.45);
+    facing(painter2.root, easel2.position.x, easel2.position.z);
+    painter2.hold("Fist.R", brush());
     ticks.push((t) => {
-      const arm = painter.bone("UpperArm.R");
-      if (arm) arm.rotation.z += Math.sin(t * 1.6) * 0.12;
+      for (const [p, ph] of [[painter, 0], [painter2, 2]] as const) {
+        const arm = p.bone("UpperArm.R");
+        if (arm) arm.rotation.z += Math.sin(t * 1.6 + ph) * 0.18;
+      }
     });
+
+    // The real trees, bushes and flowers replace the stand-ins.
+    simpleTrees.removeFromParent();
+    const kinds: Plant[] = ["roundTree", "pine", "birch", "tallTree", "pine", "roundTree", "birch", "tallTree", "roundTree", "birch", "pine"];
+    trees.forEach(([x, z], i) => {
+      const p = cast.plant(kinds[i % kinds.length]);
+      p.position.set(x, 0, z);
+      p.rotation.y = r() * PI * 2;
+      p.scale.setScalar(0.85 + r() * 0.3);
+      scene.add(p);
+    });
+    const shrubs: [Plant, number, number][] = [
+      ["flowerBush", 7.5, 12], ["bush", -6.8, 12.6], ["bush", 9.8, 9.6], ["flowerBush", 12.6, 5.2], ["flowerBush", 13.4, 1.2], ["flowerBush", -13.6, -1.8], ["bush", 5.5, -10.6], ["bush", -8.2, -10.8], ["flowerBush", 11.2, 8.2],
+    ];
+    for (const [kind, x, z] of shrubs) {
+      const p = cast.plant(kind);
+      p.position.set(x, 0, z);
+      p.rotation.y = r() * PI * 2;
+      scene.add(p);
+    }
+    // Flowers round the plaza and tufts of grass across the lawns. Fewer on small screens.
+    const tufts = small ? 18 : 40;
+    for (let i = 0; i < tufts; i++) {
+      const a = r() * PI * 2;
+      const rad = r() < 0.5 ? 6 + r() * 2.3 : 10.3 + r() * 4;
+      const kind: Plant = i % 3 === 0 ? (i % 2 ? "flowersPink" : "flowersYellow") : "grass";
+      const p = cast.plant(kind);
+      p.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
+      p.rotation.y = r() * PI * 2;
+      scene.add(p);
+    }
 
     // Runners on the loop and a friend cheering at the finish.
     const runners = [add(cast.person(dress("casual-male", { top: W.navy }))), add(cast.person(dress("casual3-female", { top: W.red })))];

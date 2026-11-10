@@ -24,9 +24,24 @@ export const PEOPLE_FILES = [
   "oldclassy-male",
 ] as const;
 export type Body = (typeof PEOPLE_FILES)[number];
-export type Move = "Idle" | "Walk" | "Run" | "SitDown" | "Victory";
+/** "Punch" in the source pack; in the town it is a throw (a frisbee, a ball for the dog). */
+export type Move = "Idle" | "Walk" | "Run" | "SitDown" | "Victory" | "Punch" | "PickUp";
 export type DogMove = "Idle" | "Walk" | "Gallop" | "Idle_2_HeadLow" | "Eating";
 export type DogKind = "shiba" | "husky";
+
+/** Plants from Quaternius' Stylized Nature MegaKit (CC0), packed into nature.glb. */
+export const PLANTS = {
+  roundTree: { node: "CommonTree_3", height: 6 },
+  tallTree: { node: "CommonTree_5", height: 6.8 },
+  birch: { node: "Birch_2", height: 6.4 },
+  pine: { node: "Pine_2", height: 7.2 },
+  flowerBush: { node: "Bush_Common_Flowers", height: 1.1 },
+  bush: { node: "Bush_Large", height: 1.4 },
+  flowersYellow: { node: "Flower_3_Group", height: 0.45 },
+  flowersPink: { node: "Flower_4_Group", height: 0.45 },
+  grass: { node: "Grass_Common_Tall", height: 0.5 },
+} as const;
+export type Plant = keyof typeof PLANTS;
 
 /** The Soosh wardrobe. Paint in a 3D scene, so numbers, like the rest of the world code. */
 export const WARDROBE = {
@@ -61,30 +76,35 @@ const DOG_LENGTH = 1.05;
 export interface Character {
   root: T.Group;
   /** Crossfades to a move. Does nothing when it is already playing. */
-  play(move: Move, opts?: { fade?: number; speed?: number }): void;
+  play(move: Move, opts?: { fade?: number; speed?: number; fromStart?: boolean }): void;
   /** Seated, frozen at the end of the sit-down move. Put `root` on the seat after calling this. */
   sit(): void;
   /** A bone by name, for small touches on top of a move (a laugh, a brush stroke). */
   bone(name: string): T.Bone | undefined;
+  /** Puts an object in a hand (or on any bone) so it follows the move. */
+  hold(boneName: string, obj: T.Object3D, offset?: T.Vector3): void;
   update(dt: number): void;
 }
 
 export interface Dog {
   root: T.Group;
-  play(move: DogMove, opts?: { fade?: number; speed?: number }): void;
+  play(move: DogMove, opts?: { fade?: number; speed?: number; fromStart?: boolean }): void;
   update(dt: number): void;
 }
 
 export interface Cast {
   person(look: Look): Character;
   dog(kind: DogKind, opts?: { bandana?: number }): Dog;
+  /** A new copy of a plant, sized to its natural height. Copies share geometry and textures. */
+  plant(kind: Plant): T.Object3D;
 }
 
 /** Loads every model the town needs. Rejects if any file is missing, so the town can carry on without people. */
 export async function loadCast(base: string): Promise<Cast> {
   const loader = new GLTFLoader();
   const url = (name: string) => base.replace(/\/?$/, "/") + name + ".glb";
-  const [moves, shiba, husky, ...bodies] = await Promise.all([
+  const [nature, moves, shiba, husky, ...bodies] = await Promise.all([
+    loader.loadAsync(url("nature")),
     loader.loadAsync(url("people-moves")),
     loader.loadAsync(url("shiba")),
     loader.loadAsync(url("husky")),
@@ -93,6 +113,38 @@ export async function loadCast(base: string): Promise<Cast> {
   const bodyByName = new Map<Body, GLTF>(PEOPLE_FILES.map((f, i) => [f, bodies[i]]));
   const humanClips = new Map(moves.animations.map((c) => [c.name, c]));
   const dogs: Record<DogKind, GLTF> = { shiba, husky };
+  const plantProtos = new Map<Plant, T.Object3D>();
+  for (const [kind, spec] of Object.entries(PLANTS) as [Plant, (typeof PLANTS)[Plant]][]) {
+    const src = nature.scene.getObjectByName(spec.node);
+    if (!src) continue;
+    const proto = new T.Group();
+    const copy = src.clone();
+    copy.position.set(0, 0, 0);
+    proto.add(copy);
+    const box = new T.Box3().setFromObject(proto);
+    const h = box.max.y - box.min.y;
+    if (h > 0) copy.scale.multiplyScalar(spec.height / h);
+    const fitted = new T.Box3().setFromObject(proto);
+    copy.position.y -= fitted.min.y;
+    proto.traverse((n) => {
+      const m = n as T.Mesh;
+      if (!m.isMesh) return;
+      m.castShadow = spec.height > 2;
+      m.receiveShadow = true;
+      for (const mat of Array.isArray(m.material) ? m.material : [m.material]) {
+        const sm = mat as T.MeshStandardMaterial;
+        sm.metalness = 0;
+        sm.roughness = 0.9;
+        if (sm.map && sm.transparent) {
+          // Leaf cards: cut out cleanly instead of blending, so they sort and shadow right.
+          sm.transparent = false;
+          sm.alphaTest = 0.5;
+        }
+        sm.side = T.DoubleSide;
+      }
+    });
+    plantProtos.set(kind, proto);
+  }
 
   function fit(model: T.Object3D, size: number, axis: "y" | "z") {
     const box = new T.Box3().setFromObject(model);
@@ -158,7 +210,7 @@ export async function loadCast(base: string): Promise<Cast> {
     };
     return {
       mixer,
-      play(name: string, opts: { fade?: number; speed?: number } = {}) {
+      play(name: string, opts: { fade?: number; speed?: number; fromStart?: boolean } = {}) {
         const next = action(name);
         if (!next) return;
         next.timeScale = opts.speed ?? 1;
@@ -166,8 +218,9 @@ export async function loadCast(base: string): Promise<Cast> {
         next.reset().setLoop(T.LoopRepeat, Infinity);
         next.clampWhenFinished = false;
         next.paused = false;
-        // Start each character at its own point in the loop, so a crowd never moves in step.
-        next.time = Math.random() * next.getClip().duration;
+        // Start each character at its own point in the loop, so a crowd never moves in step,
+        // unless the move has a start that matters (a throw).
+        next.time = opts.fromStart ? 0 : Math.random() * next.getClip().duration;
         next.play();
         if (current) current.crossFadeTo(next, opts.fade ?? 0.4, false);
         current = next;
@@ -213,6 +266,7 @@ export async function loadCast(base: string): Promise<Cast> {
         play: (m, o) => mover.play(m, o),
         sit: () => mover.freeze("SitDown"),
         bone: (name) => bones.get(name),
+        hold: (boneName, obj, offset = new T.Vector3()) => attach(model, bones.get(boneName), obj, offset),
         update: (dt) => mover.mixer.update(dt),
       };
     },
@@ -235,6 +289,10 @@ export async function loadCast(base: string): Promise<Cast> {
       const mover = moverFor(model, new Map(src.animations.map((c) => [c.name, c])));
       mover.play("Idle");
       return { root, play: (m, o) => mover.play(m, o), update: (dt) => mover.mixer.update(dt) };
+    },
+    plant(kind) {
+      const proto = plantProtos.get(kind)!;
+      return proto.clone();
     },
   };
 }
