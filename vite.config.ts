@@ -93,6 +93,18 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         entryFileNames: 'assets/[name]-[hash].js',
+        // The libraries every page needs go in files of their own, apart from the app's code. They
+        // change only when a dependency is updated, so a returning visitor keeps them cached across
+        // deploys and downloads only the app's own file again (launch audit, Nov 11, 2026: the one
+        // entry file was 1.72 MB, about half of it these libraries). Anything not named here is
+        // left where Rollup puts it, so the 3D code stays in its own lazy files.
+        manualChunks(id) {
+          if (!id.includes('/node_modules/')) return undefined;
+          if (/\/node_modules\/(react|react-dom|scheduler|react-router)\//.test(id)) return 'vendor-react';
+          if (/\/node_modules\/(@supabase|iceberg-js|tslib)\//.test(id)) return 'vendor-supabase';
+          if (/\/node_modules\/(motion|motion-dom|motion-utils|framer-motion)\//.test(id)) return 'vendor-motion';
+          return undefined;
+        },
       },
     },
   },
