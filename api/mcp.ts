@@ -8,6 +8,18 @@ import { hobbies } from "../src/app/data/hobbies.js";
  * Public, read-only MCP endpoint. Never expose user moments, profiles, tokens,
  * service-role credentials, or private Supabase data from this endpoint.
  */
+
+const SITE = "https://www.onsoosh.com/#";
+
+/**
+ * Where a hobby opens on the site: its Corner page (/corners/:slug, src/app/routes.ts). The old
+ * /space/<group slug> address this used to return only redirects to Discover now (SpaceRoute.tsx).
+ */
+export const cornerUrl = (cornerSlug: string) => `${SITE}/corners/${encodeURIComponent(cornerSlug)}`;
+
+/** The page that lists every Corner. The 15 groups here have no page of their own any more. */
+export const CORNERS_URL = `${SITE}/corners`;
+
 function createServer() {
   const server = new McpServer({ name: "soosh", version: "0.1.0" });
 
@@ -30,7 +42,7 @@ function createServer() {
           name: item.label,
           category: h.name,
           categorySlug: h.slug,
-          url: `https://www.onsoosh.com/#/space/${encodeURIComponent(h.slug)}`,
+          url: cornerUrl(item.slug),
           searchText: [item.label, h.name, ...(h.keywords ?? [])].join(" ").toLowerCase(),
         })))
         .filter((item) => !needle || item.searchText.includes(needle))
@@ -54,7 +66,7 @@ function createServer() {
         text: JSON.stringify(hobbies.filter((h) => !h.hidden).map((h) => ({
           name: h.name,
           description: h.description,
-          url: `https://www.onsoosh.com/#/space/${encodeURIComponent(h.slug)}`,
+          url: CORNERS_URL,
         }))),
       }],
     }),
