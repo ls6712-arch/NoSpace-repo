@@ -30,6 +30,7 @@ function placeholderSvg(name: string): string {
 export interface MockReport { unservedTables: Set<string>; unhandledRpc: Set<string>; requests: number }
 
 export interface MockOptions {
+  rpcReplies?: Record<string,(args:AnyRow)=>unknown>;
   /** Hold every image response this long, so layout shift while photos load is measurable. */
   imageDelayMs?: number;
   /** Hold every image response until this promise resolves (measure the page with the photos still pending). */
@@ -45,8 +46,10 @@ export async function installSupabaseMock(context: BrowserContext, fixtures: Fix
   const cors = { "access-control-allow-origin": "*", "access-control-allow-headers": "*", "access-control-allow-methods": "*", "access-control-expose-headers": "content-range" };
 
   const rpc = (fn: string, args: AnyRow): unknown => {
+    if(opts.rpcReplies?.[fn])return opts.rpcReplies[fn](args);
     const messages = (fixtures.messages ?? []) as AnyRow[];
     switch (fn) {
+      case "get_calendar_pursuit_sessions": return [];
       case "participation_message_summaries": {
         const byP = new Map<number, AnyRow[]>();
         for (const m of messages) { if (m.participation_id != null) byP.set(m.participation_id as number, [...(byP.get(m.participation_id as number) ?? []), m]); }

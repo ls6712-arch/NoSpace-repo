@@ -44,6 +44,16 @@ afterEach(() => {
 });
 
 describe("Stubby", () => {
+  it("stops idle and state animations for a local pause control, then resumes", async () => {
+    const { rerender } = render(<Stubby state="idle" motionEnabled={false}/>);
+    await settleAll();
+    rerender(<Stubby state="thinking" motionEnabled={false}/>);
+    await settleAll();
+    expect(started).toBe(0);
+    rerender(<Stubby state="thinking" motionEnabled/>);
+    await settleAll();
+    expect(started).toBeGreaterThan(0);
+  });
   it("rests its idle life while the tab is hidden, and wakes again", async () => {
     render(<Stubby state="idle" />);
     await settleAll();

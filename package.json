@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/build-sitemap.ts",
     "preview": "vite preview",
     "test": "vitest run",
     "lint": "npm run lint:tokens",
@@ -17,9 +17,23 @@
     "visual:search": "node scripts/visual/search.ts dist docs/qa/one-skin/search",
     "visual:pages:selftest": "node scripts/visual/page-shell.ts --selftest",
     "build:app": "vite build",
-    "landing:screens": "node scripts/landing-screens/capture.mjs"
+    "landing:screens": "node scripts/landing-screens/capture.mjs",
+    "e2e:guest": "node scripts/e2e/guest-stubby.ts",
+    "e2e:landing": "node scripts/e2e/landing.ts",
+    "e2e:corner-starters": "node scripts/e2e/corner-starters.ts",
+    "e2e:corner-world": "node scripts/e2e/corner-world.ts",
+    "e2e:corner-wall-question": "node scripts/e2e/corner-wall-question.ts",
+    "e2e:room-preview": "node scripts/e2e/room-preview.ts",
+    "e2e:corner-cards": "node scripts/e2e/room-preview.ts --cards",
+    "e2e:corners-on-home": "node scripts/e2e/corners-on-home.ts",
+    "e2e:corner-room-moods": "node scripts/e2e/corner-room-moods.ts",
+    "e2e:discover-library": "node scripts/e2e/discover-library.ts",
+    "test:pursuits:db": "node scripts/check-pursuit-workflow-db.mjs",
+    "e2e:pursuits": "node scripts/e2e/pursuit-workflow.mjs",
+    "e2e:pursuits:compatibility": "node scripts/e2e/pursuit-compatibility.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@radix-ui/react-alert-dialog": "^1.1.23",
     "@radix-ui/react-avatar": "1.1.3",
     "@radix-ui/react-dialog": "1.1.6",
@@ -39,19 +53,20 @@
     "clsx": "2.1.1",
     "dotenv": "^17.4.2",
     "heic-convert": "^2.1.0",
-    "heic2any": "^0.0.4",
     "lucide-react": "0.487.0",
     "motion": "^13.4.0",
+    "ogl": "^1.0.11",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-router": "7.13.0",
-    "sonner": "^2.0.8",
+    "react-router": "7.18.5",
     "tailwind-merge": "3.2.0",
-    "three": "^0.169.0",
+    "three": "0.169.0",
     "three-stdlib": "^2.36.1",
-    "tw-animate-css": "1.3.8"
+    "tw-animate-css": "1.3.8",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
     "@tailwindcss/vite": "4.1.12",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^22.20.5",
@@ -64,7 +79,7 @@
     "sharp": "^0.35.5",
     "tailwindcss": "4.1.12",
     "typescript": "5.6.3",
-    "vite": "6.3.5",
-    "vitest": "^3.2.7"
+    "vite": "6.4.5",
+    "vitest": "^5.1.0"
   }
 }

@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
-import { hasRealMedia } from "../MomentCard";
+import { hasRealMedia } from "../moment/MomentMedia";
 import { hobbies, subHobbyLabel } from "../../data/hobbies";
 import { postCorner, type Post } from "../../data/posts";
 import { categoryOfCorner } from "../../data/cornerCategories";

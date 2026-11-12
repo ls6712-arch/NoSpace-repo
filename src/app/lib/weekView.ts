@@ -1,3 +1,6 @@
+import { localClock } from "../../../supabase/functions/_shared/preferenceTime";
+import { weeklyHours } from "../../../supabase/functions/_shared/weeklyHours";
+import { costFits } from "./personalization";
 import { formatDate, formatWeekday } from "./dates";
 import { HOME_TZ, nyParts, nyTimeToMs, type WeekPlan, type WeekWindow } from "./homeWeek";
 import { plural } from "./plural";
@@ -40,6 +43,8 @@ export interface WeekPlanDetail extends WeekPlan {
   /** A Pursuit's session: "4 of 5". Left out for a one-session plan. */
   session?: { n: number; total: number };
   pursuitId?: string;
+  pursuitSession?: boolean;
+  sharedSession?: boolean;
   /** Whether the viewer owns the Pursuit, so "Bring someone" can make its link. */
   mine?: boolean;
   going: WeekGoing;
@@ -124,19 +129,21 @@ export function windowsAcross(windows: readonly string[], days: readonly WeekDay
   if (windows.length === 0) return [];
   const out: WeekWindow[] = [];
   for (const day of days) {
-    for (const slot of SLOTS) {
-      const key = windowKey(day.dayKey, slot.key);
-      if (!windows.includes(key)) continue;
-      const startMs = nyTimeToMs(day.y, day.m, day.d, slot.key === "day" ? 6 : 18);
-      const endMs = slot.key === "day" ? nyTimeToMs(day.y, day.m, day.d, 18) : day.endMs;
-      if (endMs > now) out.push({ key, day: day.dayKey, slot: slot.key, offset: day.offset, startMs, endMs });
+    for (const range of weeklyHours(windows).filter(r => r.day === day.dayKey)) {
+      const key = range.key;
+      const slot = range.start >= 1080 ? "eve" : "day";
+      const at = (minute: number) => nyTimeToMs(day.y, day.m, day.d, Math.floor(minute / 60)) + minute % 60 * 60_000;
+      const startMs = at(range.start), endMs = at(range.end);
+      const a=localClock(startMs), b=localClock(endMs);
+      if(a.hour*60+a.minute!==range.start%1440 || b.hour*60+b.minute!==range.end%1440) continue;
+      if (endMs > now) out.push({ key, day: day.dayKey, slot, offset: day.offset, startMs, endMs });
     }
   }
   return out.sort((a, b) => a.startMs - b.startMs);
 }
 
 
-export type FreePart = "day" | "eve" | "all";
+export type FreePart = "day" | "eve" | "all" | "time";
 
 export interface FreeSlot {
   part: FreePart;
@@ -146,7 +153,7 @@ export interface FreeSlot {
   endMs: number;
 }
 
-export const FREE_LABEL: Record<FreePart, string> = { day: "Free daytime", eve: "Free evening", all: "Free all day" };
+export const FREE_LABEL: Record<FreePart, string> = { day: "Free daytime", eve: "Free evening", all: "Free all day", time: "Free time" };
 
 export interface DayContent {
   day: WeekDay;
@@ -167,6 +174,7 @@ export function dayContents(days: readonly WeekDay[], plans: readonly WeekPlanDe
     const open = left
       .filter((w) => w.offset === day.offset)
       .filter((w) => !mine.some((p) => p.startsAt >= w.startMs && p.startsAt < w.endMs));
+    if(open.some(w=>w.key.includes("@"))) return {day,plans:mine,free:open.map(w=>({part:"time" as const,keys:[w.key],startMs:w.startMs,endMs:w.endMs}))};
     const day_ = open.find((w) => w.slot === "day");
     const eve = open.find((w) => w.slot === "eve");
     const free: FreeSlot[] = [];
@@ -195,7 +203,7 @@ export const nothingOnLine = (day: WeekDay) => `${formatWeekday(day.noonMs, "sho
 
 /** Weekdays that have an evening in the saved windows, in week order starting Monday: "Thu", "Fri". */
 export function freeEvenings(windows: readonly string[]): string[] {
-  return DAYS.filter((d) => windows.includes(`${d.key}-eve`)).map((d) => d.short);
+  return DAYS.filter(d=>weeklyHours(windows).some(r=>r.day===d.key && r.end>1080)).map(d=>d.short);
 }
 
 /** The Discover link for a free slot: the first window it covers. */
@@ -249,14 +257,13 @@ export function goodPlanHours(free: readonly Span[], candidates: readonly Span[]
  * their picked Corners (the fetch only looks there) that fit their budget.
  * A listing blocks out its own length, a session 2 hours.
  */
-export function candidateSpans(input: { events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; budget: number | null; passes: readonly Pass[] }): Span[] {
+export function candidateSpans(input: { events: readonly LiveEventInput[]; pursuits: readonly LivePursuitInput[]; budget: number | null; activityBudget?:number|null; passes: readonly Pass[] }): Span[] {
   const spans: Span[] = [];
   for (const e of input.events) {
-    const hasPass = !!passFor(e.cornerKey.split("/")[1] ?? "", input.passes);
-    if (!affordable(input.budget, parsePrice(e.price), hasPass)) continue;
+    if (!costFits(parsePrice(e.price),input.activityBudget ?? (input.budget===0?0:null)) || !e.endsAt || e.endsAt<=e.startsAt) continue;
     spans.push(planSpan(e.startsAt, e.endsAt));
   }
-  for (const p of input.pursuits) spans.push(planSpan(p.startsAt));
+  for (const p of input.pursuits) if(p.endsAt && p.endsAt>p.startsAt && costFits(null,input.activityBudget ?? (input.budget===0?0:null))) spans.push(planSpan(p.startsAt,p.endsAt));
   return spans;
 }
 

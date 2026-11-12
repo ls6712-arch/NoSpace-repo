@@ -6,6 +6,12 @@
  */
 export const MIN_AGE = 18;
 
+/**
+ * The age for 21+ picks (bars, tastings), from a birthdate on file only. The same number is written
+ * in public.my_access() (migration 20261111000050): change both.
+ */
+export const ADULT_AGE = 21;
+
 /** Whole years between a birth date ("YYYY-MM-DD") and a day. Null when the date is not a real one. */
 export function ageOn(birthdate: string, today: Date = new Date()): number | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthdate);

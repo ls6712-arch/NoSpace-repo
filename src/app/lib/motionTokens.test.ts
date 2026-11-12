@@ -1,5 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { STAGGER, STAGGER_CAP, haptic, pop, press, sheet, shared, staggerDelay } from "./motionTokens";
+import { DURATION_BASE, DURATION_FAST, EASE_STANDARD, STAGGER, STAGGER_CAP, fuse, haptic, page, pop, press, settle, sheet, shared, staggerDelay } from "./motionTokens";
 import { springs } from "./springs";
 
 describe("motion tokens", () => {
@@ -20,6 +22,19 @@ describe("motion tokens", () => {
   it("keeps the older springs import pointing at the same values", () => {
     expect(springs.press).toBe(press);
     expect(springs.sheet).toBe(sheet);
+    expect(springs.settle).toBe(settle);
+  });
+
+  it("matches the CSS motion tokens in theme.css, so CSS and JS move alike", () => {
+    const css = fs.readFileSync(path.resolve(__dirname, "../../styles/theme.css"), "utf8");
+    expect(css).toContain(`--duration-fast: ${DURATION_FAST * 1000}ms;`);
+    expect(css).toContain(`--duration-base: ${DURATION_BASE * 1000}ms;`);
+    expect(css).toContain(`--ease-standard: cubic-bezier(${EASE_STANDARD.join(", ")});`);
+    expect(page).toEqual({ duration: DURATION_BASE, ease: EASE_STANDARD });
+  });
+
+  it("burns a fuse at an even speed over the time given", () => {
+    expect(fuse(6000)).toEqual({ duration: 6, ease: "linear" });
   });
 
   it("does not throw where vibrate is missing", () => {

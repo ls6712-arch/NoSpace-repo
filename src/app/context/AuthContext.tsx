@@ -17,6 +17,7 @@ import { friendlyError } from "../lib/friendlyError";
 import { isNoAccountError, isRateLimited, retryAfterSeconds } from "../lib/authErrors";
 import { recordSendMs, waitForTypicalSend } from "../lib/sendTiming";
 import { flushTermsAcceptance } from "../lib/termsAcceptance";
+import { trackSignIn } from "../lib/signInEvent";
 import { fetchOwnPrivateProfile, PUBLIC_PROFILE_COLUMNS } from "../lib/ownProfile";
 
 export interface Profile {
@@ -56,7 +57,15 @@ export interface Profile {
    * migration. Read-only here: only claim_invite/create_invite flip it,
    * server-side. Root.tsx routes a pending account to /welcome and nowhere
    * else. */
-  access?: "active" | "pending";
+  /** "under_18": a member who gave an under-18 birthday, now Stubby only (20261111000150). */
+  access?: "active" | "pending" | "under_18";
+  /**
+   * "stubby" for an account made by a guest signing up from Stubby (migration
+   * 20261111000050_member_gate.sql). Read only while onboarding isn't finished: such an account
+   * isn't sent into onboarding, it uses Stubby and is asked to finish setting up when it tries
+   * anything else.
+   */
+  signed_up_from?: "stubby" | null;
   invited_by?: string | null;
   invite_allowance?: number;
   /** Own-only (see lib/ownProfile.ts): nobody else can read these any more. */
@@ -205,6 +214,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const row = data
         ? ({ ...(data as object), ...(own.status === "ok" ? own.data : {}) } as Profile)
         : null;
+      if (row && !row.onboarding_completed) {
+        // Its own read, so a database without the column yet changes nothing.
+        const from = await supabase.from("profiles").select("signed_up_from").eq("id", userId).maybeSingle();
+        row.signed_up_from = !from.error && (from.data as { signed_up_from?: unknown } | null)?.signed_up_from === "stubby" ? "stubby" : null;
+      }
       if (row) {
         setProfile(row);
         lastRow = row;
@@ -273,8 +287,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       });
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
       setSession(newSession);
+      if (event === "SIGNED_IN" && newSession) trackSignIn(newSession.user);
       if (newSession) {
         void bootstrapProfile(newSession.user.id);
         void restoreOwnPursuits(newSession.user.id);
@@ -310,23 +325,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle: AuthContextType["signInWithGoogle"] = async () => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        // Same reasoning as signUp's emailRedirectTo above — no #/you here.
-        redirectTo: `${window.location.origin}${window.location.pathname}`,
-      },
-    });
-    return { error: error ? error.message : null };
+    // Offline, signInWithOAuth throws instead of returning an error, and the
+    // provider's own message is technical: both become one plain sentence.
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          // Same reasoning as signUp's emailRedirectTo above — no #/you here.
+          redirectTo: `${window.location.origin}${window.location.pathname}`,
+        },
+      });
+      if (error) console.warn("[auth] Google sign-in:", error);
+      return { error: error ? friendlyError(error) : null };
+    } catch (e) {
+      return { error: friendlyError(e) };
+    }
   };
 
   const signInWithApple: AuthContextType["signInWithApple"] = async () => {
     if (!supabase) return { error: "Accounts aren’t set up for this build yet." };
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "apple",
-      options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
-    });
-    return { error: error ? error.message : null };
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "apple",
+        options: { redirectTo: `${window.location.origin}${window.location.pathname}` },
+      });
+      if (error) console.warn("[auth] Apple sign-in:", error);
+      return { error: error ? friendlyError(error) : null };
+    } catch (e) {
+      return { error: friendlyError(e) };
+    }
   };
 
   const sendEmailCode: AuthContextType["sendEmailCode"] = async (email) => {

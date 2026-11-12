@@ -5,6 +5,7 @@ import { formatWeekday } from "./dates";
 import { friendlyError } from "./friendlyError";
 import { HOME_TZ, nyTimeToMs } from "./homeWeek";
 import { ticketTime } from "./weekView";
+import { STUBBY_HEADERS } from "./stubbyAsk";
 
 /**
  * "This week in New York": a few hand-picked things the founder or an admin
@@ -204,7 +205,7 @@ export interface ScoutReport {
 /** Runs the scout once. It only ever adds drafts; the admin publishes. */
 export async function runScout(focus: string): Promise<{ report: ScoutReport | null; error: string | null }> {
   if (!supabase) return { report: null, error: "The scout needs the live app." };
-  const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { focus: focus.trim() || null } });
+  const { data, error } = await supabase.functions.invoke("stubby-scout", { body: { focus: focus.trim() || null }, headers: STUBBY_HEADERS });
   if (error) {
     // The function says what went wrong in its JSON body; the client only says "non-2xx".
     let message: string | null = null;

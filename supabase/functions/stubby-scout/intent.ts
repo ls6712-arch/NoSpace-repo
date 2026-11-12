@@ -8,14 +8,25 @@
 //   budget  a per-outing ceiling: "free", "under $20" or "cheap" in the ask, else about a
 //           quarter of the monthly budget.
 //   what    the kind of thing, when the ask names one.
-// And whether one thing is still missing that's worth one question (who, then when, then what).
+//   setting stay in or head out, when the ask says (stubby-agent C3).
+// And whether one thing is still missing that's worth one question (stubby-agent C4): a vague ask
+// with no one named is asked "Stay in or head out?"; who is asked only when company changes the
+// options (heading out, no one named); then when, then what kind. Never more than one per ask.
+//
+// Precedence (stubby-agent B3, config.ts): what they typed now wins over a chip remembered from
+// earlier asks, so "with my girlfriend" beats a remembered Just me. A tap made for this ask
+// (Stubby's question, This weekend) is the person changing the ask, so for the time it wins over
+// the words it replaces. Every value carries where it came from (`from`), for the decision trace.
 
 import { HOME_TZ } from "./picks.ts";
+import type { Source } from "./config.ts";
 
 export type Who = "solo" | "partner" | "friends" | "family";
 export type WhenLabel = "tonight" | "today" | "tomorrow" | "weekend" | "day" | "week";
 export type Vibe = "active" | "make" | "food" | "chill" | "learn";
-export type Missing = "who" | "when" | "what";
+export type Missing = "setting" | "who" | "when" | "what";
+/** Stay in (at home) or head out. */
+export type Setting = "in" | "out";
 
 export interface Window {
   startMs: number;
@@ -42,8 +53,12 @@ export interface Intent {
   specific: boolean;
   /** The ask asks for bars, breweries, tastings or 21+: otherwise those are left out. */
   adults: boolean;
+  /** Stay in or head out, when the ask says or they answered. Null: either. */
+  setting: Setting | null;
   /** The one question worth asking, or null. Never more than one per ask. */
   missing: Missing | null;
+  /** Where each value came from (stubby-agent B3), for the decision trace. Null: not known. */
+  from: { who: Source | null; when: Source | null; setting: Source | null; budget: Source | null };
 }
 
 export interface Answers {
@@ -52,21 +67,26 @@ export interface Answers {
   when?: "tonight" | "tomorrow" | "weekend" | string;
   /** Surprise me, or an answer typed into the ask: no question, he searches. */
   skip?: boolean;
+  /** The answer to "Stay in or head out?". */
+  setting?: Setting;
+  /** Who they said in an earlier ask, remembered for the session as a chip. Below what they type now. */
+  rememberedWho?: Who;
 }
 
 /** A day picked as "YYYY-MM-DD": that whole day in New York (from now, if it's today). Null if not a real day. */
-export function dayWindow(day: string, now: number): Window | null {
+export function dayWindow(day: string, now: number, timeZone = HOME_TZ): Window | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
   if (!m) return null;
   const [y, mo, d] = m.slice(1).map(Number);
-  const start = nyTime(y, mo, d, 0);
-  const end = nyTime(y, mo, d + 1, 0);
-  const p = nyParts(start);
+  const start = nyTime(y, mo, d, 0, 0, timeZone);
+  const end = nyTime(y, mo, d + 1, 0, 0, timeZone);
+  const p = nyParts(start, timeZone);
   if (p.y !== y || p.m !== mo || p.d !== d || end <= now) return null;
   return { startMs: Math.max(start, now), endMs: end, label: "day", hard: true };
 }
 
 export interface IntentContext {
+  timeZone?: string;
   now: number;
   /** The usual week: "sat-eve" and the like. */
   windows?: readonly string[];
@@ -85,27 +105,27 @@ export const DEFAULT_DAYS = 7;
 const fmt = new Intl.DateTimeFormat("en-US", { timeZone: HOME_TZ, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" });
 const DOW: Record<string, number> = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
 
-export function nyParts(ms: number) {
+export function nyParts(ms: number, timeZone = HOME_TZ) {
   const p: Record<string, string> = {};
-  for (const x of fmt.formatToParts(new Date(ms))) p[x.type] = x.value;
+  for (const x of (timeZone === HOME_TZ ? fmt : new Intl.DateTimeFormat("en-US", { timeZone, year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", weekday: "short", hourCycle: "h23" })).formatToParts(new Date(ms))) p[x.type] = x.value;
   return { y: Number(p.year), m: Number(p.month), d: Number(p.day), hour: Number(p.hour), minute: Number(p.minute), dow: DOW[p.weekday] ?? 0 };
 }
 
 /** A New York wall clock time to ms. Day overflow (d + 1) is fine. */
-export function nyTime(y: number, m: number, d: number, hour: number, minute = 0): number {
+export function nyTime(y: number, m: number, d: number, hour: number, minute = 0, timeZone = HOME_TZ): number {
   const guess = Date.UTC(y, m - 1, d, hour, minute);
   let ms = guess;
   for (let i = 0; i < 2; i++) {
-    const p = nyParts(ms);
+    const p = nyParts(ms, timeZone);
     ms += guess - Date.UTC(p.y, p.m - 1, p.d, p.hour, p.minute);
   }
   return ms;
 }
 
 /** Midnight at the start of the day `offset` days from now's day. */
-const dayStart = (now: number, offset: number) => {
-  const t = nyParts(now);
-  return nyTime(t.y, t.m, t.d + offset, 0);
+const dayStart = (now: number, offset: number, timeZone = HOME_TZ) => {
+  const t = nyParts(now, timeZone);
+  return nyTime(t.y, t.m, t.d + offset, 0, 0, timeZone);
 };
 
 // ── the words ─────────────────────────────────────────────────────────────
@@ -125,6 +145,11 @@ const VIBES: [Vibe, RegExp][] = [
   ["learn", /\b(learn|learning|class|classes|lecture|talk|course|lesson|lessons|seminar|reading group)\b/i],
 ];
 
+/** Stay in: at home. */
+const STAY_IN = /\b(stay in|staying in|stay home|at home|from home|night in|indoors|on the couch|on the sofa)\b/i;
+/** Head out: leave the house. */
+const HEAD_OUT = /\b(head out|heading out|go out|going out|get out|out of the house|out and about|outdoors|outside|night out|out (tonight|today|tomorrow|this weekend))\b/i;
+
 const ADULTS = /\b(brewery|breweries|bars?|pubs?|21\+|tasting|tastings|wine|beer|cocktails?|happy hour)\b/i;
 
 /** Words that carry no "what": an ask made only of these and a time or a who needs one question. */
@@ -132,20 +157,20 @@ const EMPTY_WORDS = new Set(
   "a an and any anything are around can do doing for get go good i id i'd ideas idea im i'm in is it let's lets me my near need of on or out over please plans plan some something stuff that the things thing this to up want what with you".split(" "),
 );
 
-function readWhen(text: string, now: number): Window | null {
+function readWhen(text: string, now: number, timeZone = HOME_TZ): Window | null {
   const t = text.toLowerCase();
-  const today = nyParts(now);
-  const endOfDay = (offset: number) => dayStart(now, offset + 1);
+  const today = nyParts(now, timeZone);
+  const endOfDay = (offset: number) => dayStart(now, offset + 1, timeZone);
   if (/\b(tonight|this evening|later today)\b/.test(t)) return { startMs: now, endMs: endOfDay(0), label: "tonight", hard: true };
   if (/\btoday\b/.test(t)) return { startMs: now, endMs: endOfDay(0), label: "today", hard: true };
-  if (/\btomorrow\b/.test(t)) return { startMs: dayStart(now, 1), endMs: endOfDay(1), label: "tomorrow", hard: true };
+  if (/\btomorrow\b/.test(t)) return { startMs: dayStart(now, 1, timeZone), endMs: endOfDay(1), label: "tomorrow", hard: true };
   // This weekend's Friday, in days from today: already in the weekend, the Friday just gone.
   const toFri = today.dow === 6 ? -1 : today.dow === 0 ? -2 : 5 - today.dow;
   const weekend = (fromFri: number): Window => {
-    const p = nyParts(dayStart(now, fromFri) + 12 * HOUR);
-    const start = nyTime(p.y, p.m, p.d, 17);
+    const p = nyParts(dayStart(now, fromFri, timeZone) + 12 * HOUR, timeZone);
+    const start = nyTime(p.y, p.m, p.d, 17, 0, timeZone);
     // Friday 5 pm to the end of Sunday; already in it, from now.
-    return { startMs: Math.max(start, now), endMs: dayStart(now, fromFri + 3), label: "weekend", hard: true };
+    return { startMs: Math.max(start, now), endMs: dayStart(now, fromFri + 3, timeZone), label: "weekend", hard: true };
   };
   if (/\bnext weekend\b/.test(t)) return weekend(toFri + 7);
   if (/\b(this weekend|weekend|saturday and sunday)\b/.test(t)) return weekend(toFri);
@@ -153,10 +178,10 @@ function readWhen(text: string, now: number): Window | null {
   for (const [i, name] of days.entries()) {
     if (new RegExp(`\\b${name}\\b`).test(t)) {
       const offset = (i - today.dow + 7) % 7;
-      return { startMs: offset === 0 ? now : dayStart(now, offset), endMs: endOfDay(offset), label: "day", hard: true };
+      return { startMs: offset === 0 ? now : dayStart(now, offset, timeZone), endMs: endOfDay(offset), label: "day", hard: true };
     }
   }
-  if (/\bthis week\b/.test(t)) return { startMs: now, endMs: dayStart(now, DEFAULT_DAYS), label: "week", hard: true };
+  if (/\bthis week\b/.test(t)) return { startMs: now, endMs: dayStart(now, DEFAULT_DAYS, timeZone), label: "week", hard: true };
   return null;
 }
 
@@ -176,12 +201,22 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
   const lower = text.toLowerCase();
   const answers = ctx.answers ?? null;
 
-  let who: Who | null = null;
-  for (const [w, re] of WHO) if (re.test(text)) { who = w; break; }
-  if (answers?.who) who = answers.who;
+  // Who: what they typed, then their answer to the question, then the chip remembered from before.
+  let typedWho: Who | null = null;
+  for (const [w, re] of WHO) if (re.test(text)) { typedWho = w; break; }
+  const who = typedWho ?? answers?.who ?? answers?.rememberedWho ?? null;
+  const whoFrom: Source | null = typedWho ? "ask" : answers?.who ? "answer" : answers?.rememberedWho ? "session" : null;
 
-  let when = readWhen(text, ctx.now);
-  if (answers?.when) when = dayWindow(answers.when, ctx.now) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now) ?? when;
+  // When: a tap made for this ask wins over the words it replaces (This weekend on a "tonight" ask).
+  const typedWhen = readWhen(text, ctx.now, ctx.timeZone);
+  const answeredWhen = answers?.when ? (dayWindow(answers.when, ctx.now, ctx.timeZone) ?? readWhen(answers.when === "weekend" ? "this weekend" : answers.when, ctx.now, ctx.timeZone)) : null;
+  const when = answeredWhen ?? typedWhen;
+  const whenFrom: Source | null = answeredWhen ? "answer" : typedWhen ? "ask" : null;
+
+  // Stay in or head out: typed, else answered.
+  const typedSetting: Setting | null = STAY_IN.test(text) ? "in" : HEAD_OUT.test(text) ? "out" : null;
+  const setting = typedSetting ?? answers?.setting ?? null;
+  const settingFrom: Source | null = typedSetting ? "ask" : answers?.setting ? "answer" : null;
 
   const vibes = VIBES.filter(([, re]) => re.test(text)).map(([v]) => v);
   const corners = (ctx.cornerNames ?? []).map((c) => c.toLowerCase()).filter((c) => c.length > 2);
@@ -197,25 +232,30 @@ export function readIntent(raw: string, ctx: IntentContext): Intent {
 
   const hasWindows = (ctx.windows ?? []).length > 0;
   let missing: Missing | null = null;
-  // One question per ask: once they have answered, he searches.
-  if (!answers?.who && !answers?.when && !answers?.skip) {
-    if (!specific && !who) missing = "who";
-    else if (!specific && !when && !hasWindows) missing = "when";
+  // One question per ask, only when the answer changes what's possible: once answered, he searches.
+  // Staying in, who's coming changes little, so it's never asked then.
+  if (!answers?.who && !answers?.when && !answers?.skip && !answers?.setting) {
+    if (!specific && !setting && !who) missing = "setting";
+    else if (!specific && setting === "out" && !who) missing = "who";
+    else if (!specific && setting !== "in" && !when && !hasWindows) missing = "when";
     else if (!specific && content.length === 0 && who && when) missing = "what";
   }
 
+  const budget = readBudget(text, ctx.monthlyBudget === 0 ? 0 : null);
   return {
     when,
     who,
-    budget: readBudget(text, ctx.monthlyBudget),
+    budget,
     vibes,
     specific,
     adults: ADULTS.test(text),
+    setting,
     missing,
+    from: { who: whoFrom, when: whenFrom, setting: settingFrom, budget: budget ? budget.from : null },
   };
 }
 
 /** The window the search looks in: the ask's own, else the next 7 days. */
-export function searchWindow(intent: Intent, now: number): Window {
-  return intent.when ?? { startMs: now, endMs: dayStart(now, DEFAULT_DAYS + 1), label: "week", hard: false };
+export function searchWindow(intent: Intent, now: number, timeZone = HOME_TZ): Window {
+  return intent.when ?? { startMs: now, endMs: dayStart(now, DEFAULT_DAYS + 1, timeZone), label: "week", hard: false };
 }

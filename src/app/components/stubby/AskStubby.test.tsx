@@ -10,6 +10,7 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock("../../lib/stubbyAsk", async (orig) => ({ ...(await orig<typeof import("../../lib/stubbyAsk")>()), ...api }));
 
+import { MemoryRouter } from "react-router";
 import { AskStubby, useAskStubby } from "./AskStubby";
 import { StubbyResults } from "./StubbyResults";
 import type { BuddyReaction } from "./StubbyBuddy";
@@ -71,8 +72,10 @@ describe("AskStubby", () => {
     fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
     await waitFor(() => expect(screen.getByTestId("outcome").textContent).toBe("nothing"));
     expect(onReact).toHaveBeenCalledWith("shrug");
-    // Stubby's own line says nothing fit (the stage), so the results don't repeat it.
-    expect(screen.queryByText("Nothing fit this time. Try asking another way.")).toBeNull();
+    // Never a blank area: the results say so too, with the ways on.
+    const empty = document.querySelector("[data-stubby-empty]")!;
+    expect(empty.textContent).toContain("Nothing fit this time. Try asking another way.");
+    expect([...empty.querySelectorAll("button")].map((b) => b.textContent)).toEqual(["This weekend", "Surprise me", "Try different words"]);
   });
 
   it("tilts and says why when the ask fails", async () => {
@@ -118,7 +121,83 @@ describe("AskStubby", () => {
     api.fetchMyPicks.mockResolvedValue([pick]);
     render(<Harness />);
     fireEvent.click(await screen.findByRole("button", { name: "Remove: Wheel night" }));
-    await waitFor(() => expect(api.removeMyPick).toHaveBeenCalledWith(9));
+    await waitFor(() => expect((api.removeMyPick.mock.calls[0] as unknown[] | undefined)?.[0]).toBe(9));
     expect(screen.queryByText("Wheel night")).toBeNull();
+  });
+
+  it("answers Stay in from their own Pursuits and Corners, never the search, and says so when there's nothing", async () => {
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: 3, error: null, question: "setting" });
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "something fun" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Stay in" }));
+    // No account in the test: nothing to go on, so the honest empty state with its ways on.
+    expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Head out" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Start a Pursuit" }).getAttribute("href")).toBe("/pursuits/new");
+    expect(screen.getByRole("link", { name: "Go to Discover" })).toBeTruthy();
+    // Only the first ask went out; Stay in used no search and no ask.
+    expect(api.askStubbyStream).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("3 asks left today")).toBeTruthy();
+
+    // Head out sends the same ask again, heading out.
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: 3, error: null });
+    fireEvent.click(screen.getByRole("button", { name: "Head out" }));
+    await waitFor(() => expect(api.askStubbyStream).toHaveBeenCalledTimes(2));
+    expect(api.askStubbyStream.mock.calls[1]?.[0]).toBe("something fun");
+    expect((api.askStubbyStream.mock.calls[1]?.[1] as { answers?: { setting?: string } }).answers?.setting).toBe("out");
+  });
+
+  it("an ask that says stay in skips the search too", async () => {
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "a cozy night in" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    expect(await screen.findByText("Nothing fit this time. Try asking another way.")).toBeTruthy();
+    expect(api.askStubbyStream).not.toHaveBeenCalled();
+  });
+
+  it("outside a verified country, the care card says to call the local emergency number, with nothing to tap", async () => {
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: null, care: { line: "That sounds really hard. You don’t have to handle it alone.", resources: [], emergency: { label: "Call your local emergency number", detail: "If you’re in danger right now", href: null }, friend: { label: "Message a friend", href: "/messages" } } });
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery tonight" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    expect(await screen.findByText("Call your local emergency number")).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Call your local emergency number" })).toBeNull();
+    expect(screen.queryByRole("list", { name: "Someone to talk to" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Message a friend" }).getAttribute("href")).toBe("/messages");
+  });
+
+  it("shows the care card in place of picks, with someone to talk to and a way to message a friend", async () => {
+    api.askStubbyStream.mockResolvedValue({ found: 0, asksLeft: null, error: null, care: { line: "That sounds really hard. You don’t have to handle it alone.", resources: [{ label: "Call 988", detail: "988 Suicide and Crisis Lifeline, any time", href: "tel:988" }], emergency: { label: "Call 911", detail: "If you’re in danger right now", href: "tel:911" }, friend: { label: "Message a friend", href: "/messages" } } });
+    render(
+      <MemoryRouter>
+        <Harness />
+      </MemoryRouter>,
+    );
+    expect(await screen.findByText("3 asks left today")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("What are you in the mood for?"), { target: { value: "pottery tonight" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ask Stubby" }));
+    expect(await screen.findByText("That sounds really hard. You don’t have to handle it alone.")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Call 988" }).getAttribute("href")).toBe("tel:988");
+    expect(screen.getByRole("link", { name: "Message a friend" }).getAttribute("href")).toBe("/messages");
+    expect(screen.getByRole("link", { name: "Call 911" }).getAttribute("href")).toBe("tel:911");
+    // No ask was used, and no picks.
+    expect(screen.getByText("3 asks left today")).toBeTruthy();
+    expect(screen.getByTestId("outcome").textContent).toBe("null");
   });
 });

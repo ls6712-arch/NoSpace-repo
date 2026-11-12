@@ -14,15 +14,15 @@ import { dayContents, daysFromToday, windowsAcross, FREE_LABEL, goingLine, planS
  * time. The screens only draw what these return.
  */
 
-export type CalendarView = "day" | "week" | "month" | "list";
-export const VIEWS: readonly CalendarView[] = ["day", "week", "month", "list"];
-export const VIEW_LABEL: Record<CalendarView, string> = { day: "Day", week: "Week", month: "Month", list: "List" };
+export type CalendarView = "day" | "week" | "month" | "year" | "list";
+export const VIEWS: readonly CalendarView[] = ["day", "week", "month", "year", "list"];
+export const VIEW_LABEL: Record<CalendarView, string> = { day: "Day", week: "Week", month: "Month", year: "Year", list: "List" };
 export const DEFAULT_VIEW: CalendarView = "month";
 
 /** The agenda covers this many days. */
 export const LIST_DAYS = 30;
-/** How far ahead a person can page. */
-export const MONTHS_AHEAD = 3;
+/** How many whole years past this one a person can page into. */
+export const YEARS_AHEAD = 1;
 const DAY_MS = 86_400_000;
 
 // ---------- the URL ----------
@@ -67,9 +67,9 @@ export const addMonths = (ms: number, n: number): number => {
 // ---------- the range ----------
 
 export interface CalendarRange {
-  /** The first moment a person can open: the 1st of the month they signed up. */
+  /** The first moment a person can open: Jan 1 of the year they signed up. */
   minMs: number;
-  /** The end (exclusive) of what a person can open: the end of the month 3 months ahead. */
+  /** The end (exclusive) of what a person can open: the end of next year. */
   maxMs: number;
 }
 
@@ -77,7 +77,22 @@ export function calendarRange(now: number, signedUpAt?: number | null): Calendar
   const start = signedUpAt && Number.isFinite(signedUpAt) && signedUpAt < now ? signedUpAt : now;
   const sp = nyParts(start);
   const np = nyParts(now);
-  return { minMs: nyTimeToMs(sp.y, sp.m, 1, 0), maxMs: nyTimeToMs(np.y, np.m + MONTHS_AHEAD + 1, 1, 0) };
+  // Whole years, so the Year view is never half faded: Jan 1 of the sign-up year to Dec 31 of next year.
+  return { minMs: nyTimeToMs(sp.y, 1, 1, 0), maxMs: nyTimeToMs(np.y + YEARS_AHEAD + 1, 1, 1, 0) };
+}
+
+/** The years a person can open, oldest first: their sign-up year to next year. */
+export function rangeYears(range: CalendarRange): number[] {
+  const first = nyParts(range.minMs).y;
+  const last = nyParts(range.maxMs - DAY_MS).y;
+  return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+}
+
+/** The same month and day in another year (Feb 29 becomes Feb 28), at noon, pulled into the range. */
+export function anchorInYear(anchor: number, year: number, range: CalendarRange): number {
+  const { m, d } = nyParts(anchor);
+  const lastDay = new Date(Date.UTC(year, m, 0)).getUTCDate();
+  return clampAnchor(nyTimeToMs(year, m, Math.min(d, lastDay), 12), range);
 }
 
 /** Pulls any anchor day into the range (noon of the first or the last day). */
@@ -99,10 +114,12 @@ export function viewSpan(view: CalendarView, anchor: number): { startMs: number;
       return { startMs: nyTimeToMs(p.y, p.m, p.d, 0), endMs: nyTimeToMs(p.y, p.m, p.d + LIST_DAYS, 0) };
     case "month":
       return { startMs: nyTimeToMs(p.y, p.m, 1, 0), endMs: nyTimeToMs(p.y, p.m + 1, 1, 0) };
+    case "year":
+      return { startMs: nyTimeToMs(p.y, 1, 1, 0), endMs: nyTimeToMs(p.y + 1, 1, 1, 0) };
   }
 }
 
-/** The anchor one step before (-1) or after (1) this one. Month steps land on the 1st. */
+/** The anchor one step before (-1) or after (1) this one. Month steps land on the 1st, year steps on Jan 1. */
 export function stepAnchor(view: CalendarView, anchor: number, dir: -1 | 1): number {
   switch (view) {
     case "day":
@@ -113,6 +130,8 @@ export function stepAnchor(view: CalendarView, anchor: number, dir: -1 | 1): num
       return addDays(anchor, LIST_DAYS * dir);
     case "month":
       return addMonths(anchor, dir);
+    case "year":
+      return nyTimeToMs(nyParts(anchor).y + dir, 1, 1, 12);
   }
 }
 
@@ -132,9 +151,10 @@ const monthTitle = (anchor: number) => {
 
 const short = (ms: number, now: number) => formatDate(ms, { timeZone: HOME_TZ, now });
 
-/** The big title: "October 2026", "Oct 31 to Nov 6", "Tue Nov 3", "Oct 31 to Nov 29". */
+/** The big title: "October 2026", "2026", "Oct 31 to Nov 6", "Tue Nov 3", "Oct 31 to Nov 29". */
 export function viewTitle(view: CalendarView, anchor: number, now: number): string {
   if (view === "month") return monthTitle(anchor);
+  if (view === "year") return String(nyParts(anchor).y);
   if (view === "day") return `${formatWeekday(anchor, "short", HOME_TZ)} ${short(anchor, now)}`;
   const { startMs, endMs } = viewSpan(view, anchor);
   return `${short(startMs + DAY_MS / 2, now)} to ${short(endMs - DAY_MS / 2, now)}`;
@@ -145,6 +165,7 @@ export const STEP_LABEL: Record<CalendarView, { prev: string; next: string }> = 
   day: { prev: "Previous day", next: "Next day" },
   week: { prev: "Previous week", next: "Next week" },
   month: { prev: "Previous month", next: "Next month" },
+  year: { prev: "Previous year", next: "Next year" },
   list: { prev: "Previous 30 days", next: "Next 30 days" },
 };
 
@@ -153,9 +174,9 @@ export function monthSubline(stubs: number, plansToGo: number): string {
   return [stubs > 0 ? plural(stubs, "Stub") : null, plansToGo > 0 ? `${plural(plansToGo, "plan")} to go` : null, "New York"].filter(Boolean).join(" · ");
 }
 
-/** The line under the title: month counts Stubs and plans to go, week and day count plans, list says how far it reaches. */
+/** The line under the title: month and year count Stubs and plans to go, week and day count plans, list says how far it reaches. */
 export function viewSubline(view: CalendarView, counts: { stubs: number; plans: number; startsToday: boolean }): string {
-  if (view === "month") return monthSubline(counts.stubs, counts.plans);
+  if (view === "month" || view === "year") return monthSubline(counts.stubs, counts.plans);
   const lead = view === "week" ? (counts.startsToday ? "Next 7 days" : "7 days") : view === "list" ? "Next 30 days" : null;
   return [lead, view !== "list" && counts.plans > 0 ? plural(counts.plans, "plan") : null, "New York"].filter(Boolean).join(" · ");
 }
@@ -168,6 +189,25 @@ export function monthGridDays(anchor: number): WeekDay[] {
   const first = nyTimeToMs(p.y, p.m, 1, 12);
   return weekDays(addDays(first, -nyParts(first).dow), 42);
 }
+
+// ---------- the year ----------
+
+/** Every day of the anchor's year, Jan 1 to Dec 31. */
+export function yearDays(anchor: number): WeekDay[] {
+  const y = nyParts(anchor).y;
+  const first = nyTimeToMs(y, 1, 1, 12);
+  const count = Math.round((nyTimeToMs(y + 1, 1, 1, 12) - first) / DAY_MS);
+  return weekDays(first, count);
+}
+
+/** Noon on the 1st of each month of the anchor's year. */
+export function yearMonths(anchor: number): number[] {
+  const y = nyParts(anchor).y;
+  return Array.from({ length: 12 }, (_, i) => nyTimeToMs(y, i + 1, 1, 12));
+}
+
+/** Whether a day can be opened: inside what the person may page through. */
+export const inRange = (day: Pick<WeekDay, "startMs" | "endMs">, range: CalendarRange) => day.endMs > range.minMs && day.startMs < range.maxMs;
 
 export const inMonth = (day: WeekDay, anchor: number) => {
   const p = nyParts(anchor);
@@ -217,7 +257,7 @@ function slotsOfDay(day: WeekDay, spans: readonly Span[], windows: readonly stri
     .map((s) => ({ startMs: Math.max(s.startMs, day.startMs), endMs: Math.min(s.endMs, day.endMs) }))
     .filter((s) => s.endMs - s.startMs >= MIN_FREE_MS)
     .map((s) => {
-      const part: FreePart = s.endMs <= sixPm ? "day" : s.startMs >= sixPm ? "eve" : "all";
+      const part: FreePart = used.some(w=>w.key.includes("@")) ? "time" : s.endMs <= sixPm ? "day" : s.startMs >= sixPm ? "eve" : "all";
       const keys = [
         ...(s.startMs < sixPm && s.endMs > sixAm ? [`${day.dayKey}-day`] : []),
         ...(s.endMs > sixPm ? [`${day.dayKey}-eve`] : []),
@@ -229,7 +269,7 @@ function slotsOfDay(day: WeekDay, spans: readonly Span[], windows: readonly stri
         endMs: s.endMs,
         usualKeys: used.filter((w) => overlaps(w, s)).map((w) => w.key),
         entryIds: free.filter((e) => occurrences(e, s.startMs, s.endMs).length > 0).map((e) => e.id),
-        slotKey: `${dateParam(day.noonMs)}:${keys[0] ?? `${day.dayKey}-day`}`,
+        slotKey: `${dateParam(day.noonMs)}:${keys[0] ?? `${day.dayKey}-day`}${used.some(w=>w.key.includes("@")) ? `:${s.startMs}:${s.endMs}` : ""}`,
       };
     });
 }
@@ -348,7 +388,7 @@ function safeStore(): Storage | null {
 }
 
 /** A session of a longer Pursuit. A plan someone made for one day is a small Pursuit with one session, but it is a plan. */
-export const isPursuitSession = (p: Pick<WeekPlanDetail, "kind" | "session">): boolean => p.kind === "session" && !!p.session && p.session.total > 1;
+export const isPursuitSession = (p: Pick<WeekPlanDetail, "kind" | "session" | "pursuitSession">): boolean => p.kind === "session" && (p.pursuitSession ?? (!!p.session && p.session.total > 1));
 
 /** A day's plans after the Plans and Pursuit sessions filters. */
 export const visiblePlans = (c: Pick<DayContent, "plans">, filters: Filters): WeekPlanDetail[] =>

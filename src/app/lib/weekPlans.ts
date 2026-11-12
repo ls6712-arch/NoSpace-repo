@@ -1,3 +1,4 @@
+import { calendarSessions } from "../../../supabase/functions/_shared/calendarSessions.ts";
 import { supabase } from "../../lib/supabase";
 import { cornerColor, type CatColor } from "./categoryStyle";
 import type { WeekPlan } from "./homeWeek";
@@ -63,49 +64,40 @@ export async function fetchWeekDetail(userId: string, from: number, to: number):
     }
   }
 
-  // Pursuits: the ones they own or have joined, and their sessions in range.
-  const [joined, owned] = await Promise.all([
-    client.from("pursuit_members").select("pursuit_id").eq("user_id", userId).eq("status", "joined"),
-    client.from("pursuits").select("id").eq("user_id", userId).is("finished_at", null).is("let_go_at", null),
-  ]);
-  const pursuitIds = [
-    ...new Set([...rows(joined, "joined").map((r) => r.pursuit_id as string), ...rows(owned, "owned").map((r) => r.id as string)]),
-  ];
-  if (pursuitIds.length > 0) {
-    const [sessions, allSessions, pursuits] = await Promise.all([
-      client.from("pursuit_sessions").select("id, pursuit_id, starts_at, place").in("pursuit_id", pursuitIds).gte("starts_at", iso(from)).lt("starts_at", iso(to)),
-      client.from("pursuit_sessions").select("id, pursuit_id, starts_at").in("pursuit_id", pursuitIds).order("starts_at", { ascending: true }),
-      client.from("pursuits").select("id, title, user_id, hobby_slug, sub_hobby, measure").in("id", pursuitIds),
-    ]);
-    const inRange = rows(sessions, "sessions");
-    const byPursuit = new Map<string, number[]>();
-    for (const s of rows(allSessions, "all sessions")) byPursuit.set(s.pursuit_id, [...(byPursuit.get(s.pursuit_id) ?? []), s.id as number]);
-    const info = new Map(rows(pursuits, "pursuits").map((p) => [p.id as string, p]));
-    const going = await sessionGoing(userId, inRange.map((s) => s.id as number));
-    for (const s of inRange) {
-      const p = info.get(s.pursuit_id as string);
-      if (!p) continue;
-      const all = byPursuit.get(s.pursuit_id as string) ?? [];
-      const target = Number(p.measure?.target);
-      const total = Math.max(all.length, Number.isFinite(target) && target > 0 ? target : 0);
-      const n = all.indexOf(s.id as number) + 1;
-      const space = (p.hobby_slug as string | null) ?? undefined;
-      const slug = (p.sub_hobby as string | null) ?? undefined;
-      plans.push({
-        id: `session-${s.id}`,
-        kind: "session",
-        title: p.title as string,
-        startsAt: Date.parse(s.starts_at as string),
-        place: (s.place as string | null) ?? undefined,
-        cornerKey: space && slug ? `${space}/${slug}` : undefined,
-        color: space && slug ? cornerColor(space, slug) : "orange",
-        session: n > 0 ? { n, total } : undefined,
-        pursuitId: s.pursuit_id as string,
-        mine: p.user_id === userId,
-        going: going.get(s.id as number) ?? alone(),
-      });
-    }
+  const sessions = await calendarSessions(client, userId, from, to);
+  const legacyIds = sessions
+    .filter((s) => s.id.startsWith("session-"))
+    .map((s) => Number(s.id.slice(8)));
+  const going = await sessionGoing(userId, legacyIds);
+  const workflowIds = sessions
+    .filter((s) => s.id.startsWith("meeting-"))
+    .map((s) => s.id.slice(8));
+  const workflowGoing = await meetingGoing(userId, workflowIds);
+  for (const s of sessions) {
+    const space = s.hobby_slug ?? undefined;
+    const slug = s.sub_hobby ?? undefined;
+    plans.push({
+      id: s.id,
+      kind: "session",
+      title: s.title,
+      startsAt: Date.parse(s.starts_at),
+      place: s.place ?? undefined,
+      cornerKey: space && slug ? `${space}/${slug}` : undefined,
+      color: space && slug ? cornerColor(space, slug) : "orange",
+      pursuitId: s.pursuit_id,
+      pursuitSession: !s.is_plan,
+      sharedSession: s.shared_session,
+      session: !s.is_plan
+        ? { n: Number(s.n), total: Number(s.total) }
+        : undefined,
+      mine: s.owner_id === userId || s.creator_id === userId,
+      going:
+        (s.id.startsWith("meeting-")
+          ? workflowGoing.get(s.id.slice(8))
+          : going.get(Number(s.id.slice(8)))) ?? alone(),
+    });
   }
+
 
   return plans.filter((p) => Number.isFinite(p.startsAt)).sort((a, b) => a.startsAt - b.startsAt);
 }
@@ -243,4 +235,30 @@ async function sessionGoing(userId: string, sessionIds: number[]): Promise<Map<n
   } catch {
     return new Map();
   }
+}
+
+async function meetingGoing(
+  userId: string,
+  ids: string[],
+): Promise<Map<string, WeekGoing>> {
+  const result = new Map<string, WeekGoing>();
+  if (!supabase || !ids.length) return result;
+  const { data, error } = await supabase
+    .from("pursuit_attendance")
+    .select("session_id,user_id")
+    .in("session_id", ids)
+    .eq("going", true);
+  if (error) return result;
+  const keys = new Map(ids.map((id, index) => [id, index]));
+  const numbered = await goingFor(
+    userId,
+    (data ?? [])
+      .map((r) => ({ key: keys.get(r.session_id)!, userId: r.user_id }))
+      .filter((r) => r.key !== undefined),
+  );
+  for (const [id, key] of keys) {
+    const people = numbered.get(key);
+    if (people) result.set(id, people);
+  }
+  return result;
 }

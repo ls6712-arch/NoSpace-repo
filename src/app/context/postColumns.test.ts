@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("heic2any", () => ({ default: () => Promise.resolve(new Blob()) }));
 import { BASE_POST_COLUMNS, POST_COLUMNS, POST_COLUMNS_WITH_AUDIENCE, POST_COLUMNS_WITH_COUNTS } from "./ContentContext";
 
 describe("posts column tiers", () => {

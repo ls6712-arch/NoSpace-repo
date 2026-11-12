@@ -215,6 +215,8 @@ describe("the request", () => {
       settings: SETTINGS,
       now: () => NOW,
       userId: async () => "user-1",
+      whoIs: async () => ({ guest: false, member: true }),
+      ipHash: async () => null,
       db: {
         runsSince: async () => 0,
         startRun: async () => 41,
@@ -349,7 +351,12 @@ describe("the request", () => {
       // Shared copy: published (trusted host), and nothing in it says who asked.
       expect(saved[0]).toMatchObject({ published: true, found_by: "scout" });
       expect(JSON.stringify(saved[0])).not.toContain("user-1");
-      expect(asks).toEqual([{ id: 5, found: 2, added: 1, failed: false }]);
+      // Fewer than 3 fit, so a second round ran (the fake search answers the same both times).
+      expect(asks).toMatchObject([{ id: 5, found: 4, added: 1, failed: false }]);
+      // Why each candidate was dropped is saved with the ask: titles and reasons only, never the ask text.
+      const reasons = (asks[0] as { dropped: { title: string; reason: string }[] }).dropped;
+      expect(reasons.length).toBeGreaterThan(0);
+      expect(JSON.stringify(reasons)).not.toContain("next weekend");
     });
 
     it("needs a sign-in and something to look for, before using up an ask", async () => {
@@ -385,7 +392,23 @@ describe("the request", () => {
 
   it("clamps its settings", () => {
     const s = readSettings((k) => ({ STUBBY_SCOUT_ENABLED: "true", ANTHROPIC_API_KEY: "k", STUBBY_SCOUT_RUNS_PER_DAY: "999", STUBBY_SCOUT_MAX_SEARCHES: "abc", STUBBY_ASKS_PER_PERSON: "0" })[k]);
-    expect(s).toEqual({ enabled: true, hasKey: true, runsPerDay: 20, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 });
+    expect(s).toEqual({
+      enabled: true,
+      hasKey: true,
+      askHasKey: true,
+      askEngine: "legacy",
+      v3Testers: [],
+      runsPerDay: 20,
+      maxSearches: 5,
+      restockSearches: 3,
+      asksPerPerson: 6,
+      asksPerDay: 200,
+      guestAsksPerDay: 3,
+      guestAsksPerIp: 9,
+      newGuestsPerIpHour: 5,
+      guestAsksGlobal: 60,
+      guestMaxSearches: 3,
+    });
     expect(readSettings(() => undefined).enabled).toBe(false);
   });
 });

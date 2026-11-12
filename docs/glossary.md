@@ -137,6 +137,8 @@ New in the Corners home (`/corners`, `/corners/:slug`). **Every row below is a n
 | How to start | Heading above a Corner's numbered steps. Also the label on a Discover card with no event, which shows the Corner's first step and links to the Corner |
 | What you’ll need | Heading above 3 to 5 plain facts: gear, place, cost, people. Never a claim about results |
 | More Corners like this | Heading above Corners in the same group of 18 |
+| Not started here yet | **New, for approval (founder, Nov 7, 2026).** Heading of the section under the full Corners on `/corners` and on each group's page: text chips for Corners that have no guide, curated entry or photo yet. On `/corners` the chips are grouped under each group's own name, the first 6 of each, then the existing "See all" link to the group's page; on a group's page every chip shows, with no sub-headings. Hidden while a time or place choice is on, because those choices cannot apply to a Corner with no length or place on record. A Corner leaves it on its own once it has a guide, a curated entry and its own photo, and joins the main grid |
+| Tap one to be the first. | **New, for approval (founder, Nov 7, 2026).** The line under "Not started here yet". Each chip is the Corner's name and opens its page; there is no count and no other text on a chip |
 | Starts in 20m | Time to the next event inside the next hour. Inside 24 hours it is "Starts in 4h"; later it is the day and time |
 | You’ve been to one of their events. | Line on a Closed Space card when you hold a Stub from that Space |
 
@@ -206,6 +208,21 @@ Replaces the Stub types in the row above (silver, ticket, with someone, session,
 
 ## Pursuits
 
+### Simplified workflow (approved by the owner, November 4, 2026)
+
+| Term | Meaning |
+|---|---|
+| Sessions | Count each time you do it |
+| Total | Add up pages, hours, distance, or another amount |
+| Checklist | Check things off as you go |
+| Moments only | Share how it’s going without counting progress |
+| Individual goals / Shared goal | Each participant chooses a target / contributions count toward one goal |
+| Progress / Chat | Tracking and recent Moments / discussion within the Pursuit |
+| Add progress | Record a session, amount, or completed checklist item |
+| Finish by | Optional goal date |
+
+These replace the older measurement and mode labels in the simplified workflow. Legacy Pursuits retain their existing labels for compatibility. Existing action, reminder, invitation, session, comment, and notification terminology continues to apply.
+
 | Term | Meaning |
 |---|---|
 | Pursuit / Start a Pursuit | Named ongoing goal / the only create wording |
@@ -214,6 +231,7 @@ Replaces the Stub types in the row above (silver, ticket, with someone, session,
 | Aim for | Optional target date (no urgency language) |
 | Check in with me | Gentle Pursuit reminders. "Check in" means only this |
 | Just started / In progress / Paused / Finished | Statuses. Buttons: "Pause", "Resume", "Finish", "Reopen". Filter: "Paused" |
+| Upcoming sessions / Past sessions | Scheduled sessions after the next one / previous sessions, shown separately in a Pursuit |
 | Next session | Card at the top of an active Pursuit: when, plus an optional note |
 | Times a week / [N] of [M] this week | Your own weekly aim for a Pursuit, and the count toward it (days with a Moment, Mon–Sun) |
 | One shared goal / Side by side | Shared Pursuit modes |
@@ -260,7 +278,10 @@ Replaces the Stub types in the row above (silver, ticket, with someone, session,
 | Waitlist / You're on the list | Retired (Oct 30, 2026). Sign-up is open. The waitlist table and its data stay, unused |
 | Welcome to Soosh | The inviter's button on "[Name] added their first moment": opens it with the reply box ready |
 
-## Landing page copy (website only)
+## Landing page copy (website only, archived)
+
+Superseded by the interactive landing page below. This older narrative is kept as history;
+its promises and action labels are not used on the current landing page.
 
 These lines are for the signed-out landing page (`src/app/landing`). They are
 marketing wording, not app terms: never use them in the app UI. The page follows
@@ -272,7 +293,7 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 |---|---|
 | Welcome to the rest of you. | Hero headline |
 | Log in | Text link in the landing nav, to /login |
-| Sign up | Every landing button, all going to /onboarding. ("Request an invite" is retired.) |
+| Sign up | Every landing button, all going to /onboarding, except Get your first pick, which opens Stubby as a guest (Nov 2, 2026). ("Request an invite" is retired.) |
 | Save it. Try it. Share it. | Section heading and the three step labels (website only) |
 | Example Shelf | Small caption under the hero and step screens (website only). Those people are examples, never real members |
 | Example | Small caption under the reward, friends and privacy screens (website only) |
@@ -283,7 +304,7 @@ In-app labels on the page still follow the glossary above: "Count me in", "Finis
 | See who's on Soosh. | Real Shelves heading |
 | Join Soosh. | Sign-up section heading, a neutral placeholder to be rewritten ("Soosh is invite-only." is retired) |
 | Create an account to get started. | Sign-up section line, a neutral placeholder to be rewritten |
-| Privacy Policy / Terms | Footer links. Contact, Instagram and TikTok appear once set in `src/app/config.ts` |
+| Privacy Policy / Terms | Footer links. Contact, Instagram, X and TikTok appear once set in `src/app/config.ts` |
 
 ## Core loop v1 (Oct 28, 2026)
 
@@ -363,14 +384,14 @@ Strings from `docs/design/core-loop/06`, `07`, `08` and `14`, added with PR 4.
 | Cancel / Log a Moment | Top of the Log sheet: Cancel on the left, the title in the middle |
 | Add photo / + {N} more | On the photo: add another (up to 8); how many more photos follow the first |
 | Add a thought | Placeholder of the caption box under the photo |
-| Activity / Pick one | Row that sets the Moment's Corner. The sheet that opens is titled Activity |
-| Counts toward / Nothing | Row that sets the Pursuit the Moment adds to. "Nothing" when there is none. The sheet is titled Counts toward |
+| Activity / Pick one | Retired (Nov 2, 2026). The Corner is now a chip in Counts toward (see Log a Moment: punch cards) |
+| Counts toward / Nothing | Retired as a row (Nov 2, 2026). Counts toward is now the optional chip row; the sheet behind its More keeps the title Counts toward |
 | With | Row listing the other people in the chosen Pursuit. Read only. Hidden when it is a Pursuit for one |
-| Details / Add | Row for tags, "This is something happening" and Where |
+| Details / Add | Retired (Nov 9, 2026). Tags are gone from Log; "This is something happening" and Where moved to the Something happening row |
 | Who sees this | Label of the picker: Group (only when the Moment counts toward a Pursuit with people), Followers, Everyone, Only you. The same four words are used on every screen |
 | People in your Pursuit can see this. / People who follow you can see this. / Anyone can find this in {Corner}. / Only you can see this. | The line under the picker |
 | Post / Keep it private | The one fixed button. Every row above it is optional with a default, so a photo posts in one tap. It reads Keep it private when Only you is picked |
-| Pick a Corner for this Moment. | Shown, with the Activity sheet open, when Post is tapped without a Corner |
+| Pick a Corner for this Moment. | Retired (Nov 2, 2026). A Corner is never required |
 | Posted to your group / Posted to your followers / Posted to everyone | First line of the Posted screen |
 | {Name} loved your Moment | Card that appears on the Posted screen when someone reacts while you are there |
 | People who do {Corner} also try {Corner} | A What's next row |
@@ -617,21 +638,55 @@ The profile rebuild (`/you`, `/u/:username`). **Every row below is a new string,
 | Add when you’re usually free to get plan suggestions. · Not now | One-time prompt on Your planning while no availability is set |
 | GIFs can’t be added here. Choose a photo. | Shown when a GIF is picked for a Moment. Moments take photos only, because video and GIF files carry GPS and creation time the app can’t strip |
 | Your Moments show up here. | Caption under the first-run Moments grid. **Changed Oct 30, 2026:** it used to continue "Friends see the day and neighborhood, never the exact time." That line is held back until exact times are really private (`docs/tickets/posts-column-privacy.md`), because the old columns can still be read directly. Restore it when that ticket ships |
-| Visible to others at 7:42 pm | Owner-only label on a Moment inside its 2 hour delay |
+| Visible to others at 7:42 pm | Owner-only label on a Moment held with Post in 2 hours |
 | This profile is private. | Shown to a stranger on a private profile, with the name, the level name and Follow |
 | Add your neighborhood and a short bio | The link on your profile while both are empty |
 | Private profile | Settings > Profile switch: people who don’t follow you see only your name and level |
 
-### The 2 hour hold on new Moments
+### Post in 2 hours (opt-in hold)
 
-New, for approval. A new Moment is visible only to its owner for 2 hours (everywhere in the app, not only on the profile), unless the owner shares it now.
+Changed Nov 9, 2026 (founder): a new Moment is visible to others right away, like every other social app. Holding it is opt-in: "Post in 2 hours" keeps it visible only to its owner (everywhere in the app) until 2 hours after posting, so a Moment taken somewhere you still are shows up after you have left. Replaces the default 2 hour hold and its "Share now" switch. New wording, for approval.
 
 | Term | Meaning |
 |---|---|
-| Share now | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment. Also the confirm button below |
-| Shows this Moment to others right away. | Helper text under Share now |
+| Post in 2 hours | Switch on Log a Moment, off by default, shown when anyone but you can see the Moment |
+| Still there? Turn this on so others see it after you’ve left. | Helper text under Post in 2 hours while it is off |
+| Others see it at {time}, after you’ve left. | Helper text under Post in 2 hours while it is on: when the hold ends (`formatTime`) |
+| They see it at {time}. | Under the first line of Posted while the Moment is held |
 | Share now? | Title of the confirm that appears when you send a still-held Moment into a chat, or add it to a Space (Add from my Moments) |
 | Anyone who can see your Moments will see this one too. | Body of that confirm. Cancel, or a failed release, leaves the Moment held and shares nothing; Share now shows it to others, then sends it. A Space's hosts are told about an approval share only after the release |
+
+### Log a Moment: punch cards (Nov 2, 2026)
+
+New, for approval. Logging has no required step: tap Log, then Post. What a Moment counts toward is one optional row of chips, and every Moment that moves a card punches a hole in it. The numbers come from `log_progress()` (migration `20261110000000_log_punch_cards.sql`), which counts exactly as the Stub triggers do: a Regular is 10 different New York days with a photo or video Moment in one Corner in a month; a Finisher is a Pursuit's goal of Moments, or, with no goal, 3 different days and then Finish. "Punch" is used only for a hole on a card, never as a noun of its own.
+
+| Term | Meaning |
+|---|---|
+| Counts toward · Optional / More | Retired on Log (Nov 9, 2026): replaced by the Corner row. Still used on Posted (below) |
+| Corner / Add | Row on Log a Moment: where the Moment goes. Shows the picked Pursuit (with a flag) or Corner, else Add. Opens Add to a Corner. New, for approval |
+| Add to a Corner | Full-height sheet behind the Corner row: a search box, then Your Pursuits, Your Corners and All Corners as one scrolling list. A tap picks and closes. New, for approval |
+| Search Corners | Placeholder and label of its search box. New, for approval |
+| Your Pursuits / Your Corners / All Corners / Corners | Section headings in Add to a Corner ("Corners" while searching). New, for approval |
+| No Corner matches that. | Add to a Corner when a search finds nothing. New, for approval |
+| Something happening / Add / Added | Row on Log a Moment for an Activity (a time, and optionally a place, that people can join). A place is saved only for an Activity. New, for approval |
+| New: {title} | Replaces More while a new Pursuit is being named in that sheet |
+| Optional. A Pursuit, a Corner, or both. / Pursuit / Corner | The sheet's description and its two headings |
+| This makes {n} of {N} days in {Corner} | Line under the chips, with the holes, when the Moment would punch a Corner's card |
+| This makes {n} of {N} days on {Pursuit} / This makes {n} of {N} Moments on {Pursuit} | The same for a Pursuit with no goal / with a goal |
+| Add a photo to punch a day. | That line for a Corner while no photo or video is attached |
+| Today already counts in {Corner}. / Today already counts for {Pursuit}. / {Pursuit} is ready to finish. | That line when this Moment adds no hole |
+| {n} of {N} days in {Corner} | Posted headline after a Corner's card moved |
+| {k} more days in {Month} and you keep a Regular Stub. | The line under it (`plural()`) |
+| You kept a Regular Stub. / Only photo and video Moments punch a day. / Today already counts. See you tomorrow. | That line on the 10th day / after a text Moment / after a second Moment the same day |
+| {n} of {N} days / {n} of {N} Moments | Posted headline after a Pursuit's card moved |
+| {Pursuit}. {k} more days and you can finish it for a Finisher Stub. / {Pursuit}. {k} more Moments and you keep a Finisher Stub. | The line under it |
+| {Pursuit}. All 3 days are in. / {Pursuit}. Pursuit finished. | That line once the card is full |
+| Also a day in {Corner}: {n} of 10 days | Under a Pursuit's card when the Moment also punched its Corner's |
+| Finish it now and keep a Finisher Stub. / Finish | Card on Posted for your own Pursuit with no goal and its 3 days. Finish opens the usual finishing dialog |
+| Regular / Finisher | The name on the stub end of the card |
+| Counts toward / One tap punches a day. | Card on Posted when nothing was picked: the same Pursuits and Corners, once. The second line only when a photo or video is attached. Skip hides it; nothing is asked again |
+| Pursuit · {n} of {N} days / {n} of 10 days this month | The line on each of those choices |
+| Log another | Button at the bottom of Posted, beside Go to Home |
 
 ## Home v2 (Oct 30, 2026)
 
@@ -650,7 +705,7 @@ Approved by the founder on Oct 30, 2026. Counts use `plural()`, dates use `dates
 | At-home detail | Your first step: {the guide's first step} |
 | At-home row in More ways | At home · about {duration} (for example "At home · about 30 min"; just "At home" when the Corner has no typical time) |
 | More ways heading / link | More ways this week / See all |
-| Log card | Log a Moment / Did something today? Log it and get a Stub. |
+| Log card | Log a Moment / Did something today? Log it. With a Corner card under way this month: {Corner}: {n} of 10 days in {Month}, and its holes. The old "Log it and get a Stub." is retired (Nov 2, 2026): most Moments earn no Stub. New, for approval |
 | Feed heading | From your people |
 | Bottom bar | Home, Discover, Log, Week, You |
 | Why: `fits_window` | Fits your {Weekday} {evening, daytime} |
@@ -691,7 +746,8 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Empty Search | Nothing typed: Busy this week (the Corners with the most events in the next 7 days, each with its event count) and Corners (a row of up to six). A section with nothing in it is left out, and neither says "Be the first". With both empty: Type something to search. |
 | / | On desktop, pressing / opens search, except while typing in a field |
 | Search (old note) | Discover had no search box of its own before this (Oct 31, 2026). Search is the nav one: the header icon on a phone, the rail's Search panel from 744px ("Search Moments, people, Spaces") |
-| Jump chips | Ideas / Corners / Spaces / Moments |
+| Jump chips | Stubby / Ideas / Corners / Spaces / People / Moments. Stubby, People and Moments are for signed-in people only, and a section left out because it is empty has no chip (approved Nov 3, 2026) |
+| Stubby’s picks row heading / link | Stubby’s picks / Ask Stubby (opens Calendar). The cards are Stubby’s pick cards with Make it a plan under each; Remove deletes the pick. Left out with no picks (approved Nov 3, 2026) |
 | Ideas heading / subline | What could you do? / Ideas for what you’ve got. Tap a pill to change it. |
 | Time pill | An hour / Tonight / Weekend (each includes the ones before it) |
 | Spend pill | Free / Under $25 / Treat me (each includes the ones before it) |
@@ -703,6 +759,7 @@ The Discover page, as drawn on the Discover v2 artboard (founder approved the sc
 | Spaces heading / subline | Spaces near you / Studios, cafés and groups that host things |
 | Space buttons | Join / Ask to join |
 | Space activity | {N} Moments this month |
+| People heading / subline / link | People near you / From people you don’t follow yet / See all (opens /people). The newest authors of the feed, each once, never yourself. No counts, no Follow button: each card opens their Shelf (approved Nov 3, 2026) |
 | Feed heading / subline | What {city} is making / From people you don’t follow yet |
 | Feed actions | Follow / Love this / Try {corner} (the Corner’s name drops to lower case unless it is a name like D&D) |
 
@@ -710,7 +767,7 @@ Words around the page, approved Oct 31, 2026:
 
 | Where | String |
 |---|---|
-| Corner card, hook line | The Corner guide's own description, on one line with an ellipsis |
+| Corner card, hook line | The Corner guide's own description, up to two lines with an ellipsis (Corner-only polish approved Nov 5, 2026) |
 | Corner card, At home tab | The idea's title, a short thing to do (for example Start a sourdough starter) |
 | Corner card, With people tab | The title of the soonest open Pursuit for that Corner; with no name, Find people to go with |
 | Corner card, At a place tab | The name of the nearest Space for that Corner (same neighborhood, then same city); with no name, Find a place near you |
@@ -737,7 +794,7 @@ The Moment city, from PR 1 (approved Oct 30, 2026).
 
 ## Week view (brief of Oct 30, 2026)
 
-The wording of the Week view, taken from the founder's Week view brief. It is now the Week view of the calendar (`/calendar?view=week`); `/week` redirects there. Opens from Home's Your week card and the Calendar item.
+The wording of the Week view, taken from the founder's Week view brief. It is now the Week view of the calendar (`/calendar?view=week`); `/week` redirects there. Opens from Home's Your week card and the Stubby item on the rail.
 
 | Term | Use |
 |---|---|
@@ -769,7 +826,8 @@ The wording of `/calendar`, from the founder's calendar brief (`claude-code-brie
 
 | Term | Use |
 |---|---|
-| Calendar | The rail item and the page. It replaced "Week". Not a phone tab: it opens from Home's Your week card |
+| Calendar | The page. It replaced "Week". Not a phone tab: it opens from Home's Your week card |
+| Stubby (rail item) | The rail item for `/calendar`: his mark as the icon, his name as the label (was Calendar; founder, Nov 2, 2026). The page keeps the name Calendar |
 | Today · Previous {day, week, month, 30 days} · Next {day, week, month, 30 days} | The header buttons. The arrows are icons; the names are for screen readers and say which period they move by |
 | Day · Week · Month · List | The view switch. The chosen one is filled in the foreground colour |
 | October 2026 · Oct 31 to Nov 6 · Tue Nov 3 · Oct 31 to Nov 29 | Titles of Month, Week, Day and List. Week is the next 7 days, today first. List is the next 30 days |
@@ -790,13 +848,13 @@ Terms from the brief's section 8 and the founder's reviews. Approved Nov 1, 2026
 
 | Term | Use |
 |---|---|
-| Make a plan | Opens the plan sheet: Corner (yours first, then a search), a day, Daytime or Evening with an optional exact time, an optional friend. Button: Make the plan (approved) |
+| Make a plan | Opens the plan sheet: Corner (yours first, then a search), Day and When fields with a visible exact time, and Bring someone to reveal the optional friend picker. A selected calendar time stays filled in; changing the day keeps that time. Button: Make the plan (approved) |
 | Make a plan at {time} | The first choice in the time sheet. Opens the plan sheet with the time filled in |
 | I'm free then | Adds free time. Choice: Just this {Tuesday} · Every {Tuesday} |
 | Block this time | Adds a block. Field: Note (approved), with the helper text "Only you see this." (the period is approved, Nov 1, 2026), then Just this once · Every week |
 | Your block | What a block without a note says |
 | Cancel this plan | A plan only you are in. Also: Change the time · Bring someone. Cancelling also removes the one-session Pursuit it is stored under when no one else is in it. A one-off plan is never in Your Pursuits or any list of your own Pursuits: it lives on the calendar and in Your week only |
-| Leave this plan | A plan with others, or a host's listing. A host's listing cannot be moved: "The host sets this time." (approved). A plan with others that is yours also: Change my time |
+| Leave this plan | A plan with others, or a host's listing. A host's listing cannot be moved: "The host sets this time." (approved). A plan with others that is yours also: Change the time |
 | Move this session · Skip this session | A session of a longer Pursuit. Skip removes only that session if it is your Pursuit, else it takes only you out. Open Pursuit (approved) links to it |
 | Change the times · Not free this {Tuesday} · Remove from my usual week | Free time. Change the times opens the usual week screen for the usual week, or two time fields for a stretch you added. Remove free time (approved) takes away a stretch you added |
 | Change · Remove block | A block |
@@ -860,18 +918,168 @@ What Start on a suggestion opens: `/start/:space/:corner`. It is the activity it
 
 The brief's word "Cheer" is not used: the sheet's reaction is **Love this**, like every other Moment.
 
-## Landing page (Nov 1, 2026)
+## Interactive landing page (PDF v2, Nov 4, 2026, superseded by v3 below)
 
-The signed-out home page (`src/app/landing/copy.ts`). It uses existing terms where they exist: "I’m going" (the RSVP), "Count me in", "Bring someone", "Undo", Home, Shelf, Stub, Moment, "Admit one". Stubby only reacts here too: the lines beside him are captions, not speech. **Every row below is a new string, approved by the founder on Nov 1, 2026.**
+Implements the reviewed PDF v2 and the request to build it. The signed-out page's
+copy is in `src/app/landing/copy.ts`; editorial activity examples are in `examples.ts`.
+This supersedes the Nov 1 ticket demo. Soosh remains the product; Stubby remains its helper.
+Examples do not save answers, create a plan, prepare an invitation or use recommendation asks.
 
 | Term | Meaning |
 |---|---|
-| Free tonight? Stubby has a pick. | The landing hero line. "Stubby" is the character's name, so it is not a product noun |
-| Get your first pick | The landing buttons that go to sign-up (the hero and the last card). The nav button stays "Sign up" |
-| Good solo | Small badge on an example pick that works well on your own. Also used in the Questions answers ("marked Good solo") |
-| Nah | The button on an example pick that moves to another pick. Landing examples only |
-| Admit two | The example ticket's stub after Bring someone, the pair of "Admit one". Landing examples only |
-| Photos | The landing footer link that opens the photographer credits (the names on record, then Unsplash). New, from the landing photos brief of Nov 1, 2026 |
+| Find something you’d like to do | Hero headline |
+| Try Soosh | Nav, hero and final entry to `/calendar`. The configured guest/account gates still apply. A chosen example can seed an editable draft; it never sends automatically |
+| Log in | Existing accounts go to `/login?mode=signin` |
+| How it works | Moves focus and scrolls to the guide without changing the hash route |
+| Example activity | Always visible over the interactive example; never a personalized or scheduled result |
+| At home / Outside | Local example choices; they do not write preferences |
+| Another example | Cycles only within the selected setting |
+| Choose a setting or try another example. | Instruction above the photo-backed example |
+| Pause motion / Play motion | Stops or resumes the page's decorative graphics, photo movement and Stubby animations. Does not save a preference |
+| Motion off | Shown when the device requests reduced motion; animations remain off |
+| Tap Stubby / Play with Stubby | Visible instruction and accessible name for the same native play button. Reacts locally and never makes a plan or uses an ask |
+| Swipe the photo to change the example. | Touch shortcut with equivalent native buttons. Vertical scrolling is preserved |
+| Photo: {credit} | Link to the recorded photograph source. Uses Unsplash when an older library entry has no photographer credit |
+| What you’ll need | Expands the activity details |
+| Choose either option / Optional | Distinguishes whole required bundles from optional supplies |
+| Suggested time / Cost / Activity guide | Example facts. Practice time is suggested; missing price or unconfirmed ownership never means free |
+| Ask Stubby | Opens the real request field with this example as an editable draft |
+| Make a plan you can return to | Describes created calendar plans. Does not promise account-wide saving of the browser's kept selection |
+| Tell us what you like | Shown only when the actual human preference flow is enabled. Links to real onboarding, with no mock form on the landing page |
+| Sign up | Keeps its existing meaning and `/onboarding` destination |
+
+## Guest Stubby and birthdays (founder, Nov 3, 2026)
+
+All approved on Nov 3, 2026 (`src/app/lib/guestCopy.ts`). No number or time is written into a line: `{n}` is an allowance from the server, `{time}` a time in the person's own time zone (`dates.ts`), `{age}` from `src/app/lib/age.ts`.
+
+| Term | Meaning |
+|---|---|
+| Sign up to keep your picks and get {n} asks a day. | The card after a guest's 3rd ask, and the sign-up sheet's general line (the same sentence) |
+| Sign up to make this a plan. / Sign up to add this to your calendar. / Sign up to ask Stubby for more. | The sign-up sheet's line when a guest taps Make it a plan, saves a pick, or a follow-up |
+| Sign up for {n} more asks today, or ask again after {time}. | Under "That's {n} for today" at a guest's limit |
+| Lots of asks right now. Sign up to keep going. | When guests together have used the day's asks |
+| You're in. Your picks are saved. | The toast after a guest signs up |
+| Finish setting up | The title of what a Stubby account sees on a members-only feature |
+| Finish setting up your account to join Spaces, log Moments and send messages. | Its line |
+| Set up now | Its button, to onboarding (the founder's change; the title stays "Finish setting up") |
+| Three quick things so my first picks fit you. | The quick-context card, Stubby's line |
+| Only the city name is kept. | Under Use my location on that card |
+| Anytime / Use these | That card's third timing chip, and its button |
+| Good pick / Not for me | Screen reader labels of the thumbs on a pick |
+| Add your birthday to see {age}+ picks. | Under the picks, only when 21+ picks were left out because no birthday is on file. The button and sheet use onboarding's words: Add your birthday, When's your birthday?, Date of birth, Never shown to anyone. |
+| Your account stays, and you can keep using Stubby. | Under onboarding's "{APP_NAME} is for people {age} and over for now." after an under-18 birthday; its button is Done |
+| Back to Stubby | The button an under-18 account sees on a members-only page |
+| Your birthday can't be changed here. To fix it, contact support. | When a birthday is already on file, followed by the support link |
+
+## Support (Nov 3, 2026)
+
+| Term | Meaning |
+|---|---|
+| Message us on X (@onsoosh) | The support link's text, to https://x.com/onsoosh, wherever a message says to contact support (founder, Nov 3, 2026). Set once, in `SUPPORT_CONTACT` (`src/app/config.ts`): an email can replace or join it there |
+
+## Corner walls (brief of Nov 7, 2026; every string approved by the founder Nov 8, 2026)
+
+A Corner page shows what people are making, finished or not, and lets you start your own version. No counts anywhere on these surfaces, no progress bars on wall cards, no leaderboards. "Corner chat" and the rest of chat are PR 3 and are not built yet; "Corner chat" is approved for that PR only.
+
+| String | Where |
+|---|---|
+| Walls | The Corner page tab for the two walls (the other tab is Your first time) |
+| Still making | The wall of Moments from people in the middle of something (unfinished and paused Pursuits, and Moments with no Pursuit). Also its option on the phone control |
+| Made it | The wall of finished Pursuits. The wall is named Made it; a card on it still says Finished {date}, the Pursuit status word. Also its option on the phone control |
+| Half-done, messy, in progress. | The line under the Still making heading |
+| Finished things, with the Moments that got them here. | The line under the Made it heading |
+| Finished {date} | On a Made it card, with the date from `dates.ts` |
+| Make your version | The tear-off strip on a wall card (not on your own Moment). Starts your own Pursuit inspired by that Moment. Different from Count me in, which leads to doing it together |
+| You started yours. | Replaces the strip on the source card as soon as you start your own Pursuit because of that Moment. A Moment held with Post in 2 hours only delays your own card appearing on Still making, once you post a Moment to it. Replaces "Yours is on Still making." (founder, Nov 8, 2026) |
+| Finisher | On a Made it card, with the Stub icon, when the Pursuit's owner holds its Finisher Stub |
+| Started because of {Name} | On a card whose Pursuit started because of another person's Moment you may see, in the accent text colour at the small text size. Shown only when you can open that Moment |
+| {A} started because of this / {A} and {B} started because of this / {A}, {B} and others started because of this | On a card whose Moment other people started a Pursuit because of. Never a number |
+| Passed along | The section of chains, each a row of chips with arrows. The source chip's Pursuit title is cut at a word boundary with … (24 characters at most), never mid-word |
+| Who got whom into it here. | The line under Passed along |
+| You? | The dashed last chip of a chain. Opens Make your version for the chain's newest Moment |
+| Members see who's making what. | The card over the blurred Walls for visitors (signed out, or not approved yet), with the Sign up button. It replaces "Members see who's going." on the Corner page |
+| Share what you're making. | The one card when both walls are empty, with Log a Moment (opened in this Corner) and, under it, Do this with people (the existing Make it a Pursuit entry). Replaces "Nobody has shared here yet. Be the first." Nothing says "nobody here"; an empty wall has no panel |
+| Follow / Following | On a Corner page's hero. The existing words for following a Corner |
+| Love this / Count me in / Show more | Reused as they are. On a wall card neither shows a count |
+
+## Landing page v4 (founder request, Nov 8, 2026; new strings for approval)
+
+Asked for: a bigger Soosh, a real hook, the newest features on the page, and SEO and answer-engine
+wording. Supersedes the v3 hero, the Grab the Stub step and the On your own / With someone section.
+The complete wording is in `src/app/landing/copy.ts`; the crawler copy in `index.html` matches it
+(checked by `src/indexHtml.test.ts`). The walls on this page are labeled examples, never anyone's Moments.
+
+| String | Where |
+|---|---|
+| Hobby ideas and things to do with friends | Hero eyebrow and the start of the page title (search phrase). Replaces "Hobbies, activities & personal goals" |
+| Soosh: Do the thing. Bring a friend. Keep the Stub. | The h1: the wordmark, then the hook on three lines. "Keep the Stub" is a marketing invitation like v3's "Grab the Stub"; it changes no Stub rule |
+| Try Soosh | Header, hero, Walls and final entry. Reused from v2; replaces "Find my next step". Same destinations and gates |
+| Free to use. Works in your browser. | Under the hero button |
+| How Soosh works / Find something to try / Make a plan / Log a Moment / Keep the Stub | The four steps, moved up under the hero |
+| See what people are making, finished or not. | Walls section heading. Uses the approved wall strings (Still making, Made it, Make your version, Finisher, Passed along, Members see who's making what.) |
+| Example walls | Label over the editorial wall cards |
+| Join a Space / Your Shelf / You pick who sees it | The three feature cards |
+| Guides / Not sure what to try? Start with a guide. / See all hobby guides | Links to the static guides under `public/` |
+| Questions | FAQ heading. Replaces "Before you start". New questions: How do I find a new hobby?, What can I do with friends this week?, What is a Stub?, Is Soosh free?, Who can see what I post? |
+| Pick one thing. Do it this week. / Free to use. Go on your own or bring someone. | Final card |
+
+### Landing footer (founder, Nov 9, 2026)
+
+Rebuilt after the founder's reference screenshot. Website only. Wording is in `LANDING_COPY.footer`.
+
+| String | Where |
+|---|---|
+| Explore / How it works / Corners / Guides / Questions | Footer link column. Each scrolls to that landing section |
+| Who we are | Label over the hook line (reuses "Do the thing. Bring a friend. Keep the Stub.") |
+| Follow | Label over the X and Instagram icons (@onsoosh) |
+| Tell us what you wish Soosh did / I wish… / Send | The footer pill. "Wish" means an idea someone sends us for Soosh. Send opens the visitor's mail app addressed to `CONTACT_EMAIL` (info@onsoosh.com); nothing is stored |
+| © Soosh / Privacy Policy / Terms / Contact | Footer bottom row |
+
+## Home v3: your Corners, right now (founder request, Nov 8, 2026; new strings for approval)
+
+Home was a planner card, four suggestions, a Log a Moment card and a feed of people you follow that was
+empty for almost everyone (12 accounts, 4 following anyone, 1 Moment in 30 days on Nov 8). Home now
+reads from your Corners, which works at any size. Order: Best fit for you, Your week (one row), Still
+making, Happening this week, then From your people, or the bring-someone card while that is empty.
+More ways and the Log a Moment card are gone from Home (Discover, Corners and the Log button cover them).
+
+| String | Where |
+|---|---|
+| Still making in your Corners | Heading over the newest Still making cards from the Corners you follow. Under it, the wall's own line: Half-done, messy, in progress. New |
+| Still making on Soosh | The same heading when you follow no Corners: the cards come from the Corners of the newest public Moments. New |
+| Follow a few Corners to make this yours. | The line under "Still making on Soosh". New |
+| See all Corners | Link beside the heading, to /corners. Reused |
+| Happening this week | Event tickets in your Corners' Spaces for the next 7 days, else the open Spaces' events this week. Not shown with none. Reused from the Corner page |
+| Your week / Open | Now one row; its count line or "Add when you’re usually free" sits beside it (under it on phones). Still the phone's way into the Calendar. Reused |
+| Soosh is better with your people / Bring a friend and start your first Pursuit together. / Invite on WhatsApp / Find contacts | Shown in place of From your people while it is empty. Reused from the old empty Home |
+| Make your version | On each Still making card; opens the same sheet as on a Corner page. Reused |
+
+## Corners on Home and Discover (brief, Nov 10, 2026; headings approved by the founder, Nov 10, 2026)
+
+Home has one more row, directly under Your week: the Corners whose 3D world is switched on, as square
+still pictures of it (`cornerPicture`, `src/app/lib/cornerPicture.ts`), each with the Corner's name and
+its existing one line (`cornerAbout`). Everyone sees the same Corners: the ones a person follows come
+first, then their onboarding picks, then by affinity, then the rest (founder, Nov 10, 2026; the first
+version showed a person who followed Corners only those, which hid the 3D Corners from them).
+The same still is the Corner's picture in Corners new to you on Discover and, in a 16:9 cut, on `/corners`.
+Group pages and the related Corners strip on a Corner page keep photos (founder, Nov 10, 2026).
+Nothing else on either page changed. A person never reads a word for the 3D world itself here: these are
+Corners.
+
+| String | Where |
+|---|---|
+| Corners for you | Heading of the row, for everyone. Approved Nov 10, 2026 |
+| Your Corners | No longer a heading on Home (Nov 10, 2026). Still a section heading in Add to a Corner |
+| See all | Link beside the heading, to /corners. Reused |
+
+## Landing ribbon words (founder request, Nov 9, 2026)
+
+The ten words on the satin ribbon between the landing hero and the Corner carousel, in this order,
+with " · " between them: Sooshmaxxing, Hobbymaxxing, Timemaxxing, Weekendmaxxing, Friendmaxxing,
+Lifemaxxing, Stubmaxxing, Offlinemaxxing, Funmaxxing, Sidequestmaxxing. Double x, one word each,
+sentence case. Brand voice for the landing page only (the 2026-09 blueprint kept "hobbymaxxing" out
+of the hero but allowed it elsewhere); not for in-app labels. Source: `LANDING_COPY.maxxing` in
+`src/app/landing/copy.ts`.
 
 ## Retired terms
 
@@ -886,6 +1094,13 @@ Never use these in UI copy.
 | That email and password didn’t match. | Oct 30, 2026 | That email and password don’t match. |
 | Not this | Nov 2, 2026 (the label changes in Stubby plan PR 3) | Not now |
 | What are you after? | Nov 2, 2026 (the Ask Stubby field label) | What are you in the mood for? |
+| Do this (on a Moment) | Nov 10, 2026 (One Moment, brief v2) | Nothing. Save is the one "I want this" on a Moment. "Do this with people" on a Corner page is unchanged |
+| Count me in / You’re in (on a Moment) | Nov 10, 2026 (One Moment, brief v2) | Nothing on a Moment. A Pursuit session keeps "I’m in" and "You’re in" on the Pursuit page |
+| Try {corner} / See {Corner} | Nov 10, 2026 (One Moment, brief v2) | The Corner’s name in the Moment’s meta line, which links to the Corner |
+| Make your version / You started yours. | Nov 10, 2026 (One Moment, brief v2) | Nothing on a wall card. Still on the public landing page until its line is rewritten (founder to approve) |
+| Start a Pursuit inspired by this / Start a Pursuit with {name}? / Ask {name} to make it together? | Nov 10, 2026 (One Moment, brief v2) | Nothing. Removed from every Moment |
+| Quick react | Nov 10, 2026 (One Moment, brief v2) | Nothing. A double tap on the photo loves it |
+| Hobby (the label on a Moment) / Share this Moment / Not part of a Pursuit | Nov 10, 2026 (One Moment, brief v2) | The meta line; Copy link in the Moment’s menu |
 | Free tonight? Ask Stubby. | Nov 2, 2026 (the dock was removed) | Stubby's greeting on the Calendar stage |
 | Keep, for making a plan at once | Nov 2, 2026 (the in-slot label changes in Stubby plan PR 3) | Make it a plan. Keep means only shortlist, in the deck |
 
@@ -902,7 +1117,7 @@ Superseded on Nov 2, 2026 by the Stubby rule (he talks in Ask Stubby, on the Cal
 | {n} asks left today | Beside the field's label, with plural() (Stubby plan PR 1, so the calendar shows in a phone's first screen). At 0 it goes away and Stubby's line says "That’s 3 for today. I’ll look again tomorrow." (the old "That’s your 3 for today. Stubby can look again tomorrow." is retired, Nov 2, 2026) |
 | Found {n} things. | After an ask that found something |
 | Nothing fit this time. Try asking another way. | After an ask that found nothing: Stubby's line in the bubble (he shrugs) |
-| Found for you | The label on each of your own picks (a dashed card like Stubby’s pick). Buttons: Open (links out) · Remove |
+| Stubby’s pick | The label on each card in the deck (a dashed card like Stubby’s pick in a free slot: one word per idea). The deck's accessible name is Stubby’s picks. Was "Found for you", retired Nov 3, 2026 (founder, Stubby agent PR 6). Buttons: Open (links out) · Remove |
 | Say what you’re after, like pottery on Saturday. | Error with an empty or one-letter ask |
 
 ### The Stubby dock (Nov 1, 2026)
@@ -957,6 +1172,19 @@ Removed on Nov 2, 2026 (Stubby plan PR 4, `docs/briefs/claude-code-brief-stubby-
 
 What he understood shows as chips while he looks, in the words of his question chips (Tonight, Tomorrow, This weekend; Just me, With my partner, With friends, With family). Anything else he understood has no chip yet.
 
+### When nothing fits (founder, Nov 2, 2026)
+
+Never a blank area. Stubby shrugs and says "Nothing fit this time. Try asking another way.", and the results area says it too, with why in one short line of the 3 most common reasons, then three ways on. When something after the time asked fits, it shows instead, marked: tonight, Stubby says "Nothing tonight that fits. Here’s the soonest after."; any other time, "Nothing then that fits. Here’s the soonest after."
+
+| Term | Use |
+|---|---|
+| {n} was a listing page / {n} were listing pages | A reason, with plural(). The others: was/were after midnight · was/were outside the time you asked for · was/were over your budget · was a bar or 21+ / were bars or 21+ · had no page of its own / their own · had no clear time · was/were too late for kids. Joined with commas: "2 were listing pages, 1 was after midnight" |
+| {n} had no price listed | A reason, with plural() (the same for one and many), for a pick dropped because only free things were asked for and its page gives no price. Until now these were counted as "over your budget", which they weren't (Stubby agent PR 6). Approved by the founder, Nov 3, 2026 |
+| This weekend | The same ask, for this weekend (uses an ask). While the empty state shows, the quick ideas step aside, so there's one This weekend on screen |
+| Surprise me | A surprise (uses an ask). The same words as the question chip |
+| Try different words | Back to the field, the ask selected |
+| Nothing then that fits. Here’s the soonest after. | Stubby's line when nothing fits a time other than tonight and the soonest after are shown |
+
 ### Stubby's question chips
 
 Asked only when something worth asking is missing (who, then when, then what kind), at most once per ask. Answering uses no ask; Surprise me skips it; typing an answer works too. Pick a day opens a date field labelled Pick a day. Who you're going with is remembered for the session as a chip (its X reads "Remove: Just me"), sent with every ask until removed.
@@ -995,3 +1223,416 @@ His other lines:
 | Error | Something went wrong on my end. Try again? |
 | Out of asks | That’s 3 for today. I’ll look again tomorrow. |
 | Bring-a-friend | This one’s better with a friend. Bring someone? |
+
+## Stubby agent (`docs/briefs/stubby-agent.md`, founder, Nov 3, 2026)
+
+**Approved by the founder, Nov 3, 2026.** Each is used only when the PR that needs it lands. Approved lines that already cover a moment stay: "On it. Checking a few places." is still the line while he looks.
+
+### Stubby's lines
+
+| Line | When | From |
+|---|---|---|
+| Stay in or head out? | The first question for a vague ask (nothing named, no one named, nowhere said). Replaces "Going solo or with someone?" as the first question; that one is asked only when company changes the options (heading out, no one named) | PR 7 |
+| Nothing fits those limits. Want to change one? | Nothing satisfies the hard limits typed in the ask | PR 10 |
+| I couldn't check the weather just now. | The weather couldn't be read for this ask | PR 8 |
+| These two fit best. | Fewer good options than usual (written for the count shown) | PR 10 |
+| Let's bring the price down. | After Cheaper | PR 10 |
+| Different direction. Keeping your limits. | After Something different | PR 10 |
+| Got it. {correction}. | A correction echoed back, for example "Got it. Solo tonight." | PR 10 |
+| Low-energy evening? Here are a few easy things. | A low-energy ask | PR 10 |
+| Rainy {day}. Want something cozy? | The greeting on a rainy day ("Rainy Monday. Want something cozy?") | PR 8 |
+| {Plan} at {time}. Leave by {time}. | Get ready, the day of a plan | PR 14 |
+| How was {plan}? | After a plan | PR 14 |
+
+### Other words
+
+| Term | Use | From |
+|---|---|---|
+| Stay in · Head out · Surprise me | The answers to "Stay in or head out?". Surprise me skips the question, as everywhere | PR 7 |
+| Stubby is updating, try again in a minute. | When the app and Stubby's function are from different versions (one is mid-update), instead of an error with no explanation. Wording from the founder, Nov 3, 2026 | Stubby version check |
+| Event · Watch · Read · At home · Idea · Connect | The kind label on each card. They replace "An idea" | PR 11 |
+| Keep · Not now (stamps) | The swipe stamps, in sentence case like everything else: bold, letter-spaced, in a bordered, rotated box. Never capitals | PR 11 |
+| Enjoyed it · It was okay · Didn't go | The answers to "How was {plan}?" | PR 14 |
+| Partner | The label on a partner Space | When partner Spaces show |
+
+"Reflect" is internal only: it names a step in the spec's loop and never appears in the app.
+
+## Stubby V3 (#316, Nov 3, 2026)
+
+V3 reaches only the accounts in `STUBBY_V3_TESTERS` until the founder switches it on for everyone. **Every row below is new, for approval.** Rows from #316 that never reached this glossary are included here too.
+
+### The care card (stubby-agent C1)
+
+Shown in place of picks when an ask reads as clear distress. No ask is used and nothing about it is kept. Only a verified country's resources are shown: the US, checked by the founder against SAMHSA's 988 fact sheet on Nov 4, 2026. Everywhere else gets only "Call your local emergency number" until its entry is verified. The care step still needs the brief's separate expert review (`supabase/functions/stubby-scout/v3/careResources.ts`).
+
+| Term | Use |
+|---|---|
+| That sounds really hard. You don’t have to handle it alone. | The card's line (the brief's own wording) |
+| Someone to talk to | Accessible name of the list of resources; not shown as text |
+| Call 988 · Text 988 | US buttons, each with "988 Suicide and Crisis Lifeline, any time" or "988 Suicide and Crisis Lifeline, by text" under it |
+| Chat online | US button to 988lifeline.org, with "988lifeline.org" under it |
+| Text AYUDA to 988 | US button, with "In Spanish, or call 988 and press 2" under it |
+| Call 911 | The US emergency button, with "If you’re in danger right now" |
+| Call your local emergency number | Every country without a verified entry: shown as words, with nothing to tap, and "If you’re in danger right now" under it |
+| Message a friend | Opens Messages |
+
+### Their own Pursuits and Corners in a deck
+
+| Term | Use |
+|---|---|
+| You’ll need {a}, {b} and {c}. | The note on their own Pursuit or Corner pick: up to three of the Corner's "What you’ll need", in place of "Details need confirmation." |
+| Time on your own Pursuit. | Why line on a Pursuit pick |
+| One of your Corners, at home. | Why line on a Corner pick ({Corner} at home is the existing title) |
+
+### Notes and lines on V3 picks
+
+| Term | Use |
+|---|---|
+| Source verified. · Details need confirmation. | Start of the note on a web pick |
+| Source details need confirmation before you go. · Price is unknown. · End time is unknown. · Availability is unknown. · Age restrictions could not be checked. · Weather could not be checked. · Travel time is unknown. | What couldn't be checked, after the note's start |
+| Check opening hours before you go. | On a place (a park, a walking route, a museum's visiting page), in place of "Availability is unknown." |
+| Up to ${n} | A web pick's price, the most it costs |
+| Fits your interests and the constraints checked for this ask. · Fits the constraints checked for this ask. | Why line on a web pick |
+| Source details checked. · Some details need confirmation. Check the source before you go. | Line under the deck: all verified, or some not |
+| No verified match. Try another day or an activity using what you already have. | When nothing fits |
+| No verified match. Confirm your city before Stubby searches nearby. · …Use a budget in US dollars so Stubby can check the price. · …Choose a clear date and time so Stubby can check what fits. | When the ask names an unknown city, another currency, or an impossible time |
+| No new picks were saved. Try different words. | When nothing could be saved |
+| A source couldn’t be reached. · A source returned invalid details. · Discovery timed out. · Calendar availability could not be checked. | Warnings under the deck (no source names, Nov 3, 2026) |
+| Stubby’s new search is unavailable. | V3 switched on with no engine wired (should never show) |
+
+### What Stubby knows (Settings and onboarding)
+
+| Term | Use |
+|---|---|
+| What Stubby knows | The section |
+| Stubby uses your onboarding answers and anything you save here to fit picks to you. Learning from your feedback is off unless you turn it on. You can change or delete it here. | The section's line (Nov 3, 2026: onboarding answers by default) |
+| Learn from my feedback | The only switch; off until turned on |
+| Your thumbs up and down on his picks, from the last 60 days. Off unless you turn it on. | Under the switch |
+| Timezone · Budget for an activity in dollars · Equipment and resources · Goals · What you prefer | Fields |
+| One entry per line. Leave blank to skip. | Under each list field |
+| Memberships and subscriptions · Name · Expiry date, if known · Add membership · Remove | The memberships list |
+| What you tell us is not proof of a discount or entry. Check with the provider before you go. | Under Memberships and subscriptions |
+| Usual free times: {list} · Monthly budget: {amount} · Passes: {list} · Not set · Edit onboarding answers | The onboarding answers, read only |
+| Save changes · Delete saved information · Delete · Cancel | Buttons |
+| Delete Stubby’s saved information and feedback? This keeps your onboarding answers. | Before deleting |
+| Your changes are saved. · Your changes weren’t saved. Try again. · Stubby’s saved information and feedback are deleted. Your onboarding answers are unchanged. · Your saved information wasn’t deleted. Try again. · Stubby couldn’t load your saved information. Try again later. | After saving or deleting |
+| Your first plan will look for free things. Pass coverage needs confirmation. | Onboarding, after passes |
+
+## Private personalization
+
+The human onboarding questions and editable summary are approved in the clean personalization build brief.
+Use “What would you like to make more room for?”, “What do you already love, or keep meaning to try?” and “What does a little free time look like for you?”. One interest, Help me explore and Skip for now are valid paths. “Suggested time” identifies a flexible suggestion, not an event booking. Cost unknown means check cost; it never means Free. Private preferences, goals and feedback are never public profile copy.
+
+| This changes the time for everyone. | Explanation before rescheduling a shared Calendar session |
+
+### Calendar: exact usual hours
+
+Requested by the founder in the Calendar planning PR. The usual week uses local time ranges for each day, replacing the broad Daytime/Evening checkbox grid. Earlier selections remain readable and are only changed by an explicit save.
+
+| Term | Use |
+| --- | --- |
+| Choose your usual hours. Only you see this. | Owner-only weekly editor helper |
+| Times shown in New York. | Exact usual hours use Calendar’s displayed timezone |
+| No times added | Day with no saved ranges; it makes no claim about being busy |
+| From · To · Add time · Remove | Exact time range controls; midnight as To ends that day |
+| Copy to other days · Copy hours | Copy the current day's hours to selected days |
+| Adds these hours without removing existing times. | Copy merges overlapping ranges and preserves other hours |
+| Your earlier daytime and evening choices are shown below. Adjust them before saving. | Existing coarse selections shown for explicit review |
+| Choose an end time after the start. Split overnight hours between two days. | Invalid range guidance |
+| These hours overlap. Adjust or remove a time range. | Invalid overlapping ranges |
+| Keep up to eight time ranges per day. | Range limit guidance |
+
+
+## Landing page v3 (reviewed design, Nov 5, 2026)
+
+Implements the reviewed PDF v3 after the request to return to the landing and build.
+This section supersedes v2 marketing copy. The product is Soosh; Stubby is its helper.
+No 3D world, multiplayer or mobile-store availability is promised on this page.
+
+| Term | Meaning |
+| --- | --- |
+| Make time for the things you keep meaning to do. | Emotional hero headline |
+| Hobbies, activities & personal goals | Literal product description and SEO vocabulary |
+| Find my next step | Header, hero and final entry into the real calendar/Stubby flow; existing guest gates apply |
+| Start with Stubby, Soosh’s activity helper. | Explains the entry destination |
+| Find something to try this week. Keep going if you love it. On your own or with someone. | Revised hero invitation; account requirements remain in the FAQ |
+| See how it works | Focuses and scrolls to the explanation without modifying the hash route |
+| Explore Corners / Explore this Corner | Actual public Corner destinations, never a fixed catalog count |
+| Preview activity | Shows the selected editorial photo and title without making an ask |
+| Ask about this activity | Carries the selected example into an editable Stubby request |
+| A little of everything / Make something / Spend time outside / Try something at home | Local filters for the representative Corner cards, never saved preferences |
+| That thing you’d like to keep going with. | Introduces personal goals called Pursuits |
+| Start a Pursuit | Existing creation wording; chosen example title and Corner pass through signup, with no sample progress copied |
+| Example Pursuit / Choose an example goal / Stepping stones | Clearly labeled editorial goal preview; not account data |
+| On your own. With someone. Both belong here. | Equal solo and shared activity emphasis |
+| Keep what you do. Choose what you share. | Introduces Moments, Shelf, Stubs and Spaces without implying all data is public |
+| Something to start today. Something to keep working toward. | Closing promise |
+
+Complete approved implementation wording is in `src/app/landing/copy.ts` and the
+editorial examples in `PursuitPreview.tsx` and `examples.ts`. Photos are actual
+activity photography, never AI-generated member evidence. Failed photo loading
+retains the activity graphic; photographer credits appear only after photo load.
+No geographic coverage claim is made until independently verified. Guest asks,
+quotas, privacy controls, age/access checks and onboarding flags are unchanged.
+
+
+### Uploaded landing photography and Motion (Nov 5, 2026)
+
+The owner supplied six real photographs for the landing page and requested
+Framer Motion. The existing Motion dependency provides the transitions. There
+is no new public product name, plugin requirement or automatic saving behavior.
+
+| Term | Use |
+| --- | --- |
+| Paint a small scene | Photographed Painting activity; requirements and request describe watercolor painting, not pencil drawing |
+| Take a book outside | Photographed Reading activity used for the outside selection |
+
+Both Reading photos are used in matching contexts. Each Corner appears once in
+the all-interests gallery. Earlier Drawing and Birdwatching example ids remain
+valid for old editable requests, without exposing unrelated photos. Photograph
+credits use the provided filenames and recorded source ids, and appear only
+when that photograph actually loads. All displayed landing photos are local.
+Motion transitions follow the device reduced-motion preference, including changes
+during a visit. The streamlined hero has no ongoing animation or pause control;
+controls remain outside the animated content.
+
+
+### Streamlined landing revision (Nov 5, 2026)
+
+The owner requested less planner language, fewer disclaimers, a full six-card
+Corner grid, visual Stubs and solo/shared photography on the same review branch.
+The NYC weekend strip was explicitly skipped. No coverage claim or live picks
+are introduced. The complete revised wording remains in `copy.ts`.
+
+| Term | Use |
+| --- | --- |
+| Grab the Stub / Pick a time, bring someone if you like. | Owner-requested second step; marketing invitation, not a new early Stub-awarding action |
+| See all Corners | Sixth card links to the existing public Corner directory |
+| Things you did. Stubs you keep. | Introduces three visual examples using the actual Stub artwork |
+| Example Stubs | Explicit editorial label; never private account progress or confirmed available events |
+| Finish a Pursuit or attend a host-confirmed event to earn a Stub. | Accurate earning examples; does not claim every activity creates a Stub |
+| Photo walk / Pizza night / Learn a song | Illustrative event and finish Stubs, with weekday/social context |
+| Spaces are pages for hosts and local spots that run things you can join. | Owner-requested one-line explanation of Spaces |
+
+The five repeated disclaimer lines are removed from the hero/gallery/preview.
+Account, cost and booking requirements stay in the FAQ. Event/finish samples
+change no actual Stub issuance rules. The photo, title and “Another example”
+remain in the hero, with photographer attribution after a successful load.
+
+
+## Visible Corner starter content (Nov 5, 2026)
+
+The owner requested that the prepared activities, generic Pursuit templates and
+website resources be visible in the application. The relevant Corner pages now
+show these editorial sections below their existing introduction. Other Discover
+sections, member Moments, recommendation ranking and private goals are unchanged.
+
+| Wording | Meaning |
+| --- | --- |
+| Things to try | Three readable activity guides in each of ten existing Corners |
+| About {duration} to {duration} | Estimated activity duration, formatted with the shared duration helper |
+| What you’ll need / Optional / Choose a setup | Required resources, optional extras and complete alternative setups remain distinct |
+| Cost unknown. Check supplies, access and travel before starting. | An unknown total is never described as free |
+| With someone | Optional shared version of an activity; no invitation or event is created |
+| Pursuit ideas | Generic starter goals, separate from members’ own Pursuits and progress |
+| Start a Pursuit | Opens the existing creation form with an editable title and checklist; account gates apply |
+| Resources | Original descriptions and outbound website links relevant to this Corner |
+| Visit website | Opens the named source in a new tab; includes its name in the accessible label |
+
+The runtime catalog is in `src/app/data/starterContent.json`. It contains no
+member identity, private preference, sample completion or invitation. User
+requests to display these link-only resources authorize their inclusion; their
+current external availability and source terms were not independently verified.
+The earlier directory review files remain a historical candidate snapshot,
+not a claim that any third-party material is copyright-free. Resource cards
+contain no copied website images, logos, text excerpts, audio or embeds.
+
+## Discover content visibility (approved Nov 5, 2026)
+
+The owner approved the Discover visibility design. Public Resources and Pursuit
+ideas appear directly below the existing Corner carousel, with in-page shortcuts.
+Both are readable without opening a Corner, following or signing up.
+
+| Wording | Meaning |
+| --- | --- |
+| Browse art, find a book, or try a lesson. | Resources preview helper text |
+| Pick a goal. Make the steps your own. | Pursuit ideas preview helper text |
+| See all resources / See all ideas | Open the corresponding optional collection |
+| Choose a Corner if you want to narrow it down. | Optional collection filtering |
+| Search resources / Search Pursuit ideas | Search the open public collection |
+| Search by name or interest | Search field placeholder |
+| Corner / All Corners | Optional Corner filter and its unrestricted value |
+| Clear filters | Remove collection search and Corner filter only |
+| No matches. Try another word or Corner. | Empty filtered collection, not a failed read |
+| Close collection | Close the collection and restore Discover position and focus |
+
+Visit website opens the source directly. Start a Pursuit retains the existing
+editable creation form, account gates and private defaults. This editorial set
+does not claim to be personalized by Stubby or display any member progress.
+
+## Weekly times (Nov 2026)
+
+New with the weekly schedule behind Tonight (`standing_slots`). **Every row below is a new string for approval.** The admin screen is at `/admin/weekly-schedule`; the Space host panel is on a Space's Events tab and is seen by hosts only.
+
+| Term | Where and what it means |
+|---|---|
+| Weekly schedule | Admin screen title, and its row under Site admin in Settings |
+| Add a weekly time / Edit weekly time | Button and form title, admin screen and Space host panel |
+| Weekly times | Heading of the host panel on a Space's Events tab |
+| Something you do every week, like Every Thursday, 7:00 PM. | Line under that heading |
+| Every Thursday, 7:00 PM | How one weekly time reads: "Every" + weekday + the clock time from `dates.ts` |
+| Verified today | Button that stamps a weekly time as checked just now. A weekly time not verified for 60 days stops showing in Tonight until someone presses it |
+| Needs checking | Badge on a weekly time past its 60 days (admin screen) |
+| Off | Badge and checkbox label for a weekly time that is turned off |
+| Take part / Watch | Admin form: whether you can join in or only watch (`mode` do or watch) |
+| No weekly times yet. | Empty state, host panel and admin screen |
+
+## Going global (founder brief, Nov 7, 2026)
+
+Three strings that named a New York place now name no place. **Approved by the founder, Nov 7, 2026.** Nothing else in the UI changed; the New York time and city-picks wording stays until the time zone and city work (`docs/going-global-audit.md`, Ask A and B) is approved, because it is true until then.
+
+| String | Where |
+|---|---|
+| e.g. the park by your place | Placeholder of the place field when logging a Moment. Was "e.g. Prospect Park, Brooklyn" |
+| Shown under your name, like your neighborhood or town. | Help line under the neighborhood field in Settings. Was "...like Greenpoint, Brooklyn." |
+| (no wording) | `llms.txt` no longer says Soosh is for New York or "in New York first" |
+
+## Corner activities, PR A (brief of Nov 7, 2026)
+
+On a Corner's page, a section of things to do from `data/corner_activities.csv` (written by the founder's team and approved as content; the activity titles, descriptions, first steps and Moment prompts are that content and are not repeated here). **New wording for approval.**
+
+| String | Where |
+|---|---|
+| Things to try | Heading of the section on a Corner that has activities. The same words as the existing "Things to try" of the ten starter Corners, which it replaces on a Corner that has both (none today). Reused, not new |
+| At home / With people / At a place | The three tabs. The same words as Discover's Corner cards. An activity is under every tab it fits; a tab with nothing in it is not shown. Reused, not new |
+| Low energy / Medium energy / High energy | Tag on an activity card |
+| Solo / With a friend / With a group | Tags on an activity card, one per way it works |
+| Free / Low cost / Treat | Cost tag on an activity card. Never an amount of money |
+| 15 min / 1 hr / 3 hr / 4 hr | Duration tag, from `formatDuration` (15min, an hour, an evening, half a day; the last two are proposed lengths in `config.ts`) |
+| First step: | Label before an activity's first step, on its card |
+| Try this | Button on an activity card (founder, Nov 8, 2026: renamed from "Do this", which the Moment pill and the Corner page already use for other actions). Opens the composer on that Corner with the activity's Moment prompt above the thought |
+
+In the composer, from "Try this": a small block above the thought shows the activity's title and its Moment prompt (content, no new label). The Moment saves the activity (`posts.activity_id`) and earns the normal Stub.
+
+
+## Corner room: Pottery (briefs of Nov 10, 2026; merged by the founder Nov 10, 2026)
+
+A Corner can have a room: a 3D place that is what the Corner looks like. Pottery is the only one so far. It is **the Pottery Corner, never "the studio"** (founder, Nov 10, 2026: no seventh name; a room is how a Corner looks, not a separate thing). For an approved member the Corner opens as its room. The same Corner as a list (the page every other Corner has) is one tap away and is what visitors, and devices that cannot draw the room, get.
+
+The room shows the same walls as the list: Still making is the drying rack, Made it is the shelves, and your own pieces are Your shelf. Every piece is a real Moment. The potters and the cat are characters, tagged "Character" wherever they speak, and are never counted or listed with people. No member or follower counts; a sign counts pieces.
+
+The room reuses, unchanged, the approved Corner walls strings (Walls, Still making, Made it, their two lines, Make your version, You started yours., Passed along, You?, Love this, Count me in, Log a Moment) and the Corner chat strings (Chat, Message the Corner).
+
+| String | Where | Status |
+|---|---|---|
+| Enter the Corner | The button on the room's entry screen, under the Corner's name. Replaces "Enter the studio" | New Nov 10, proposed |
+| Room | On the list, beside Follow, for members of a Corner that has a room: opens the room. Replaces the "Enter the studio" button | New Nov 10, proposed |
+| List | In the room's top bar: the same Corner as a list. Replaces "Leave the studio" | New Nov 10, proposed |
+| Back | Screen reader name of the arrow in the room's top bar | New Nov 10, proposed |
+| This device can't open the room, so here is the list. | Shown on the list when the browser cannot draw the room. Replaces "The studio can't open on this device, so here is the Corner page." | New Nov 10, proposed |
+| The wheel is spinning and three potters are at work. Come make something, finished or not. | Entry screen line | Merged Nov 10 |
+| Best with sound on. Drag to look around. | Under the entry button | Merged Nov 10 |
+| Your shelf | The viewer's own pieces: a sign in the room, a wooden tag on the shelf and a section of the panel | Merged Nov 10 |
+| {N} in progress | Under the Still making sign: how many Moments are on that wall. Not shown when the wall has more than the room fetched | Merged Nov 10 |
+| {N} finished | Under the Made it sign, same rule | Merged Nov 10 |
+| {N} piece / {N} pieces | Under the Your shelf sign, through `plural()` | Merged Nov 10 |
+| Empty for now | Under the Your shelf sign when the viewer has no Moments in the Corner | Merged Nov 10 |
+| Nothing yet. Log a Moment and your piece appears in the Corner: on the drying rack while you're still making it, on your shelf once it's done. | Your shelf, when empty. "in the studio" became "in the Corner" | Changed Nov 10, proposed |
+| Finished pieces sit on your shelf. Pieces in progress dry on the rack. | Your shelf, when it has pieces | Merged Nov 10 |
+| Tap a sign to see who's still making, who made it, and your own shelf. | The one-time hint under the first sign | Merged Nov 10 |
+| Got it | Closes the hint | Merged Nov 10 |
+| Character | The tag on anything a potter or the cat says | Merged Nov 10 |
+| Time of day | Screen reader name of the four choices below | Merged Nov 10 |
+| Morning / Golden hour / Night rain / My clock | The light in the room. My clock follows the viewer's own hour and is the default | Merged Nov 10 |
+| Sound on / Sound off | Top bar, and (founder, Nov 10, 2026) a small button on the entry screen beside "Best with sound on. Drag to look around.", so sound can be turned off before going in. One setting: the two buttons always agree. Nothing plays before Enter either way | Merged Nov 10 |
+| Music on / Music off | Top bar | Merged Nov 10 |
+| The Pottery Corner as a 3D room. Drag to look around. Everything in it is also in the Walls panel. | Screen reader description of the canvas | Changed Nov 10, proposed |
+
+What the characters say (each shown with the Character tag). Meera: "Oh hi! Grab a stool, the wheel's warm." / "Centre first. Everything else follows." / "Slow hands, fast wheel." / "Wet your hands again. Trust me." / "Ha. Collapsed. Again! Third time today." Sid: "Wedge out the air bubbles first." / "Mine looked like a potato too. Keep going." / "You showed up. That's the hard part." Lena: "Nobody's first bowl is round." / "Glaze day is the best day." / "Dip, count to three, lift." Biscuit, the cat: "(Biscuit the cat is asleep. Purring.)"
+
+Retired on Nov 10, 2026 (the room is the Corner): "Enter the studio", "The Pottery studio", "Leave the studio", "The studio can't open on this device, so here is the Corner page.", and "studio" in any string a person reads.
+
+Wording from the first brief that is **not used**, because an approved string already covers it: "Tear off · make your version" (Make your version), "I'm in" (Count me in), "Keep going" as a reaction (retired; see `docs/moment-card-and-reactions-spec.md`), "Half-done, messy, in progress. The good part." (Half-done, messy, in progress.), "{N} here now" (the Corner chat's own presence line, which names up to three people).
+
+## Corner rooms: Gardening, Reading and Board games (founder, Nov 10, 2026)
+
+Gardening, Reading and Board games open as rooms, like Pottery. Each is **the Corner**, never a place with a name of its own: no "the garden", "the reading room" or "the game café" as a place (founder, Nov 10, 2026). Objects keep their names: seedling stand, reading cart, learning cart, your shelf. The button on every entry screen is **Enter the Corner**. Every string every room shares (Room, List, Your shelf, Empty for now, Got it, Character, the lights, Sound and Music) is the Pottery room's, unchanged.
+
+**Pottery's second character is Sid** (founder, Nov 10, 2026; was Arjun). His lines are unchanged.
+
+**The name label.** Hovering a character shows their name with the Character tag and nothing else. Tapping one shows their name, the tag and one of their lines, as before.
+
+Wall names are in "Corner rooms: wall labels" below. The words under a sign count pieces, never people.
+
+| String | Where | Status |
+|---|---|---|
+| {N} growing / {N} in bloom or picked | Gardening, under the Still growing and Made it signs | Proposed Nov 10 |
+| {N} open / {N} finished | Reading, under the Still reading and Read it signs | Proposed Nov 10 |
+| {N} learning / {N} played | Board games, under the Still learning and Played it signs | Proposed Nov 10 |
+| The greenhouse doors are open to the vegetable patch, someone's watering the big fern, and the seedling stand is full. Come grow something, sprouted or not. | Gardening entry screen. The reference began "Golden hour."; dropped, because the light follows the viewer's clock | Proposed Nov 10 |
+| The fire's lit, the shelves go up to the ceiling, and three readers are lost in their books. Pull up a chair, halfway through or just starting. | Reading entry screen | Proposed Nov 10 |
+| Dice are rolling, someone's thinking far too hard, and the shelves are full of games. Sit down and learn one, or play an old favourite. | Board games entry screen | Proposed Nov 10 |
+| Nothing yet. Log a Moment and your plant appears in the Corner: on the seedling stand while it's growing, on your shelf once it blooms or you pick something. | Gardening, Your shelf when empty | Proposed Nov 10 |
+| Plants that made it sit on your shelf. Ones still growing wait on the stand. | Gardening, Your shelf with pieces | Proposed Nov 10 |
+| Nothing yet. Log a Moment and your book appears in the Corner: open on the reading cart while you're reading it, on your shelf once you finish. | Reading, Your shelf when empty | Proposed Nov 10 |
+| Finished books stand on your shelf. Ones you're still reading lie open on the cart. | Reading, Your shelf with pieces | Proposed Nov 10 |
+| Nothing yet. Log a Moment and your game appears in the Corner: open on the learning cart while you're learning it, on your shelf once you've played it properly. | Board games, Your shelf when empty | Proposed Nov 10 |
+| Games you've played stand on your shelf. Ones you're learning sit open on the cart. | Board games, Your shelf with pieces | Proposed Nov 10 |
+| Tap a sign to see who's still growing, who made it, and your own shelf. | Gardening, the one-time hint | Proposed Nov 10 |
+| Tap a sign to see who's still reading, who read it, and your own shelf. | Reading, the one-time hint | Proposed Nov 10 |
+| Tap a sign to see who's still learning, who played it, and your own shelf. | Board games, the one-time hint | Proposed Nov 10 |
+| The Gardening Corner as a 3D room. Drag to look around. Everything in it is also in the Walls panel. | Screen reader description of the canvas. The same sentence for Reading and Board games, with the Corner's name | Proposed Nov 10 |
+
+What the characters say (each shown with the Character tag). Proposed Nov 10.
+
+Gardening. Rosa: "Hi! Mind the hose, everything else is fair game." / "Water the soil, not the leaves." / "Most plants want less water than you think." / "Talk to them. It can't hurt." Kofi: "Firm the soil, don't pack it." / "Hold them by the leaf, never the stem." / "Every gardener kills a few. Keep going." Noor: "Look, the first tomato is turning red." / "Weeding is basically meditation." / "Plant a few extra. Snails eat some." Ade: "Sun on your back, hands in the soil. Best feeling." / "The sunflowers were one seed each. One!" / "Outside beds forgive a lot. Just start." Pip, the cat: "(Pip is asleep in a patch of sun.)"
+
+Reading. Hana: "Oh, hello. The armchair by the fire is free." / "Just one more chapter." / "Abandoning a book is allowed, you know." / "Read the first page out loud. It helps." Ellie: "Rain is the best reading weather." / "I keep a pencil for lines I love." / "Ten pages counts. It really does." Omar: "I write one line about every book." / "Libraries are the best free thing there is." / "Swap a book with a friend. It's a gift that comes back." Moth, the cat: "(Moth is asleep on the rug, very much not reading.)"
+
+Board games. Theo: "Come on, double six." / "Rule one: whoever explains the rules goes first." / "Losing is how you learn the good games." Mira: "Hi! We're mid-game, but there's always room for one more." / "Your turn. Take your time. Not that much time." / "First game is always a practice game." / "Read the rules out loud together. It's faster." Sol: "Hmm. Hmm. Hmm." / "I'm not losing, I'm strategising." / "Short games first. Big ones once you're hooked." / "Yes! Did you see that?" Meeple, the cat: "(Meeple is asleep and has knocked over a pawn.)"
+
+Not used from the reference configs, because they name a place or belong to a later step: "Step into the garden", "Step into the reading room", "Pull up a chair" (Enter the Corner); the pet labels "Greenhouse cat", "Reading-room cat", "Café cat" (every character, pets included, carries the Character tag); and the composer, toast, Stubby, station, board and Pursuit strings, which wait for the step that ships them.
+
+## Corner rooms: wall labels (founder, Nov 10, 2026)
+
+A Corner with a room may name its two walls itself. Nothing else about a wall changes: a Moment is on the finished wall when its Pursuit is finished, and on the in-progress wall otherwise. A Corner without a room says Still making and Made it. The labels are in `src/app/lib/cornerWallLabels.ts` and are used wherever the wall is named for that Corner: the list's panels and phone control, the room's signs and panel, and Log a Moment. All four Corners have their rooms, so all four show their labels.
+
+| String | Where | Status |
+|---|---|---|
+| Still making | Pottery, in progress. Unchanged | Approved |
+| Made it | Pottery and Gardening, finished. Unchanged for Pottery | Approved Nov 10 |
+| Still growing | Gardening, in progress | Approved Nov 10 |
+| Still reading | Reading, in progress | Approved Nov 10 |
+| Read it | Reading, finished. Not "Finished": a card on the wall already says Finished {date} | Approved Nov 10 |
+| Still learning | Board games, in progress | Approved Nov 10 |
+| Played it | Board games, finished | Approved Nov 10 |
+
+Log a Moment, on a Corner that has a room, asks whether the Moment is in progress or finished, as a two-way choice under the Corner row that uses the Corner's two labels (in progress is picked to start). It is asked only for a Moment other people will see, and not for a group's Pursuit. Choosing the finished label finishes the Pursuit the Moment counts toward. With no Pursuit, it makes one that is finished from the start, titled with the first line of the Moment (60 characters at most, cut at a word with …) or the Corner's name when nothing was written; that Pursuit is never active, so it is not in any list of Pursuits in progress, and it is shared only when the Moment is for everyone. Undo takes it back with the Moment.
+
+| String | Where | Status |
+|---|---|---|
+| How far along | Screen reader name of the two-way choice in Log a Moment. Never shown | Approved Nov 10 |
+
+## One Moment, everywhere (brief v2, founder, Nov 10, 2026)
+
+A Moment is drawn by one set of parts (`src/app/components/moment/`) on every surface: Home, Discover, Spaces, Corner walls, Pursuit pages, profiles and the Moment itself. It has no action button. Save is the one "I want this". This section replaces what earlier sections say about buttons on a Moment ("Count me in", "See {Corner}", "Try {corner}", "Make your version"): those are retired above.
+
+| String | Where | Status |
+|---|---|---|
+| {Corner} · {place} · {when} | The one meta line under the maker’s name. The Corner’s name links to the Corner. {when} is the short form from `dates.ts`; a session that has not happened yet shows its day and time. Never a group name | Brief v2 |
+| Follow / Follow back / Requested | In a Moment’s header when it is not yours and you do not follow them yet. Requested stays, disabled | Reused |
+| More | Accessible name of the ⋯ button on a Moment and of its menu. Never shown | Reused (the rail’s More) |
+| Love this / Loved | Accessible name of the heart. Loved once you have | Reused |
+| Thoughts | Accessible name of the speech bubble, and the heading above a Moment’s thoughts. Opens the Moment at its thoughts | Reused |
+| Send to | Accessible name of the paper plane, and the title of its dialog. Hidden for an Only you Moment | Reused |
+| Share | Button in Send to that opens the phone’s share sheet, where there is one | Reused |
+| Save / Saved | Accessible name of the bookmark. Saved while it is, and the toast the first time someone saves on a device | Reused |
+| Love this, {n} / Thoughts, {n} / Saved, {n} | Accessible names on your own Moment, where each icon carries its count. Nobody else sees a number | Brief v2 |
+| more | After two lines of caption. Opens the rest in place. Lower case, as it continues the sentence | **New, for approval** |
+| See thoughts | Under the caption when the Moment has any. Opens the Moment at its thoughts | **New, for approval** |
+| Message {name} about this / Copy link / Report | The menu on someone else’s Moment, in this order | Reused |
+| Add details / Add to Pursuit / Move to another Pursuit / Change who sees this / Copy link / Delete | The menu on your own Moment, in this order | Reused |
+| Link copied | Toast after Copy link | Reused |
+| Everyone / Followers / Only you | At the end of the meta line on your own Moment, with its icon. Opens Change who sees this | Reused |
+| What you wrote / Replace photo | Fields in Add details when it is opened from a Moment’s menu (they were in the Moment’s old Edit form) | Reused |
+| Open {name}’s Moment | Accessible name of a grid tile. Never shown | Brief v2 |

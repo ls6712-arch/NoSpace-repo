@@ -5,7 +5,9 @@ import { ImageWithFallback } from "../ImageWithFallback";
 import { SnapCarousel } from "../ui/SnapCarousel";
 import { PillButton } from "../ui/PillButton";
 import { ResponsiveSheet } from "../profile/ResponsiveSheet";
-import { LoveThis } from "../home/FeedCard";
+import { MomentActions } from "../moment/MomentActions";
+import { wantThoughts } from "../moment/thoughtsIntent";
+import { useNavigate } from "react-router";
 import { formatWhen } from "../../lib/dates";
 
 /**
@@ -20,6 +22,7 @@ const photoOf = (p: Post) => p.mediaUrls?.[0] ?? p.media;
 
 export function InspirationStrip({ posts, cornerName, onMakeThisToo }: { posts: readonly Post[]; cornerName: string; onMakeThisToo: (post: Post) => void }) {
   const [open, setOpen] = useState<Post | null>(null);
+  const navigate = useNavigate();
   if (posts.length === 0) return null;
   return (
     <section aria-labelledby="start-others" className="mt-4">
@@ -64,9 +67,14 @@ export function InspirationStrip({ posts, cornerName, onMakeThisToo }: { posts: 
             <ImageWithFallback src={photoOf(open)} alt={open.caption || `${open.creator}, ${cornerName}`} width={640} aspect="1 / 1" className="w-full overflow-hidden rounded-card" />
             <p className="text-small text-muted-foreground">{formatWhen(open.createdAt)}</p>
             {open.caption && <p className="text-body leading-snug">{open.caption}</p>}
-            <div>
-              <LoveThis post={open} />
-            </div>
+            <MomentActions
+              post={open}
+              mine={false}
+              onThoughts={() => {
+                wantThoughts(open.id);
+                navigate(`/moment/${open.id}`);
+              }}
+            />
           </div>
         </ResponsiveSheet>
       )}

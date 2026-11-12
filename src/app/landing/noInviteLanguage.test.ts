@@ -17,10 +17,14 @@ describe("open sign-up copy", () => {
     expect(landing).not.toMatch(GATE);
   });
 
-  it("sends the landing buttons to sign-up", () => {
+  it("uses the reviewed next-step entry without changing Sign up or implying a completed action", () => {
     expect(LANDING_COPY.signUp).toBe("Sign up");
+    expect(LANDING_COPY.heroCta).toBe("Try Soosh");
     expect(landing).toContain('to="/onboarding"');
     expect(landing).not.toContain("WaitlistForm");
+    // The main button goes to Ask Stubby, or to sign-up while Ask Stubby is off (config.ts).
+    expect(landing).toContain('to={stubbyAskEnabled ? "/calendar" : "/onboarding"}');
+    expect(landing).not.toContain("You’re going");
   });
 
   it("has no invite-only or waitlist language on the other invite-era screens", () => {

@@ -1,3 +1,4 @@
+import { activityCost } from "./activityFit";
 import { describe, expect, it } from "vitest";
 import { CORNER_IDEAS } from "../data/cornerIdeas";
 import { fitsPills, ideasFor, MAX_PER_CATEGORY, ROW_SIZE, SPEND_ORDER, TIME_ORDER, type IdeaPills } from "./ideaMatch";
@@ -7,10 +8,12 @@ const WHOS = ["solo", "friend", "new"] as const;
 describe("idea pills are ceilings", () => {
   const combos: IdeaPills[] = TIME_ORDER.flatMap((time) => SPEND_ORDER.flatMap((spend) => WHOS.map((who) => ({ time, spend, who }))));
 
-  it("returns at least 3 ideas for every pill combination, with no picks, even with the category cap", () => {
+  it("keeps category caps without filling constrained rows with unknown cost", () => {
     expect(combos).toHaveLength(27);
     for (const pills of combos) {
-      expect(ideasFor(pills).length, JSON.stringify(pills)).toBeGreaterThanOrEqual(3);
+      const row=ideasFor(pills);
+      expect(row.length).toBeLessThanOrEqual(ROW_SIZE);
+      if(pills.spend!=="treat")expect(row.every(m=>activityCost(m.key,[])!==null)).toBe(true);
     }
   });
 
@@ -34,9 +37,8 @@ describe("idea pills are ceilings", () => {
     }
   });
 
-  it("still fills the row of 6 for most combinations", () => {
-    const full = combos.filter((p) => ideasFor(p).length === ROW_SIZE);
-    expect(full.length).toBeGreaterThanOrEqual(24);
+  it("can show fewer results when an explicit cost constraint cannot be checked",()=>{
+    expect(ideasFor({time:"hour",spend:"free",who:"solo"}).length).toBeLessThan(ROW_SIZE);
   });
 
   it("only ever widens as a pill loosens: An hour in Tonight in Weekend, Free in Under $25 in Treat me", () => {

@@ -1,12 +1,13 @@
-import { Link, useLocation } from "react-router";
+import { Link } from "react-router";
 import { motion } from "motion/react";
 import { pop, press, PRESS_SCALE } from "../lib/motionTokens";
 import { useAuth } from "../context/AuthContext";
 import { useIncomingFollowRequests } from "../lib/useIncomingFollowRequests";
 import { TAB_DESTINATIONS, type Destination } from "./nav/navItems";
+import { useCurrentTab } from "../lib/routeHandle";
 
 /**
- * Phone and tablet navigation: Home, Discover, Log and You. Each tab is a
+ * Phone and tablet navigation: Home, Discover, Log, Stubby and You. Each tab is a
  * line icon over a short label, so it reads the same as the desktop top nav's
  * destinations in the same order (Profile hangs off the avatar there). The
  * desktop button reads "Log a Moment"; this tab says "Log" (the glossary's
@@ -33,7 +34,7 @@ export const TABS: readonly Destination[] = TAB_DESTINATIONS;
  * keeps the top header), the bar hides at lg as it always did.
  */
 export function BottomTabBar({ railEligible = false }: { railEligible?: boolean }) {
-  const { pathname } = useLocation();
+  const currentTab = useCurrentTab();
   const { user } = useAuth();
   const incomingFollows = useIncomingFollowRequests(user?.id) ?? [];
   const waiting = incomingFollows.length > 0;
@@ -49,9 +50,9 @@ export function BottomTabBar({ railEligible = false }: { railEligible?: boolean 
         style={{ paddingBottom: "var(--safe-bottom)", paddingLeft: "var(--safe-left)", paddingRight: "var(--safe-right)" }}
         aria-label="Main"
       >
-        <div className="mx-auto grid max-w-md grid-cols-4 items-end px-1 pb-1.5 pt-1.5">
+        <div className="mx-auto grid max-w-md grid-cols-5 items-end px-1 pb-1.5 pt-1.5">
           {TABS.map((tab) => {
-            const active = tab.match(pathname);
+            const active = tab.tab === currentTab;
             const Icon = tab.icon;
             if (tab.accent) {
               return (

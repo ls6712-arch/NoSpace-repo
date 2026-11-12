@@ -111,6 +111,27 @@ async function decorate(allPeople: Person[]): Promise<Person[]> {
   return [...byId.values()];
 }
 
+/**
+ * These people, in the order given, with what they do attached. For Discover's
+ * People near you, which already knows who (the authors of its feed). Test
+ * accounts and anyone without a readable profile drop out.
+ */
+export async function peopleByIds(ids: string[]): Promise<Person[]> {
+  if (!supabase || ids.length === 0) return [];
+  try {
+    const { data, error } = await withTimeout(
+      supabase.from("profiles").select("id, username, display_name, avatar_url").in("id", ids),
+      { data: null, error: true } as any,
+    );
+    if (error || !data) return [];
+    const people = await decorate((data as ProfileRow[]).map(toPerson));
+    const order = new Map(ids.map((id, i) => [id, i]));
+    return people.sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  } catch {
+    return [];
+  }
+}
+
 /** One person by id — for a page that arrives already knowing who it's
  * about (CreatePursuit's ?with=). Null if they can't be read. */
 export async function fetchPerson(id: string): Promise<Person | null> {

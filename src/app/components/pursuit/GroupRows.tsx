@@ -75,7 +75,7 @@ export function GroupRows({
                     style={{ background: hue }}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: s.fraction }}
-                    transition={{ ...page, delay: 0.15 + staggerDelay(i), duration: 0.5 }}
+                    transition={{ ...page, delay: 0.15 + staggerDelay(i) }}
                   />
                 </div>
               </div>

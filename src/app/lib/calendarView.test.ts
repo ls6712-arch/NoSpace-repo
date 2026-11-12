@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   agendaDays,
   calendarDays,
+  anchorInYear,
   calendarRange,
+  rangeYears,
   canStep,
   clampAnchor,
   dateParam,
@@ -23,10 +25,12 @@ import {
   viewSpan,
   viewSubline,
   viewTitle,
+  yearDays,
+  yearMonths,
   visiblePlans,
   windowsAcross,
 } from "./calendarView";
-import { nyTimeToMs } from "./homeWeek";
+import { nyParts, nyTimeToMs } from "./homeWeek";
 import type { StubCard } from "./stubs";
 import { weekDays, type WeekPlanDetail } from "./weekView";
 
@@ -55,7 +59,8 @@ describe("the URL", () => {
   it("reads the view, falling back to Month", () => {
     expect(parseView("week")).toBe("week");
     expect(parseView("list")).toBe("list");
-    expect(parseView("year")).toBe("month");
+    expect(parseView("year")).toBe("year");
+    expect(parseView("decade")).toBe("month");
     expect(parseView(null)).toBe("month");
   });
 
@@ -76,32 +81,51 @@ describe("the URL", () => {
 describe("the range", () => {
   const range = calendarRange(NOW, ny(8, 14, 9));
 
-  it("runs from the 1st of the sign-up month to the end of the month 3 ahead", () => {
-    expect(range.minMs).toBe(ny(8, 1, 0));
-    expect(range.maxMs).toBe(ny(2, 1, 0, 2027));
+  it("runs in whole years: Jan 1 of the sign-up year to the end of next year", () => {
+    expect(range.minMs).toBe(ny(1, 1, 0));
+    expect(range.maxMs).toBe(ny(1, 1, 0, 2028));
   });
 
-  it("starts this month when there is no sign-up date or it is in the future", () => {
-    expect(calendarRange(NOW, null).minMs).toBe(ny(10, 1, 0));
-    expect(calendarRange(NOW, NOW + 1e9).minMs).toBe(ny(10, 1, 0));
+  it("starts this year when there is no sign-up date or it is in the future", () => {
+    expect(calendarRange(NOW, null).minMs).toBe(ny(1, 1, 0));
+    expect(calendarRange(NOW, NOW + 1e9).minMs).toBe(ny(1, 1, 0));
+  });
+
+  it("lists the years a person can open, oldest first", () => {
+    expect(rangeYears(range)).toEqual([2026, 2027]);
+    expect(rangeYears(calendarRange(NOW, ny(5, 2, 9, 2024)))).toEqual([2024, 2025, 2026, 2027]);
+  });
+
+  it("moves to the same month and day in another year, and keeps Feb 29 inside February", () => {
+    expect(dateParam(anchorInYear(ny(3, 14, 12), 2027, range))).toBe("2027-03-14");
+    const old = calendarRange(NOW, ny(5, 2, 9, 2024));
+    expect(dateParam(anchorInYear(ny(2, 29, 12, 2024), 2025, old))).toBe("2025-02-28");
+  });
+
+  it("goes back to the sign-up year, however long ago", () => {
+    const old = calendarRange(NOW, ny(5, 2, 9, 2024));
+    expect(old.minMs).toBe(ny(1, 1, 0, 2024));
+    expect(canStep("year", ny(6, 1, 12, 2024), -1, old)).toBe(false);
+    expect(canStep("year", ny(6, 1, 12, 2025), -1, old)).toBe(true);
   });
 
   it("pulls a date outside it back in", () => {
-    expect(dateParam(clampAnchor(ny(1, 5, 12), range))).toBe("2026-08-01");
-    expect(dateParam(clampAnchor(ny(6, 5, 12, 2027), range))).toBe("2027-01-31");
-    expect(clampAnchor(ny(10, 5, 12), range)).toBe(ny(10, 5, 12));
+    expect(dateParam(clampAnchor(ny(12, 5, 12, 2025), range))).toBe("2026-01-01");
+    expect(dateParam(clampAnchor(ny(2, 5, 12, 2028), range))).toBe("2027-12-31");
+    expect(clampAnchor(ny(1, 5, 12), range)).toBe(ny(1, 5, 12));
+    expect(clampAnchor(ny(6, 5, 12, 2027), range)).toBe(ny(6, 5, 12, 2027));
   });
 
   it("stops the arrows at both ends", () => {
-    expect(canStep("month", ny(8, 10, 12), -1, range)).toBe(false);
-    expect(canStep("month", ny(9, 10, 12), -1, range)).toBe(true);
-    expect(canStep("month", ny(1, 10, 12, 2027), 1, range)).toBe(false);
-    expect(canStep("month", ny(12, 10, 12), 1, range)).toBe(true);
-    // A week that only partly fits still opens (the page then clamps it to the 1st).
-    expect(canStep("week", ny(8, 3, 12), -1, range)).toBe(true);
-    expect(canStep("week", ny(8, 1, 12), -1, range)).toBe(false);
-    expect(canStep("week", ny(8, 8, 12), -1, range)).toBe(true);
-    expect(canStep("day", ny(1, 31, 12, 2027), 1, range)).toBe(false);
+    expect(canStep("month", ny(1, 10, 12), -1, range)).toBe(false);
+    expect(canStep("month", ny(2, 10, 12), -1, range)).toBe(true);
+    expect(canStep("month", ny(12, 10, 12, 2027), 1, range)).toBe(false);
+    expect(canStep("month", ny(11, 10, 12, 2027), 1, range)).toBe(true);
+    // A week that only partly fits still opens (the page then clamps it to Jan 1).
+    expect(canStep("week", ny(1, 3, 12), -1, range)).toBe(true);
+    expect(canStep("week", ny(1, 1, 12), -1, range)).toBe(false);
+    expect(canStep("week", ny(1, 8, 12), -1, range)).toBe(true);
+    expect(canStep("day", ny(12, 31, 12, 2027), 1, range)).toBe(false);
   });
 });
 
@@ -283,5 +307,25 @@ describe("labels", () => {
     expect(makePlanFor(d(10, 31), ny(10, 31, 19))).toBe("Make a plan for tonight");
     expect(makePlanFor(d(11, 1), NOW)).toBe("Make a plan for tomorrow");
     expect(makePlanFor(d(11, 7), NOW)).toBe("Make a plan for Sat 7");
+  });
+});
+
+describe("the year", () => {
+  const range = calendarRange(NOW, ny(8, 14, 9));
+  it("covers Jan 1 to Dec 31, titles itself with the year and steps a year at a time", () => {
+    expect(viewSpan("year", ny(6, 9, 12))).toEqual({ startMs: ny(1, 1, 0), endMs: ny(1, 1, 0, 2027) });
+    expect(viewTitle("year", ny(6, 9, 12), NOW)).toBe("2026");
+    expect(stepAnchor("year", ny(6, 9, 12), 1)).toBe(ny(1, 1, 12, 2027));
+    expect(stepAnchor("year", ny(6, 9, 12), -1)).toBe(ny(1, 1, 12, 2025));
+  });
+  it("lists every day, leap years included, and the twelve months", () => {
+    expect(yearDays(ny(3, 3, 12))).toHaveLength(365);
+    expect(yearDays(ny(3, 3, 12, 2028))).toHaveLength(366);
+    expect(yearMonths(ny(3, 3, 12)).map((ms) => nyParts(ms).m)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  });
+  it("pages into a year only while it overlaps the range", () => {
+    expect(canStep("year", NOW, 1, range)).toBe(true);
+    expect(canStep("year", NOW, -1, range)).toBe(false);
+    expect(canStep("year", ny(1, 1, 12, 2027), 1, range)).toBe(false);
   });
 });

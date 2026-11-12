@@ -23,6 +23,7 @@ export const Bad = () => (
     <img src="/x.png" alt="" /> <p className="text-on-media/70" />
     <i className="duration-300" /> <i className="ease-out" /> <i style={{ transition: "opacity 300ms" }} />
     {/* design-token-ignore: */}
+    <Motion transition={{ type: "spring", stiffness: 300, damping: 20 }} />
   </div>
 );
 TSX
@@ -35,6 +36,7 @@ export const Good = () => (
     <i className="rounded-lg" />
     <i className="text-white" /> {/* design-token-ignore: selftest, same line */}
     <input accept="image/*" className="text-body rounded-card shadow-card duration-fast ease-standard bg-scrim-solid/40 text-on-media h-viewport" />
+    <Motion transition={reduce ? { duration: 0 } : { ...page, delay: staggerDelay(i) }} />
   </div>
 );
 TSX

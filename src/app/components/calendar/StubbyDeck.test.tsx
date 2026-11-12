@@ -6,6 +6,8 @@
 import { MemoryRouter } from "react-router";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../../config", async (orig) => ({ ...(await orig<typeof import("../../config")>()), stubbyAskEnabled: true }));
 import type { AskStep, MyPick } from "../../lib/stubbyAsk";
 
 type Opts = { signal?: AbortSignal; onStep: (s: AskStep) => void; answers?: unknown; questions?: boolean; followUp?: unknown };
@@ -113,7 +115,7 @@ describe("Stubby's one question", () => {
     await waitFor(() => expect(document.querySelector("[data-stubby-who]")?.textContent).toContain("Just me"));
     // The next ask carries it.
     await askFor("pottery tonight");
-    expect(lastOpts()[1].answers).toEqual({ who: "solo" });
+    expect(lastOpts()[1].answers).toEqual({ rememberedWho: "solo" });
     fireEvent.click(screen.getByRole("button", { name: "Remove: Just me" }));
     expect(document.querySelector("[data-stubby-who]")).toBeNull();
     await askFor("pottery tonight");

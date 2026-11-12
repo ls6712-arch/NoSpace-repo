@@ -4,7 +4,7 @@ import { ImageOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchSharedMoment } from "../lib/sharedContent";
 import { Post } from "../data/posts";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 
 /**
  * A standalone Moment page — the one place a Moment shared into a chat (or

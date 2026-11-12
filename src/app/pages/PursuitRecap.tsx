@@ -7,7 +7,7 @@ import { useContent } from "../context/ContentContext";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
 import { pursuitStatus, useJournalSlice, type Project } from "../lib/journal";
 import { collectPursuitMoments } from "../lib/pursuitTrail";
-import { formatAmount, pursuitCorner, unitFor } from "../lib/pursuitProgress";
+import { formatAmount, pursuitCorner, summarize, unitFor } from "../lib/pursuitProgress";
 import { usePursuitMembers, usePursuitProgress } from "../lib/usePursuitProgress";
 import { daysBetween } from "../lib/pursuitGoal";
 import { withLine } from "../lib/withLine";
@@ -21,16 +21,16 @@ import { formatDateTime } from "../lib/dates";
 import { cornerMeta, curatedBySlug } from "../data/curatedCorners";
 import { StubArt } from "../components/stub/StubArt";
 import { PillButton } from "../components/ui/PillButton";
-import { Confetti } from "../components/pursuit/Confetti";
 import { ImageWithFallback } from "../components/ImageWithFallback";
-import { PAGE_FROM, PAGE_TO, haptic, page, press, PRESS_SCALE } from "../lib/motionTokens";
+import { PAGE_FROM, PAGE_TO, haptic, page, press, PRESS_SCALE, staggerDelay } from "../lib/motionTokens";
 
 const MotionLink = motion.create(Link);
 
 /**
  * Pursuit complete (screen 13): how long it took, the Moments as a 5 by 2 grid
  * that flips in tile by tile, the gold stub, a story image to share, and what
- * to do next. Confetti once, skipped under reduced motion.
+ * to do next. No confetti: the Stub reveal is the app's one reward moment
+ * (motionTokens.ts).
  */
 export function PursuitRecap() {
   const { id = "" } = useParams();
@@ -95,15 +95,16 @@ export function PursuitRecap() {
 
   const measure = project.measure;
   const target = measure?.target ?? project.goal?.targetNumber ?? 0;
-  const unit = measure ? unitFor(measure, target) : "";
+  const unit = measure ? unitFor(measure, target) : project.goal?.unit ?? "";
   const finished = project.finishedAt ?? Date.now();
   const days = daysBetween(project.startedAt, finished);
   const corner = pursuitCorner(project) ?? project.title;
   const others = members.filter((m) => m.status === "joined" && m.userId !== user?.id).map((m) => m.displayName);
-  const done = Math.min(measure ? Math.max(tiles.length, 0) : 0, target) || tiles.length;
-  const stubCount = { done: Math.min(target || done, target || done), total: target || done };
+  const counted = project.mode === "group" ? entries : entries.filter(e => !e.userId || e.userId === user?.id);
+  const done = measure ? summarize(measure, counted).current : project.goal?.shape === "number" ? project.goal.current ?? 0 : moments.length;
+  const stubCount = { done, total: target || done };
   const meta = [withLine(others), formatDateRange(project.startedAt, finished)].filter(Boolean).join(" · ");
-  const headline = target > 0 ? `You finished ${formatAmount(target)} ${unit}`.trim() : `You finished ${project.title}`;
+  const headline = target > 0 ? `${formatAmount(done)} of ${formatAmount(target)} ${unit}`.trim() : `You finished ${project.title}`;
 
   const share = async () => {
     if (sharing) return;
@@ -112,7 +113,7 @@ export function PursuitRecap() {
     const blob = await renderRecap({
       kicker: `Pursuit complete · ${plural(days, "day")}`,
       title: headline,
-      stubTitle: target > 0 ? `${formatAmount(stubCount.total)}/${formatAmount(stubCount.total)} ${unit}` : corner,
+      stubTitle: target > 0 ? `${formatAmount(stubCount.done)}/${formatAmount(stubCount.total)} ${unit}` : corner,
       stubCount: target > 0 ? `${formatAmount(stubCount.done)}/${formatAmount(stubCount.total)}` : "",
       stubMeta: meta,
       photoUrls: tiles.map((t) => t.image).filter((u): u is string => !!u),
@@ -167,7 +168,6 @@ export function PursuitRecap() {
 
   return (
     <div className="min-h-viewport bg-background pb-24">
-      <Confetti />
       <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-col gap-8 pt-10">
         <header className="text-center">
           <p className="text-small text-muted-foreground">{`Pursuit complete · ${plural(days, "day")}`}</p>
@@ -189,7 +189,7 @@ export function PursuitRecap() {
                 key={t.key}
                 initial={{ rotateY: 90, opacity: 0 }}
                 animate={{ rotateY: 0, opacity: 1 }}
-                transition={{ duration: 0.35, delay: i * 0.04, ease: "easeOut" }}
+                transition={{ ...page, delay: staggerDelay(i) }}
                 style={{ transformPerspective: 600 }}
                 className="relative aspect-square overflow-hidden rounded-control bg-card"
               >

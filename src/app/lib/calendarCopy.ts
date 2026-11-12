@@ -29,7 +29,7 @@ export const SHEET = {
   nobody: "Just me",
   makeIt: "Make the plan",
   changeTime: "Change the time",
-  changeMyTime: "Change my time",
+  sharedTime: "This changes the time for everyone.",
   moveSession: "Move this session",
   bringSomeone: "Bring someone",
   cancelPlan: "Cancel this plan",
@@ -93,8 +93,9 @@ export const ASK_COPY = {
   placeholder: "Pottery on Saturday, a free run, something outdoors",
   busy: "Looking",
   nothing: "Nothing fit this time. Try asking another way.",
-  listLabel: "Found for you",
-  cardLabel: "Found for you",
+  /** The deck's name, and the label on each card: the same words as his picks in a free slot, one word per idea (founder, Nov 3, 2026; was "Found for you"). */
+  listLabel: "Stubby’s picks",
+  cardLabel: "Stubby’s pick",
   /** The label on a do-it-yourself pick, instead of a dated ticket (approved Nov 2, 2026). */
   ideaLabel: "An idea",
   open: "Open",
@@ -141,6 +142,11 @@ export const UNDERSTOOD_COPY = {
 
 /** Stubby's one question, answered with a tap (stubby-plan §5, approved Nov 2, 2026). */
 export const QUESTION_COPY = {
+  /** The answers to "Stay in or head out?" (stubby-agent C4, approved Nov 3, 2026). */
+  setting: [
+    { label: "Stay in", setting: "in" },
+    { label: "Head out", setting: "out" },
+  ] as const,
   who: [
     { label: "Just me", who: "solo" },
     { label: "With my partner", who: "partner" },
@@ -155,5 +161,49 @@ export const QUESTION_COPY = {
   pickADay: "Pick a day",
   what: ["Active", "Make something", "Food & drink", "Chill", "Learn something"] as const,
   surprise: "Surprise me",
+};
+
+/**
+ * When nothing fits: the honest line, then why, as one short line of the 3 most common reasons
+ * ("2 were listing pages, 1 was after midnight"), then three ways on (approved Nov 2, 2026).
+ */
+/**
+ * Stay in, answered from their own Pursuits and Corners (hotfix, Nov 3, 2026). Every string is
+ * already in docs/glossary.md: the At-home badge, What you’ll need, Head out, Start a Pursuit,
+ * Go to Discover, and the nothing-fit line.
+ */
+/**
+ * The care card (stubby-agent C1). The line is the brief's own; the rest is new, for approval
+ * (docs/glossary.md). Resource labels come from the function's reviewed list (careResources.ts).
+ */
+export const CARE_COPY = {
+  resourcesLabel: "Someone to talk to",
+};
+
+export const STAY_IN_COPY = {
+  badge: "At home",
+  needs: "What you’ll need",
+  nothing: "Nothing fit this time. Try asking another way.",
+  headOut: "Head out",
+  startPursuit: "Start a Pursuit",
+  discover: "Go to Discover",
+};
+
+export const EMPTY_COPY = {
+  reasons: {
+    listing: ["was a listing page", "were listing pages"],
+    midnight: ["was after midnight", "were after midnight"],
+    time: ["was outside the time you asked for", "were outside the time you asked for"],
+    budget: ["was over your budget", "were over your budget"],
+    /** Only free things were asked for and the page gives no price (approved Nov 3, 2026). */
+    noprice: ["had no price listed", "had no price listed"],
+    adult: ["was a bar or 21+", "were bars or 21+"],
+    nopage: ["had no page of its own", "had no page of their own"],
+    notime: ["had no clear time", "had no clear time"],
+    family: ["was too late for kids", "were too late for kids"],
+  } as Record<string, [string, string]>,
+  weekend: "This weekend",
+  surprise: "Surprise me",
+  differentWords: "Try different words",
 };
 

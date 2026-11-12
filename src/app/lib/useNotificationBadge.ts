@@ -1,3 +1,4 @@
+import { usePursuitNoticeCount } from "./usePursuitNoticeCount";
 import { useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
@@ -12,7 +13,8 @@ import { useIncomingFollowRequests } from "./useIncomingFollowRequests";
  */
 export function useNotificationBadge(followRefreshKey = 0) {
   const social = useSocial();
-  const { user } = useAuth();
+  const { user, isConfigured } = useAuth();
+  const pursuitUnread = usePursuitNoticeCount(isConfigured ? user?.id : undefined);
   const incomingFollows = useIncomingFollowRequests(user?.id, followRefreshKey) ?? [];
   const groups = useMemo(() => groupNotifications(social.notifications), [social.notifications]);
   const groupedUnread = unreadGroupCount(groups);
@@ -23,5 +25,5 @@ export function useNotificationBadge(followRefreshKey = 0) {
       (user ? p.toUser === user.id : false) &&
       !social.blockedIds.includes(p.fromUser),
   );
-  return { groups, groupedUnread, incoming, incomingFollows, badgeCount: groupedUnread + incoming.length + incomingFollows.length };
+  return { groups, groupedUnread, incoming, incomingFollows, pursuitUnread, badgeCount: groupedUnread + incoming.length + incomingFollows.length + pursuitUnread };
 }

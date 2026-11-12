@@ -1,29 +1,36 @@
+import { personalizationInputs } from "../lib/personalizationInputs";
+import { emptyPersonalization } from "../lib/personalization";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useContent } from "../context/ContentContext";
 import { useSocial } from "../context/SocialContext";
 import { cornerFollowKey } from "../context/CornersContext";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { SignUpPrompt } from "../components/SignUpPrompt";
 import { Skeleton } from "../components/ui/skeleton";
 import { notifyError } from "../components/ui/toaster";
 import { ChevronDown } from "lucide-react";
-import { LIST_GRID, PageShell } from "../components/layout/PageShell";
+import { PageShell } from "../components/layout/PageShell";
+import { HorizontalRow } from "../components/HorizontalRow";
 import { GlobalSearchBox } from "../components/nav/GlobalSearchBox";
 import { JumpChips } from "../components/discover/JumpChips";
 import { IdeaPills } from "../components/discover/IdeaPills";
 import { IdeasRow } from "../components/discover/IdeasRow";
 import { CornerTearCard } from "../components/discover/CornerTearCard";
+import { StarterLibrary } from "../components/discover/StarterLibrary";
 import { SpacesRow } from "../components/discover/SpacesRow";
 import { CityFeed } from "../components/discover/CityFeed";
 import { SectionBoundary } from "../components/discover/SectionBoundary";
 import { InterestsSheet } from "../components/discover/InterestsSheet";
+import { StubbyPicksRow } from "../components/discover/StubbyPicksRow";
+import { PeopleRow } from "../components/discover/PeopleRow";
+import { ASK_COPY } from "../lib/calendarCopy";
+import type { Owner } from "../lib/firstPlanRemote";
 import { useInterests } from "../lib/interests";
 import { fetchPasses, fetchTaste, type Taste } from "../lib/tasteRemote";
 import type { Pass } from "../lib/tasteModel";
 import { fetchHomeSuggestions } from "../lib/homeSuggestions";
-import { follow } from "../lib/profileFollows";
 import { requestOrJoinSpace } from "../lib/spaces";
 import { ideasFor, type IdeaPills as Pills } from "../lib/ideaMatch";
 import { defaultPills, loosenSpend, passTagFor, type PassCorners } from "../lib/discoverIdeas";
@@ -32,7 +39,7 @@ import { discoverFeed, feedCornerChips, postCornerKey } from "../lib/discoverFee
 import {
   fetchCornerAffinity,
   fetchDiscoverCorners,
-  fetchDiscoverMoments,
+  fetchDiscoverMomentsOrThrow,
   fetchDiscoverSpaces,
   fetchPassCornerMap,
   fetchPublicSpaces,
@@ -83,12 +90,15 @@ function SectionSkeleton({ cards }: { cards: number }) {
  * Discover v2: the world, not your world. Home is what is yours (dated plans,
  * people you follow, Spaces you joined); this is what is not yet: undated ideas,
  * Corners new to you, Spaces near you, and Moments from people you do not follow.
- * One scrolling page: a header with the city, jump chips, then the four sections. Every section loads and fails on
+ * One scrolling page: a header with the city, jump chips, then the sections. Signed in, two more:
+ * Stubby's picks (what he found when you asked him) and People near you (the authors of the feed).
+ * Every section loads and fails on
  * its own, and a Moment, Corner or Space is never on both Home and Discover.
- * Signed out, everything is read only and any action opens the sign up prompt.
+ * Public starter resources and editable Pursuit ideas sit below the Corner carousel.
+ * Signed out, membership actions require signup; browsing and visiting a resource do not.
  */
 export function Discover() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { publicFeed } = useContent();
   const social = useSocial();
   const interests = useInterests();
@@ -114,6 +124,7 @@ export function Discover() {
   );
 
   // ---------- Ideas: local, instant ----------
+  const [personalization,setPersonalization]=useState(emptyPersonalization);
   const [taste, setTaste] = useState<Taste | null>(null);
   const [passes, setPasses] = useState<Pass[]>([]);
   const [passCorners, setPassCorners] = useState<PassCorners>({});
@@ -129,7 +140,11 @@ export function Discover() {
   useEffect(() => {
     if (!user) return;
     let live = true;
-    void fetchTaste(user.id).then((t) => {
+    setPersonalization(emptyPersonalization());
+    setTaste(null);setPasses([]);setAffinity(new Map());
+    void Promise.all([fetchTaste(user.id),fetchPasses(user.id)]).then(async ([t,p]) => {
+      const saved=await personalizationInputs(user.id,t,p);
+      if(live){setPersonalization(saved.value);setPersonalResources({equipment:saved.equipment,activityBudget:saved.perActivityBudget});}
       if (!live) return;
       setTaste(t);
       if (!touched.current) setPills(defaultPills(t, Date.now()));
@@ -142,7 +157,8 @@ export function Discover() {
     };
   }, [user?.id]);
 
-  const ideas = useMemo(() => ideasFor(pills, { picks: taste?.picks, affinity }), [pills, taste?.picks, affinity]);
+  const [personalResources,setPersonalResources]=useState<{equipment:string[];activityBudget:number|null}>({equipment:[],activityBudget:null});
+  const ideas = useMemo(() => ideasFor(pills, { ...personalResources,personalization,picks: taste?.picks, affinity }), [pills, taste?.picks, affinity,personalization,personalResources]);
   const changePills = (next: Pills) => {
     touched.current = true;
     setPills(next);
@@ -240,6 +256,7 @@ export function Discover() {
   const [corner, setCorner] = useState<string | null>(null);
   const [moments, setMoments] = useState<DiscoverMoment[]>([]);
   const [momentsLoading, setMomentsLoading] = useState(true);
+  const [momentsError, setMomentsError] = useState(false);
   const [momentsDone, setMomentsDone] = useState(false);
   const [chips, setChips] = useState<string[]>([]);
   const [followed, setFollowed] = useState<Set<string>>(new Set());
@@ -260,7 +277,17 @@ export function Discover() {
         setMomentsDone(false);
       }
       setMomentsLoading(true);
-      const page = await fetchDiscoverMoments({ corner, cursor: cursor.current, limit: FEED_PAGE });
+      setMomentsError(false);
+      let page: Awaited<ReturnType<typeof fetchDiscoverMomentsOrThrow>>;
+      try {
+        page = await fetchDiscoverMomentsOrThrow({ corner, cursor: cursor.current, limit: FEED_PAGE });
+      } catch {
+        if (id !== requestId.current) return;
+        setMomentsError(true);
+        setMomentsDone(true);
+        setMomentsLoading(false);
+        return;
+      }
       if (id !== requestId.current) return;
       if (page.length > 0) cursor.current = page[page.length - 1].createdAt;
       setMoments((prev) => (reset ? page : [...prev, ...page]));
@@ -279,17 +306,14 @@ export function Discover() {
     if (corner === null && posts.length > 0) setChips(feedCornerChips(posts, Date.now()));
   }, [posts, corner]);
 
-  const followAuthor = (post: Post) =>
-    needAccount(() => {
-      if (!user || !post.userId) return;
-      const authorId = post.userId;
-      void follow(user.id, authorId).then((ok) => {
-        if (!ok) return notifyError("Something went wrong. Try again.");
-        // Their Moments leave this page at once; Home shows them once the follow is accepted.
-        setFollowed((prev) => new Set(prev).add(authorId));
-        log("moment", String(post.id), 0, "followed", postCornerKey(post));
-      });
-    });
+  // The Moment's own Follow button has saved the request by now.
+  // Their Moments leave this page at once; Home shows them once the follow is accepted.
+  const followedAuthor = (post: Post) => {
+    if (!post.userId) return;
+    const authorId = post.userId;
+    setFollowed((prev) => new Set(prev).add(authorId));
+    log("moment", String(post.id), 0, "followed", postCornerKey(post));
+  };
 
   const openId = searchParams.get("m") ? Number(searchParams.get("m")) : null;
   const openPost = openId != null ? (publicFeed.find((p) => p.id === openId) ?? null) : null;
@@ -299,6 +323,10 @@ export function Discover() {
     else next.set("m", String(id));
     setSearchParams(next, { replace: true });
   };
+
+  const owner: Owner | null = user
+    ? { id: user.id, username: profile?.username ?? null, displayName: profile?.display_name?.trim() || "", avatarUrl: profile?.avatar_url ?? undefined }
+    : null;
 
   const city = interests.city.trim();
   const cornersLoading = corners === null;
@@ -338,7 +366,13 @@ export function Discover() {
         {/* One search: this box only leads to /search, the same one the side menu and the phone magnifier open. */}
         <GlobalSearchBox launcher />
 
-        <JumpChips withMoments={!!user} />
+        <JumpChips signedIn={!!user} />
+
+        {owner && (
+          <SectionBoundary>
+            <StubbyPicksRow owner={owner} heading={<SectionHeading id="stubby-title" title={ASK_COPY.listLabel} action={{ label: ASK_COPY.button, to: "/calendar" }} />} />
+          </SectionBoundary>
+        )}
 
         <SectionBoundary>
           <section id="discover-ideas" aria-labelledby="ideas-title" className="scroll-mt-24">
@@ -364,20 +398,25 @@ export function Discover() {
           ) : cornerCards.length > 0 ? (
             <section id="discover-corners" aria-labelledby="corners-title" className="scroll-mt-24">
               <SectionHeading id="corners-title" title="Corners new to you" sub="Three ways into each one" action={{ label: "See all", to: "/corners" }} />
-              <ul className={LIST_GRID}>
+              <HorizontalRow name="discover.corners" label="Corners new to you" contentKey={cornerCards.map(m => m.key).join("|")} focusable>
                 {cornerCards.map((m, i) => (
                   <CornerTearCard
                     key={m.key}
                     model={m}
+                    className="w-[calc(100%-2.5rem)] shrink-0 snap-start tab:w-[22rem]"
                     position={i}
                     onFollow={followCorner}
                     onShown={(c, pos) => log("corner", c.key, pos, "shown", c.key)}
                     onOpen={(c, pos) => log("corner", c.key, pos, "opened", c.key)}
                   />
                 ))}
-              </ul>
+              </HorizontalRow>
             </section>
           ) : null}
+        </SectionBoundary>
+
+        <SectionBoundary>
+          <StarterLibrary restricted={!user || profile?.access === "pending"}/>
         </SectionBoundary>
 
         <SectionBoundary>
@@ -401,6 +440,16 @@ export function Discover() {
 
         {user && (
           <SectionBoundary>
+            <PeopleRow
+              posts={posts}
+              viewerId={user.id}
+              heading={<SectionHeading id="people-title" title="People near you" sub="From people you don’t follow yet" action={{ label: "See all", to: "/people" }} />}
+            />
+          </SectionBoundary>
+        )}
+
+        {user && (
+          <SectionBoundary>
             <section id="discover-moments" aria-labelledby="moments-title" className="scroll-mt-24">
               <SectionHeading id="moments-title" title={city ? `What ${city} is making` : "What people are making"} sub="From people you don’t follow yet" />
               <CityFeed
@@ -409,12 +458,12 @@ export function Discover() {
                 corner={corner}
                 onCorner={setCorner}
                 loading={momentsLoading || !feedInputsLoaded}
+                failed={momentsError}
+                onRetry={() => void loadMoments(posts.length === 0)}
                 hasMore={!momentsDone}
                 onMore={() => void loadMoments(false)}
-                followed={followed}
-                onFollow={followAuthor}
+                onFollowed={followedAuthor}
                 onOpen={(post) => setOpen(post.id)}
-                onTry={(post, i) => log("moment", String(post.id), i, "tried", postCornerKey(post))}
                 onShown={(post, i) => log("moment", String(post.id), i, "shown", postCornerKey(post))}
               />
             </section>

@@ -1,6 +1,22 @@
-import { formatDate, formatMonthYear, formatTime, formatWeekday } from "./dates";
+import { formatAmount, unitFor } from "./pursuitProgress";
+import type { Measure } from "./journal";
+import {
+  formatDate,
+  formatMonthYear,
+  formatTime,
+  formatWeekday,
+} from "./dates";
 import { plural } from "./plural";
-import type { AvailabilityBlock, Day, DayPart, Membership, OwnerMoment, PlanSlot, PursuitItem, SharedMoment } from "./profileApi";
+import type {
+  AvailabilityBlock,
+  Day,
+  DayPart,
+  Membership,
+  OwnerMoment,
+  PlanSlot,
+  PursuitItem,
+  SharedMoment,
+} from "./profileApi";
 
 /** "2026-10-24" as a local date at noon, so no time zone can move the day. */
 function dayToDate(day: string): Date {
@@ -8,7 +24,8 @@ function dayToDate(day: string): Date {
   return new Date(y, m - 1, d, 12);
 }
 
-const lowerMeridiem = (t: string) => t.replace(/\s?([AP])M$/, (_, c: string) => ` ${c.toLowerCase()}m`);
+const lowerMeridiem = (t: string) =>
+  t.replace(/\s?([AP])M$/, (_, c: string) => ` ${c.toLowerCase()}m`);
 
 /** Owner: "Oct 24 · 7:00 pm". */
 export function ownerMomentMeta(m: OwnerMoment, now = Date.now()): string {
@@ -21,11 +38,17 @@ export function sharedMomentMeta(m: SharedMoment, now = Date.now()): string {
   return m.neighborhood ? `${date} · ${m.neighborhood}` : date;
 }
 
-export function momentTitle(m: { category: string | null; caption: string | null }): string {
+export function momentTitle(m: {
+  category: string | null;
+  caption: string | null;
+}): string {
   return m.category || m.caption || "Moment";
 }
 
-export function momentAlt(m: { category: string | null; caption: string | null }): string {
+export function momentAlt(m: {
+  category: string | null;
+  caption: string | null;
+}): string {
   return [m.caption, m.category].filter(Boolean).join(", ") || "Moment";
 }
 
@@ -35,35 +58,75 @@ export function visibleAtLabel(visibleAt: string): string {
 }
 
 /** The month and day block on a Stub card. */
-export function stubBlock(stub: { day: string }): { month: string; day: string } {
+export function stubBlock(stub: { day: string }): {
+  month: string;
+  day: string;
+} {
   const d = dayToDate(stub.day);
-  return { month: formatDate(d, { year: false }).split(" ")[0], day: String(d.getDate()) };
+  return {
+    month: formatDate(d, { year: false }).split(" ")[0],
+    day: String(d.getDate()),
+  };
 }
 
 /** Status line under a Pursuit's goal. */
-export function pursuitStatus(p: PursuitItem, role: "owner" | "other", now = Date.now()): string {
+export function pursuitStatus(
+  p: PursuitItem,
+  role: "owner" | "other",
+  now = Date.now(),
+): string {
   if (p.finished) {
     if (role === "owner" && p.finishedAt) {
       return `Finished ${formatDate(dayToDate(p.finishedAt), { now })} · ${plural(p.stubCount, "Stub")}`;
     }
-    const month = p.finishedAt ? formatMonthYear(dayToDate(`${p.finishedAt}-01`)).split(" ")[0] : "";
+    const month = p.finishedAt
+      ? formatMonthYear(dayToDate(`${p.finishedAt}-01`)).split(" ")[0]
+      : "";
     return month ? `Finished in ${month}` : "Finished";
+  }
+  if (p.workflow) {
+    const w = p.workflow;
+    if (w.status === "paused") return "Paused";
+    if (w.tracking === "updates")
+      return `Ongoing · ${plural(p.momentCount, "Moment")}`;
+    const unit = unitFor({ unit: w.unit } as Measure, w.target ?? w.current);
+    return w.target != null
+      ? `${formatAmount(w.current)} of ${w.unit ? plural(w.target, unit, w.unit) : formatAmount(w.target)}`
+      : `${formatAmount(w.current)} ${w.unit}`.trim();
   }
   if (p.target) {
     const base = `${p.momentCount} of ${plural(p.target, "Moment")}`;
-    return role === "owner" && p.lastMomentDate ? `${base} · last ${formatDate(p.lastMomentDate, { now })}` : base;
+    return role === "owner" && p.lastMomentDate
+      ? `${base} · last ${formatDate(p.lastMomentDate, { now })}`
+      : base;
   }
   return `Ongoing · ${plural(p.momentCount, "Moment")}`;
 }
 
 export function pursuitFraction(p: PursuitItem): number | null {
+  if (p.workflow)
+    return p.workflow.target
+      ? Math.min(1, p.workflow.current / p.workflow.target)
+      : null;
   if (!p.target) return null;
   return Math.min(1, p.momentCount / p.target);
 }
 
 const DAYS: Day[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
-const DAY_NAMES: Record<Day, string> = { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" };
-const PART_WORDS: Record<DayPart, string> = { morning: "mornings", afternoon: "afternoons", evening: "evenings" };
+const DAY_NAMES: Record<Day, string> = {
+  mon: "Mon",
+  tue: "Tue",
+  wed: "Wed",
+  thu: "Thu",
+  fri: "Fri",
+  sat: "Sat",
+  sun: "Sun",
+};
+const PART_WORDS: Record<DayPart, string> = {
+  morning: "mornings",
+  afternoon: "afternoons",
+  evening: "evenings",
+};
 
 /** "Thu evenings · Weekends" from availability blocks. Empty list gives "". */
 export function availabilitySummary(blocks: AvailabilityBlock[]): string {
@@ -80,7 +143,9 @@ export function availabilitySummary(blocks: AvailabilityBlock[]): string {
   for (const day of DAYS) {
     const set = bySlot.get(day);
     if (!set || (weekendBoth && weekend(day))) continue;
-    const words = (["morning", "afternoon", "evening"] as DayPart[]).filter((p) => set.has(p)).map((p) => PART_WORDS[p]);
+    const words = (["morning", "afternoon", "evening"] as DayPart[])
+      .filter((p) => set.has(p))
+      .map((p) => PART_WORDS[p]);
     parts.push(`${DAY_NAMES[day]} ${words.join(" and ")}`);
   }
   return parts.join(" · ");
@@ -116,6 +181,7 @@ export function firstName(displayName: string): string {
 export function mutualFriendsLine(names: string[], count: number): string {
   if (count <= 0 || names.length === 0) return "";
   if (count === 1) return `Friends with ${names[0]}`;
-  if (count === 2 && names.length > 1) return `Friends with ${names[0]} and ${names[1]}`;
+  if (count === 2 && names.length > 1)
+    return `Friends with ${names[0]} and ${names[1]}`;
   return `Friends with ${names[0]} and ${plural(count - 1, "other")} you know`;
 }

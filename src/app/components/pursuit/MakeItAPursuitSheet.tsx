@@ -8,7 +8,7 @@ import { AvatarStack } from "../ui/AvatarStack";
 import { RollNumber } from "../ui/RollNumber";
 import { useAuth } from "../../context/AuthContext";
 import { addJoinedProject, startProject, type PursuitMember } from "../../lib/journal";
-import { defaultMeasure } from "../../lib/pursuitProgress";
+import { defaultMeasure, toDateInput } from "../../lib/pursuitProgress";
 import {
   fetchPursuitAsProject,
   mirrorPursuit,
@@ -114,7 +114,15 @@ export function MakeItAPursuitSheet({
       }
 
       const endsAt = endsAtFor(weeks);
-      const mode = who === "solo" ? "solo" : "together";
+      // Keep legacy open-group hosting/joining intact. Personal and friend goals use the unified form.
+      if (who !== "open") {
+        const params = new URLSearchParams({ title: corner.name, hobby: corner.spaceSlug, sub: corner.slug, target: String(count), finishBy: toDateInput(endsAt) });
+        if (who === "friends") params.set("together", "1");
+        onOpenChange(false);
+        void navigate(`/pursuits/new?${params}`);
+        return;
+      }
+      const mode = "together" as const;
       const owner: PursuitMember = {
         userId: user.id,
         username: profile?.username ?? null,
@@ -129,7 +137,7 @@ export function MakeItAPursuitSheet({
         subHobby: corner.slug,
         measure: { ...defaultMeasure("count"), target: count, unit: "times", targetDate: endsAt },
         mode,
-        members: mode === "solo" ? [] : [owner],
+        members: [owner],
         checkInDays: DEFAULT_CHECK_IN_DAYS,
         // An open group has to be readable by people who are not in it yet.
         shared: who === "open",

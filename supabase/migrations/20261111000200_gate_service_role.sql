@@ -1,0 +1,23 @@
+-- Hotfix: the RPC gate refused every server call (Nov 3, 2026).
+--
+-- 20261111000010_member_rpc_gate.sql set private.request_gate() as PostgREST's db_pre_request. It
+-- runs before every API request as the request's own role, and calling it needs USAGE on the
+-- private schema. anon and authenticated have it; service_role never did. So since the gate took
+-- effect (Nov 3, about 14:31 UTC), every request made with the service role key failed before the
+-- gate's own "service_role passes" line could run: "permission denied for schema private"
+-- (42501), seen as 403s and 500s. That is every server-side write by stubby-scout (saving picks,
+-- finishing an ask, the morning restock) and any other function or script using the service key.
+-- Members' own requests were not affected.
+--
+-- The fix is USAGE only: it lets service_role resolve and run functions in private that it has
+-- already been granted (request_gate, is_member, is_anonymous, is_stubby_account). It grants no
+-- table in private; service_role already bypasses RLS on public tables, as before.
+--
+-- Not caught by the earlier verification scripts: they run as the database owner and only set the
+-- JWT claim to service_role. gate_service_role_check.sql switches to the real role.
+--
+-- Run AFTER 20261111000150_birthdate_rules.sql. No subqueries here.
+-- Verification: supabase/verification/gate_service_role_check.sql.
+-- Rollback: rollback_20261111000200_gate_service_role.sql (it breaks server calls again).
+
+grant usage on schema private to service_role;

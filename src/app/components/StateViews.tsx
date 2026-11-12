@@ -40,7 +40,7 @@ export function EmptyState({
   const line = endSentence(rawLine);
   const hint = typeof rawHint === "string" ? endSentence(rawHint) : rawHint;
   if (size === "rail") {
-    const linkClass = "text-caption text-accent hover:underline";
+    const linkClass = "text-caption text-accent-text hover:underline";
     return (
       <div data-slot="empty-state" className={cn("mt-3", className)}>
         <p className="text-small text-muted-foreground">

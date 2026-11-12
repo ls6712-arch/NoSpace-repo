@@ -1,6 +1,11 @@
 import { recordStartAction } from "../lib/startActions";
+import { activityFromParams } from "../lib/cornerActivities";
 import { PaperStamp } from "../components/corners/MomentStamp";
-import { formatDate } from "../lib/dates";
+import { formatDate, formatMonth, formatTime } from "../lib/dates";
+import { MOMENT_HOLD_MS } from "../lib/momentHold";
+import { plural } from "../lib/plural";
+import { afterLog, cornerKey, fetchLogProgress, pursuitPunch, readyToFinish, regularPunch, REGULAR_DAYS, type LogProgress } from "../lib/punchCards";
+import { PunchHoles } from "../components/log/PunchCard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Link, useBlocker, useNavigate, useSearchParams } from "react-router";
@@ -10,6 +15,7 @@ import {
   Camera,
   Check,
   Clock,
+  Flag,
   FolderPlus,
   Globe2,
   Images,
@@ -22,7 +28,7 @@ import {
   Video,
   X,
 } from "lucide-react";
-import { hobbies, subHobbyLabel, findSpaceForInterest, defaultSpaceSlug } from "../data/hobbies";
+import { hobbies, subHobbyLabel, findSpaceForInterest } from "../data/hobbies";
 import { useCategories } from "../context/CategoriesContext";
 import { LOCATION_PRIVACY, LocationPrivacy } from "../data/participation";
 import { Visibility } from "../data/posts";
@@ -33,9 +39,12 @@ import { useAuth } from "../context/AuthContext";
 import { useSocial } from "../context/SocialContext";
 import { useSettings } from "../context/SettingsContext";
 import { useRewards } from "../context/RewardsContext";
-import { addProgress, removeProgress, startProject, useJournal } from "../lib/journal";
+import { recordWorkflowMoment, removeWorkflowMoment } from "../lib/pursuitWorkflowStore";
+import { notifyError } from "../components/ui/toaster";
+import { addProgress, dropProject, finishProject, removeProgress, resumeProject, startFinishedProject, startProject, useJournal } from "../lib/journal";
 import { usePrivateLogs } from "../context/PrivateLogsContext";
-import { attachPostToPursuit, deleteRemoteProgress, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
+import { attachPostToPursuit, deleteRemoteProgress, deleteRemotePursuit, mirrorFinishedPursuitWithMoment, mirrorProgress, mirrorPursuit } from "../lib/pursuitsRemote";
+import { asksWallQuestion, finishedPursuitTitle, wallLabels, WALL_QUESTION_LABEL } from "../lib/cornerWallLabels";
 import { formatAmount, hasMeasure, stepFor, summarize, targetText, unitFor } from "../lib/pursuitProgress";
 import { AmountStepper, SoftPanel, Toggle } from "../components/pursuit/ui";
 import { uploadMomentFile } from "../lib/momentMedia";
@@ -65,23 +74,21 @@ import {
 } from "../components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../components/ui/dialog";
 import { GeneratedArt } from "../components/GeneratedArt";
-import { TagsField } from "../components/TagsField";
-import { CornerTagField } from "../components/CornerTagField";
-import { PursuitField } from "../components/PursuitField";
 import { CameraCapture } from "../components/CameraCapture";
 import { LinkPreviewCard } from "../components/LinkPreviewCard";
-import { ENTER } from "../lib/motion";
+import { page } from "../lib/motionTokens";
 import { UPLOAD_COPY } from "../lib/stateCopy";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { ImageWithFallback } from "../components/ImageWithFallback";
 import { BottomSheet } from "../components/ui/BottomSheet";
+import { CornerPickerSheet } from "../components/log/CornerPickerSheet";
 import { Switch } from "../components/ui/switch";
 import { PillButton } from "../components/ui/PillButton";
 import { Segmented } from "../components/ui/Segmented";
-import { PostedScreen, LOG_PHOTO_LAYOUT_ID, type PostedAudience } from "../components/log/PostedScreen";
+import { PostedScreen, LOG_PHOTO_LAYOUT_ID, type PostedAudience, type PostedChoice, type PostedPunch } from "../components/log/PostedScreen";
 import { haptic, shared as sharedSpring, sheet as sheetSpring } from "../lib/motionTokens";
 import { withLine } from "../lib/withLine";
-import { MAX_CORNER_SUGGESTIONS, type CornerSuggestion, cornersPostedIn, fetchCityCornerCounts, followedCornerKeys, rankCornerSuggestions, topCityCorners } from "../lib/cornerSuggestions";
+import { type CornerSuggestion, cornersPostedIn, followedCornerKeys, rankCornerSuggestions } from "../lib/cornerSuggestions";
 import { useInterests } from "../lib/interests";
 import { Camera as CameraGlyph, ChevronRight } from "lucide-react";
 
@@ -115,6 +122,7 @@ const AUDIENCE: {
 ];
 
 const THOUGHT_LIMIT = 300;
+/** posts.visible_at defaults to now() + 2 hours (20261030210601_profile_roles_and_planning.sql). */
 const MAX_PHOTOS = 8;
 
 /**
@@ -274,7 +282,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // be a chooser first ("Add an update" vs "Reflect privately"), but the
   // form already has a private reflection section and an "Only you"
   // audience, so that screen was a step that decided nothing.
-  const [screen, setScreen] = useState<Screen>(pursuitScoped || onboarding ? "caption" : "camera");
+  // Log opens on the form, never the camera: a photo is one tap away ("Add a
+  // photo"), and a Moment can be just a sentence. Nothing on the form is required.
+  const [screen, setScreen] = useState<Screen>("caption");
   // Where the caption screen's Back link returns to — "camera" when a photo
   // or video was actually captured/picked there, "choose" when "Write a
   // moment" skipped the camera entirely. Getting this wrong would mean
@@ -284,7 +294,10 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const navigate = useNavigate();
 
   const hobbyParam = searchParams.get("hobby");
-  const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? defaultSpaceSlug();
+  // No default Space: with nothing picked, a Moment is saved with no Space at all
+  // (20261110000000_log_punch_cards.sql). It used to be filed under the first
+  // visible Space, which nobody chose.
+  const initialHobby = hobbyParam ?? initialPursuit?.hobbySlug ?? "";
   const [hobbySlug, setHobbySlug] = useState(initialHobby);
   // Whether hobbySlug reflects something the person actually chose or typed,
   // versus just the untouched default (hobbies[0], or a ?hobby= link). A
@@ -298,7 +311,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const { spaceRows } = useCategories();
   useEffect(() => {
     if (spaceSet) return;
-    if (hobbies.find((h) => h.slug === hobbySlug)?.hidden) setHobbySlug(defaultSpaceSlug());
+    if (hobbySlug && hobbies.find((h) => h.slug === hobbySlug)?.hidden) setHobbySlug("");
   }, [spaceRows, spaceSet, hobbySlug]);
   const [subHobby, setSubHobby] = useState<string>(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
   // Independent of subHobby — a Moment can be tagged Woodwork (subHobby,
@@ -313,12 +326,16 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     if (initialPursuit?.subHobby) return initialPursuit.subHobby;
     return searchParams.get("sub") ?? "";
   });
+  // Came from "Try this" on a Corner's activity: its prompt shows above the thought, and the Moment keeps the activity.
+  // Dropped if the person moves the Moment to another Corner.
+  const activity = activityFromParams(searchParams, corner);
   const [projectId, setProjectId] = useState<string>(initialPursuitId);
   const [projectTitle, setProjectTitle] = useState("");
   // A Pursuit with a measure (10 loaves, 5 paintings) can take an amount from
   // the same form: how much this Moment moved it forward.
   const selectedProject = journal.projects.find((p) => p.id === projectId);
-  const selectedMeasure = selectedProject && hasMeasure(selectedProject) ? selectedProject.measure : undefined;
+  const workflowTracking = selectedProject?.measure?.workflow?.tracking;
+  const selectedMeasure = selectedProject && (workflowTracking ? workflowTracking === "sessions" || workflowTracking === "total" : hasMeasure(selectedProject)) ? selectedProject.measure : undefined;
   const groupPursuit = !!selectedProject && (selectedProject.mode ?? "solo") !== "solo" && !!user;
   const [amount, setAmount] = useState<number>(1);
   const [counts, setCounts] = useState(true);
@@ -359,7 +376,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const interest = tags[0] ?? "";
   // The Start page hands over what the person said they were making (?caption=).
   const [thought, setThought] = useState(() => (searchParams.get("caption") ?? "").slice(0, 80));
-  const [progress, setProgress] = useState("");
+  const [progressNote, setProgressNote] = useState("");
   const [changed, setChanged] = useState("");
   // Starts at the account's own default (Settings → Privacy → "Default
   // visibility for new Moments"), "Only you" unless changed there. Falls
@@ -370,8 +387,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // person picks Only you here.
   const initialAudience = (): Visibility | "private" => (defaultVisibilityLoaded && defaultVisibility === "public" ? "public" : "followers");
   const [audience, setAudience] = useState<Visibility | "private">(initialAudience);
-  // A Moment is held back from everyone else for 2 hours; this releases it at once.
-  const [shareNow, setShareNow] = useState(false);
+  // Others see a Moment right away; "Post in 2 hours" keeps it to its owner until then (safety: after you've left).
+  const [postLater, setPostLater] = useState(false);
   /** Posting to the Pursuit's group instead of to followers. Stored as visibility "just_me" with audience "group". */
   const [toGroup, setToGroup] = useState(false);
   // Sticks once the person (or a resumed draft, or "Reflect privately")
@@ -394,6 +411,23 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const [rowSheet, setRowSheet] = useState<null | "activity" | "counts" | "details">(null);
   type Circle = "group" | "friends" | "everyone" | "private";
   const circle: Circle = audience === "private" ? "private" : toGroup ? "group" : audience === "public" ? "everyone" : "friends";
+
+  // A Corner with a room asks one more thing: is this still in progress, or finished? The answer is not
+  // stored on the Moment. "Finished" finishes the Pursuit the Moment counts toward, or, with no Pursuit,
+  // makes one from the Moment that is finished from the start (startFinishedProject), which is what puts the
+  // Moment on the Corner's finished wall. Asked only for a Moment other people will see, and only when the
+  // Pursuit (if any) is the person's own solo one: a group's Pursuit is not one person's to finish from here.
+  const [wallAnswer, setWallAnswer] = useState<"making" | "made">("making");
+  const wallCorner = corner || subHobby;
+  const wallNames = wallLabels(hobbySlug, wallCorner);
+  const ownSoloPursuit =
+    !selectedProject ||
+    ((selectedProject.mode ?? "solo") === "solo" &&
+      !selectedProject.ownerId &&
+      selectedProject.role !== "member" &&
+      !selectedProject.measure?.workflow &&
+      !selectedProject.workflowPersonal);
+  const asksWall = spaceSet && asksWallQuestion(hobbySlug, wallCorner) && circle !== "private" && circle !== "group" && ownSoloPursuit;
   const chooseCircle = (c: Circle) => {
     audienceDecidedRef.current = true;
     setToGroup(c === "group");
@@ -414,12 +448,29 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // layout morph into its Shelf-grid styling — see WorkGrid.tsx, which
   // tracks the same layoutId for the real tile.
   const [savedPostId, setSavedPostId] = useState<number | null>(null);
+  // Punch cards (lib/punchCards.ts): read once on entry for the Log preview, and
+  // again after posting for Posted. Null signed out, offline, or before the
+  // migration; then no card is shown rather than a guessed one.
+  const [progress, setProgress] = useState<LogProgress | null>(null);
+  const [postedPunch, setPostedPunch] = useState<PostedPunch | undefined>(undefined);
+  const [postedAt, setPostedAt] = useState<number | null>(null);
+  const [postedHasMedia, setPostedHasMedia] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let live = true;
+    void fetchLogProgress().then((p) => live && setProgress(p));
+    return () => {
+      live = false;
+    };
+  }, [user]);
   // What Undo takes back, whichever way in the Moment was saved: the post or
   // private log itself, plus the Pursuit amount logged with it, if any.
   const [undoTarget, setUndoTarget] = useState<null | {
     postId?: number;
     logId?: number;
     progressId?: string;
+    /** The Pursuit that "finished" finished with this Moment: made for it, or one that was already there. */
+    finished?: { pursuitId: string; created: boolean };
   }>(null);
   const [undoing, setUndoing] = useState(false);
   const [undoError, setUndoError] = useState<string | null>(null);
@@ -517,7 +568,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   // actually chosen just now, so a leftover "this was chosen" flag can't
   // survive next to the corrected value.
   useEffect(() => {
-    setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? defaultSpaceSlug());
+    setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? "");
     setSpaceSet(!!hobbyParam || !!initialPursuit?.hobbySlug);
   }, [hobbyParam, initialPursuit?.hobbySlug]);
 
@@ -560,7 +611,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   const resumeDraft = () => {
     if (!draftPrompt) return;
     setThought(draftPrompt.thought);
-    setHobbySlug(draftPrompt.hobbySlug || defaultSpaceSlug());
+    setHobbySlug(draftPrompt.hobbySlug || "");
     setSubHobby(draftPrompt.subHobby);
     // A draft saved before tags existed only has the old single interest
     // field — recovers as one tag rather than losing it.
@@ -777,7 +828,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
    * function again — the exact bug that put a moment's photo into
    * private_logs three times over one upload. */
   const saveAsPrivateLog = async () => {
-    const note = [thought.trim(), progress.trim(), changed.trim()]
+    const note = [thought.trim(), progressNote.trim(), changed.trim()]
       .filter(Boolean)
       .join("\n\n");
     if (!note && files.length === 0) return;
@@ -864,7 +915,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     }
     setPrivateSaveError(null);
     lastProgressId.current = undefined;
-    setSavedProgressLine(recordProgress(undefined, result.data.id, note));
+    setSavedProgressLine(await recordProgress(undefined, result.data.id, note));
     setUndoTarget({ logId: result.data.id, progressId: lastProgressId.current });
     setUndoError(null);
 
@@ -886,8 +937,19 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
   /** Logs the amount toward the chosen Pursuit's measure and returns the line
    * the saved screen shows ("+1 painting · 3 of 5 paintings"). */
   const lastProgressId = useRef<string | undefined>(undefined);
-  const recordProgress = (postId?: number, logId?: number, note?: string): string | null => {
+  const recordProgress = async (postId?: number, logId?: number, note?: string): Promise<string | null> => {
     if (!selectedProject || !selectedMeasure || loggedAmount <= 0) return null;
+    if (selectedProject.measure?.workflow) {
+      try {
+        const row = await recordWorkflowMoment(selectedProject, loggedAmount, user?.id, postId, logId, note);
+        if (!row) return null;
+        lastProgressId.current = row.id;
+        return `+${formatAmount(row.amount)} ${unitFor(selectedMeasure, row.amount)}`;
+      } catch {
+        notifyError("Moment saved. Progress couldn’t be saved. Add progress from the Pursuit.");
+        return null;
+      }
+    }
     const entry = addProgress({
       projectId: selectedProject.id,
       amount: loggedAmount,
@@ -903,28 +965,80 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     return `+${formatAmount(loggedAmount)} ${unitFor(selectedMeasure, loggedAmount)} · ${formatAmount(sum.current)} of ${targetText(selectedMeasure)}`;
   };
 
-  // Chips for Posted when the Moment has no Corner: Corners you have posted in,
-  // then ones you follow, then your city's most-posted this week.
+  // Corner and Pursuit chips (Log and Posted) are built from these.
   const social = useSocial();
   const { city: myCity } = useInterests();
-  const [cornerChoices, setCornerChoices] = useState<CornerSuggestion[]>([]);
-  useEffect(() => {
-    if (screen !== "posted" || corner) return;
-    let live = true;
-    const postedIn = cornersPostedIn(myPosts);
-    const followed = followedCornerKeys(social.followedHobbies);
-    const rank = (inCity: string[]) => rankCornerSuggestions({ postedIn, followed, inCity });
-    setCornerChoices(rank([]));
-    // The city list only matters when the first two do not fill three chips.
-    if (postedIn.length + followed.length < MAX_CORNER_SUGGESTIONS && myCity) {
-      void fetchCityCornerCounts(myCity).then((counts) => live && setCornerChoices(rank(topCityCorners(counts))));
+
+  /** A Corner's name from its "space/corner" key. */
+  const cornerNameOf = (key: string | null) => {
+    const slug = key?.split("/")[1] ?? "";
+    return subHobbyLabel(slug) ?? slug;
+  };
+
+  /**
+   * What Posted says about the card this Moment moved, from the progress before
+   * and after it (lib/punchCards.ts). A Pursuit wins over its Corner (the Corner
+   * becomes the "also" line). Undefined when nothing was picked, or the Corner's
+   * Regular was already kept this month.
+   */
+  const buildPunch = (
+    before: LogProgress | null,
+    after: LogProgress | null,
+    m: { key: string | null; pursuitId?: string; hasMedia: boolean },
+  ): PostedPunch | undefined => {
+    if (!after) return undefined;
+    const cBefore = m.key ? before?.corners.find((c) => c.key === m.key) : undefined;
+    const cAfter = m.key ? after.corners.find((c) => c.key === m.key) : undefined;
+    const regularDays = Math.min(cAfter?.days ?? 0, REGULAR_DAYS);
+    const regularFresh = (cAfter?.days ?? 0) > (cBefore?.days ?? 0);
+    const name = cornerNameOf(m.key);
+
+    const pAfter = m.pursuitId ? after.pursuits.find((p) => p.id === m.pursuitId) : undefined;
+    const project = m.pursuitId ? journal.projects.find((p) => p.id === m.pursuitId) : undefined;
+    if (pAfter && project) {
+      const pBefore = before?.pursuits.find((p) => p.id === m.pursuitId);
+      const title = project.title.slice(0, 40);
+      const goal = pAfter.target != null && pAfter.target > 0;
+      const total = goal ? pAfter.target! : 3;
+      const done = Math.min(goal ? pAfter.moments : pAfter.days, total);
+      const fresh = goal ? pAfter.moments > (pBefore?.moments ?? 0) : pAfter.days > (pBefore?.days ?? 0);
+      const left = total - done;
+      const line =
+        left > 0
+          ? goal
+            ? `${title}. ${plural(left, "more Moment")} and you keep a Finisher Stub.`
+            : `${title}. ${plural(left, "more day")} and you can finish it for a Finisher Stub.`
+          : goal
+            ? `${title}. Pursuit finished.`
+            : `${title}. All 3 days are in.`;
+      return {
+        headline: goal ? `${done} of ${plural(total, "Moment")}` : `${done} of ${plural(total, "day")}`,
+        line,
+        label: "Finisher",
+        done,
+        total,
+        fresh,
+        also: m.key && regularFresh && !cAfter?.kept ? `Also a day in ${name}: ${regularDays} of ${plural(REGULAR_DAYS, "day")}` : undefined,
+      };
     }
-    return () => {
-      live = false;
+
+    if (!m.key || cBefore?.kept) return undefined;
+    const line = !m.hasMedia
+      ? "Only photo and video Moments punch a day."
+      : !regularFresh
+        ? "Today already counts. See you tomorrow."
+        : regularDays >= REGULAR_DAYS
+          ? "You kept a Regular Stub."
+          : `${plural(REGULAR_DAYS - regularDays, "more day")} in ${formatMonth(Date.now())} and you keep a Regular Stub.`;
+    return {
+      headline: `${regularDays} of ${plural(REGULAR_DAYS, "day")} in ${name}`,
+      line,
+      label: "Regular",
+      done: regularDays,
+      total: REGULAR_DAYS,
+      fresh: regularFresh,
     };
-    // Chips are decided once, when Posted appears.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen]);
+  };
 
   const publish = async () => {
     if (saving) return;
@@ -936,7 +1050,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     setError(null);
     try {
       // No caption typed means no caption stored (a photo can stand alone).
-      const typedCaption = [thought.trim(), progress.trim(), changed.trim()].filter(Boolean).join(". ");
+      const typedCaption = [thought.trim(), progressNote.trim(), changed.trim()].filter(Boolean).join(". ");
       const caption =
         typedCaption ||
         (loggedAmount > 0 && selectedMeasure && selectedProject
@@ -956,7 +1070,8 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       const effectiveType = classifyMomentType(files);
 
       const entry = await addPost({
-        hobbySlug,
+        // "" when nothing was picked: saved with no Space (never a default one).
+        hobbySlug: spaceSet ? hobbySlug : "",
         subHobby: subHobby || undefined,
         corner: corner || undefined,
         interest: interest.trim() || undefined,
@@ -968,18 +1083,23 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         visibility: toGroup ? "just_me" : audience,
         audience: toGroup ? "group" : audience === "public" ? "everyone" : "friends",
         city: circle === "private" || cityRemoved || !myCity.trim() ? null : myCity.trim(),
-        shareNow: circle !== "private" && shareNow,
+        // Taken off by the person: the database keeps no city key for this Moment either.
+        cityHidden: cityRemoved || undefined,
+        postLater: circle !== "private" && postLater,
         // Saved with the Pursuit from the start, so the group can read it and the Stub is issued at once.
         pursuitId: projectId || undefined,
         // Made after seeing someone else's Moment (from the Start page). The database checks it.
         inspiredBy: /^\d{1,15}$/.test(searchParams.get("inspired") ?? "") ? Number(searchParams.get("inspired")) : undefined,
+        // Logged from an activity ("Try this"): saved on the Moment as posts.activity_id.
+        activityId: activity?.id,
         // GUARD (docs/tickets/posts-column-privacy.md): posts.starts_at and posts.location_name
         // are readable by everyone today. Only the existing Activity fields may write them;
         // do not add an exact place or time for a plain Moment until that ticket is done.
         // Log.guard.test.ts fails if this changes.
         startsAt: isActivity && startsAt ? new Date(startsAt).getTime() : undefined,
-        locationName: locationName.trim() ? locationName.trim() : undefined,
-        locationPrivacy: locationName.trim() ? locationPrivacy : undefined,
+        // A place is saved only with "Something happening" (docs/tickets/posts-column-privacy.md).
+        locationName: isActivity && locationName.trim() ? locationName.trim() : undefined,
+        locationPrivacy: isActivity && locationName.trim() ? locationPrivacy : undefined,
         forSale: forSale
           ? {
               name: saleTitle.trim() || caption.slice(0, 40),
@@ -1003,17 +1123,39 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       if (!linkTo && projectTitle.trim()) {
         linkTo = startProject({
           title: projectTitle.trim(),
-          hobbySlug,
-          subHobby: subHobby || undefined,
+          hobbySlug: spaceSet ? hobbySlug : undefined,
+          subHobby: spaceSet ? subHobby || undefined : undefined,
           inspiredByPostId: entry.id,
         }).id;
       }
 
+      const finishing = asksWall && wallAnswer === "made" && !entry.unsaved;
       if (linkTo) {
         const targetProject = journal.projects.find((p) => p.id === linkTo);
         void attachPostToPursuit(entry.id, linkTo);
-        if (targetProject?.finishedAt && user) {
+        if (targetProject?.finishedAt && user && !finishing) {
           void mirrorPursuit(user.id, { ...targetProject, finishedAt: undefined });
+        }
+      }
+      // "Finished" on a Corner with a room (see asksWall above).
+      let finished: { pursuitId: string; created: boolean } | undefined;
+      if (finishing) {
+        if (linkTo) {
+          const done = finishProject(linkTo);
+          if (done) {
+            if (user) void mirrorPursuit(user.id, done);
+            finished = { pursuitId: linkTo, created: false };
+          }
+        } else {
+          // Shared only when the Moment is for everyone: a shared Pursuit's title can be read by anyone, and
+          // it comes from this Moment's caption.
+          const made = startFinishedProject(
+            { title: finishedPursuitTitle(typedCaption, cornerLabel), hobbySlug, subHobby: wallCorner, shared: audience === "public" },
+            entry.id,
+          );
+          if (user) void mirrorFinishedPursuitWithMoment(user.id, made, entry.id);
+          linkTo = made.id;
+          finished = { pursuitId: made.id, created: true };
         }
       }
       // Same direct insert AddMomentToSpaceDialog uses for an existing
@@ -1025,14 +1167,25 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         void supabase.from("space_moments").insert({ space_id: initialSpaceId, post_id: entry.id });
       }
       lastProgressId.current = undefined;
-      setSavedProgressLine(recordProgress(entry.id, undefined, typedCaption));
-      setUndoTarget({ postId: entry.id, progressId: lastProgressId.current });
+      setSavedProgressLine(await recordProgress(entry.id, undefined, typedCaption));
+      setUndoTarget({ postId: entry.id, progressId: lastProgressId.current, finished });
       setUndoError(null);
       if (!pursuitScoped) clearDraft();
       setSavedAs("shared");
       setSavedPostId(entry.id);
       // A Moment posted from the Start page ("Done? Log it") is the "logged" the page's analytics count.
       if (!entry.unsaved && searchParams.get("ref") === "start") recordStartAction("logged", [hobbySlug, corner || subHobby].filter(Boolean).join("/"));
+      // The database punched the card in the same transaction; read it back.
+      // Only a photo or video that actually uploaded punches a day.
+      const hasMediaNow = effectiveType !== "written" && !!entry.mediaPaths?.length;
+      const momentKey = cornerKey(spaceSet ? hobbySlug : "", corner || subHobby);
+      const before = progress;
+      const refreshed = entry.unsaved ? null : await fetchLogProgress();
+      const after = refreshed ?? (before ? afterLog(before, { key: momentKey, pursuitId: linkTo || undefined, hasMedia: hasMediaNow }) : null);
+      setProgress(after);
+      setPostedPunch(buildPunch(before, after, { key: momentKey, pursuitId: linkTo || undefined, hasMedia: hasMediaNow }));
+      setPostedHasMedia(hasMediaNow);
+      setPostedAt(Date.now());
       haptic();
       // A post that did not reach the database keeps the honest "Not saved" screen.
       setScreen(entry.unsaved ? "saved" : "posted");
@@ -1052,9 +1205,21 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     try {
       if (undoTarget.postId !== undefined) await deletePost(undoTarget.postId);
       else if (undoTarget.logId !== undefined) await removePrivateLog(undoTarget.logId);
+      // Taking the Moment back takes "finished" back with it: a Pursuit made for the Moment goes, and one
+      // that was already there is open again.
+      if (undoTarget.finished?.created) {
+        dropProject(undoTarget.finished.pursuitId);
+        if (user) void deleteRemotePursuit(undoTarget.finished.pursuitId);
+      } else if (undoTarget.finished) {
+        const reopened = resumeProject(undoTarget.finished.pursuitId);
+        if (reopened && user) void mirrorPursuit(user.id, reopened);
+      }
       if (undoTarget.progressId) {
-        removeProgress(undoTarget.progressId);
-        if (user) void deleteRemoteProgress(undoTarget.progressId);
+        if (selectedProject?.measure?.workflow) await removeWorkflowMoment(selectedProject.id, undoTarget.progressId, !!user);
+        else {
+          removeProgress(undoTarget.progressId);
+          if (user) void deleteRemoteProgress(undoTarget.progressId);
+        }
       }
       setUndoTarget(null);
       setSavedPostId(null);
@@ -1076,13 +1241,14 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     clearSaveError();
     setPrivateSaveError(null);
     setThought("");
-    setProgress("");
+    setProgressNote("");
     setChanged("");
     setForSale(false);
     setSaleTitle("");
     setTags([]);
     setProjectTitle("");
     setProjectId(pursuitScoped ? initialPursuitId : "");
+    setWallAnswer("making");
     setFiles([]);
     setError(null);
     setSavedAs(null);
@@ -1097,11 +1263,19 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
     setLocationName("");
     setLocationPrivacy("neighborhood");
     setCityRemoved(false);
-    setScreen(pursuitScoped ? "caption" : "camera");
+    // What it counts toward starts over too, back to what the link picked (if anything).
+    setProjectTitle("");
+    setCorner(initialPursuit?.subHobby ?? searchParams.get("sub") ?? "");
+    setSubHobby(searchParams.get("sub") ?? initialPursuit?.subHobby ?? "");
+    setHobbySlug(hobbyParam ?? initialPursuit?.hobbySlug ?? "");
+    setSpaceSet(!!hobbyParam || !!initialPursuit?.hobbySlug);
+    setPostedPunch(undefined);
+    setPostedAt(null);
+    setScreen("caption");
     audienceDecidedRef.current = false;
     setToGroup(false);
     setAudience(initialAudience());
-    setShareNow(false);
+    setPostLater(false);
   };
 
   const requiresLogin =
@@ -1179,19 +1353,107 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         </Dialog>
   );
 
+  // ── Counts toward: one optional row of chips, Pursuits first, then Corners ──
+  // At most 2 Pursuits (the ones log_progress lists first, newest started) and 3
+  // Corners (this month's cards, then where you posted, then what you follow).
+  // Nothing is preselected unless a link picked it. A Pursuit carries its Corner,
+  // so one tap counts toward both.
+  const pursuitOptions = (() => {
+    const open = openProjects.filter((p) => !p.plan);
+    const order = progress?.pursuits.map((p) => p.id) ?? [];
+    const rank = (id: string) => (order.indexOf(id) < 0 ? Number.MAX_SAFE_INTEGER : order.indexOf(id));
+    const list = [...open].sort((a, b) => rank(a.id) - rank(b.id) || b.startedAt - a.startedAt).slice(0, 2);
+    const picked = open.find((p) => p.id === projectId);
+    if (picked && !list.some((p) => p.id === picked.id)) list.unshift(picked);
+    return list;
+  })();
+  const cornerOptions: CornerSuggestion[] = (() => {
+    const thisMonth = (progress?.corners ?? []).filter((c) => !c.kept).map((c) => c.key);
+    const list = rankCornerSuggestions({
+      postedIn: [...thisMonth, ...cornersPostedIn(myPosts)],
+      followed: followedCornerKeys(social.followedHobbies),
+      inCity: [],
+    });
+    // The Corner picked now, and the one a link arrived with, always keep a chip,
+    // so tapping one off never makes it disappear.
+    const keep: CornerSuggestion[] = [];
+    if (corner && spaceSet) keep.push({ spaceSlug: hobbySlug, slug: corner, name: cornerLabel });
+    const linkedSub = searchParams.get("sub");
+    if (hobbyParam && linkedSub) keep.push({ spaceSlug: hobbyParam, slug: linkedSub, name: subHobbyLabel(linkedSub) ?? linkedSub });
+    for (const k of keep.reverse()) {
+      if (!list.some((c) => c.slug === k.slug && c.spaceSlug === k.spaceSlug)) list.unshift(k);
+    }
+    return list;
+  })();
+
+  /** Tapping the chip that is on clears it: back to nothing picked. */
+  const clearCountsToward = () => {
+    setProjectId("");
+    setProjectTitle("");
+    setCorner("");
+    setSubHobby("");
+    if (!hobbyParam) {
+      setHobbySlug("");
+      setSpaceSet(false);
+    }
+  };
+  const pickPursuit = (p: (typeof openProjects)[number]) => {
+    if (projectId === p.id) return clearCountsToward();
+    setProjectId(p.id);
+    setProjectTitle("");
+    if (p.hobbySlug && p.subHobby) {
+      setCorner(p.subHobby);
+      setSubHobby("");
+      setHobbySlug(p.hobbySlug);
+      setSpaceSet(true);
+    } else {
+      setCorner("");
+    }
+  };
+  const pickCorner = (c: CornerSuggestion) => {
+    if (!projectId && corner === c.slug && hobbySlug === c.spaceSlug) return clearCountsToward();
+    setProjectId("");
+    setProjectTitle("");
+    setCorner(c.slug);
+    setSubHobby("");
+    setHobbySlug(c.spaceSlug);
+    setSpaceSet(true);
+  };
+
+  /** The line under the chips: what this Moment would punch, before posting. */
+  const countsPreview = (() => {
+    if (!progress) return null;
+    const hasMedia = files.length > 0;
+    if (selectedProject) {
+      const card = progress.pursuits.find((p) => p.id === selectedProject.id);
+      const punch = pursuitPunch(card ?? { id: selectedProject.id, owner: true, target: null, moments: 0, days: 0, today: false });
+      if (!punch) return null;
+      const title = selectedProject.title.slice(0, 40);
+      const unit = card?.target ? "Moment" : "day";
+      const text = punch.adds
+        ? `This makes ${punch.after} of ${plural(punch.total, unit)} on ${title}`
+        : punch.done >= punch.total
+          ? `${title} is ready to finish.`
+          : `Today already counts for ${title}.`;
+      return { done: punch.done, total: punch.total, next: punch.adds, text };
+    }
+    const punch = regularPunch(progress, cornerKey(spaceSet ? hobbySlug : "", corner || subHobby), hasMedia);
+    if (!punch) return null;
+    const text = punch.adds
+      ? `This makes ${punch.after} of ${plural(punch.total, "day")} in ${cornerLabel}`
+      : !hasMedia
+        ? "Add a photo to punch a day."
+        : `Today already counts in ${cornerLabel}.`;
+    return { done: punch.done, total: punch.total, next: punch.adds, text };
+  })();
+
   // ── 1 · Camera — reached only once "Photo or video" is actually tapped ──
   if (screen === "camera") {
     return (
       <SheetShell bare={!!onboarding}>
         <div className="pt-4">
-          <button
-            type="button"
-            onClick={() => void navigate(-1)}
-            className="mb-4 inline-flex min-h-11 items-center text-body text-muted-foreground hover:text-foreground"
-          >
-            Cancel
-          </button>
           <CameraCapture
+            onClose={() => setScreen("caption")}
             onCaptured={handleCaptured}
             onPickedLibrary={handlePickedLibrary}
             onTextOnly={() => {
@@ -1291,7 +1553,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             // the Shelf instead of the grid tile just appearing cold.
             layoutId={!reduceMotion && savedPostId ? `moment-${savedPostId}` : undefined}
             // design-token-ignore: spring, not a fixed duration; layout/layoutId are off under reduced motion
-            transition={ENTER}
+            transition={page}
             className={
               savedTileSettled
                 ? "w-24 overflow-hidden border border-[var(--hairline)] bg-[var(--surface)]"
@@ -1357,7 +1619,7 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                   to={
                     pursuitScoped
                       ? `/pursuit/${initialPursuitId}`
-                      : savedAs === "private"
+                      : savedAs === "private" || !spaceSet
                         ? "/you"
                         : `/you/work/${archiveKey({ subSlug: subHobby || undefined, hobbySlug })}`
                   }
@@ -1391,6 +1653,68 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
       ? (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id && (e.userId ?? user?.id) === user?.id).length
       : 0;
     const cornerInfo = corner ? { spaceSlug: hobbySlug, slug: corner, name: cornerLabel } : undefined;
+    // Nothing was picked: the same chips as Log, offered once, as a bonus.
+    const postedChoices: PostedChoice[] = [
+      ...pursuitOptions.map((p) => {
+        const card = progress?.pursuits.find((x) => x.id === p.id);
+        const punch = progress ? pursuitPunch(card ?? { id: p.id, owner: true, target: null, moments: 0, days: 0, today: false }) : null;
+        return {
+          key: `p:${p.id}`,
+          label: p.title.slice(0, 40),
+          line: punch ? `Pursuit · ${punch.done} of ${plural(punch.total, card?.target ? "Moment" : "day")}` : "Pursuit",
+        };
+      }),
+      ...cornerOptions.map((c) => {
+        const card = progress?.corners.find((x) => x.key === cornerKey(c.spaceSlug, c.slug));
+        return {
+          key: `c:${c.spaceSlug}/${c.slug}`,
+          label: c.name,
+          line: progress ? `${Math.min(card?.days ?? 0, REGULAR_DAYS)} of ${plural(REGULAR_DAYS, "day")} this month` : undefined,
+        };
+      }),
+    ];
+    /** Counts the Moment just posted toward a Pursuit or a Corner, then punches it on screen. */
+    const chooseAfterPosting = async (key: string): Promise<boolean> => {
+      if (savedPostId == null) return false;
+      const before = progress;
+      let momentKey: string | null = null;
+      let pursuitId: string | undefined;
+      if (key.startsWith("p:")) {
+        const p = journal.projects.find((x) => x.id === key.slice(2));
+        if (!p) return false;
+        const withCorner = !!(p.hobbySlug && p.subHobby);
+        const ok = await updatePost(savedPostId, {
+          pursuitId: p.id,
+          ...(withCorner ? { hobbySlug: p.hobbySlug, corner: p.subHobby, subHobby: p.subHobby } : {}),
+        });
+        if (!ok) return false;
+        void attachPostToPursuit(savedPostId, p.id);
+        setProjectId(p.id);
+        if (withCorner) {
+          setCorner(p.subHobby!);
+          setHobbySlug(p.hobbySlug!);
+          setSpaceSet(true);
+          momentKey = cornerKey(p.hobbySlug, p.subHobby);
+        }
+        pursuitId = p.id;
+      } else {
+        const [space, slug] = key.slice(2).split("/");
+        const ok = await updatePost(savedPostId, { corner: slug, subHobby: slug, hobbySlug: space });
+        if (!ok) return false;
+        setCorner(slug);
+        setHobbySlug(space);
+        setSpaceSet(true);
+        momentKey = cornerKey(space, slug);
+      }
+      const after = (await fetchLogProgress()) ?? (before ? afterLog(before, { key: momentKey, pursuitId, hasMedia: postedHasMedia }) : null);
+      setProgress(after);
+      setPostedPunch(buildPunch(before, after, { key: momentKey, pursuitId, hasMedia: postedHasMedia }));
+      haptic();
+      return true;
+    };
+    // A Pursuit with no goal that now has its 3 days: Finish keeps the Finisher.
+    const finishCard = progress?.pursuits.find((p) => p.id === projectId);
+    const postedFinish = finishCard?.owner && readyToFinish(finishCard) ? journal.projects.find((p) => p.id === projectId && !p.finishedAt) : undefined;
     return (
       <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
         <PostedScreen
@@ -1403,17 +1727,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
               : undefined
           }
           place={locationName.trim() || undefined}
-          cornerChoices={corner ? [] : cornerChoices}
-          onAddCorner={async (c) => {
-            if (savedPostId == null) return false;
-            const ok = await updatePost(savedPostId, { corner: c.slug, subHobby: c.slug, hobbySlug: c.spaceSlug });
-            if (ok) {
-              setCorner(c.slug);
-              setHobbySlug(c.spaceSlug);
-              setSpaceSet(true);
-            }
-            return ok;
-          }}
+          holdLine={postLater && circle !== "private" && postedAt ? `They see it at ${formatTime(postedAt + MOMENT_HOLD_MS)}.` : undefined}
+          punch={postedPunch}
+          choices={postedPunch || corner || projectId ? [] : postedChoices}
+          choicesLine={postedHasMedia ? "One tap punches a day." : undefined}
+          onChoose={chooseAfterPosting}
+          finish={postedFinish}
+          onLogAnother={reset}
           undo={undoTarget ? { onUndo: () => void undoSave(), busy: undoing, error: undoError } : undefined}
         />
       </div>
@@ -1422,18 +1742,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
 
   // ── 2 · Caption + audience — one screen, whatever the capture was ────────
   if (screen === "caption") {
-    const hasSomething = files.length > 0 || thought.trim().length > 0 || loggedAmount > 0;
+    // A photo, a sentence, or just what it counts toward: any one of them is a Moment.
+    const hasSomething = files.length > 0 || thought.trim().length > 0 || loggedAmount > 0 || !!projectId || !!corner;
     const detectedUrl = extractFirstUrl(thought);
-    const doneSoFar = selectedProject
-      ? (journal.progress ?? []).filter((e) => e.projectId === selectedProject.id && (e.userId ?? user?.id) === user?.id).length
-      : 0;
-    const countsValue = selectedProject
-      ? selectedMeasure
-        ? `${selectedProject.title.slice(0, 40)} · #${doneSoFar + 1}`
-        : selectedProject.title.slice(0, 50)
-      : projectTitle.trim()
-        ? projectTitle.trim().slice(0, 50)
-        : "Nothing";
     const withNames = (selectedProject?.members ?? [])
       .filter((m) => m.status === "joined" && m.userId !== user?.id)
       .map((m) => m.displayName.split(" ")[0]);
@@ -1533,6 +1844,13 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           </p>
         )}
 
+        {activity && (
+          <div className="mb-3 rounded-card bg-card p-4" data-testid="activity-prompt">
+            <p className="text-caption text-muted-foreground">{activity.title}</p>
+            <p className="mt-1 text-body">{activity.momentPrompt}</p>
+          </div>
+        )}
+
         <div className="mb-4">
           <Label htmlFor="thought" className="sr-only">
             Add a thought
@@ -1556,20 +1874,49 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         </div>
 
         <div className="mb-4 flex flex-col gap-2">
-          <button type="button" className={rowClass} onClick={() => setRowSheet("activity")}>
-            <span className="text-small text-muted-foreground">Activity</span>
-            <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
-              <span className="truncate">{corner ? cornerLabel : "Pick one"}</span>
-              <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            </span>
-          </button>
           <button type="button" className={rowClass} onClick={() => setRowSheet("counts")}>
-            <span className="text-small text-muted-foreground">Counts toward</span>
+            <span className="text-small text-muted-foreground">Corner</span>
             <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
-              <span className="truncate">{countsValue}</span>
+              {selectedProject && <Flag className="size-3.5 shrink-0" aria-hidden="true" />}
+              <span className="truncate">{selectedProject?.title || (corner ? cornerLabel : "") || "Add"}</span>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </span>
           </button>
+          {asksWall && (
+            <Segmented
+              label={WALL_QUESTION_LABEL}
+              value={wallAnswer}
+              onChange={setWallAnswer}
+              options={[
+                { value: "making", label: wallNames.making },
+                { value: "made", label: wallNames.made },
+              ]}
+            />
+          )}
+          {countsPreview && (
+            <div className="flex items-center gap-3 rounded-card bg-card px-4 py-3" role="status">
+              <PunchHoles size="sm" done={countsPreview.done} total={countsPreview.total} next={countsPreview.next} />
+              <span className="text-small font-semibold">{countsPreview.text}</span>
+            </div>
+          )}
+          {selectedMeasure && selectedProject && (
+            <SoftPanel>
+              <p className="text-small">How much did this move it forward?</p>
+              <div className="mt-3">
+                <AmountStepper
+                  value={amount}
+                  onChange={setAmount}
+                  step={stepFor(selectedMeasure)}
+                  unit={unitFor(selectedMeasure, amount)}
+                  allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
+                />
+              </div>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
+                <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
+              </div>
+            </SoftPanel>
+          )}
           {withNames.length > 0 && (
             <div className={rowClass}>
               <span className="text-small text-muted-foreground">With</span>
@@ -1577,9 +1924,9 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
             </div>
           )}
           <button type="button" className={rowClass} onClick={() => setRowSheet("details")}>
-            <span className="text-small text-muted-foreground">Details</span>
+            <span className="text-small text-muted-foreground">Something happening</span>
             <span className="flex min-w-0 items-center gap-1 text-body font-semibold">
-              <span className="truncate">{[tags[0], locationName.trim(), isActivity ? "Something happening" : ""].filter(Boolean).join(" · ") || "Add"}</span>
+              <span className="truncate">{isActivity ? "Added" : "Add"}</span>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </span>
           </button>
@@ -1613,10 +1960,14 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
         {circle !== "private" && (
           <div className="mb-4 flex items-center justify-between gap-4 rounded-card bg-card px-4 py-3">
             <div>
-              <Label htmlFor="share-now" className="text-body font-semibold">Share now</Label>
-              <p id="share-now-help" className="text-caption text-muted-foreground">Shows this Moment to others right away.</p>
+              <Label htmlFor="post-later" className="text-body font-semibold">Post in 2 hours</Label>
+              <p id="post-later-help" className="text-caption text-muted-foreground">
+                {postLater
+                  ? `Others see it at ${formatTime(Date.now() + MOMENT_HOLD_MS)}, after you’ve left.`
+                  : "Still there? Turn this on so others see it after you’ve left."}
+              </p>
             </div>
-            <Switch id="share-now" aria-describedby="share-now-help" checked={shareNow} onCheckedChange={setShareNow} />
+            <Switch id="post-later" aria-describedby="post-later-help" checked={postLater} onCheckedChange={setPostLater} />
           </div>
         )}
 
@@ -1634,98 +1985,23 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
           </div>
         </div>
 
-        {/* Activity: the Corner this Moment is filed under. */}
-        <BottomSheet open={rowSheet === "activity"} onOpenChange={(o) => !o && setRowSheet(null)} title="Activity" description="Where this shows up when someone browses by Corner.">
-          <div className="pt-2">
-            <CornerTagField
-              spaceSlug={spaceSet ? hobbySlug : undefined}
-              value={corner}
-              onChange={(slug, _name, resolvedSpaceSlug) => {
-                setCorner(slug);
-                if (slug) {
-                  setHobbySlug(resolvedSpaceSlug);
-                  setSpaceSet(true);
-                }
-              }}
-            />
-          </div>
-        </BottomSheet>
+        {/* Where it goes: one scrolling list of your Pursuits and every Corner. */}
+        <CornerPickerSheet
+          open={rowSheet === "counts"}
+          onOpenChange={(o) => setRowSheet(o ? "counts" : null)}
+          pursuits={openProjects.filter((p) => !p.plan).map((p) => ({ id: p.id, title: p.title }))}
+          yourCorners={cornerOptions}
+          pickedPursuitId={projectId}
+          pickedCorner={corner && spaceSet ? `${hobbySlug}/${corner}` : ""}
+          onPickPursuit={(id) => {
+            const p = openProjects.find((x) => x.id === id);
+            if (p) pickPursuit(p);
+          }}
+          onPickCorner={pickCorner}
+        />
 
-        {/* Counts toward: the Pursuit, and how much it moves it forward. */}
-        <BottomSheet open={rowSheet === "counts"} onOpenChange={(o) => !o && setRowSheet(null)} title="Counts toward" description="Keep an ongoing thing together.">
-          <div className="flex flex-col gap-4 pt-2">
-            <PursuitField
-              projects={openProjects}
-              projectId={projectId}
-              projectTitle={projectTitle}
-              onSelectExisting={(id) => {
-                setProjectId(id);
-                setProjectTitle("");
-                const picked = journal.projects.find((p) => p.id === id);
-                // Choosing a Pursuit that has a Corner counts as picking that
-                // Corner, unless one was already picked on the Activity row.
-                if (picked?.subHobby && !corner) {
-                  setCorner(picked.subHobby);
-                  if (picked.hobbySlug) {
-                    setHobbySlug(picked.hobbySlug);
-                    setSpaceSet(true);
-                  }
-                }
-              }}
-              onCreateNew={(title) => {
-                setProjectTitle(title);
-                setProjectId("");
-              }}
-              onClear={() => {
-                setProjectId("");
-                setProjectTitle("");
-              }}
-            />
-            {selectedMeasure && selectedProject && (
-              <SoftPanel>
-                <p className="text-small">How much did this move it forward?</p>
-                <div className="mt-3">
-                  <AmountStepper
-                    value={amount}
-                    onChange={setAmount}
-                    step={stepFor(selectedMeasure)}
-                    unit={unitFor(selectedMeasure, amount)}
-                    allowDecimals={selectedMeasure.allowDecimals || selectedMeasure.allowPartial}
-                  />
-                </div>
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <span className="text-caption text-muted-foreground">Count toward Pursuit progress</span>
-                  <Toggle checked={counts} onChange={setCounts} label="Count toward Pursuit progress" />
-                </div>
-              </SoftPanel>
-            )}
-          </div>
-        </BottomSheet>
-
-        {/* Details: tags, something happening, and where. */}
-        <BottomSheet open={rowSheet === "details"} onOpenChange={(o) => !o && setRowSheet(null)} title="Details">
+        <BottomSheet open={rowSheet === "details"} onOpenChange={(o) => !o && setRowSheet(null)} title="Something happening">
           <div className="flex flex-col gap-6 pt-2">
-            <div>
-              <h2 className="mb-2 text-small">
-                <label htmlFor="tags">What is it about?</label>
-              </h2>
-              <TagsField
-                value={tags}
-                onChange={(next) => {
-                  setTags(next);
-                  for (const t of next) {
-                    const match = findSpaceForInterest(t);
-                    if (match) {
-                      setHobbySlug(match.hobbySlug);
-                      setSubHobby(match.slug);
-                      setSpaceSet(true);
-                      break;
-                    }
-                  }
-                }}
-              />
-            </div>
-
             <div className="rounded-card bg-card px-4 py-3.5">
               <button
                 type="button"
@@ -1742,36 +2018,37 @@ export function Log({ onboarding }: { onboarding?: { onDone: () => void } } = {}
                 </span>
               </button>
               {isActivity && (
-                <div className="mt-4">
-                  <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
-                    When
-                  </Label>
-                  <Input id="startsAt" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-card bg-card px-4 py-3.5">
-              <Label htmlFor="place" className="mb-1.5 block text-caption">
-                Where (optional)
-              </Label>
-              <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. Prospect Park, Brooklyn" />
-              {locationName.trim() && (
-                <div className="mt-3">
-                  <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
-                  <Select value={locationPrivacy} onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {LOCATION_PRIVACY.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}: {o.copy}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="mt-1.5 text-caption text-muted-foreground">Neighborhood by default.</p>
+                <div className="mt-4 flex flex-col gap-4">
+                  <div>
+                    <Label htmlFor="startsAt" className="mb-1.5 block text-caption">
+                      When
+                    </Label>
+                    <Input id="startsAt" type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
+                  </div>
+                  <div>
+                    <Label htmlFor="place" className="mb-1.5 block text-caption">
+                      Where (optional)
+                    </Label>
+                    <Input id="place" value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="e.g. the park by your place" />
+                    {locationName.trim() && (
+                      <div className="mt-3">
+                        <Label className="mb-1.5 block text-caption">How precisely to show it</Label>
+                        <Select value={locationPrivacy} onValueChange={(v) => setLocationPrivacy(v as LocationPrivacy)}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {LOCATION_PRIVACY.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}: {o.copy}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="mt-1.5 text-caption text-muted-foreground">Neighborhood by default.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

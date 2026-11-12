@@ -6,7 +6,7 @@ const ROUND = "inline-flex size-11 items-center justify-center rounded-full bord
 
 /**
  * The row under the title: Today, previous and next (44px, named for the period
- * they move by), the Day, Week, Month, List switch (the chosen one in the
+ * they move by), the Day, Week, Month, Year, List switch (the chosen one in the
  * foreground fill), and then Make a plan, the one coral fill on every screen size.
  * Below 1128px a Show button opens the Show panel as a sheet.
  */
@@ -20,6 +20,9 @@ export function CalendarToolbar({
   onView,
   onShow,
   onMakePlan,
+  years = [],
+  year,
+  onYear,
 }: {
   view: CalendarView;
   /** Below 1128px the Show panel is a sheet, opened from here. */
@@ -31,7 +34,12 @@ export function CalendarToolbar({
   onView: (view: CalendarView) => void;
   onShow: () => void;
   onMakePlan: () => void;
+  /** The years a person can open. With more than one, Month and Year show a year switch. */
+  years?: readonly number[];
+  year?: number;
+  onYear?: (year: number) => void;
 }) {
+  const yearSwitch = (view === "month" || view === "year") && years.length > 1 && year !== undefined && onYear;
   return (
     <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-3">
       <div className="flex items-center gap-2">
@@ -53,7 +61,7 @@ export function CalendarToolbar({
             aria-pressed={v === view}
             onClick={() => onView(v)}
             className={cn(
-              "min-h-11 flex-1 rounded-full px-4 text-small font-semibold",
+              "min-h-11 flex-1 rounded-full px-2 text-small font-semibold tab:px-4",
               v === view ? "bg-foreground text-background" : "text-muted-foreground",
             )}
           >
@@ -61,6 +69,21 @@ export function CalendarToolbar({
           </button>
         ))}
       </div>
+      {yearSwitch && (
+        <div role="group" aria-label="Year" className="flex max-w-full overflow-x-auto rounded-full border border-border bg-card p-1">
+          {years.map((y) => (
+            <button
+              key={y}
+              type="button"
+              aria-pressed={y === year}
+              onClick={() => onYear(y)}
+              className={cn("min-h-11 shrink-0 rounded-full px-4 text-small font-semibold tabular-nums", y === year ? "bg-foreground text-background" : "text-muted-foreground")}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="ml-auto flex items-center gap-2">
         {showButton && (
           <button type="button" onClick={onShow} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border bg-card px-4 text-small font-semibold">

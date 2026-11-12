@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Navigate, Outlet, useLocation, useNavigate } from "react-router";
+import { WorldBackdrop } from "../components/WorldBackdrop";
 import { useAuth } from "../context/AuthContext";
 import { Header } from "../components/Header";
 import { SideRail } from "../components/nav/SideRail";
@@ -9,6 +10,9 @@ import { CartDrawer } from "../components/CartDrawer";
 import { BadgeUnlockToast } from "../components/BadgeUnlockToast";
 import { AccountPrompts } from "../components/AccountPrompts";
 import { BottomTabBar } from "../components/BottomTabBar";
+import { BackChevron } from "../components/nav/BackChevron";
+import { BackChevronProvider } from "../components/nav/BackChevronContext";
+import { useRouteHandle } from "../lib/routeHandle";
 import { PreviewBanner } from "../components/PreviewBanner";
 import { NetworkBanner } from "../components/NetworkBanner";
 import { AccountStatusBanner } from "../components/AccountStatusBanner";
@@ -16,8 +20,16 @@ import { hasRecoveryKind } from "../lib/recoveryLink";
 import { isTypingTarget, SEARCH_SHORTCUT_EVENT } from "../lib/searchShortcut";
 import { useTruncationReveal } from "../lib/truncation";
 import { useScrollMemory } from "../lib/useScrollMemory";
+import { usePageEnter } from "../lib/usePageEnter";
+import { useSlowNavigation } from "../lib/useSlowNavigation";
+import { NavProgress } from "../components/NavProgress";
+import { prefetchMainTabs } from "../lib/prefetchTabs";
 import { reconcileSaves } from "../lib/bookmarksRemote";
 import { resumeCalendarChanges } from "../lib/calendarPending";
+import { FinishSettingUp, stubbyAccountMayOpen } from "../components/stubby/FinishSettingUp";
+import { Under18Screen } from "../components/stubby/Birthday";
+import { isUnder18 } from "../lib/birthday";
+import { SignUpReturnEffect } from "../components/stubby/SignUpReturnEffect";
 import { sooshOnboardingEnabled } from "../config";
 
 // Only the landing page, the login/signup screen, and the two legal pages
@@ -80,10 +92,27 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   (import.meta.env.DEV && pathname === "/dev/kit");
 
 export function Root() {
+  return (
+    <BackChevronProvider>
+      <RootShell />
+    </BackChevronProvider>
+  );
+}
+
+function RootShell() {
   const { user, profile, loading, isConfigured } = useAuth();
   const location = useLocation();
+  // Every pushed page gets the one back chevron, drawn here; pages never draw their own (see BackChevron.tsx).
+  const handle = useRouteHandle().handle;
+  const showBack = handle?.kind === "page" && !handle.legacyBack;
   useTruncationReveal();
   useScrollMemory();
+  const mainRef = useRef<HTMLElement>(null);
+  usePageEnter(mainRef, location.pathname);
+  const slowNavigation = useSlowNavigation();
+  // Only for someone signed in: they are the ones who open these tabs, and a visitor on the landing page should not pay for them.
+  const signedIn = !!user;
+  useEffect(() => (signedIn ? prefetchMainTabs() : undefined), [signedIn]);
 
   // "/" focuses search on desktop, unless someone is typing in a field. Whichever search is on screen answers.
   useEffect(() => {
@@ -158,6 +187,16 @@ export function Root() {
     return <Navigate to="/welcome" replace />;
   }
 
+  // A Stubby account (a guest who signed up from Stubby, onboarding not finished) isn't sent into
+  // onboarding: it uses Stubby, and anything else says "Finish setting up". The database is what
+  // actually keeps it out of member features (20261111000050_member_gate.sql).
+  const stubbyAccount = !!user && !!profile && !profile.onboarding_completed && profile.signed_up_from === "stubby";
+  if (stubbyAccount && location.pathname === "/") return <Navigate to="/calendar" replace />;
+  // A member who gave an under-18 birthday: kept, Stubby only, never sent to onboarding again
+  // (20261111000150_birthdate_rules.sql). Every other page says so, with the way back.
+  const under18 = !!user && !!profile && isUnder18(profile.access);
+  if (under18 && location.pathname === "/") return <Navigate to="/calendar" replace />;
+
   // Post-signup onboarding (sql/onboarding-v2.sql), enforced here so it
   // can't be dodged by deep-linking straight past it. Only for a signed-in
   // visitor whose profile has actually loaded and confirms it's not done —
@@ -172,6 +211,8 @@ export function Root() {
     user &&
     profile &&
     !profile.onboarding_completed &&
+    !stubbyAccount &&
+    !under18 &&
     location.pathname !== "/onboarding" &&
     !(sooshOnboardingEnabled && location.pathname === "/login")
   ) {
@@ -185,12 +226,16 @@ export function Root() {
   if ((!user && location.pathname === "/") || location.pathname === "/onboarding" || location.pathname === "/reset-password" || (sooshOnboardingEnabled && location.pathname === "/login") || /^\/pursuit\/[^/]+\/recap$/.test(location.pathname)) {
     return (
       <div className="min-h-viewport">
+        <WorldBackdrop />
+        <NavProgress active={slowNavigation} />
         <PreviewBanner />
         <NetworkBanner />
         <AccountStatusBanner />
-        <main>
+        <main className="relative">
+          {showBack && <BackChevron />}
           <Outlet />
         </main>
+        <SignUpReturnEffect />
       </div>
     );
   }
@@ -203,6 +248,8 @@ export function Root() {
 
   return (
     <div className="min-h-viewport">
+      <WorldBackdrop />
+      <NavProgress active={slowNavigation} />
       {rail && <SkipLink />}
       {rail && <SideRail />}
       <div className={railPad}>
@@ -211,9 +258,11 @@ export function Root() {
         <AccountStatusBanner />
       </div>
       <Header hideWithRail={rail} />
-      <main id="main-content" tabIndex={-1} className={`outline-none ${railPad}`}>
-        <Outlet />
+      <main ref={mainRef} id="main-content" tabIndex={-1} className={`relative outline-none ${railPad}`}>
+        {showBack && <BackChevron rail={rail} />}
+        {under18 && !stubbyAccountMayOpen(location.pathname) ? <Under18Screen /> : stubbyAccount && !stubbyAccountMayOpen(location.pathname) ? <FinishSettingUp /> : <Outlet />}
       </main>
+      <SignUpReturnEffect />
       <CartDrawer />
       <BadgeUnlockToast />
       <AccountPrompts />

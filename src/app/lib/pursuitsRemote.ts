@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabase";
-import { Goal, GoalShape, Project, attachEntry, mergeRemoteProgress, mergeRemoteProjects } from "./journal";
+import { Goal, GoalShape, Project, attachEntry, mergeRemoteProgress, mergeRemoteProjects, getJournal, projectWorkflowProgress } from "./journal";
 import type { Measure, PursuitMember, PursuitMode, ProgressEntry } from "./journal";
 import { friendlyError } from "./friendlyError";
 import { ERROR_LINE } from "./stateCopy";
@@ -34,6 +34,8 @@ function rowToProject(row: any): Project {
     customSpace: row.custom_space ?? undefined,
     inspiredByPostId: row.inspired_by_post_id ?? undefined,
     shared: !!row.shared,
+    targetMoments: row.target_moments ?? null,
+    archivedAt: row.archived_at ? Date.parse(row.archived_at) : undefined,
     // Column from supabase/migrations/20261031185723_calendar_edits.sql; absent reads as a Pursuit.
     plan: row.is_plan ? true : undefined,
     startedAt: new Date(row.started_at).getTime(),
@@ -85,6 +87,9 @@ export async function mirrorPursuit(userId: string, project: Project) {
       custom_space: project.customSpace ?? null,
       inspired_by_post_id: project.inspiredByPostId ?? null,
       shared: !!project.shared,
+      // A one-off plan says so from its first write: a Stubby account may only make plans
+      // (20261111000050_member_gate.sql), and markAsPlan below still runs for older rows.
+      ...(project.plan ? { is_plan: true } : {}),
       started_at: new Date(project.startedAt).toISOString(),
       finished_at: project.finishedAt ? new Date(project.finishedAt).toISOString() : null,
       goal_shape: project.goal?.shape ?? null,
@@ -218,6 +223,40 @@ export async function attachPostToPursuit(postId: number | string, pursuitId: st
   }
 }
 
+/**
+ * Saves a Pursuit that is finished from its first write and links its one Moment to it, in that order
+ * (posts.pursuit_id references pursuits, so the Pursuit has to exist first). The Pursuit is inserted with
+ * finished_at already set: it is never an open row, and the Finisher Stub trigger, which only runs when
+ * finished_at changes on an existing row, does not run. Best effort, like every mirror here.
+ */
+export async function mirrorFinishedPursuitWithMoment(userId: string, project: Project, postId: number | string) {
+  if (!supabase || !project.finishedAt) return;
+  await mirrorPursuit(userId, project);
+  try {
+    // The mark that lets corner_wall show this Moment as finished to everyone who can see the Moment, when
+    // the Pursuit itself is not shared (20261128000000_corner_wall_from_moment.sql). A write of its own, like
+    // the other later columns in mirrorPursuit: if the column is not there yet, only this write fails.
+    await supabase.from("pursuits").update({ from_moment: true }).eq("id", project.id);
+  } catch {
+    // Best effort: without the mark the Pursuit's owner still sees it finished.
+  }
+  try {
+    await supabase.from("posts").update({ pursuit_id: project.id }).eq("id", postId);
+  } catch {
+    // Best effort: the local journal already links the two.
+  }
+}
+
+/** Removes a Pursuit's row (its owner only, by RLS). posts.pursuit_id is set to null by the database. Best effort. */
+export async function deleteRemotePursuit(pursuitId: string) {
+  if (!supabase) return;
+  try {
+    await supabase.from("pursuits").delete().eq("id", pursuitId);
+  } catch {
+    // Best effort.
+  }
+}
+
 /** One Pursuit by id, for its own page — visible per the table's RLS (the
  * owner always, anyone else only when it's marked shared). Returns null
  * rather than throwing when it doesn't exist, isn't shared, or Supabase
@@ -310,6 +349,7 @@ export async function restoreOwnPursuits(userId: string) {
         ((joined as any[]) ?? []).map((row) => ({ ...withPlan(rowToProject(row)), ownerId: row.user_id, role: "member" as const })),
       );
     }
+    await restoreWorkflowProgress(userId);
   } catch {
     // Best effort — the local journal is unaffected either way.
   }
@@ -683,5 +723,27 @@ export async function markAsPlan(pursuitId: string): Promise<void> {
     await supabase.from("pursuits").update({ is_plan: true }).eq("id", pursuitId);
   } catch {
     // Without the column the plan is a plain Pursuit on this person's other devices until the migration is applied.
+  }
+}
+
+/** Restore versioned progress into the existing Shelf cache on a fresh device. */
+async function restoreWorkflowProgress(userId: string) {
+  if (!supabase) return;
+  const projects = getJournal().projects.filter(p => p.measure?.workflow && !p.measure.workflow.legacy);
+  if (!projects.length) return;
+  const ids = projects.map(p => p.id);
+  const [entries, goals] = await Promise.all([
+    supabase.from('pursuit_contributions').select('*').in('pursuit_id',ids),
+    supabase.from('pursuit_personal_goals').select('*').eq('user_id',userId).in('pursuit_id',ids),
+  ]);
+  if (entries.error || goals.error) return;
+  const session = await supabase.auth.getSession();
+  if (session.data.session?.user.id !== userId) return;
+  for (const p of projects) {
+    const w = p.measure!.workflow!;
+    const rows = (entries.data ?? []).filter(e => e.pursuit_id === p.id && (p.mode === 'group' || e.user_id === userId))
+      .filter(e => w.tracking !== 'checklist' || w.items.some(i => i.id === e.item_id && !i.archived))
+      .map(e => ({id:e.id,projectId:p.id,userId:e.user_id,amount:Number(e.amount),createdAt:Date.parse(e.occurred_at),postId:e.post_id ?? undefined,note:e.note}));
+    projectWorkflowProgress(p.id,rows,p.mode === 'group' ? undefined : (goals.data ?? []).find(g => g.pursuit_id === p.id));
   }
 }

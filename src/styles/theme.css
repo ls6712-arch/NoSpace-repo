@@ -698,6 +698,13 @@
       transform: translate(-50%, -50%);
     }
 
+    /* A visually hidden link (the skip link) has no hit area to enlarge: its
+       44px ::after would sit invisibly over whatever is next to it (the
+       wordmark) and take its taps. It gets the area back when it is shown on focus. */
+    .sr-only:not(:focus)::after {
+      content: none;
+    }
+
     :where(input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"], [type="file"]), select, textarea) {
       min-height: 44px;
     }
@@ -747,13 +754,14 @@
   background-image: var(--scrim-top);
 }
 
-/* The billboard fade: the page colour comes in from the left and from the
-   bottom, so a title sits on dark and the photo shows at the right. Pair with
-   bg-scrim and text-on-media. */
+/* The billboard fade: a dark fade comes in from the left and from the bottom,
+   so a title sits on dark and the photo shows at the right. It uses
+   --scrim-solid, not --background: --background is cream in light mode, which
+   put the white title on cream (1.08:1). Pair with bg-scrim and text-on-media. */
 @utility bg-hero-fade {
   background-image:
-    linear-gradient(90deg, var(--background) 0%, color-mix(in srgb, var(--background) 70%, transparent) 40%, transparent 75%),
-    linear-gradient(0deg, var(--background) 0%, transparent 35%);
+    linear-gradient(90deg, rgb(0 0 0 / 0.6) 0%, rgb(0 0 0 / 0.42) 40%, rgb(0 0 0 / 0) 75%),
+    linear-gradient(0deg, rgb(0 0 0 / 0.6) 0%, rgb(0 0 0 / 0) 35%);
 }
 
 /* A paper card on the page: a soft drop shadow in both themes. Not shadow-overlay,
@@ -1329,6 +1337,34 @@ summary:focus-visible,
 /* ── Signed-out landing page (src/app/landing) ────────────────────────────
    The page has its own warm palette and looks the same in light and dark mode,
    because the gradient behind it does. Layout lives in landing.css. */
+/* Page enter (lib/usePageEnter.ts): the main column fades in when the page
+   changes. Opacity only, so fixed sheets inside <main> never move. With reduced
+   motion --duration-base is 0ms, so this does nothing. */
+@keyframes page-enter {
+  from { opacity: 0.35; }
+  to { opacity: 1; }
+}
+.page-enter {
+  animation: page-enter var(--duration-base) var(--ease-standard);
+}
+
+/* The loading bar at the top of the screen while a page's file downloads
+   (components/NavProgress.tsx). It slides across; with reduced motion it is
+   a still bar. */
+@keyframes nav-progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+.nav-progress-bar {
+  /* design-token-ignore: a looping indeterminate bar, not an enter or exit */
+  animation: nav-progress 1.1s var(--ease-standard) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress-bar {
+    animation: none;
+  }
+}
+
 /* View transitions (a Discover tile growing into its page's header, Step 7).
    Same duration and curve as every other enter; a browser without view
    transitions never runs this, and links only ask for one when the person has
@@ -1399,6 +1435,24 @@ summary:focus-visible,
 }
 .dark {
   --stubby-tab: var(--foreground);
+}
+/* Calendar's rail icon (StubbyNavIcon): off its page, an outline in the rail's own colour like the
+   icons beside it, coral body off. On its page (its link is aria-current="page") it inherits the
+   values above, so it is the full coral mark in either theme. */
+.stubby-nav-icon {
+  --stubby-body: transparent;
+  --stubby-tab: transparent;
+  --stubby-ink: currentColor;
+}
+/* The mark's outline is 9 of 240 units, under 1px at 22px wide: drawn at the rail's own weight
+   (Lucide's 1.75px on 24px) so it sits with the icons beside it. Same path, heavier line. */
+.stubby-nav-icon path[fill="none"] {
+  stroke-width: 18;
+}
+[aria-current="page"] .stubby-nav-icon {
+  --stubby-body: inherit;
+  --stubby-tab: inherit;
+  --stubby-ink: inherit;
 }
 
 /* ── Onboarding and login ────────────────────────────────────────────────────

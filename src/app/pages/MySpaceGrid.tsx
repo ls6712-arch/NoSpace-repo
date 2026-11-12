@@ -10,8 +10,8 @@ import { activePursuits, collectPursuitMoments } from "../lib/pursuitTrail";
 import { fetchFollowingIds } from "../lib/profileFollows";
 import { supabase } from "../../lib/supabase";
 import { Post } from "../data/posts";
-import { MomentCard, MOMENT_GRID } from "../components/MomentCard";
-import { MomentDetail } from "../components/MomentDetail";
+import { Moment, MOMENT_LIST } from "../components/moment/Moment";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { PursuitsRail } from "../components/PursuitsRail";
 import { DayTwoInviteCard } from "../components/DayTwoInviteCard";
 import { PursuitsInProgressSection } from "../components/PursuitsInProgressSection";
@@ -24,7 +24,7 @@ import { formatDate } from "../lib/dates";
 import { plural } from "../lib/plural";
 import { Sparkles } from "lucide-react";
 import { Loadable } from "../components/ui/skeleton";
-import { MomentGridSkeleton } from "../components/Skeletons";
+import { MomentListSkeleton } from "../components/moment/MomentSkeleton";
 import { EmptyState, ErrorNotice } from "../components/StateViews";
 
 const PAGE_SIZE = 6;
@@ -254,7 +254,7 @@ export function MySpaceGrid() {
         <div className="myspace-feed">
           <Loadable
             loading={postsStatus === "loading" || !followingLoaded || !spaceMomentsLoaded}
-            skeleton={<MomentGridSkeleton count={PAGE_SIZE} />}
+            skeleton={<MomentListSkeleton />}
           >
             {postsStatus === "error" && sheet.length === 0 ? (
               <ErrorNotice onRetry={reloadPosts} />
@@ -276,16 +276,9 @@ export function MySpaceGrid() {
                 />
               )
             ) : (
-              <div className={MOMENT_GRID}>
+              <div className={MOMENT_LIST}>
                 {sheet.map((post, i) => (
-                  <MomentCard
-                    key={post.id}
-                    post={post}
-                    surface="mySpace"
-                    size="standard"
-                    number={String(i + 1).padStart(2, "0")}
-                    onOpen={() => openDetail(post)}
-                  />
+                  <Moment key={post.id} post={post} priority={i === 0} onOpen={openDetail} />
                 ))}
               </div>
             )}
@@ -295,7 +288,7 @@ export function MySpaceGrid() {
             <button
               type="button"
               onClick={() => setPageIndex((p) => p + 1)}
-              className="mt-6 text-caption text-accent hover:underline"
+              className="mt-6 text-caption text-accent-text hover:underline"
             >
               Turn the page
             </button>
@@ -307,7 +300,7 @@ export function MySpaceGrid() {
               <p className="mt-1 text-small" style={{ fontFamily: "var(--font-serif)" }}>
                 You’re caught up
               </p>
-              <Link to="/create" className="mt-2 inline-block text-caption text-accent hover:underline">
+              <Link to="/create" className="mt-2 inline-block text-caption text-accent-text hover:underline">
                 Log a Moment
               </Link>
             </div>

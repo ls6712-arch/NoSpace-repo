@@ -1,5 +1,7 @@
 import { forwardRef, useCallback, useEffect, useId, useImperativeHandle, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { useLocation } from "react-router";
+import { exampleFromEntry } from "../../landing/examples";
 import { ASK_COPY } from "../../lib/calendarCopy";
 import { page } from "../../lib/motionTokens";
 import { STUBBY_LINES, greetingLine, type GreetingInput } from "../../lib/stubbyLines";
@@ -9,6 +11,13 @@ import { AskStubby, QUESTION_LINE, useAskStubby, type AskState } from "../stubby
 import { frontCard } from "../../lib/stubbyDeck";
 import { StubbyBuddy, type BuddyReaction, type StubbyBuddyHandle } from "../stubby/StubbyBuddy";
 import { StubbyResults, type DeckActions } from "../stubby/StubbyResults";
+import { ContextCard } from "../stubby/ContextCard";
+import { GuestSignUpButton, InlineSignUpCard } from "../stubby/GuestPrompts";
+import { SignUpSheet } from "../stubby/SignUpSheet";
+import { AdultPrompt } from "../stubby/Birthday";
+import { useStubbyAccess } from "../../context/StubbyAccess";
+import { stubbyAskEnabled } from "../../config";
+import { GUEST_COPY, outOfAsksLine } from "../../lib/guestCopy";
 
 /** A hover or focus hop at most this often, so a wandering pointer doesn't keep him bouncing. */
 const EAGER_GAP_MS = 1500;
@@ -21,7 +30,11 @@ export interface StubbyStageHandle {
   react: (r: BuddyReaction) => void;
 }
 
-type LineState = Pick<AskState, "busy" | "left" | "outcome" | "stalled"> & Partial<Pick<AskState, "question" | "deck" | "nudgeId">>;
+type LineState = Pick<AskState, "busy" | "left" | "outcome" | "stalled"> &
+  Partial<Pick<AskState, "question" | "deck" | "nudgeId" | "tonight" | "perDay">> & {
+    /** Guests are paused for now (the guest cap): his line says so instead of the day's count. */
+    capped?: boolean;
+  };
 
 /**
  * What Stubby says right now, the first that fits: he's looking; his one question; the card in
@@ -33,9 +46,10 @@ export function stageLine(state: LineState, greeting: string): string {
   const deck = state.deck;
   if (deck && state.nudgeId != null && frontCard(deck) === state.nudgeId) return STUBBY_LINES.bringAFriend;
   if (deck && deck.all.length > 0 && frontCard(deck) === null) return STUBBY_LINES.deckRunOut;
-  if (state.left === 0) return STUBBY_LINES.outOfAsks;
+  if (state.capped) return GUEST_COPY.busy;
+  if (state.left === 0) return state.perDay ? outOfAsksLine(state.perDay) : STUBBY_LINES.outOfAsks;
   if (state.outcome === "found") return STUBBY_LINES.found;
-  if (state.outcome === "after") return STUBBY_LINES.nothingFits;
+  if (state.outcome === "after") return state.tonight === false ? STUBBY_LINES.nothingThen : STUBBY_LINES.nothingFits;
   if (state.outcome === "nothing") return ASK_COPY.nothing;
   if (state.outcome === "error") return STUBBY_LINES.error;
   return greeting;
@@ -78,8 +92,17 @@ export const StubbyStage = forwardRef<
   }, []);
   useImperativeHandle(ref, () => ({ react }), [react]);
 
-  const ask = useAskStubby({ onReact: react, userId });
-  const line = stageLine(ask, greetingLine({ ...greeting, asksLeft: ask.left }));
+  const location = useLocation();
+  // The landing passes only a known example id. Seed an editable field, never an automatic ask.
+  // The existing signup-resume effect runs after initialization and keeps precedence over this draft.
+  const ask = useAskStubby({ onReact: react, userId, initialDraft: exampleFromEntry(location.state)?.prompt });
+  const access = useStubbyAccess();
+  useEffect(() => {
+    if (access.guest) access.draft.current = ask.text;
+  }, [access.guest, access.draft, ask.text]);
+  const capped = access.prompt?.kind === "limit" && (access.prompt.limit.code === "GUEST_GLOBAL_CAP" || access.prompt.limit.code === "GLOBAL_CAP");
+  // Guests aren't open: his line says how to use him instead of greeting a field that isn't there.
+  const line = access.guest && access.closed ? GUEST_COPY.closed : stageLine({ ...ask, capped }, greetingLine({ ...greeting, asksLeft: ask.left }));
 
   // Hello, once a session: a hop and one soft ring.
   const [ring, setRing] = useState(false);
@@ -115,7 +138,7 @@ export const StubbyStage = forwardRef<
     <>
       {/* No height of its own, so it never pushes the page when it appears. Below the phone header, above nothing else. */}
       <div className="sticky top-[calc(var(--safe-top)+65px)] z-30 h-0 rail:top-0">
-        {past && !sheetOpen && (
+        {stubbyAskEnabled && past && !sheetOpen && (
           <button
             type="button"
             data-stubby-sticky=""
@@ -130,7 +153,8 @@ export const StubbyStage = forwardRef<
 
       <section
         ref={stage}
-        aria-label={ASK_COPY.button}
+        // With Ask Stubby off (config.ts) he has no field or line, so the stage isn't named for it.
+        aria-label={stubbyAskEnabled ? ASK_COPY.button : undefined}
         data-stubby-stage=""
         className="mb-6 grid scroll-mt-[calc(var(--safe-top)+80px)] grid-cols-[88px_minmax(0,1fr)] items-start gap-x-3 gap-y-4 rail:scroll-mt-4 tab:grid-cols-[112px_minmax(0,1fr)] tab:gap-x-6"
       >
@@ -155,21 +179,42 @@ export const StubbyStage = forwardRef<
           <StubbyBuddy ref={buddy} size={size} rest="ready" waiting={loading || ask.busy} upset={failed} followPointer={finePointer} className="relative" />
         </div>
 
-        {/* His line, in a bubble pointing at him. Screen readers read the words; Stubby himself is hidden. */}
-        <div className="relative col-start-2 row-start-1 w-fit max-w-full self-center justify-self-start">
+        {/* His line, in a bubble pointing at him. Screen readers read the words; Stubby himself is hidden.
+            With Ask Stubby off, every line invites an ask, so he only reacts and says nothing. */}
+        {stubbyAskEnabled && <div className="relative col-start-2 row-start-1 w-fit max-w-full self-center justify-self-start">
           <span aria-hidden="true" className="absolute left-0 top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b border-l border-border bg-card" />
           <p aria-live="polite" data-stubby-line="" className="relative rounded-card border border-border bg-card px-4 py-3 text-lead font-semibold leading-snug">
             {line}
           </p>
-        </div>
+        </div>}
 
-        <div className="col-span-2 row-start-2 tab:col-span-1 tab:col-start-2">
+        <div className="col-span-2 row-start-2 flex flex-col gap-4 tab:col-span-1 tab:col-start-2">
+          {access.guest && (
+            <div className="flex justify-end">
+              <GuestSignUpButton />
+            </div>
+          )}
+          {stubbyAskEnabled && ask.showContext && !access.closed && <ContextCard onDone={(t) => void ask.saveContext(t)} onSkip={ask.skipContext} />}
           {/* When his line already asks "What are you in the mood for?", the label isn't shown twice. */}
-          <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} hideLabel={line === ASK_COPY.label} />
+          {stubbyAskEnabled && <AskStubby state={ask} inputId={inputId} onFieldFocus={eager} hideLabel={line === ASK_COPY.label} />}
         </div>
       </section>
 
-      <StubbyResults state={ask} onMakePlans={onMakePlans} onBring={onBring} />
+      {access.guest && <SignUpSheet />}
+      {stubbyAskEnabled && <StubbyResults
+        state={ask}
+        onMakePlans={onMakePlans}
+        onBring={onBring}
+        onTryDifferent={() => {
+          const field = document.getElementById(inputId) as HTMLInputElement | null;
+          field?.focus();
+          field?.select();
+        }}
+      />}
+      {stubbyAskEnabled && access.guest && <InlineSignUpCard perDay={ask.accountPerDay} />}
+      {!access.guest && ask.offerBirthday && (
+        <AdultPrompt onAdded={ask.birthdayAdded} />
+      )}
     </>
   );
 });

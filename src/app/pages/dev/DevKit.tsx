@@ -1,4 +1,11 @@
 import { useState } from "react";
+import { TimeGrid } from "../../components/calendar/TimeGrid";
+import { loadFilters } from "../../lib/calendarView";
+import { noopHandlers, sampleWeek } from "./sampleWeek";
+
+const ALL_FILTERS = loadFilters("week");
+import { notify } from "../../components/ui/toaster";
+import { announceChange } from "../../lib/undo";
 import { motion } from "motion/react";
 import { Flame, Plus, Minus } from "lucide-react";
 import { StubArt } from "../../components/stub/StubArt";
@@ -17,7 +24,6 @@ import { Reveal } from "../../components/common/Reveal";
 import { GroupRows } from "../../components/pursuit/GroupRows";
 import { NextTogetherCard } from "../../components/pursuit/NextTogetherCard";
 import { MakeItAPursuitSheet } from "../../components/pursuit/MakeItAPursuitSheet";
-import { Confetti } from "../../components/pursuit/Confetti";
 import type { Measure, PursuitMember, ProgressEntry } from "../../lib/journal";
 import { plural } from "../../lib/plural";
 import { haptic, pop, shared } from "../../lib/motionTokens";
@@ -122,7 +128,6 @@ export function DevKit() {
   const [stubReveal, setStubReveal] = useState<StubFace | null>(null);
   const [big, setBig] = useState(false);
   const [pursuitSheet, setPursuitSheet] = useState(false);
-  const [confetti, setConfetti] = useState(0);
 
   return (
     <main className="mx-auto flex max-w-3xl flex-col gap-10 px-4 py-8 pb-24">
@@ -235,6 +240,21 @@ export function DevKit() {
         {stubReveal && <StubReveal face={stubReveal} onDone={() => setStubReveal(null)} onPin={async () => null} />}
       </Section>
 
+      <Section title="Week timeline">
+        <TimeGrid days={sampleWeek(Date.now())} now={Date.now()} filters={ALL_FILTERS} passes={[]} handlers={noopHandlers} />
+      </Section>
+
+      <Section title="Toasts">
+        <div className="flex flex-wrap gap-3">
+          <PillButton variant="outline" onClick={() => notify("Link copied")}>
+            Show a toast
+          </PillButton>
+          <PillButton variant="outline" onClick={() => announceChange("Plan cancelled", { undo: () => notify("Plan is back") })}>
+            Show an Undo toast
+          </PillButton>
+        </div>
+      </Section>
+
       <Section title="Shared element">
         <motion.button
           type="button"
@@ -278,11 +298,7 @@ export function DevKit() {
         />
         <div className="flex flex-wrap gap-3">
           <PillButton onClick={() => setPursuitSheet(true)}>Make it a Pursuit</PillButton>
-          <PillButton variant="outline" onClick={() => setConfetti((c) => c + 1)}>
-            Confetti
-          </PillButton>
         </div>
-        {confetti > 0 && <Confetti key={confetti} />}
         <MakeItAPursuitSheet open={pursuitSheet} onOpenChange={setPursuitSheet} corner={{ spaceSlug: "food-cooking", slug: "pasta", name: "Pasta" }} />
       </Section>
 

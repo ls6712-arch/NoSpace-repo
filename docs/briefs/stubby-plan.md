@@ -2,6 +2,7 @@
 
 **Status:** plan for review. Nothing gets built until the founder signs off on this page.
 **Replaces:** an earlier draft brief (never added to the repo). The floating dock (PR #289) is replaced by `docs/briefs/claude-code-brief-stubby-calendar-hero.md` (see §9).
+**Superseded in part (Nov 3, 2026):** `docs/briefs/stubby-agent.md` replaces this plan's brain: how Stubby understands, asks, suggests, ranks and learns (§§5 to 8, 10 to 12). Where they disagree, `stubby-agent.md` wins. The rest stays as the history of what's built.
 **Put in repo as:** `docs/briefs/stubby-plan.md`. Claude Code builds it one PR at a time (§8), and only when told "build PR n".
 
 ---

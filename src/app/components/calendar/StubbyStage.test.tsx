@@ -3,6 +3,8 @@ import { createRef } from "react";
 import { MemoryRouter } from "react-router";
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../../config", async (orig) => ({ ...(await orig<typeof import("../../config")>()), stubbyAskEnabled: true }));
 
 const api = vi.hoisted(() => ({
   askStubbyStream: vi.fn(),
@@ -18,6 +20,7 @@ import { nyTimeToMs } from "../../lib/homeWeek";
 import { HELLO_KEY } from "../../lib/stubbyStage";
 import { SETTLE_MS } from "../stubby/StubbyBuddy";
 import { StubbyStage, type StubbyStageHandle } from "./StubbyStage";
+import { saveResume } from "../../lib/signUpReturn";
 
 // Fixed clock: Sunday Nov 1, 2026, 5:00 pm New York.
 const NOW = nyTimeToMs(2026, 11, 1, 17);
@@ -64,6 +67,25 @@ const line = () => document.querySelector("[data-stubby-line]")?.textContent;
 const state = () => document.querySelector("[data-stubby-stage] [data-stubby-state]")?.getAttribute("data-stubby-state");
 
 describe("the Stubby stage", () => {
+  it("opens a landing example as an editable draft without submitting or reapplying it",async()=>{
+    const ui=<MemoryRouter initialEntries={[{pathname:"/calendar",state:{landingExample:"photo-walk"}}]}><StubbyStage greeting={{now:NOW,windows:[],plans:[]}}/></MemoryRouter>;
+    const view=render(ui);
+    const field=screen.getByRole("textbox",{name:"What are you in the mood for?"}) as HTMLInputElement;
+    expect(field.value).toBe("I’d like to take a photo walk outside.");
+    await screen.findByText("3 asks left today");
+    expect(api.askStubbyStream).not.toHaveBeenCalled();
+    fireEvent.change(field,{target:{value:"pottery on Saturday"}});
+    view.rerender(ui);
+    expect(field.value).toBe("pottery on Saturday");
+  });
+
+  it("keeps the signup return draft ahead of the landing example",async()=>{
+    saveResume("My original request",false);
+    render(<MemoryRouter initialEntries={[{pathname:"/calendar",state:{landingExample:"sketch"}}]}><StubbyStage greeting={{now:NOW,windows:[],plans:[]}}/></MemoryRouter>);
+    await waitFor(()=>expect((screen.getByRole("textbox",{name:"What are you in the mood for?"}) as HTMLInputElement).value).toBe("My original request"));
+    expect(api.askStubbyStream).not.toHaveBeenCalled();
+  });
+
   it("greets with a line about your week, read out as text, with Stubby himself hidden", async () => {
     stage();
     await waitFor(() => expect(line()).toBe("You’re free tonight from 6. Want ideas?"));
@@ -126,7 +148,7 @@ describe("the Stubby stage", () => {
   it("at 0 asks left he says so, and the field is off", async () => {
     api.asksLeft.mockResolvedValue(0);
     stage();
-    await waitFor(() => expect(line()).toBe("That’s 3 for today. I’ll look again tomorrow."));
+    await waitFor(() => expect(line()).toBe("That’s 6 for today. I’ll look again tomorrow."));
     expect((screen.getByLabelText("What are you in the mood for?") as HTMLInputElement).disabled).toBe(true);
   });
 
@@ -192,7 +214,7 @@ describe("smarter picks on the stage", () => {
   };
 
   it("nothing fit tonight: he shrugs and says so, and the soonest after are shown with no count", async () => {
-    api.askStubbyStream.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after", askId: 7 });
+    api.askStubbyStream.mockResolvedValue({ found: 1, asksLeft: 2, error: null, outcome: "after", askId: 7, when: "tonight" });
     api.fetchMyPicks.mockResolvedValue([{ ...pick, kind: "event", why: "A class for two, near you.", after: true }]);
     stage();
     await ask();
@@ -212,7 +234,8 @@ describe("smarter picks on the stage", () => {
     await ask("something to do tonight on my own");
     // The deck shows one card at a time: the event first, then the idea after Not now.
     const event = (await screen.findByText("Wheel night")).closest("[data-pick-kind]")!;
-    expect(event.textContent).toContain("Found for you");
+    expect(event.textContent).toContain("Stubby’s pick");
+    expect(event.textContent).not.toContain("Found for you");
     expect(event.textContent).toContain("Coming alone is normal here.");
     expect(event.querySelector("a")!.getAttribute("target")).toBe("_blank");
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));

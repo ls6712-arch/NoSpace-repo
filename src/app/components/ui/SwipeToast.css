@@ -1,0 +1,150 @@
+/* One toast (SwipeToast.tsx). Looks as toasts always have: a card, one line, an
+   accent action. Moves only on the motion tokens: rises and leaves on
+   --duration-base, the emptied slot closes on --duration-fast. */
+.swipe-toast {
+  display: grid;
+  grid-template-rows: 1fr;
+  width: 100%;
+  transition: grid-template-rows var(--duration-base) var(--ease-standard);
+}
+
+.swipe-toast[data-mounted="false"],
+.swipe-toast[data-phase="closing"],
+.swipe-toast[data-phase="gone"] {
+  grid-template-rows: 0fr;
+}
+
+.swipe-toast[data-phase="gone"] {
+  transition-duration: var(--duration-fast);
+}
+
+.swipe-toast__gate {
+  min-height: 0;
+}
+
+.swipe-toast__lift {
+  margin-top: 8px;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    opacity var(--duration-base) var(--ease-standard);
+}
+
+@starting-style {
+  .swipe-toast {
+    grid-template-rows: 0fr;
+  }
+
+  .swipe-toast__lift {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+.swipe-toast[data-mounted="false"] .swipe-toast__lift,
+.swipe-toast[data-phase="closing"] .swipe-toast__lift {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+.swipe-toast[data-phase="gone"] .swipe-toast__lift {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(100%);
+}
+
+.swipe-toast[data-instant] .swipe-toast__lift {
+  transition: none;
+}
+
+.swipe-toast__card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: var(--text-small);
+  line-height: 1.4;
+  box-shadow: var(--shadow-overlay);
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.swipe-toast__card:focus-visible {
+  outline: 3px solid var(--foreground);
+  outline-offset: 2px;
+}
+
+.swipe-toast[data-tone="error"] .swipe-toast__card {
+  border-color: color-mix(in srgb, var(--destructive) 40%, transparent);
+}
+
+.swipe-toast__card[data-swiping] {
+  cursor: grabbing;
+}
+
+.swipe-toast__message {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.swipe-toast__action {
+  flex: none;
+  min-height: 44px;
+  margin-block: -12px;
+  padding-inline: 4px;
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .swipe-toast__action:hover {
+    text-decoration: underline;
+  }
+}
+
+/* The fuse: burns from right to left at an even speed (fuse() in motionTokens.ts). */
+.swipe-toast__fuse {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--accent) 50%, transparent) 18%,
+    var(--accent) 38%,
+    var(--accent) 62%,
+    color-mix(in srgb, var(--accent) 50%, transparent) 82%,
+    transparent 100%
+  );
+  transform-origin: left center;
+  pointer-events: none;
+}
+
+.swipe-toast[data-fuse="off"] .swipe-toast__fuse {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-toast__lift {
+    transform: none !important;
+  }
+}

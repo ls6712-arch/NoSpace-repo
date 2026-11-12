@@ -15,18 +15,17 @@ const extra = vi.hoisted(() => ({ value: { plans: [], stubs: [], failed: false }
 vi.mock("../lib/useCalendarData", () => ({ useCalendarData: () => extra.value }));
 
 const toasts = vi.hoisted(() => ({ calls: [] as { message: string; undo: () => void }[] }));
-vi.mock("sonner", () => ({
-  Toaster: () => null,
-  toast: Object.assign(
-    (message: string, opts?: { action?: { onClick: () => void } }) => void toasts.calls.push({ message, undo: () => opts?.action?.onClick() }),
-    { error: vi.fn() },
-  ),
+vi.mock("../lib/toasts", () => ({
+  // Errors were a separate call before; only confirmations are counted here.
+  showToast: (message: string, opts?: { tone?: string; action?: { onClick: () => void } }) =>
+    void (opts?.tone !== "error" && toasts.calls.push({ message, undo: () => opts?.action?.onClick() })),
 }));
 
 const remote = vi.hoisted(() => ({
   createPlan: vi.fn(async (_plan: unknown, _owner: unknown) => ({ sessionId: 41, pursuitId: "p-new" })),
   deleteSession: vi.fn(async () => null as string | null),
   cancelOwnPlan: vi.fn(async (_sessionId: number, _pursuitId: string | undefined) => null as string | null),
+  changeWorkflowSession: vi.fn(async () => null as string | null),
   moveSession: vi.fn(async () => null as string | null),
   leavePlan: vi.fn(async () => null as string | null),
   fetchConnections: vi.fn(async () => [] as { id: string; name: string }[]),
@@ -36,12 +35,16 @@ const remote = vi.hoisted(() => ({
   fetchEntries: vi.fn(async () => [] as unknown[]),
   savePrivate: vi.fn(async () => ({ error: null as string | null })),
 }));
-vi.mock("../lib/planEdits", async (orig) => ({ ...(await orig<typeof import("../lib/planEdits")>()), createPlan: remote.createPlan, deleteSession: remote.deleteSession, cancelOwnPlan: remote.cancelOwnPlan, moveSession: remote.moveSession, leavePlan: remote.leavePlan, fetchConnections: remote.fetchConnections }));
+vi.mock("../lib/planEdits", async (orig) => ({ ...(await orig<typeof import("../lib/planEdits")>()), createPlan: remote.createPlan, deleteSession: remote.deleteSession, cancelOwnPlan: remote.cancelOwnPlan, moveSession: remote.moveSession, changeWorkflowSession:remote.changeWorkflowSession, leavePlan: remote.leavePlan, fetchConnections: remote.fetchConnections }));
 vi.mock("../lib/calendarEntries", async (orig) => ({ ...(await orig<typeof import("../lib/calendarEntries")>()), addEntry: remote.addEntry, removeEntry: remote.removeEntry, updateEntry: remote.updateEntry, fetchEntries: remote.fetchEntries }));
 vi.mock("../lib/onboardingRemote", async (orig) => ({ ...(await orig<typeof import("../lib/onboardingRemote")>()), savePrivate: remote.savePrivate }));
 vi.mock("../lib/tasteRemote", async (orig) => ({ ...(await orig<typeof import("../lib/tasteRemote")>()), fetchTaste: async () => ({ picks: ["crafts/pottery"], windows: [], budget: null }) }));
 
 import { Calendar } from "./Calendar";
+import { GRID_START_HOUR, HOUR_PX } from "../components/calendar/TimeGrid";
+
+/** How far down the day column an hour sits, in px (the grid starts at GRID_START_HOUR). */
+const rowAt = (hour: number) => (hour - GRID_START_HOUR) * HOUR_PX;
 
 const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
 const NOW = ny(10, 30, 12);
@@ -56,7 +59,7 @@ const data = (over: Partial<WeekData> = {}): WeekData => {
 const setWide = (wide: boolean) => {
   window.matchMedia = ((query: string) => ({ matches: wide && (query.includes("744") || query.includes("1128")), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
 };
-const show = (url: string) => render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);
+const show = async(url:string) => {let result!:ReturnType<typeof render>;await act(async()=>{result=render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);});return result;};
 const flush = () => act(async () => void (await Promise.resolve()));
 const lastToast = () => toasts.calls[toasts.calls.length - 1];
 
@@ -89,7 +92,7 @@ afterEach(() => {
 
 describe("Make a plan", () => {
   it("needs a Corner, offers the picked ones first, and searches the rest", async () => {
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     const make = screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement;
@@ -102,12 +105,12 @@ describe("Make a plan", () => {
     expect(screen.getByText("No Corner matches.")).toBeTruthy();
   });
 
-  it("makes the plan for the day and part picked, and says it can be undone", async () => {
-    show("/calendar");
+  it("makes the plan for the visible date and time, and says it can be undone", async () => {
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
-    fireEvent.click(screen.getByRole("button", { name: "Evening" }));
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "19:00" } });
     fireEvent.click(screen.getByRole("button", { name: "Make the plan" }));
     await flush();
     expect(remote.createPlan).toHaveBeenCalledTimes(1);
@@ -119,29 +122,46 @@ describe("Make a plan", () => {
   });
 
   it("uses an exact time when one is typed, and refuses a time that has passed", async () => {
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
-    fireEvent.change(screen.getByLabelText("Exact time (optional)"), { target: { value: "20:30" } });
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "20:30" } });
     fireEvent.click(screen.getByRole("button", { name: "Make the plan" }));
     await flush();
     expect(remote.createPlan.mock.calls[0][0]).toMatchObject({ startsAt: ny(10, 30, 20) + 30 * 60_000 });
     cleanup();
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
-    fireEvent.change(screen.getByLabelText("Exact time (optional)"), { target: { value: "09:00" } });
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "09:00" } });
     expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("does not submit a cleared Corner or a nonexistent daylight-saving time", async () => {
+    await show("/calendar");
+    fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
+    await flush();
+    fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
+    expect(screen.queryByText("No Corner matches.")).toBeNull();
+    fireEvent.change(screen.getByLabelText("Day"), { target: { value: "2027-03-14" } });
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "02:30" } });
+    expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText("When"), { target: { value: "03:30" } });
+    expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText("Find a Corner"), { target: { value: "climb" } });
+    expect((screen.getByRole("button", { name: "Make the plan" }) as HTMLButtonElement).disabled).toBe(true);
+    expect(remote.createPlan).not.toHaveBeenCalled();
   });
 
   it("offers a friend only when there are connections, and sends the pick", async () => {
     remote.fetchConnections.mockResolvedValueOnce([{ id: "f1", name: "Priya Shah" }]);
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Make a plan" }));
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Pottery" }));
+    fireEvent.click(screen.getByRole("button", { name: "Bring someone" }));
     fireEvent.change(screen.getByLabelText("Bring a friend (optional)"), { target: { value: "f1" } });
     fireEvent.click(screen.getByRole("button", { name: "Make the plan" }));
     await flush();
@@ -154,29 +174,31 @@ describe("empty hours", () => {
   const column = () => document.querySelectorAll<HTMLElement>(".cursor-cell")[0];
 
   it("opens the time sheet for the hour tapped, with the three choices", async () => {
-    show("/calendar?view=week");
-    // 7 AM at the top, 48px an hour: 288px down is 1 PM.
-    fireEvent.click(column(), { clientY: 288 });
+    await show("/calendar?view=week");
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     expect(screen.getByRole("dialog", { name: "Friday, 1 PM" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Make a plan at 1 PM" })).toBeTruthy();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Make a plan" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "I’m free then" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Block this time" })).toBeTruthy();
   });
 
   it("opens the plan form with the time filled in", async () => {
-    show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    await show("/calendar?view=week");
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
-    fireEvent.click(screen.getByRole("button", { name: "Make a plan at 1 PM" }));
+    fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Make a plan" }));
     await flush();
-    expect((screen.getByLabelText("Exact time (optional)") as HTMLInputElement).value).toBe("13:00");
-    expect(screen.getByRole("button", { name: "Daytime", pressed: true })).toBeTruthy();
+    expect((screen.getByLabelText("When") as HTMLInputElement).value).toBe("13:00");
+    expect(screen.queryByRole("button", { name: "Daytime" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Evening" })).toBeNull();
+    fireEvent.change(screen.getByLabelText("Day"), { target: { value: "2026-11-05" } });
+    expect((screen.getByLabelText("When") as HTMLInputElement).value).toBe("13:00");
   });
 
   it("adds free time once or every week, and Undo takes it away", async () => {
-    show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    await show("/calendar?view=week");
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "I’m free then" }));
     fireEvent.click(screen.getByRole("button", { name: "Every Friday" }));
@@ -189,8 +211,8 @@ describe("empty hours", () => {
   });
 
   it("adds a block with an optional note and shows it, hatched, with the note", async () => {
-    show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    await show("/calendar?view=week");
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.change(screen.getByLabelText("Note"), { target: { value: "Dentist" } });
@@ -202,8 +224,8 @@ describe("empty hours", () => {
   });
 
   it("hides blocks when Your blocks is off", async () => {
-    show("/calendar?view=week");
-    fireEvent.click(column(), { clientY: 288 });
+    await show("/calendar?view=week");
+    fireEvent.click(column(), { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.click(screen.getByRole("button", { name: "Just this once" }));
@@ -214,13 +236,12 @@ describe("empty hours", () => {
   });
 
   it("selects a range by dragging across empty hours with a mouse", async () => {
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     const col = column();
-    fireEvent.pointerDown(col, { button: 0, pointerType: "mouse", clientY: 240, clientX: 10, pointerId: 1 });
-    fireEvent.pointerMove(col, { pointerType: "mouse", clientY: 336, clientX: 10, pointerId: 1 });
-    fireEvent.pointerUp(col, { pointerType: "mouse", clientY: 336, clientX: 10, pointerId: 1 });
+    fireEvent.pointerDown(col, { button: 0, pointerType: "mouse", clientY: rowAt(12), clientX: 10, pointerId: 1 });
+    fireEvent.pointerMove(col, { pointerType: "mouse", clientY: rowAt(14), clientX: 10, pointerId: 1 });
+    fireEvent.pointerUp(col, { pointerType: "mouse", clientY: rowAt(14), clientX: 10, pointerId: 1 });
     await flush();
-    // 240px is 12 PM, 336px is 2 PM.
     expect(screen.getByRole("dialog", { name: "Friday, 12 PM" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.click(screen.getByRole("button", { name: "Just this once" }));
@@ -233,15 +254,15 @@ describe("tapping a plan", () => {
   beforeEach(() => {
     hook.value = data({ plans: [plan()] });
   });
-  const openPlan = () => {
-    show("/calendar");
+  const openPlan = async() => {
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     fireEvent.click(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" }));
   };
 
-  it("offers change, bring and cancel for a plan only you are in", () => {
+  it("offers change, bring and cancel for a plan only you are in", async () => {
     hook.value = data({ plans: [plan({ kind: "session" })] });
-    openPlan();
+    await openPlan();
     const sheet = screen.getByRole("dialog");
     expect(within(sheet).getByRole("button", { name: "Change the time" })).toBeTruthy();
     expect(within(sheet).getByRole("button", { name: "Bring someone" })).toBeTruthy();
@@ -249,7 +270,7 @@ describe("tapping a plan", () => {
   });
 
   it("cancels at once on screen, sends nothing for 6 seconds, then deletes it", async () => {
-    openPlan();
+    await openPlan();
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
     expect(lastToast().message).toBe("Plan cancelled");
     expect(screen.queryByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeNull();
@@ -261,7 +282,7 @@ describe("tapping a plan", () => {
   });
 
   it("brings the plan back and sends nothing when Undo is tapped", async () => {
-    openPlan();
+    await openPlan();
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
     act(() => lastToast().undo());
     await act(async () => void vi.advanceTimersByTime(7000));
@@ -272,7 +293,7 @@ describe("tapping a plan", () => {
 
   it("leaves a host's listing by taking only you out, after the 6 seconds", async () => {
     hook.value = data({ plans: [plan({ id: "event-9", kind: "event", pursuitId: undefined, mine: undefined })] });
-    openPlan();
+    await openPlan();
     const sheet = screen.getByRole("dialog");
     expect(within(sheet).queryByRole("button", { name: "Cancel this plan" })).toBeNull();
     expect(within(sheet).queryByRole("button", { name: "Change the time" })).toBeNull();
@@ -285,7 +306,7 @@ describe("tapping a plan", () => {
 
   it("skips a session of a longer Pursuit and moves it", async () => {
     hook.value = data({ plans: [plan({ session: { n: 2, total: 5 } })] });
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     fireEvent.click(screen.getByRole("button", { name: "Pursuit session, 7 PM, Bouldering night" }));
     const sheet = screen.getByRole("dialog");
@@ -303,7 +324,7 @@ describe("tapping a plan", () => {
 
   it("skips one session of a longer Pursuit by removing only that session", async () => {
     hook.value = data({ plans: [plan({ session: { n: 2, total: 5 } })] });
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     fireEvent.click(screen.getByRole("button", { name: "Pursuit session, 7 PM, Bouldering night" }));
     fireEvent.click(screen.getByRole("button", { name: "Skip this session" }));
@@ -315,7 +336,7 @@ describe("tapping a plan", () => {
 
   it("puts the plan back and says so when the send fails", async () => {
     remote.cancelOwnPlan.mockResolvedValueOnce("Something went wrong. Try again.");
-    openPlan();
+    await openPlan();
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
     await act(async () => void vi.advanceTimersByTime(6100));
     await flush();
@@ -325,9 +346,9 @@ describe("tapping a plan", () => {
 });
 
 describe("tapping free time, a block and a Stub", () => {
-  it("opens a Stub as its ticket", () => {
+  it("opens a Stub as its ticket", async () => {
     extra.value = { plans: [], stubs: [stub], failed: false };
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 3,/ }));
     fireEvent.click(screen.getByRole("button", { name: "Stub, Pottery #2" }));
     const sheet = screen.getByRole("dialog", { name: "Stub" });
@@ -335,7 +356,7 @@ describe("tapping free time, a block and a Stub", () => {
   });
 
   it("marks one free slot not free, once, with Undo", async () => {
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     fireEvent.click(screen.getByRole("button", { name: "Free all day" }));
     // The usual week is changed on its own screen.
@@ -347,7 +368,7 @@ describe("tapping free time, a block and a Stub", () => {
   });
 
   it("removes a slot from the usual week and puts it back on Undo", async () => {
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     fireEvent.click(screen.getByRole("button", { name: "Free all day" }));
     fireEvent.click(screen.getByRole("button", { name: "Remove from my usual week" }));
@@ -364,7 +385,7 @@ describe("dragging with a mouse", () => {
 
   it("moves a plan only you are in, snapped to 15 minutes, and Undo moves it back", async () => {
     hook.value = data({ plans: [plan()] });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     const block = screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" });
     fireEvent.pointerDown(block, { button: 0, pointerType: "mouse", clientX: 0, clientY: 0 });
     fireEvent.pointerMove(block, { pointerType: "mouse", clientX: 0, clientY: 100 });
@@ -379,7 +400,7 @@ describe("dragging with a mouse", () => {
 
   it("opens the sheet instead when it is only a click", async () => {
     hook.value = data({ plans: [plan()] });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     const block = screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" });
     fireEvent.pointerDown(block, { button: 0, pointerType: "mouse", clientX: 0, clientY: 0 });
     fireEvent.pointerUp(block, { pointerType: "mouse", clientX: 0, clientY: 2 });
@@ -391,7 +412,7 @@ describe("dragging with a mouse", () => {
 
   it("never drags a host's listing or a session of a longer Pursuit", async () => {
     hook.value = data({ plans: [plan({ id: "event-9", kind: "event", mine: undefined, pursuitId: undefined })] });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     const block = screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" });
     fireEvent.pointerDown(block, { button: 0, pointerType: "mouse", clientX: 0, clientY: 0 });
     fireEvent.pointerMove(block, { pointerType: "mouse", clientX: 0, clientY: 100 });
@@ -402,16 +423,16 @@ describe("dragging with a mouse", () => {
 
   it("deletes a plan only you are in with the Delete key, with Undo", async () => {
     hook.value = data({ plans: [plan()] });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.keyDown(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" }), { key: "Delete" });
     expect(lastToast().message).toBe("Plan cancelled");
     expect(screen.queryByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeNull();
   });
 
   it("changes a block's end by its bottom edge and moves it by dragging", async () => {
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     const column = document.querySelectorAll<HTMLElement>(".cursor-cell")[0];
-    fireEvent.click(column, { clientY: 288 });
+    fireEvent.click(column, { clientY: rowAt(13) });
     await flush();
     fireEvent.click(screen.getByRole("button", { name: "Block this time" }));
     fireEvent.click(screen.getByRole("button", { name: "Just this once" }));
@@ -423,5 +444,52 @@ describe("dragging with a mouse", () => {
     await flush();
     // An hour later: 2 to 7 PM.
     expect(remote.updateEntry).toHaveBeenCalledWith(7, expect.objectContaining({ startsAt: ny(10, 30, 14), endsAt: ny(10, 30, 19) }));
+  });
+});
+
+describe("workflow session actions from Calendar", () => {
+  const id = "00000000-0000-4000-8000-000000000001";
+  const open = async (shared: boolean) => {
+    hook.value = data({
+      plans: [
+        plan({
+          id: "meeting-" + id,
+          pursuitSession: true,
+          sharedSession: shared,
+          mine: true,
+          session: { n: 1, total: 1 },
+        }),
+      ],
+    });
+    await show("/calendar");
+    fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Pursuit session, 7 PM, Bouldering night",
+      }),
+    );
+  };
+  it("skipping an owned group session changes only attendance after Undo expires", async () => {
+    await open(true);
+    fireEvent.click(screen.getByRole("button", { name: "Skip this session" }));
+    await act(async () => void vi.advanceTimersByTime(6100));
+    expect(remote.leavePlan).toHaveBeenCalledWith(
+      { id: "meeting-" + id, kind: "session" },
+      "u1",
+    );
+    expect(remote.deleteSession).not.toHaveBeenCalled();
+    expect(remote.changeWorkflowSession).not.toHaveBeenCalled();
+  });
+  it("skipping a personal session cancels its record instead of deleting it", async () => {
+    await open(false);
+    fireEvent.click(screen.getByRole("button", { name: "Skip this session" }));
+    await act(async () => void vi.advanceTimersByTime(6100));
+    expect(remote.changeWorkflowSession).toHaveBeenCalledWith(
+      id,
+      undefined,
+      true,
+      "u1",
+    );
+    expect(remote.deleteSession).not.toHaveBeenCalled();
   });
 });

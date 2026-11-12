@@ -2,6 +2,8 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../config", async (orig) => ({ ...(await orig<typeof import("../config")>()), stubbyAskEnabled: true }));
 import { nyTimeToMs, windowsLeft } from "../lib/homeWeek";
 import type { StubCard } from "../lib/stubs";
 import type { WeekData } from "../lib/useWeekData";
@@ -15,12 +17,10 @@ const extra = vi.hoisted(() => ({ value: { plans: [], stubs: [], failed: false }
 vi.mock("../lib/useCalendarData", () => ({ useCalendarData: () => extra.value }));
 
 const toasts = vi.hoisted(() => ({ calls: [] as { message: string; undo: () => void }[] }));
-vi.mock("sonner", () => ({
-  Toaster: () => null,
-  toast: Object.assign(
-    (message: string, opts?: { action?: { onClick: () => void } }) => void toasts.calls.push({ message, undo: () => opts?.action?.onClick() }),
-    { error: vi.fn() },
-  ),
+vi.mock("../lib/toasts", () => ({
+  // Errors were a separate call before; only confirmations are counted here.
+  showToast: (message: string, opts?: { tone?: string; action?: { onClick: () => void } }) =>
+    void (opts?.tone !== "error" && toasts.calls.push({ message, undo: () => opts?.action?.onClick() })),
 }));
 
 const remote = vi.hoisted(() => ({
@@ -65,12 +65,7 @@ const data = (over: Partial<WeekData> = {}): WeekData => {
 const setWide = (wide: boolean) => {
   window.matchMedia = ((query: string) => ({ matches: wide && (query.includes("744") || query.includes("1128")), media: query, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {}, dispatchEvent: () => false, onchange: null })) as typeof window.matchMedia;
 };
-const show = (url: string) =>
-  render(
-    <MemoryRouter initialEntries={[url]}>
-      <Calendar />
-    </MemoryRouter>,
-  );
+const show = async(url:string) => {let result!:ReturnType<typeof render>;await act(async()=>{result=render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);});return result;};
 const flush = () => act(async () => void (await Promise.resolve()));
 const lastToast = () => toasts.calls[toasts.calls.length - 1];
 
@@ -119,9 +114,9 @@ describe("Stubby's picks", () => {
 
   const stubbyState = () => document.querySelector("[data-stubby-state]")?.getAttribute("data-stubby-state");
 
-  it("has one Stubby, the stage's, hidden from screen readers, resting (smiling) once loaded", () => {
+  it("has one Stubby, the stage's, hidden from screen readers, resting (smiling) once loaded", async () => {
     withEvents([event(1)]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(document.querySelectorAll("[data-stubby-state]").length).toBe(1);
     const el = document.querySelector("[data-stubby-state]")!;
     expect(el.getAttribute("aria-hidden")).toBe("true");
@@ -129,9 +124,9 @@ describe("Stubby's picks", () => {
     expect(stubbyState()).toBe("ready");
   });
 
-  it("has Ask Stubby in the page, not behind a button that opens a dialog", () => {
+  it("has Ask Stubby in the page, not behind a button that opens a dialog", async () => {
     withEvents([event(1)]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.queryByText("Something different?")).toBeNull();
     expect(screen.getByLabelText("What are you in the mood for?")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Ask Stubby" }).getAttribute("aria-haspopup")).toBeNull();
@@ -139,7 +134,7 @@ describe("Stubby's picks", () => {
 
   it("Stubby stamps on Make it a plan, sighs on Undo, and shrugs on Not now", async () => {
     withEvents([event(1), event(2, { startsAt: ny(10, 31, 21), endsAt: ny(10, 31, 23), title: "Late climbing" })]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(stubbyState()).toBe("stamped");
@@ -158,37 +153,37 @@ describe("Stubby's picks", () => {
   it("Stubby tilts his head when a Keep can't be made", async () => {
     withEvents([event(1)]);
     picks.keepPick.mockResolvedValueOnce({ error: "Something went wrong. Try again." });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(stubbyState()).toBe("tilt");
   });
 
-  it("puts one pick in a free stretch, with the label, the thing and Make it a plan", () => {
+  it("puts one pick in a free stretch, with the label, the thing and Make it a plan", async () => {
     withEvents([event(1)]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
     expect(screen.getByText("Stubby’s pick")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Make it a plan" })).toBeTruthy();
   });
 
-  it("shows plain free time when nothing fits, never filler", () => {
+  it("shows plain free time when nothing fits, never filler", async () => {
     withEvents([]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
     expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
-  it("does not pick a thing longer than the free stretch", () => {
+  it("does not pick a thing longer than the free stretch", async () => {
     // 6 to 7 PM is all that is left of the evening after the plan at 7.
     withEvents([event(1, { startsAt: ny(10, 31, 18), endsAt: ny(10, 31, 20) })], { plans: [plan({ id: "event-77", kind: "event", startsAt: ny(10, 31, 19), endsAt: ny(10, 31, 20), pursuitId: undefined, mine: undefined })] });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
   });
 
   it("keeps a pick as a plan with Undo, sending only the plan and nothing about the pick", async () => {
     withEvents([event(1)]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(picks.keepPick).toHaveBeenCalledTimes(1);
@@ -205,7 +200,7 @@ describe("Stubby's picks", () => {
   it("says so when a Keep cannot be made, and keeps offering the pick", async () => {
     withEvents([event(1)]);
     picks.keepPick.mockResolvedValueOnce({ error: "Something went wrong. Try again." });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));
     await flush();
     expect(toasts.calls).toHaveLength(0);
@@ -214,7 +209,7 @@ describe("Stubby's picks", () => {
 
   it("opens the pick with its reason, and Not now swaps in the next match", async () => {
     withEvents([event(1), event(2, { startsAt: ny(10, 31, 21), endsAt: ny(10, 31, 23), title: "Late climbing" })]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: pickLabel("Climbing 1") }));
     const sheet = screen.getByRole("dialog", { name: "Climbing 1" });
     expect(within(sheet).getByText("You said Saturday evenings work, and you picked Climbing.")).toBeTruthy();
@@ -231,7 +226,7 @@ describe("Stubby's picks", () => {
 
   it("goes back to plain free time after three Not now on one stretch", async () => {
     withEvents([1, 2, 3, 4].map((n) => event(n, { startsAt: ny(10, 31, 18 + n * 0), endsAt: ny(10, 31, 20) })));
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     for (let i = 0; i < 3; i++) {
       fireEvent.click(screen.getByRole("button", { name: /^Stubby’s pick, / }));
       fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Not now" }));
@@ -241,24 +236,24 @@ describe("Stubby's picks", () => {
     expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
-  it("remembers Not now on a reload, in this browser", () => {
+  it("remembers Not now on a reload, in this browser", async () => {
     window.localStorage.setItem("soosh.calendar.notthis.v1", JSON.stringify({ "2026-10-31:sat-day": ["event:1"] }));
     withEvents([event(1)]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
   });
 
   it("runs again when a block is added: the stretch is gone and so is its pick", async () => {
     withEvents([event(1)]);
     remote.fetchEntries.mockResolvedValueOnce([{ id: 3, kind: "block", startsAt: ny(10, 31, 18), endsAt: ny(10, 31, 23), repeat: "none" }]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     await flush();
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
   });
 
   it("runs again when a plan is cancelled: the stretch opens and a pick comes back", async () => {
     withEvents([event(1)], { plans: [plan({ startsAt: ny(10, 31, 19) })] });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel this plan" }));
@@ -266,20 +261,20 @@ describe("Stubby's picks", () => {
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
   });
 
-  it("hides picks when Stubby's picks is turned off, and shows plain free time", () => {
+  it("hides picks when Stubby's picks is turned off, and shows plain free time", async () => {
     withEvents([event(1)]);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("checkbox", { name: /Stubby’s picks/ }));
     expect(screen.queryByText("Stubby’s pick")).toBeNull();
     expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
   });
 
-  it("shows a pick in the month and the list too", () => {
+  it("shows a pick in the month and the list too", async () => {
     withEvents([event(1)]);
-    const { unmount } = show("/calendar");
+    const { unmount } = await show("/calendar");
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
     unmount();
-    show("/calendar?view=list");
+    await show("/calendar?view=list");
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
   });
 });
@@ -290,20 +285,20 @@ describe("a pick that needs the host's approval", () => {
   const group = (needsApproval: boolean) => {
     hook.value = data({
       budget: 50,
-      stubby: { picks: [pottery], events: [], pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(10, 31, 19), hostName: "Priya Shah", needsApproval }], area: "" },
+      stubby: { picks: [pottery], events: [], pursuits: [{ cornerKey: pottery.key, pursuitId: "p9", title: "Pasta from scratch", startsAt: ny(10, 31, 19), endsAt:ny(10,31,21), hostName: "Priya Shah", needsApproval }], area: "" },
     });
   };
 
-  it("says Ask to join, never Make it a plan", () => {
+  it("says Ask to join, never Make it a plan", async () => {
     group(true);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.getByRole("button", { name: "Ask to join" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Make it a plan" })).toBeNull();
   });
 
-  it("says Make it a plan for a group you join at once", () => {
+  it("says Make it a plan for a group you join at once", async () => {
     group(false);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     expect(screen.getByRole("button", { name: "Make it a plan" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Ask to join" })).toBeNull();
   });
@@ -311,7 +306,7 @@ describe("a pick that needs the host's approval", () => {
   it("sends the request, says Request sent with Undo, and stops offering it", async () => {
     group(true);
     picks.keepPick.mockResolvedValueOnce({ requested: true });
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: "Ask to join" }));
     await flush();
     expect(picks.keepPick).toHaveBeenCalledTimes(1);
@@ -323,9 +318,9 @@ describe("a pick that needs the host's approval", () => {
     expect(screen.getByText("Stubby’s pick")).toBeTruthy();
   });
 
-  it("uses Ask to join in the pick's own sheet too", () => {
+  it("uses Ask to join in the pick's own sheet too", async () => {
     group(true);
-    show("/calendar?view=week");
+    await show("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: /^Stubby’s pick, / }));
     expect(within(screen.getByRole("dialog")).getByRole("button", { name: "Ask to join" })).toBeTruthy();
   });
@@ -334,7 +329,7 @@ describe("a pick that needs the host's approval", () => {
 describe("Stubby's picks on a phone", () => {
   it("shows the pick under the day in Month, with Make it a plan", async () => {
     withEvents([event(1)]);
-    show("/calendar");
+    await show("/calendar");
     fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31/ }));
     expect(screen.getByRole("button", { name: pickLabel("Climbing 1") })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Make it a plan" }));

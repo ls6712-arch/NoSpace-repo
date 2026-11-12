@@ -3,7 +3,6 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("heic2any", () => ({ default: vi.fn() }));
 const auth = vi.hoisted(() => ({ user: { id: "u1" } as { id: string } | null, isAdmin: true }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => ({ user: auth.user }) }));
 vi.mock("../context/CategoriesContext", () => ({ useCategories: () => ({ isAdmin: auth.isAdmin }) }));
@@ -35,10 +34,11 @@ afterEach(cleanup);
 const show = () => render(<MemoryRouter><AdminCityPicks /></MemoryRouter>);
 
 describe("AdminCityPicks", () => {
-  it("shows nothing to someone who is not an admin", () => {
+  it("shows the ordinary 404 to someone who is not an admin, so the page doesn't say it exists", () => {
     auth.isAdmin = false;
     show();
-    expect(screen.getByText("Nothing here for you")).toBeTruthy();
+    expect(screen.getByText("This page doesn’t exist")).toBeTruthy();
+    expect(screen.queryByText(/City picks/)).toBeNull();
     expect(api.fetchAllPicks).not.toHaveBeenCalled();
   });
 

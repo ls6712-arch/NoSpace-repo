@@ -59,12 +59,12 @@ export function ShelfRail() {
             ))}
           </div>
 
-          <ul className="mt-3 space-y-2.5">
+          <ul className="mt-3 space-y-0">
             {sessions.map((s, i) => (
               <li key={s.key}>
                 <Link
                   to={`/you/work/${archiveKey(s)}`}
-                  className="flex items-center gap-3 hover:text-accent"
+                  className="flex min-h-11 items-center gap-3 hover:text-accent-text"
                 >
                   <span
                     aria-hidden="true"

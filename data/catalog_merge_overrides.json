@@ -1,0 +1,21 @@
+{
+  "note": "Founder approvals the strict rules need. PROPOSED by the build, confirm in the PR. overrides: catalog slug to the existing Corner's space/slug to merge into. keepSeparate: catalog slugs created as their own Corner although an alias names a narrower existing Corner. acceptFollowOn: catalog slugs whose match on an already-merged-away Corner the founder approved merging into the Corner that was kept (Nov 2026).",
+  "overrides": {
+    "crocheting": "crafts-making/crochet",
+    "nail-art": "fashion-beauty/nails",
+    "model-building": "crafts-making/model-making",
+    "homebrewing": "food-cooking/home-brewing",
+    "trivia-and-quizzes": "gaming-tabletop/trivia",
+    "trading-card-collecting": "collecting-fandom/trading-cards"
+  },
+  "keepSeparate": [
+    "playing-an-instrument",
+    "breadmaking"
+  ],
+  "acceptFollowOn": [
+    "backpacking",
+    "creative-writing",
+    "singing",
+    "tabletop-rpgs"
+  ]
+}

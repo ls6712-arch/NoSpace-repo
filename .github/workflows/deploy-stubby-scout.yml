@@ -1,0 +1,77 @@
+# Deploys the stubby-scout edge function from main to the live Supabase project. Manual only.
+#
+# Why this exists: the app ships from main on every merge, the function only when someone deploys it, and
+# the two drifting apart broke Stubby live (Nov 3, 2026). The `stubby-deploy` job in ci.yml checks the
+# deploy record; nothing performed the deploy until now.
+#
+# How to run it: Actions, "Deploy stubby-scout", Run workflow, branch main, type "deploy stubby-scout".
+# Needs the repository secret SUPABASE_ACCESS_TOKEN (Settings, Secrets and variables, Actions).
+#
+# After it succeeds, read the live function back and record it (the PR for that is a separate step):
+#   node scripts/record-stubby-deploy.ts <read-back.json>
+# which writes supabase/deploys/stubby-scout.json only if every file matches this commit byte for byte.
+name: Deploy stubby-scout
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy stubby-scout" to deploy this commit of main to the live project'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-stubby-scout
+  cancel-in-progress: false
+
+env:
+  # The live project. Fixed here so the workflow can never deploy anywhere else.
+  PROJECT_REF: eyzokuhhbyidvmuqfmwm
+
+jobs:
+  deploy:
+    # Only main, and only when the confirmation was typed exactly.
+    if: github.ref == 'refs/heads/main' && inputs.confirm == 'deploy stubby-scout'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Token is set
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::The repository secret SUPABASE_ACCESS_TOKEN is not set. Add it under Settings, Secrets and variables, Actions."
+            exit 1
+          fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Live version before
+        run: |
+          supabase functions list --project-ref "$PROJECT_REF" -o json \
+            | jq -r '.[] | select(.slug == "stubby-scout") | .version' | tee "$RUNNER_TEMP/before"
+
+      # --no-verify-jwt: stubby-scout does its own access checks (_shared/access.ts) and is live with verify_jwt off.
+      # --use-api: bundles on Supabase's side, so no Docker is needed here.
+      - name: Deploy stubby-scout
+        run: supabase functions deploy stubby-scout --project-ref "$PROJECT_REF" --no-verify-jwt --use-api --yes
+
+      - name: Live version after
+        run: |
+          before=$(cat "$RUNNER_TEMP/before")
+          after=$(supabase functions list --project-ref "$PROJECT_REF" -o json | jq -r '.[] | select(.slug == "stubby-scout") | .version')
+          echo "stubby-scout: version $before -> $after (commit $GITHUB_SHA)"
+          {
+            echo "### stubby-scout deployed"
+            echo "- commit: \`$GITHUB_SHA\`"
+            echo "- live version: $before to $after"
+            echo "- next: read the function back and record it with \`scripts/record-stubby-deploy.ts\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$after" -gt "$before"

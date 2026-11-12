@@ -40,7 +40,7 @@ export const SCREENS: Screen[] = [
   { name: "you", route: "/you", setup: async (page) => { await page.getByRole("button", { name: /Pasta|Pottery|Sourdough|Stub/ }).first().waitFor({ timeout: 8000 }).catch(() => undefined); await page.waitForTimeout(900); } },
   { name: "you-pursuits", route: "/you", setup: click("Pursuits") },
   { name: "you-moments", route: "/you", setup: click("Moments") },
-  { name: "you-stub-open", route: "/you", setup: async (page) => { await page.getByRole("button", { name: /Open$/ }).first().click({ timeout: 8000 }); await page.waitForTimeout(900); } },
+  // you-stub-open is gone: a Stub on the Stubs pane no longer opens a detail dialog, so there is nothing to click.
   { name: "you-all", route: "/you/all" },
   { name: "search", route: "/search?q=pottery", setup: async (page) => { await page.getByText("Activity", { exact: true }).first().waitFor({ timeout: 8000 }); await page.waitForTimeout(900); } },
   { name: "search-empty", route: "/search" },
@@ -51,14 +51,16 @@ export const SCREENS: Screen[] = [
   { name: "corners", route: "/corners" },
   { name: "corner-pasta", route: "/corners/pasta" },
   { name: "corner-bbq", route: "/corners/bbq" },
+  { name: "corner-origami", route: "/corners/origami" },
   // Core loop v1: onboarding, the Make it a Pursuit sheet over a Corner, and the recap.
   { name: "onboarding", route: "/onboarding" },
   { name: "corner-pasta-sheet", route: "/corners/pasta", setup: click("Do this with people") },
   { name: "pursuit-recap", route: `/pursuit/${PURSUIT3_ID}/recap` },
   { name: "category-food", route: "/browse/food-drink" },
+  { name: "category-sports", route: "/browse/sports-martial-arts" },
   { name: "log", route: "/create" },
   { name: "log-caption", route: "/create", setup: pickPhotos(3) },
-  { name: "log-caption-sheet", route: "/create", setup: async (page) => { await pickPhotos(1)(page); await page.getByText("Counts toward").first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
+  { name: "log-caption-sheet", route: "/create", setup: async (page) => { await pickPhotos(1)(page); await page.getByRole("button", { name: "More" }).first().click({ timeout: 8000 }); await page.waitForTimeout(700); } },
   { name: "log-posted", route: "/create", setup: async (page) => {
       await pickPhotos(1)(page);
       await page.getByRole("button", { name: "Post", exact: true }).first().click({ timeout: 8000 }); await page.getByText("Posted to your followers").first().waitFor({ timeout: 8000 }); await page.waitForTimeout(1600);

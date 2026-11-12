@@ -16,6 +16,9 @@
  * Outdoor photography). Each pair is one Corner here: both keys map to the
  * same category and cornersInCategory() lists it once.
  */
+import { CATALOG_CORNERS } from "./catalogCorners";
+import { CATALOG_CORNER_CATEGORY } from "./catalogCornerCategories";
+
 export interface CornerCategory {
   slug: string;
   name: string;
@@ -222,8 +225,21 @@ const CATEGORY_BY_CORNER: Record<string, string> = {
   "travel-adventure/volunteering": "culture-community",
 };
 
+/**
+ * A catalog Corner's category (docs/catalog-corner-categories.md). Kept apart from
+ * CATEGORY_BY_CORNER: that map is exactly the Corners a category lists in its main
+ * grid, and a catalog Corner joins the grid only once it is complete (homeCorners.ts).
+ */
+export function catalogCategoryOf(spaceSlug: string, cornerSlug: string): CornerCategory | undefined {
+  if (!CATALOG_KEYS.has(`${spaceSlug}/${cornerSlug}`)) return undefined;
+  const slug = CATALOG_CORNER_CATEGORY[cornerSlug];
+  return slug ? CORNER_CATEGORIES.find((c) => c.slug === slug) : undefined;
+}
+const CATALOG_KEYS = new Set(CATALOG_CORNERS.map((c) => `${c.spaceSlug}/${c.slug}`));
+
 export function categoryOfCorner(spaceSlug: string, cornerSlug: string): CornerCategory | undefined {
   const slug = CATEGORY_BY_CORNER[`${spaceSlug}/${cornerSlug}`];
+  if (!slug) return catalogCategoryOf(spaceSlug, cornerSlug);
   return slug ? CORNER_CATEGORIES.find((c) => c.slug === slug) : undefined;
 }
 

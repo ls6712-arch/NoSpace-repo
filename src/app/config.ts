@@ -31,6 +31,17 @@ export const STAGING_HOSTNAMES: readonly string[] = [STAGING_DOMAIN, `www.${STAG
 // hidden until this flips on.
 export const marketplaceEnabled = false;
 
+// Ask Stubby: the field on the Stubby tab that runs a live search (the
+// stubby-scout function, which calls an AI model). Off for now (founder,
+// Nov 6, 2026): Stubby stays on the tab with his greeting and the picks he
+// already has, but there is no field, no live search and no results under
+// him, and the landing page's main button goes to sign-up instead. The code,
+// the function and the saved picks all stay; flip this to bring it back.
+// It is off unless a build sets VITE_STUBBY_ASK=true, and only the guest
+// end-to-end build does (scripts/e2e/guest-stubby.ts), so the Ask path stays
+// tested while it is off on live. Do not set it on Vercel.
+export const stubbyAskEnabled = import.meta.env.VITE_STUBBY_ASK === "true";
+
 // Today's sheet, Books and the Public Scrapbook are named concepts outside
 // the five product nouns (Moment, Shelf, Pursuit, Corner, Space), so they are
 // hidden for now. The code and data stay; flip this to bring them back.
@@ -45,7 +56,7 @@ export const extraConceptsEnabled = false;
 // it when the Terms or Privacy Policy change in a way people should accept
 // again, and when the real text replaces the draft. Never a future date: the
 // database refuses one more than a day ahead.
-export const TERMS_VERSION = "2026-10-30";
+export const TERMS_VERSION = "2026-11-03";
 
 // Onboarding's first step normally uses its own short "first Moment" form.
 // When this is on, it shows the one Log a Moment form instead (same fields,
@@ -66,9 +77,19 @@ export const suggestionLoggingEnabled = true;
 // value, so adding one later is a one-line change here and no layout work.
 // CONTACT_EMAIL is a bare address; the others are full URLs. A test keeps it set.
 // The Terms and Privacy Policy pages read CONTACT_EMAIL too.
-export const CONTACT_EMAIL = "sushmithalekkala@gmail.com";
-export const INSTAGRAM_URL = "";
+export const CONTACT_EMAIL = "info@onsoosh.com";
+export const INSTAGRAM_URL = "https://www.instagram.com/onsoosh";
+export const X_URL = "https://x.com/onsoosh";
 export const TIKTOK_URL = "";
+
+// How people reach support from inside the app (founder, Nov 3, 2026), wherever a message says
+// "contact support". The one place it is set: to switch to email, or add it, change this only, for
+// example { label: "Email us", href: `mailto:${CONTACT_EMAIL}` }. The label is shown as the link
+// text, so it follows docs/style-guide.md. A test keeps the link https or mailto.
+export const SUPPORT_CONTACT = {
+  label: "Message us on X (@onsoosh)",
+  href: "https://x.com/onsoosh",
+} as const;
 
 /**
  * Ask Soosh: when a search reads like a sentence, a card at the top shows what was
@@ -88,3 +109,6 @@ export const sooshOnboardingEnabled = true;
 // the button stays hidden; flip this and ship, nothing else changes.
 export const appleSignInEnabled = false;
 
+// How long each "duration" in data/corner_activities.csv is, in minutes, for showing it as "15 min", "1 hr", "3 hr".
+// Proposed numbers (the CSV only says 15min, hour, evening, halfday); the founder confirms or changes them here.
+export const activityDurationMinutes = { "15min": 15, hour: 60, evening: 180, halfday: 240 } as const;

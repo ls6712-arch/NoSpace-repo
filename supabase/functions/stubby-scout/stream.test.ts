@@ -120,6 +120,8 @@ function deps(search: ScoutDeps["search"], over: Partial<ScoutDeps["server"]> = 
       settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
       now: () => NOW,
       userId: async () => "user-1",
+      whoIs: async () => ({ guest: false, member: true }),
+      ipHash: async () => null,
       db: { runsSince: async () => 0, startRun: async () => 1, finishRun: async () => undefined, corners: async () => [], existingKeys: async () => new Set(), insertPick: async () => true, profile: async () => EMPTY_PROFILE },
       server: {
         claimSource: async () => null,
@@ -151,11 +153,12 @@ describe("an ask that streams", () => {
     const res = await handleScout(post({ mode: "ask", ask: "pottery tonight", stream: true }), d);
     expect(res.headers.get("content-type")).toContain("text/event-stream");
     const events = await readEvents(res);
-    expect(events.map(([e]) => e)).toEqual(["understood", "search", "pages", "picking", "done"]);
+    // One pick fit, fewer than 3: a second round runs within the same ask, with its own steps.
+    expect(events.map(([e]) => e)).toEqual(["understood", "search", "pages", "picking", "search", "pages", "picking", "done"]);
     expect(events[0][1]).toMatchObject({ when: "tonight" });
     expect(events[1][1]).toEqual({ type: "search", query: "pottery tonight" });
     expect(events[2][1]).toEqual({ type: "pages", count: 9 });
-    expect(events[4][1]).toMatchObject({ askId: 42, outcome: "found", picks: [{ title: "Drop-in wheel night" }] });
+    expect(events[events.length - 1][1]).toMatchObject({ askId: 42, outcome: "found", picks: [{ title: "Drop-in wheel night" }] });
   });
 
   it("still says it's picking when the search didn't (a plain reply)", async () => {
@@ -185,11 +188,16 @@ describe("an ask that streams", () => {
   });
 
   it("keeps working and saves the picks if the person stops (the ask still counts)", async () => {
-    let release: () => void = () => undefined;
+    let released = false;
+    const waiting: (() => void)[] = [];
+    const release = () => {
+      released = true;
+      waiting.splice(0).forEach((r) => r());
+    };
     const saved: unknown[] = [];
     const { d, asks } = deps(
       async () => {
-        await new Promise<void>((r) => (release = r));
+        if (!released) await new Promise<void>((r) => waiting.push(r));
         return { text: picksText, sourceLinks: new Set([linkKey(PAGE)!]), searches: 1 };
       },
       { insertPersonal: async (row) => (saved.push(row), true) },
@@ -199,7 +207,8 @@ describe("an ask that streams", () => {
     await reader.read(); // understood
     await reader.cancel(); // Stop
     release();
-    await vi.waitFor(() => expect(asks).toEqual([{ id: 42, found: 1, added: 1, failed: false }]));
+    // Both rounds ran (the second found the same pick again), and it was saved once.
+    await vi.waitFor(() => expect(asks).toMatchObject([{ id: 42, found: 2, added: 1, failed: false }]));
     expect(saved).toHaveLength(1);
   });
 });

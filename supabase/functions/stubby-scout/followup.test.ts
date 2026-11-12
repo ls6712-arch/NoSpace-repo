@@ -19,6 +19,8 @@ function deps(o: { free?: boolean; claim?: number | null; text?: string; links?:
     settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
     now: () => NOW,
     userId: async () => "user-1",
+    whoIs: async () => ({ guest: false, member: true }),
+    ipHash: async () => null,
     db: { runsSince: async () => 0, startRun: async () => 1, finishRun: async () => undefined, corners: async () => [], existingKeys: async () => new Set(), insertPick: async () => true, profile: async () => ({ ...EMPTY_PROFILE, monthlyBudget: 80 }) },
     server: {
       claimSource: async () => null,
@@ -71,7 +73,7 @@ describe("follow-ups", () => {
     expect(prompt).toContain("They want something different from what they were shown");
     expect(prompt).toContain('Already shown (don\'t report these again): "Wheel night".');
     expect(personal.map((p) => p.title)).toEqual(["Glaze class"]);
-    expect(body.dropped).toContainEqual({ title: "Wheel night", reason: "Already in the deck." });
+    expect(body.dropped).toContainEqual({ title: "Wheel night", reason: "Already in the deck.", key: "other" });
   });
 
   it("never asks the one question on a follow-up", async () => {
@@ -81,18 +83,19 @@ describe("follow-ups", () => {
     expect(claimFreeFollowUp).toHaveBeenCalled();
   });
 
-  it("ignores a follow-up that isn't well formed (and treats it as a new ask)", async () => {
+  it("refuses a follow-up of the wrong shape, and treats an unknown kind as a new ask", async () => {
     const { d, claimFreeFollowUp, claimAsk } = deps();
-    await handleScout(post({ mode: "ask", ask: "pottery tonight", followUp: { of: "42", kind: "cheaper" } }), d);
+    // The body schema is strict: a wrong type is a 400 before anything is claimed.
+    expect((await handleScout(post({ mode: "ask", ask: "pottery tonight", followUp: { of: "42", kind: "cheaper" } }), d)).status).toBe(400);
     await handleScout(post({ mode: "ask", ask: "pottery tonight", followUp: { of: 42, kind: "pricier" } }), d);
     expect(claimFreeFollowUp).not.toHaveBeenCalled();
-    expect(claimAsk).toHaveBeenCalledTimes(2);
+    expect(claimAsk).toHaveBeenCalledTimes(1);
   });
 
   it("Cheaper halves the ceiling (or sets a cheap one); Later starts two hours on", () => {
     const intent = readIntent("pottery tonight", { now: NOW, monthlyBudget: 80 });
     const window = searchWindow(intent, NOW);
-    expect(applyFollowUp(intent, window, "cheaper", NOW).intent.budget).toEqual({ max: 10, free: false, from: "ask" });
+    expect(applyFollowUp(intent, window, "cheaper", NOW).intent.budget).toEqual({ max: 20, free: false, from: "ask" });
     const noBudget = readIntent("pottery tonight", { now: NOW });
     expect(applyFollowUp(noBudget, window, "cheaper", NOW).intent.budget).toEqual({ max: 20, free: false, from: "ask" });
     expect(applyFollowUp(intent, window, "later", NOW).window.startMs).toBe(NOW + 2 * 3_600_000);
@@ -102,7 +105,7 @@ describe("follow-ups", () => {
 
 describe("the one question's answers", () => {
   it("Surprise me (or a typed answer) skips the question", () => {
-    expect(readIntent("something fun", { now: NOW }).missing).toBe("who");
+    expect(readIntent("something fun", { now: NOW }).missing).toBe("setting");
     expect(readIntent("something fun", { now: NOW, answers: { skip: true } }).missing).toBeNull();
   });
 
@@ -121,9 +124,10 @@ describe("the one question's answers", () => {
     const q = deps();
     const body = await (await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { skip: true } }), q.d)).json();
     expect(body.question).toBeUndefined();
+    // An answer that isn't one of the choices is refused at the door (schema.ts), never read.
     const bad = deps();
-    const asked = await (await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { when: "next blue moon" } }), bad.d)).json();
-    expect(asked).toEqual({ question: "who", asksLeft: 2 });
+    const res = await handleScout(post({ mode: "ask", ask: "something fun", questions: true, answers: { when: "next blue moon" } }), bad.d);
+    expect(res.status).toBe(400);
   });
 });
 

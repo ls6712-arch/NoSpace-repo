@@ -28,7 +28,7 @@ import { chromium, webkit, type Browser, type BrowserType, type Page } from "pla
 import { buildFixtures } from "./fixtures.ts";
 import { cacheFonts } from "./fonts.ts";
 import { detectInPage, diffDetections, INFLATE_CSS, type Detection } from "./detect.ts";
-import { touchAuditInPage, type TouchResult } from "./touch.ts";
+import { hitAreaInPage, touchAuditInPage, type TouchResult } from "./touch.ts";
 import { contrastInPage, type ContrastResult } from "./contrast.ts";
 import { iosChecksInPage, type IosResult } from "./ios.ts";
 import { fixedBarsInPage, type FixedBarsResult } from "./fixedbars.ts";
@@ -134,6 +134,9 @@ async function touchPass(browser: Browser, o: RunOpts): Promise<Map<string, Touc
         await page.goto("about:blank"); await page.goto(`http://localhost:${srv.port}/#${s.route}`); await page.waitForTimeout(1500); if (s.setup) await s.setup(page);
         const h = await page.evaluate(() => Math.min(document.documentElement.scrollHeight, 20000)); await page.setViewportSize({ width: W, height: Math.max(H0, h) }); await page.waitForTimeout(300);
         out.set(`${theme}/${W}/${s.name}`, await page.evaluate(touchAuditInPage, 44));
+        // Measure at the real device viewport with the control scrolled to the middle of it (the tall viewport above is for the audit only).
+        if (process.env.TOUCH_PROBE && !process.env.TOUCH_TALL) { await page.setViewportSize({ width: W, height: H0 }); await page.evaluate((q) => document.querySelector(q)?.scrollIntoView({ block: "center" }), process.env.TOUCH_PROBE); await page.waitForTimeout(400); }
+        if (process.env.TOUCH_PROBE) for (const a of await page.evaluate(hitAreaInPage, process.env.TOUCH_PROBE)) console.log(`HITAREA ${theme}/${W}/${s.name} ${a.sel} box ${a.box}, ::after ${a.after}, effective hit area ${a.hit}, pointer coarse ${a.pointerCoarse}${a.coveredBy ? `, corners covered by ${a.coveredBy}` : ""}`);
       } catch (e) { console.log(`note: touch ${theme}/${s.name}: ${String(e).split("\n")[0].slice(0, 100)}`); }
     }
     await ctx.close();
@@ -516,10 +519,11 @@ async function main() {
   }
 
   if (flag("fixed")) {
-    const rows = new Map<string, string[]>(); const warns = new Map<string, string[]>(); let n = 0;
-    for (const w of base.widths) { HEIGHTS[w] = PROFILES.find((p) => p.w === w)?.h ?? HEIGHTS[w] ?? 900; const res = await fixedPass(browser, { ...base, widths: [w] }); n += res.size; for (const [k, r] of res) { for (const wn of r.warnings) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}: ${wn}`; warns.set(kk, [...(warns.get(kk) ?? []), k.split("/").slice(2).join("/")]); } } for (const [k, r] of res) for (const pr of r.problems) rows.set(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`, [...(rows.get(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`) ?? []), k.split("/").slice(2).join("/")]); }
+    const rows = new Map<string, string[]>(); const warns = new Map<string, string[]>(); const clear = new Map<string, number>(); let n = 0;
+    for (const w of base.widths) { HEIGHTS[w] = PROFILES.find((p) => p.w === w)?.h ?? HEIGHTS[w] ?? 900; const res = await fixedPass(browser, { ...base, widths: [w] }); n += res.size; if (process.env.FIXED_DEBUG) for (const [k, r] of res) console.log(`  DEBUG ${k} bars=${JSON.stringify(r.bars)} clearance=${r.clearance}`); for (const [k, r] of res) if (r.clearance !== undefined) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}`; clear.set(kk, Math.min(clear.get(kk) ?? Infinity, r.clearance)); } for (const [k, r] of res) { for (const wn of r.warnings) { const kk = `${k.split("/")[0]}/${k.split("/")[1]}: ${wn}`; warns.set(kk, [...(warns.get(kk) ?? []), k.split("/").slice(2).join("/")]); } } for (const [k, r] of res) for (const pr of r.problems) rows.set(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`, [...(rows.get(`${k.split("/")[0]}/${k.split("/")[1]}: ${pr}`) ?? []), k.split("/").slice(2).join("/")]); }
     console.log(`fixed chrome audit: ${n} states (screens x widths x safe-area insets x scroll top/bottom); ${rows.size} distinct problem(s)`);
     for (const [k, w] of rows) console.log(`  PROBLEM ${k}  [${w.slice(0, 4).join(", ")}${w.length > 4 ? ` +${w.length - 4}` : ""}]`);
+    for (const [k, px] of clear) console.log(`  CLEAR   ${k}  ${px}px between the lowest content and the tab bar at the end of the page (least over the safe-area settings)`);
     for (const [k, w] of warns) console.log(`  WARN    ${k}  [${w.slice(0, 4).join(", ")}${w.length > 4 ? ` +${w.length - 4}` : ""}]`);
     await browser.close(); process.exit(flag("strict") && rows.size > 0 ? 1 : 0);
   }
@@ -550,10 +554,24 @@ async function main() {
       const smallInputs = ios ? new Set([...ios].flatMap(([, r]) => r.smallInputs.map((x) => `${x.sel} ${x.fontSize}px`))) : undefined;
       const safeBad = ios ? [...ios].filter(([, r]) => r.safe && (!r.safe.viewportFitCover || !r.safe.tokenIsEnv || r.safe.barFollowsToken === false)).length : 0;
       const safeSeen = ios ? [...ios].filter(([, r]) => r.safe?.barFollowsToken === true).length : 0;
-      if (hs > 0 || cf > 0 || small > 0 || fxProblems > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && safeSeen === 0)) bad++;
+      // The safe-area check is about the fixed bottom tab bar, and the audit must have seen that bar follow the token (a pass that
+      // never saw it proves nothing). From the rail breakpoint (744px) up there is a side rail and no bottom bar, so nothing to see.
+      const hasBottomBar = p.w < 744;
+      if (hs > 0 || cf > 0 || small > 0 || fxProblems > 0 || (smallInputs?.size ?? 0) > 0 || safeBad > 0 || (ios && hasBottomBar && safeSeen === 0)) bad++;
       details.push({ profile: p.name, engine: label, w: p.w, h: p.h, flags, hscroll: hs, contrastFailures: cf, touchSmall: small, overlaps: ov, smallInputs: smallInputs ? [...smallInputs] : null, safeAreaBadViews: ios ? safeBad : null, safeAreaBarViewsChecked: ios ? safeSeen : null, fixedChromeProblems: fxProblems < 0 ? null : fxProblems });
-      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad === 0 && safeSeen > 0 ? "ok" : "FAIL"} (${safeSeen} views)` : ""}`);
+      rows.push(`${p.name.padEnd(22)} ${String(p.w).padStart(4)}x${String(p.h).padEnd(5)} ${label.padEnd(9)} views ${lay.results.size}  flagged ${flags}  hscroll ${hs}  contrast<4.5 ${cf}  touch<44 ${small < 0 ? "n/a" : small}  overlapping-pairs ${ov < 0 ? "n/a" : ov}${fxProblems >= 0 ? `  fixed-chrome ${fxProblems} (+${fxWarn} warn)` : ""}${ios ? `  input<16px ${smallInputs!.size}  safe-area ${safeBad > 0 || (hasBottomBar && safeSeen === 0) ? "FAIL" : hasBottomBar ? "ok" : "n/a, side rail"} (${safeSeen} views)` : ""}`);
       if (smallInputs?.size) for (const x of smallInputs) rows.push(`    input under 16px: ${x}`);
+      // Name what to fix, grouped by screen, so a red run says where without downloading the report.
+      const screenOf = (k: string) => k.split("/").slice(2).join("/");
+      for (const [k, d] of lay.results) if (d.hscroll > 0) rows.push(`    sideways scroll +${d.hscroll}px [${k}]: ${(d.wide ?? []).map((w) => `${w.sel} "${w.text}" right=${w.right}`).join(" | ") || "(no single element found)"}`);
+      if (tch) {
+        const smalls = new Map<string, Set<string>>();
+        for (const [k, r] of tch) for (const f of r.failing) if (f.reason === "small") { const sc = screenOf(k); (smalls.get(sc) ?? smalls.set(sc, new Set()).get(sc)!).add(`${f.sel} "${f.text}" ${f.w}x${f.h} (corner on ${f.stolenBy ?? "?"})`); }
+        for (const [sc, items] of smalls) rows.push(`    touch target under 44px [${sc}]: ${[...items].join(" | ")}`);
+        const ovs = new Map<string, Set<string>>();
+        for (const [k, r] of tch) for (const x of r.overlaps) { const sc = screenOf(k); (ovs.get(sc) ?? ovs.set(sc, new Set()).get(sc)!).add(`${x.a} / ${x.b}`); }
+        for (const [sc, items] of ovs) rows.push(`    overlapping targets [${sc}]: ${[...items].join(" | ")}`);
+      }
       if (cf > 0) {
         // Name each failing pair, so a red run says what to fix without downloading the report.
         const seen = new Set<string>();

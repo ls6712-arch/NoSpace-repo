@@ -22,10 +22,15 @@ export const STUBBY_LINES = {
   found: "Here’s what I’d pick for you.",
   error: "Something went wrong on my end. Try again?",
   /** For the later plan PRs (the one question, the honest "nothing fits", the nudge). */
+  /** The first question for a vague ask (stubby-agent C4, approved Nov 3, 2026). */
+  missingSetting: "Stay in or head out?",
+  /** Asked only when company changes the options: heading out, no one named. */
   missingWho: "Going solo or with someone?",
   missingWhen: "When are you free?",
   missingVibe: "What kind of fun?",
   nothingFits: "Nothing tonight that fits. Here’s the soonest after.",
+  /** The same, for any time other than tonight (approved Nov 2, 2026). */
+  nothingThen: "Nothing then that fits. Here’s the soonest after.",
   bringAFriend: "This one’s better with a friend. Bring someone?",
   /** When the deck runs out (stubby-plan §6.5, approved Nov 2, 2026). */
   deckRunOut: "That’s all I found. Want more?",

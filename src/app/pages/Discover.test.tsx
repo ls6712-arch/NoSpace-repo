@@ -52,7 +52,7 @@ vi.mock("../lib/discover", () => ({
   fetchDiscoverCorners: fetchers.corners,
   fetchDiscoverSpaces: fetchers.spaces,
   fetchPublicSpaces: fetchers.publicSpaces,
-  fetchDiscoverMoments: fetchers.moments,
+  fetchDiscoverMomentsOrThrow: fetchers.moments,
   fetchCornerAffinity: fetchers.affinity,
   fetchPassCornerMap: fetchers.passMap,
   logDiscoverEvent: fetchers.log,
@@ -106,9 +106,9 @@ describe("Discover layout", () => {
     expect(screen.getByRole("button", { name: /New York/ })).toBeTruthy();
     
     const nav = screen.getByRole("navigation", { name: "Sections" });
-    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Spaces", "Moments"]);
+    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Resources", "Pursuit ideas", "Spaces", "Moments"]);
     const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
-    expect(headings).toEqual(["What could you do?", "Corners new to you", "Spaces near you", "What New York is making"]);
+    expect(headings).toEqual(["What could you do?", "Corners new to you", "Resources", "Pursuit ideas", "Spaces near you", "What New York is making"]);
   });
 
   it("has no member or follower counts anywhere and no price on an idea card", async () => {
@@ -140,7 +140,7 @@ describe("Discover ideas", () => {
     show();
     await settle();
     expect(screen.getByRole("combobox", { name: "Time: Weekend" })).toBeTruthy();
-    expect(screen.getByRole("combobox", { name: "Spend: Under $25" })).toBeTruthy();
+    expect(screen.getByRole("combobox", { name: "Spend: Treat me" })).toBeTruthy();
   });
 
   it("reshuffles the row at once when a pill changes, with no network call", async () => {
@@ -160,6 +160,18 @@ describe("Discover ideas", () => {
 });
 
 describe("Discover Corners and Spaces", () => {
+  it("scrolls the existing three Corner cards without changing their content or the six-result request", async () => {
+    show();
+    await settle();
+    const row = screen.getByRole("list", { name: "Corners new to you" });
+    expect(row.getAttribute("tabindex")).toBe("0");
+    expect(row.children).toHaveLength(3);
+    expect(fetchers.corners).toHaveBeenCalledWith(6, expect.any(Array));
+    expect(Array.from(row.children).map(card => card.querySelector("a")?.getAttribute("href"))).toEqual(["/corners/pottery", "/corners/piano", "/corners/dance"]);
+    expect(within(row).getAllByRole("button", { name: "Follow" })).toHaveLength(3);
+    expect(row.querySelector("img")?.closest("a")?.querySelector(".size-20")).toBeTruthy();
+  });
+
   it("hides a Corner at once when it is followed, and follows it with its Space and slug", async () => {
     show();
     await settle();
@@ -194,6 +206,17 @@ describe("Discover Corners and Spaces", () => {
 });
 
 describe("Discover fails one section at a time", () => {
+  it("keeps resources and Pursuit ideas visible when no recommended Corners load", async () => {
+    fetchers.corners.mockResolvedValue([]);
+    show();
+    await settle();
+    expect(screen.queryByRole("heading", { name: "Corners new to you" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Resources" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Pursuit ideas" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Visit website: Standard Ebooks" }).getAttribute("target")).toBe("_blank");
+    expect(screen.getByRole("heading", { name: "Spaces near you" })).toBeTruthy();
+  });
+
   it("hides Spaces when they cannot load and keeps everything else", async () => {
     fetchers.spaces.mockResolvedValue([]);
     show();
@@ -224,6 +247,19 @@ describe("Discover fails one section at a time", () => {
     expect(screen.getByText("Nothing new nearby yet.")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Log a Moment" }).getAttribute("href")).toBe("/create");
   });
+
+  it("says it could not load, with Try again, when the feed fails, and retries", async () => {
+    fetchers.moments.mockRejectedValueOnce(new Error("down"));
+    show();
+    await settle();
+    expect(screen.queryByText("Nothing new nearby yet.")).toBeNull();
+    expect(screen.getByText("Couldn’t load this. Try again.")).toBeTruthy();
+    fetchers.moments.mockClear();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    await settle();
+    expect(fetchers.moments).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Nothing new nearby yet.")).toBeTruthy();
+  });
 });
 
 describe("Discover pill dropdowns", () => {
@@ -232,7 +268,7 @@ describe("Discover pill dropdowns", () => {
     await settle();
     const cases: [string, string[], string][] = [
       ["Time", ["An hour", "Tonight", "Weekend"], "Tonight"],
-      ["Spend", ["Free", "Under $25", "Treat me"], "Under $25"],
+      ["Spend", ["Free", "Under $25", "Treat me"], "Treat me"],
       ["Who", ["Solo", "A friend", "New people"], "A friend"],
     ];
     for (const [group, values, current] of cases) {
@@ -269,13 +305,13 @@ describe("Discover Corner tabs and headings", () => {
     expect(within(section).getAllByText("Find people to go with").length).toBeGreaterThan(0);
   });
 
-  it("keeps a Corner hook to one line", async () => {
+  it("gives the Corner description two lines without shortening the Corner name", async () => {
     show();
     await settle();
     const section = screen.getByRole("heading", { name: "Corners new to you" }).closest("section")!;
     const hook = within(section).getByText(/Making|Hands|clay|wheel|pottery/i, { selector: "p" });
-    expect(hook.className).toContain("truncate");
-    expect(hook.className).not.toContain("line-clamp");
+    expect(hook.className).toContain("line-clamp-2");
+    expect(within(section).getAllByRole("link", { name: "Pottery" })[1].className).not.toContain("truncate");
   });
 
   it("calls the feed What people are making when no city is saved", async () => {
@@ -319,10 +355,10 @@ describe("Discover signed out", () => {
     await settle();
     expect(screen.queryByRole("heading", { name: /is making/ })).toBeNull();
     const nav = screen.getByRole("navigation", { name: "Sections" });
-    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Spaces"]);
+    expect(within(nav).getAllByRole("button").map((b) => b.textContent)).toEqual(["Ideas", "Corners", "Resources", "Pursuit ideas", "Spaces"]);
   });
 
-  it("opens the sign up prompt for any action and closes it with Keep looking around", async () => {
+  it("opens the sign up prompt for membership actions and closes it with Keep looking around", async () => {
     show();
     await settle();
     fireEvent.click(within(screen.getByRole("heading", { name: "Spaces near you" }).closest("section")!).getByRole("button", { name: "Join" }));

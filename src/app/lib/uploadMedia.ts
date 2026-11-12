@@ -48,7 +48,7 @@ export function mediaKindOf(file: Pick<File, "type" | "name">): MediaKind {
 }
 
 /** Same test as heicConversion's isHeicFile, kept here so this module never
- * loads heic2any (which needs a browser) until a HEIC file actually arrives. */
+ * loads the HEIC converter until a HEIC file actually arrives. */
 export function isHeicLike(file: Pick<File, "type" | "name">): boolean {
   const ext = extensionOf(file.name);
   return file.type === "image/heic" || file.type === "image/heif" || ext === "heic" || ext === "heif";

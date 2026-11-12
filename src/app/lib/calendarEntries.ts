@@ -29,7 +29,7 @@ export const NOTE_MAX = 80;
 const HOUR = 3_600_000;
 const WEEK = 7 * 24 * HOUR;
 /** A stretch of free time shorter than this is not worth showing. */
-export const MIN_FREE_MS = HOUR;
+export const MIN_FREE_MS = 15 * 60_000;
 
 /** One showing of an entry: the entry may repeat, so the same id can have many. */
 export interface Occurrence extends Span {
@@ -79,7 +79,7 @@ export function subtractSpans(from: readonly Span[], out: readonly Span[]): Span
 }
 
 export interface FreeTimeInput {
-  /** The usual week: "sat-day", "tue-eve". */
+  /** The usual week: exact "mon@1140-1260" or legacy "sat-day". */
   windows: readonly string[];
   entries: readonly CalendarEntry[];
   plans: readonly WeekPlanDetail[];
@@ -134,15 +134,15 @@ const toEntry = (r: Row): CalendarEntry => ({
 // PostgREST: PGRST205 no such table; Postgres: 42P01. Before the migration is live there are simply no entries.
 const notDeployed = (code?: string) => ["PGRST205", "42P01"].includes(code ?? "");
 
-/** The person's entries. Best effort: before the migration, or on any failure, none. */
+/** A failed read is unknown availability, never an empty list of blocks. */
 export async function fetchEntries(userId: string): Promise<CalendarEntry[]> {
   if (!supabase) return [];
   try {
     const { data, error } = await supabase.from("calendar_entries").select("id, kind, starts_at, ends_at, repeat, note").eq("user_id", userId).order("starts_at", { ascending: true }).limit(500);
-    if (error || !Array.isArray(data)) return [];
+    if (error || !Array.isArray(data)) throw new Error(ERROR_LINE);
     return (data as Row[]).map(toEntry);
   } catch {
-    return [];
+    throw new Error(ERROR_LINE);
   }
 }
 

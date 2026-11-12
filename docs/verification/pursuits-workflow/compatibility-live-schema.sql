@@ -1,0 +1,7 @@
+-- Read only. Returns one JSON value to paste back before applying the compatibility migration.
+select jsonb_build_object(
+ 'columns',(select jsonb_agg(jsonb_build_object('table',c.table_name,'column',c.column_name,'type',c.data_type,'nullable',c.is_nullable) order by c.table_name,c.ordinal_position) from information_schema.columns c where c.table_schema='public' and c.table_name in ('pursuits','pursuit_progress','pursuit_sessions','pursuit_session_rsvps','posts')),
+ 'policies',(select jsonb_agg(to_jsonb(p)) from pg_policies p where p.schemaname='public' and p.tablename in ('pursuits','pursuit_progress','pursuit_sessions','pursuit_session_rsvps')),
+ 'functions',(select jsonb_agg(jsonb_build_object('schema',n.nspname,'name',p.proname,'definition',pg_get_functiondef(p.oid))) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where (n.nspname='private' and p.proname in ('validate_pursuit_workflow_config','validate_pursuit_workflow_row','pursuit_workflow_notice','pursuit_workflow_access')) or (n.nspname='public' and p.proname='get_profile_pursuits')),
+ 'triggers',(select jsonb_agg(jsonb_build_object('table',c.relname,'trigger',pg_get_triggerdef(t.oid))) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('pursuit_progress','pursuit_sessions','pursuit_session_rsvps') and not t.tgisinternal)
+) as pursuit_compatibility_schema;

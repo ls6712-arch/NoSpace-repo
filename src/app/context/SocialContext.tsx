@@ -29,7 +29,8 @@ import {
 } from "../lib/messageSync";
 import { convertHeicIfNeeded } from "../lib/heicConversion";
 import { deleteMessagePhoto, uploadMessagePhoto } from "../lib/messageMedia";
-import { prepareForUpload, storageExtension } from "../lib/uploadMedia";
+import { deleteMomentFiles, signMomentPaths, uploadThoughtFile } from "../lib/momentMedia";
+import { legacyPostMediaPath } from "../lib/thoughtMedia";
 
 /**
  * Everything between two people: following a hobby, asking to take part,
@@ -71,8 +72,11 @@ export interface Thought {
   prompt?: string;
   body: string;
   /** A photo or video riding along with the reply — opt-in per call site
-   * via Thoughts' allowMedia prop. */
+   * via Thoughts' allowMedia prop. A signed link for a new one, or the old
+   * public URL for a thought written before photos went private. */
   media?: string;
+  /** Where a new photo lives in the private bucket (kept so deleting the thought can remove it). */
+  mediaPath?: string;
   createdAt: number;
 }
 
@@ -130,7 +134,7 @@ export interface BlockedPerson {
   avatarUrl?: string;
 }
 
-export type ReportTargetKind = "profile" | "message" | "moment" | "thought";
+export type ReportTargetKind = "profile" | "message" | "moment" | "thought" | "corner_message";
 export type ReportReason = "spam" | "harassment" | "inappropriate" | "other";
 
 interface SocialContextType {
@@ -647,6 +651,11 @@ export function SocialProvider({ children }: { children: ReactNode }) {
       fallbackMessages = (msgs ?? []).map(mapMessageRow);
     }
 
+    // New thought photos are private paths; sign them in one batch. A path the viewer can no longer read just has no photo.
+    const signedThoughtMedia = await signMomentPaths(
+      (thoughts.data ?? []).map((t: any) => t.media_path as string | null).filter((p: string | null): p is string => !!p),
+    );
+
     setRemote({
       followedHobbies: (follows.data ?? []).map((f: any) => f.hobby_key),
       participations,
@@ -658,7 +667,8 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         authorAvatar: byId.get(t.user_id)?.avatar_url ?? undefined,
         prompt: t.prompt ?? undefined,
         body: t.body,
-        media: t.media_url ?? undefined,
+        media: (t.media_path ? signedThoughtMedia.get(t.media_path) : undefined) ?? t.media_url ?? undefined,
+        mediaPath: t.media_path ?? undefined,
         createdAt: new Date(t.created_at).getTime(),
       })),
       notifications: (notes.data ?? []).map((n: any) => ({
@@ -1392,25 +1402,13 @@ export function SocialProvider({ children }: { children: ReactNode }) {
   ) => {
     if (!body.trim()) return;
     if (supabase && user) {
-      // Same bucket and per-user-folder convention as ContentContext's own
-      // post photos — reuses the storage policies that already exist for
-      // it (sql/security-hardening.sql section 8) rather than needing new
-      // ones for a second bucket.
-      let mediaUrl: string | undefined;
+      // The private moment-media bucket, in the person's own folder, like a
+      // Moment's photos: only people who can see the thought can open it.
+      let mediaPath: string | undefined;
       if (media) {
-        const prepared = await prepareForUpload(media);
-        const ready = prepared.file;
-        const path = ready ? `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${storageExtension(ready)}` : "";
-        const { error: uploadError } = ready
-          ? await supabase.storage
-              .from("post-media")
-              .upload(path, ready, { contentType: ready.type || undefined, upsert: false })
-          : { error: new Error(prepared.error ?? "not prepared") };
-        if (uploadError) {
-          console.error("[SocialContext] thought media upload failed:", uploadError);
-        } else {
-          mediaUrl = supabase.storage.from("post-media").getPublicUrl(path).data.publicUrl;
-        }
+        const uploaded = await uploadThoughtFile(user.id, media);
+        if (uploaded.path) mediaPath = uploaded.path;
+        else console.error("[SocialContext] thought media upload failed:", uploaded.error);
       }
 
       await supabase.from("thoughts").insert({
@@ -1418,7 +1416,7 @@ export function SocialProvider({ children }: { children: ReactNode }) {
         user_id: user.id,
         prompt: prompt ?? null,
         body: body.trim(),
-        media_url: mediaUrl ?? null,
+        media_path: mediaPath ?? null,
       });
       if (postOwnerId && postOwnerId !== user.id) {
         // Phase 5: links to the specific Moment, not the generic /you, so
@@ -1453,7 +1451,14 @@ export function SocialProvider({ children }: { children: ReactNode }) {
 
   const removeThought = async (id: number | string) => {
     if (supabase && user) {
-      await supabase.from("thoughts").delete().eq("id", id);
+      const gone = state.thoughts.find((t) => t.id === id);
+      const { error } = await supabase.from("thoughts").delete().eq("id", id);
+      // Take the photo with it, so no link to it keeps working. Best effort: the row is already gone.
+      if (!error && gone) {
+        if (gone.mediaPath) await deleteMomentFiles([gone.mediaPath]);
+        const legacy = legacyPostMediaPath(gone.media);
+        if (legacy) await supabase.storage.from("post-media").remove([legacy]);
+      }
       refresh();
       return;
     }

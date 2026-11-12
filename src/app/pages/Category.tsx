@@ -3,11 +3,12 @@ import { Link, Navigate, useParams, useSearchParams } from "react-router";
 import { type Post } from "../data/posts";
 import { CORNER_CATEGORIES, categoryOfCorner } from "../data/cornerCategories";
 import { cornerMeta } from "../data/curatedCorners";
-import { cornerKey, homeCornersIn } from "../data/homeCorners";
+import { cornerKey, homeCornersIn, notStartedIn } from "../data/homeCorners";
+import { NOT_STARTED_SUBLINE, NOT_STARTED_TITLE, NotStartedChips } from "../components/corners/NotStartedHere";
 import { DURATION_LIMITS } from "../data/curatedCorners";
 import { useContent } from "../context/ContentContext";
 import { useAuth } from "../context/AuthContext";
-import { MomentDetail } from "../components/MomentDetail";
+import { MomentDetail } from "../components/moment/MomentDetail";
 import { Button } from "../components/ui/button";
 import { EmptyState } from "../components/StateViews";
 import { HorizontalRow } from "../components/HorizontalRow";
@@ -64,6 +65,7 @@ export function CategoryPage() {
     () => [...homeCornersIn(slug)].sort((a, b) => Number(!!b.curated) - Number(!!a.curated) || a.name.localeCompare(b.name)),
     [slug],
   );
+  const notStarted = useMemo(() => notStartedIn(slug), [slug]);
   const shown = useMemo(() => corners.filter((c) => matches(c, picker)), [corners, picker.duration, picker.setting]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -186,6 +188,17 @@ export function CategoryPage() {
             </ul>
           )}
         </section>
+
+        {/* Catalog Corners with no guide or photo yet. A time or place choice can't apply to them, so a choice hides this. */}
+        {notStarted.length > 0 && !picked && (
+          <section className={SECTION_GAP} aria-labelledby="not-started-title">
+            <h2 id="not-started-title" className="text-title">
+              {NOT_STARTED_TITLE}
+            </h2>
+            <p className="mb-4 mt-1 text-small text-muted-foreground">{NOT_STARTED_SUBLINE}</p>
+            <NotStartedChips corners={notStarted} label={NOT_STARTED_TITLE} />
+          </section>
+        )}
 
         {lead && (
           <section className={SECTION_GAP} aria-labelledby="moments-title">

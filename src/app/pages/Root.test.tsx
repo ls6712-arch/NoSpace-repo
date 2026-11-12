@@ -1,19 +1,24 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router";
+import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const auth = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
 vi.mock("../context/AuthContext", () => ({ useAuth: () => auth.value }));
+vi.mock("../lib/useSlowNavigation", () => ({ useSlowNavigation: () => false }));
+const prefetch = vi.hoisted(() => vi.fn(() => () => {}));
+vi.mock("../lib/prefetchTabs", () => ({ prefetchMainTabs: prefetch }));
 vi.mock("../config", () => ({ sooshOnboardingEnabled: true }));
 vi.mock("../components/Header", () => ({ Header: ({ hideWithRail }: { hideWithRail?: boolean }) => <header data-testid="header" data-hide-with-rail={String(!!hideWithRail)} /> }));
 vi.mock("../components/nav/SideRail", () => ({ SideRail: () => <nav data-testid="rail" /> }));
 vi.mock("../components/nav/SkipLink", () => ({ SkipLink: () => <a data-testid="skip" href="#main-content" /> }));
 vi.mock("../components/CartDrawer", () => ({ CartDrawer: () => null }));
+vi.mock("../components/WorldBackdrop", () => ({ WorldBackdrop: () => null }));
 vi.mock("../components/BadgeUnlockToast", () => ({ BadgeUnlockToast: () => null }));
 vi.mock("../components/AccountPrompts", () => ({ AccountPrompts: () => null }));
 vi.mock("../components/BottomTabBar", () => ({ BottomTabBar: ({ railEligible }: { railEligible?: boolean }) => <nav data-testid="tabbar" data-rail-eligible={String(!!railEligible)} /> }));
 vi.mock("../components/PreviewBanner", () => ({ PreviewBanner: () => null }));
+vi.mock("../components/stubby/SignUpReturnEffect", () => ({ SignUpReturnEffect: () => null }));
 vi.mock("../components/NetworkBanner", () => ({ NetworkBanner: () => null }));
 vi.mock("../components/AccountStatusBanner", () => ({ AccountStatusBanner: () => null }));
 vi.mock("../lib/truncation", () => ({ useTruncationReveal: () => undefined }));
@@ -25,24 +30,46 @@ import { Root } from "./Root";
 const signedIn = (profile: Record<string, unknown> | null) => {
   auth.value = { user: { id: "u1" }, profile, loading: false, isConfigured: true };
 };
+const tabRoot = { kind: "tab" } as const;
 const at = (path: string) =>
   render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route element={<Root />}>
-          <Route path="/" element={<p>Home</p>} />
-          <Route path="/discover" element={<p>Discover</p>} />
-          <Route path="/onboarding" element={<p>Onboarding</p>} />
-          <Route path="/welcome" element={<p>Welcome</p>} />
-          <Route path="/corners" element={<p>Corners</p>} />
-        </Route>
-      </Routes>
-    </MemoryRouter>,
+    <RouterProvider
+      router={createMemoryRouter(
+        [
+          {
+            element: <Root />,
+            children: [
+              { path: "/", element: <p>Home</p>, handle: tabRoot },
+              { path: "/discover", element: <p>Discover</p>, handle: { kind: "tab", tab: "discover" } },
+              { path: "/onboarding", element: <p>Onboarding</p>, handle: { kind: "flow", parent: () => "/my-space" } },
+              { path: "/welcome", element: <p>Welcome</p>, handle: tabRoot },
+              { path: "/corners", element: <p>Corners</p>, handle: { kind: "page", tab: "discover", parent: () => "/discover" } },
+              { path: "/search", element: <p>Search</p>, handle: { kind: "page", parent: () => "/discover" } },
+            ],
+          },
+        ],
+        { initialEntries: [path] },
+      )}
+    />,
   );
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  prefetch.mockClear();
+});
 
 describe("Root and onboarding", () => {
+  it("fetches the main tab pages for a signed-in person, not for a visitor", () => {
+    signedIn({ onboarding_completed: true, access: "active" });
+    at("/");
+    expect(prefetch).toHaveBeenCalledTimes(1);
+    cleanup();
+    prefetch.mockClear();
+    auth.value = { user: null, profile: null, loading: false, isConfigured: true };
+    at("/");
+    expect(prefetch).not.toHaveBeenCalled();
+  });
+
   it("never sends a finished person back into onboarding", () => {
     signedIn({ onboarding_completed: true, access: "active" });
     at("/");
@@ -106,6 +133,32 @@ describe("the left rail", () => {
     at("/onboarding");
     expect(screen.queryByTestId("rail")).toBeNull();
     expect(screen.queryByTestId("header")).toBeNull();
+  });
+});
+
+describe("the back chevron", () => {
+  it("is drawn by the shell on a pushed page, with no text", () => {
+    signedIn({ onboarding_completed: true, access: "active" });
+    at("/search");
+    const back = screen.getByRole("button", { name: "Back" });
+    expect(back.textContent).toBe("");
+    expect(back.querySelector("svg")).not.toBeNull();
+    expect(back.className).toContain("size-11");
+  });
+
+  it("is not drawn on a tab root or a flow", () => {
+    signedIn({ onboarding_completed: true, access: "active" });
+    for (const path of ["/discover", "/onboarding"]) {
+      at(path);
+      expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+      cleanup();
+    }
+  });
+
+  it("is drawn for a signed-out visitor on a Corners page too", () => {
+    auth.value = { user: null, profile: null, loading: false, isConfigured: true };
+    at("/corners");
+    expect(screen.getByRole("button", { name: "Back" })).toBeTruthy();
   });
 });
 

@@ -1,0 +1,52 @@
+{
+  "scope": "Same fixed clock, fixture members, Moments and services on main d06c795 and carousel branch 019c650. No live member data. Remote photos/fonts blocked equally.",
+  "views": [
+    {
+      "name": "desktop",
+      "checks": [
+        {
+          "section": "discover-ideas",
+          "contentAndSizeIdentical": true,
+          "changedPixels": 0,
+          "totalPixels": 459680
+        },
+        {
+          "section": "discover-people",
+          "contentAndSizeIdentical": true,
+          "changedPixels": 7634,
+          "totalPixels": 147680
+        },
+        {
+          "section": "discover-moments",
+          "contentAndSizeIdentical": true,
+          "changedPixels": 38332,
+          "totalPixels": 4114240
+        }
+      ]
+    },
+    {
+      "name": "mobile",
+      "checks": [
+        {
+          "section": "discover-ideas",
+          "contentAndSizeIdentical": true,
+          "changedPixels": 0,
+          "totalPixels": 158236
+        },
+        {
+          "section": "discover-people",
+          "contentAndSizeIdentical": true,
+          "changedPixels": 5681,
+          "totalPixels": 50836
+        },
+        {
+          "section": "discover-moments",
+          "contentAndSizeIdentical": true,
+          "changedPixels": 33901,
+          "totalPixels": 736764
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

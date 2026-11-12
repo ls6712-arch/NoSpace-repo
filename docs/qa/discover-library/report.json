@@ -1,0 +1,12 @@
+{
+  "scope": "Production application and actual CSP with mocked Supabase. External navigation is intercepted locally. No live source availability, account, OAuth, production write or deployment checks.",
+  "checks": [
+    "mobile: public previews, unchanged Corner links, direct external visit, responsive layout, collection search/filter/clear, Escape/focus/scroll restoration, Browser Back, editable template and no auto-create",
+    "desktop: public previews, unchanged Corner links, direct external visit, responsive layout, collection search/filter/clear, Escape/focus/scroll restoration, Browser Back, editable template and no auto-create",
+    "small-phone: public previews, unchanged Corner links, direct external visit, responsive layout, collection search/filter/clear, Escape/focus/scroll restoration, Browser Back, editable template and no auto-create",
+    "tablet: public previews, unchanged Corner links, direct external visit, responsive layout, collection search/filter/clear, Escape/focus/scroll restoration, Browser Back, editable template and no auto-create",
+    "dark: public previews, unchanged Corner links, direct external visit, responsive layout, collection search/filter/clear, Escape/focus/scroll restoration, Browser Back, editable template and no auto-create",
+    "Guest shared-link filtering, safe close on Discover and selected Pursuit signup handoff"
+  ],
+  "errors": []
+}

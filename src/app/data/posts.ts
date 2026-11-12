@@ -61,6 +61,10 @@ export interface Post {
    * Moment — see supabase/migrations/20260924200000_post_reaction_counts.sql. */
   loveCount?: number;
   inCount?: number;
+  /** How many people saved this Moment. Only ever set on your own Moments: the
+   * database gives the number to the Moment's owner and to nobody else, and
+   * never says who saved. */
+  saveCount?: number;
   createdAt: number;
   visibility: Visibility;
   /** Links this post to a sellable listing in products.ts, if the creator is selling something. */

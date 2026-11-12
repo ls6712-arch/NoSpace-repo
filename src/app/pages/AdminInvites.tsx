@@ -16,6 +16,7 @@ import { Loadable } from "../components/ui/skeleton";
 import { CardListSkeleton } from "../components/Skeletons";
 import { ERROR_LINE } from "../lib/stateCopy";
 import { EmptyState, InlineError } from "../components/StateViews";
+import { NotFound } from "./NotFound";
 
 /**
  * Step 2 (invite-only sign-up) — admin-only "Create invite" + the list of
@@ -133,21 +134,8 @@ export function AdminInvites() {
     }
   }, [isAdmin]);
 
-  if (!user || !isAdmin) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4">
-        <div className="text-center">
-          <h2 className="mb-3 text-title" style={{ fontFamily: "var(--font-serif)" }}>
-            Nothing here for you
-          </h2>
-          <p className="mb-6 max-w-sm text-small text-muted-foreground">This screen is for whoever sends invites.</p>
-          <Link to="/discover">
-            <Button variant="outline">Back to Discover</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Anyone who isn't an admin sees the ordinary 404: the page doesn't say it exists.
+  if (!user || !isAdmin) return <NotFound />;
 
   const create = () =>
     runCreate(async () => {

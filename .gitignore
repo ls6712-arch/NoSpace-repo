@@ -12,3 +12,9 @@ seed-photos/
 /.claude/skills/
 /skills-lock.json
 docs/qa/round-2/.dist
+
+# Guest Stubby end-to-end run (scripts/e2e/guest-stubby.ts)
+dist-e2e
+e2e-guest-stubby-failure.png
+landing-e2e-out/
+landing-e2e-human-out/

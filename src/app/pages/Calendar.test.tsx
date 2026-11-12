@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+// These tests cover Ask Stubby itself, so they run with it on (it is off on the live site, config.ts).
+vi.mock("../config", async (orig) => ({ ...(await orig<typeof import("../config")>()), stubbyAskEnabled: true }));
 import { nyTimeToMs, windowsLeft } from "../lib/homeWeek";
 import type { WeekData } from "../lib/useWeekData";
 import type { WeekPlanDetail } from "../lib/weekView";
@@ -15,7 +17,9 @@ vi.mock("../lib/useCalendarData", () => ({ useCalendarData: () => extra.value })
 const bring = vi.hoisted(() => vi.fn(async () => ({ ok: true })));
 vi.mock("../lib/weekActions", async (orig) => ({ ...(await orig<typeof import("../lib/weekActions")>()), bringSomeone: bring }));
 
+vi.mock("../lib/calendarEntries",async(orig)=>({...await orig<typeof import('../lib/calendarEntries')>(),fetchEntries:vi.fn(async()=>[])}));
 import { Calendar } from "./Calendar";
+import {fetchEntries} from "../lib/calendarEntries";
 import { CALENDAR_SIGNED_OUT, WEEK_VIEW } from "../lib/homeCopy";
 
 const ny = (m: number, d: number, h: number) => nyTimeToMs(2026, m, d, h);
@@ -61,13 +65,14 @@ beforeEach(() => {
   extra.value = { plans: [], stubs: [], failed: false };
   saveBudget.mockClear();
   bring.mockClear();
+  vi.mocked(fetchEntries).mockResolvedValue([]);
 });
 afterEach(cleanup);
-const show = (url = "/calendar?view=week") => render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);
+const show = async(url="/calendar?view=week") => {let result!:ReturnType<typeof render>;await act(async()=>{result=render(<MemoryRouter initialEntries={[url]}><Calendar /></MemoryRouter>);});return result;};
 
 describe("Calendar and Stubby", () => {
-  it("has one Stubby, on the stage above the toolbar, with Ask Stubby in the page and no old heading", () => {
-    show();
+  it("has one Stubby, on the stage above the toolbar, with Ask Stubby in the page and no old heading", async () => {
+    await show();
     const stubbies = document.querySelectorAll("[data-stubby-state]");
     expect(stubbies).toHaveLength(1);
     const stage = document.querySelector("[data-stubby-stage]")!;
@@ -81,53 +86,55 @@ describe("Calendar and Stubby", () => {
 });
 
 describe("Calendar, Week view on a phone", () => {
-  it("asks someone who is signed out to make an account", () => {
+  it("gives someone who is signed out Stubby as a guest, with no sign-up wall first", async () => {
     auth.value = { user: null, isConfigured: true };
-    show();
-    expect(screen.getByRole("heading", { name: CALENDAR_SIGNED_OUT.title })).toBeTruthy();
+    await show();
+    expect(screen.queryByRole("heading", { name: CALENDAR_SIGNED_OUT.title })).toBeNull();
+    expect(screen.getByRole("heading", { level: 1, name: "Ask Stubby" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Sign up" })).toBeTruthy();
   });
 
-  it("has the title and the range in New York, and no back arrow on a tab page", () => {
-    show();
+  it("has the title and the range in New York, and no back arrow on a tab page", async () => {
+    await show();
     expect(screen.getByRole("heading", { level: 1, name: "Oct 30 to Nov 5" })).toBeTruthy();
     expect(screen.getByText("Next 7 days · New York")).toBeTruthy();
     expect(screen.queryByRole("link", { name: "Back to Home" })).toBeNull();
   });
 
-  it("shows blocks the size of the real ones while loading", () => {
+  it("shows blocks the size of the real ones while loading", async () => {
     hook.value = data({ status: "loading" });
-    const { container } = show();
+    const { container } = await show();
     expect(container.querySelector("[aria-busy='true']")).toBeTruthy();
     expect(screen.queryByText("Monthly budget")).toBeNull();
   });
 
-  it("offers a retry when the plans cannot be read", () => {
+  it("offers a retry when the plans cannot be read", async () => {
     const reload = vi.fn();
     hook.value = data({ status: "error", reload });
-    show();
+    await show();
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     expect(reload).toHaveBeenCalled();
   });
 
-  it("draws the seven days as tiles with a label that says what is on", () => {
+  it("draws the seven days as tiles with a label that says what is on", async () => {
     hook.value = data({ plans: [plan()] });
-    show();
+    await show();
     expect(screen.getAllByRole("button", { pressed: false }).length + screen.getAllByRole("button", { pressed: true }).length).toBeGreaterThanOrEqual(7);
     expect(screen.getByRole("button", { name: "Saturday 31, 1 plan, free all day" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Monday 2, nothing on" })).toBeTruthy();
   });
 
-  it("highlights a tapped day", () => {
-    show();
+  it("highlights a tapped day", async () => {
+    await show();
     const tile = screen.getByRole("button", { name: /^Sunday 1/ });
     expect(tile.getAttribute("aria-pressed")).toBe("false");
     fireEvent.click(tile);
     expect(tile.getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("renders a plan as a ticket with its time, place and price", () => {
+  it("renders a plan as a ticket with its time, place and price", async () => {
     hook.value = data({ plans: [plan()] });
-    show();
+    await show();
     const day = document.getElementById("week-day-1")!;
     expect(within(day).getByRole("heading", { name: /Tomorrow/ })).toBeTruthy();
     expect(within(day).getByText("Bouldering night")).toBeTruthy();
@@ -136,7 +143,7 @@ describe("Calendar, Week view on a phone", () => {
     expect(within(day).getByText("PM")).toBeTruthy();
   });
 
-  it("names only the connections who are going, and offers Bring someone when it is just you", () => {
+  it("names only the connections who are going, and offers Bring someone when it is just you", async () => {
     hook.value = data({
       plans: [
         plan({ id: "event-1", title: "With a friend", going: { friends: [{ id: "f1", name: "Priya Shah" }], total: 2 } }),
@@ -144,7 +151,7 @@ describe("Calendar, Week view on a phone", () => {
         plan({ id: "event-3", title: "Alone", startsAt: ny(11, 1, 15), going: { friends: [], total: 1 } }),
       ],
     });
-    show();
+    await show();
     expect(screen.getByText("You and Priya")).toBeTruthy();
     const strangers = screen.getByText("With strangers").closest("li")!;
     expect(strangers.textContent).not.toMatch(/going/);
@@ -155,52 +162,52 @@ describe("Calendar, Week view on a phone", () => {
     expect((bring.mock.calls[0] as unknown[])[0]).toMatchObject({ id: "event-3" });
   });
 
-  it("names a Pursuit's session and links to the Pursuit", () => {
+  it("names a Pursuit's session and links to the Pursuit", async () => {
     hook.value = data({ plans: [plan({ kind: "session", title: "Pottery", pursuitId: "p9", session: { n: 4, total: 5 }, cornerKey: "crafts/pottery" })] });
-    show();
+    await show();
     expect(screen.getByText("Pursuit · session 4 of 5")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Pursuit session, 7 PM, Pottery" }));
     expect(screen.getByRole("link", { name: "Open Pursuit" }).getAttribute("href")).toBe("/pursuit/p9");
   });
 
-  it("names a pass instead of a price", () => {
+  it("names a pass instead of a price", async () => {
     hook.value = data({ plans: [plan()], passes: [{ id: "x", kind: "climbing", label: "Climbing", place: "" }] });
-    show();
+    await show();
     expect(screen.getByText("Brooklyn Boulders, Gowanus · your climbing pass")).toBeTruthy();
   });
 
-  it("shows free windows with no plan, each with a Find something link to Discover", () => {
-    show();
+  it("shows free windows with no plan, each with a Find something link to Discover", async () => {
+    await show();
     const links = screen.getAllByRole("link", { name: "Find something" });
     expect(links.map((l) => l.getAttribute("href"))).toEqual(["/discover?window=fri-eve", "/discover?window=sat-day"]);
     expect(screen.getByText("Free evening")).toBeTruthy();
     expect(screen.getByText("Free all day")).toBeTruthy();
   });
 
-  it("shrinks a day with nothing on to one row", () => {
-    show();
+  it("shrinks a day with nothing on to one row", async () => {
+    await show();
     expect(screen.getByText("Mon 2 · Nothing on")).toBeTruthy();
   });
 
-  it("hides the good plan hours line at 0 and shows the number when there is one", () => {
-    const { unmount } = show();
+  it("hides the good plan hours line at 0 and shows the number when there is one", async () => {
+    const { unmount } = await show();
     expect(screen.queryByText(/good plan hour/)).toBeNull();
     unmount();
     hook.value = data({ goodHours: 7 });
-    show();
+    await show();
     expect(screen.getByText("7")).toBeTruthy();
     expect(screen.getByText("good plan hours this week")).toBeTruthy();
   });
 
-  it("lists the free evenings you told us, with a Change link that returns here", () => {
-    show();
+  it("lists the free evenings you told us, with a Change link that returns here", async () => {
+    await show();
     expect(screen.getByText("Free evenings you told us")).toBeTruthy();
     expect(screen.getByRole("link", { name: "Change" }).getAttribute("href")).toBe("/week/free?from=week");
     expect(screen.getByRole("link", { name: "Change when you’re free" }).getAttribute("href")).toBe("/week/free?from=week");
   });
 
-  it("saves the budget when the slider is let go, snapped to an allowed amount", () => {
-    show();
+  it("saves the budget when the slider is let go, snapped to an allowed amount", async () => {
+    await show();
     const slider = screen.getByLabelText("Monthly budget") as HTMLInputElement;
     expect(slider.getAttribute("aria-valuetext")).toBe("$50");
     fireEvent.change(slider, { target: { value: "2" } });
@@ -212,22 +219,22 @@ describe("Calendar, Week view on a phone", () => {
     expect(screen.queryByRole("button", { name: /save/i })).toBeNull();
   });
 
-  it("shows Free only at 0 and the plain line", () => {
+  it("shows Free only at 0 and the plain line", async () => {
     hook.value = data({ budget: 0 });
-    show();
+    await show();
     expect(screen.getByLabelText("Monthly budget").getAttribute("aria-valuetext")).toBe("Free only");
     expect(screen.getByText("Only free plans and ones your pass covers")).toBeTruthy();
   });
 
-  it("adds up what is planned this month under the slider", () => {
+  it("adds up what is planned this month under the slider", async () => {
     hook.value = data({ budget: 100, plans: [plan({ price: "$25" }), plan({ id: "event-2", price: null, startsAt: ny(10, 31, 21), cornerKey: undefined })] });
-    show();
+    await show();
     expect(screen.getByText("$25 planned so far · $75 left this month, plus 1 plan without a price")).toBeTruthy();
   });
 
-  it("asks for free time instead of showing free slots when none is saved, and keeps the plans", () => {
+  it("asks for free time instead of showing free slots when none is saved, and keeps the plans", async () => {
     hook.value = data({ windows: [], plans: [plan()] });
-    show();
+    await show();
     const card = screen.getByRole("link", { name: "Tell us when you’re usually free" });
     expect(card.getAttribute("href")).toBe("/week/free?from=week");
     expect(screen.queryByText("Free evenings you told us")).toBeNull();
@@ -235,21 +242,21 @@ describe("Calendar, Week view on a phone", () => {
     expect(screen.getByText("Bouldering night")).toBeTruthy();
   });
 
-  it("with no plans and no free time, asks for free time and offers Find something", () => {
+  it("with no plans and no free time, asks for free time and offers Find something", async () => {
     hook.value = data({ windows: [], plans: [] });
-    show();
+    await show();
     expect(screen.getByRole("link", { name: "Tell us when you’re usually free" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Find something" }).getAttribute("href")).toBe("/discover");
   });
 
-  it("shows the hand-picked row with each pick's pill, and links out when there is a link", () => {
+  it("shows the hand-picked row with each pick's pill, and links out when there is a link", async () => {
     hook.value = data({
       picks: [
         { id: 1, title: "Halloween parade", place: "Sixth Avenue", startsAt: ny(10, 31, 19), endsAt: null, price: "free", url: "https://example.com/parade", cornerKey: null, color: "orange", published: true },
         { id: 2, title: "Marathon", place: null, startsAt: ny(11, 1, 9), endsAt: null, price: null, url: null, cornerKey: null, color: "lime", published: true },
       ],
     });
-    show();
+    await show();
     expect(screen.getByRole("heading", { name: "This week in New York" })).toBeTruthy();
     expect(screen.getByText("Picked by Soosh")).toBeTruthy();
     expect(screen.getByText("Sat 31 · 7 PM · free")).toBeTruthy();
@@ -260,14 +267,14 @@ describe("Calendar, Week view on a phone", () => {
     expect(screen.getByText("Marathon").closest("a")).toBeNull();
   });
 
-  it("hides the whole hand-picked row when there are no picks", () => {
-    show();
+  it("hides the whole hand-picked row when there are no picks", async () => {
+    await show();
     expect(screen.queryByText("This week in New York")).toBeNull();
     expect(screen.queryByText("Picked by Soosh")).toBeNull();
   });
 
-  it("has the Sunday night card", () => {
-    show();
+  it("has the Sunday night card", async () => {
+    await show();
     expect(screen.getByText("Sunday night, this week flips")).toBeTruthy();
     expect(screen.getByText(WEEK_VIEW.flipBody)).toBeTruthy();
   });
@@ -289,43 +296,43 @@ const Where = () => {
   const l = useLocation();
   return <output data-testid="where">{l.pathname + l.search}</output>;
 };
-const at = (url: string) => render(<Router initialEntries={[url]}><Calendar /><Where /></Router>);
+const at = async(url:string) => {let result!:ReturnType<typeof render>;await act(async()=>{result=render(<Router initialEntries={[url]}><Calendar /><Where /></Router>);});return result;};
 const where = () => screen.getByTestId("where").textContent;
 
-describe("Calendar, the four views", () => {
+describe("Calendar, the five views", () => {
   beforeEach(() => {
     window.localStorage.clear();
     extra.value = { plans: [], stubs: [stub()], failed: false };
   });
 
-  it("opens on Month with the month's title and its Stub and plan counts", () => {
+  it("opens on Month with the month's title and its Stub and plan counts", async () => {
     hook.value = data({ plans: [plan()] });
-    at("/calendar");
+    await at("/calendar");
     expect(screen.getByRole("heading", { level: 1, name: "October 2026" })).toBeTruthy();
     expect(screen.getByText("1 Stub · 1 plan to go · New York")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Month", pressed: true })).toBeTruthy();
   });
 
-  it("reads the view and the date from the URL", () => {
-    at("/calendar?view=day&date=2026-11-03");
+  it("reads the view and the date from the URL", async () => {
+    await at("/calendar?view=day&date=2026-11-03");
     expect(screen.getByRole("heading", { level: 1, name: "Tue Nov 3" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Day", pressed: true })).toBeTruthy();
   });
 
-  it("falls back to Month and today for nonsense in the URL", () => {
-    at("/calendar?view=year&date=not-a-date");
+  it("falls back to Month and today for nonsense in the URL", async () => {
+    await at("/calendar?view=decade&date=not-a-date");
     expect(screen.getByRole("heading", { level: 1, name: "October 2026" })).toBeTruthy();
   });
 
-  it("switches views and writes the choice to the URL, so Back works", () => {
-    at("/calendar");
+  it("switches views and writes the choice to the URL, so Back works", async () => {
+    await at("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "List" }));
     expect(where()).toBe("/calendar?view=list");
     expect(screen.getByRole("heading", { level: 1, name: "Oct 30 to Nov 28" })).toBeTruthy();
   });
 
-  it("names the arrows for the period and pages by it", () => {
-    at("/calendar");
+  it("names the arrows for the period and pages by it", async () => {
+    await at("/calendar");
     fireEvent.click(screen.getByRole("button", { name: "Next month" }));
     expect(where()).toBe("/calendar?view=month&date=2026-11-01");
     expect(screen.getByRole("heading", { level: 1, name: "November 2026" })).toBeTruthy();
@@ -334,21 +341,22 @@ describe("Calendar, the four views", () => {
     expect(screen.getByRole("heading", { level: 1, name: "October 2026" })).toBeTruthy();
   });
 
-  it("pages Week by 7 days and Day by 1", () => {
-    at("/calendar?view=week");
+  it("pages Week by 7 days and Day by 1", async () => {
+    await at("/calendar?view=week");
     fireEvent.click(screen.getByRole("button", { name: "Next week" }));
     expect(screen.getByRole("heading", { level: 1, name: "Nov 6 to Nov 12" })).toBeTruthy();
     expect(screen.getByText("7 days · New York")).toBeTruthy();
   });
 
-  it("stops paging back at the month the person joined and 3 months ahead", () => {
+  it("pages in whole years: back to Jan 1 of the year the person joined, ahead to the end of next year", async () => {
     auth.value = { user: { id: "u1", created_at: new Date(ny(9, 14, 9)).toISOString() }, profile: { display_name: "Alex" }, isConfigured: true };
-    at("/calendar");
-    fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
-    expect(screen.getByRole("heading", { level: 1, name: "September 2026" })).toBeTruthy();
+    await at("/calendar");
+    for (let i = 0; i < 9; i++) fireEvent.click(screen.getByRole("button", { name: "Previous month" }));
+    expect(screen.getByRole("heading", { level: 1, name: "January 2026" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Previous month" }) as HTMLButtonElement).disabled).toBe(true);
-    for (let i = 0; i < 4; i++) fireEvent.click(screen.getByRole("button", { name: "Next month" }));
-    expect(screen.getByRole("heading", { level: 1, name: "January 2027" })).toBeTruthy();
+    cleanup();
+    await at("/calendar?date=2027-12-10");
+    expect(screen.getByRole("heading", { level: 1, name: "December 2027" })).toBeTruthy();
     expect((screen.getByRole("button", { name: "Next month" }) as HTMLButtonElement).disabled).toBe(true);
   });
 
@@ -356,55 +364,55 @@ describe("Calendar, the four views", () => {
     beforeEach(() => setWide(true));
     afterEach(() => setWide(false));
 
-    it("draws Month as Sunday first cells with chips and the coral Make a plan in the header", () => {
+    it("draws Month as Sunday first cells with chips and the coral Make a plan in the header", async () => {
       hook.value = data({ plans: [plan()] });
-      at("/calendar");
+      await at("/calendar");
       expect(screen.getByRole("button", { name: "Make a plan" })).toBeTruthy();
       expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
       expect(screen.getByRole("button", { name: "Stub, Pottery #2" })).toBeTruthy();
       expect(screen.queryByRole("button", { name: "Show" })).toBeNull();
     });
 
-    it("shows up to 3 chips in a cell and then how many more", () => {
+    it("shows up to 3 chips in a cell and then how many more", async () => {
       hook.value = data({
         windows: [],
         plans: [1, 2, 3, 4].map((n) => plan({ id: `event-${n}`, title: `Thing ${n}`, startsAt: ny(10, 31, 8 + n), endsAt: ny(10, 31, 9 + n) })),
       });
-      at("/calendar");
+      await at("/calendar");
       expect(screen.getAllByRole("button", { name: /^Plan, / })).toHaveLength(2);
       const more = screen.getByRole("button", { name: "2 more" });
       fireEvent.click(more);
       expect(where()).toBe("/calendar?view=day&date=2026-10-31");
     });
 
-    it("draws Week as a time grid with a block for the plan and free time, with no Find something link in the grid", () => {
+    it("draws Week as a time grid with a block for the plan and free time, with no Find something link in the grid", async () => {
       hook.value = data({ plans: [plan()] });
-      at("/calendar?view=week");
+      await at("/calendar?view=week");
       expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
       expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
       expect(screen.queryAllByRole("link", { name: "Find something" })).toHaveLength(0);
       expect(screen.getByText("7 PM")).toBeTruthy();
     });
 
-    it("keeps the glance card and city picks on the week that starts today, and not on a later week", () => {
+    it("keeps the glance card and city picks on the week that starts today, and not on a later week", async () => {
       hook.value = data({ goodHours: 5 });
-      const { unmount } = at("/calendar?view=week");
+      const { unmount } = await at("/calendar?view=week");
       expect(screen.getByText("good plan hours this week")).toBeTruthy();
       unmount();
-      at("/calendar?view=week&date=2026-11-06");
+      await at("/calendar?view=week&date=2026-11-06");
       expect(screen.queryByText("good plan hours this week")).toBeNull();
       expect(screen.queryByText("Sunday night, this week flips")).toBeNull();
     });
 
-    it("draws Day as a 7 day strip and one column", () => {
+    it("draws Day as a 7 day strip and one column", async () => {
       hook.value = data({ plans: [plan()] });
-      at("/calendar?view=day&date=2026-10-31");
+      await at("/calendar?view=day&date=2026-10-31");
       expect(screen.getAllByRole("button", { name: /^(Today|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) \d/ })).toHaveLength(7);
       expect(screen.getByRole("button", { name: "Plan, 7 PM, Bouldering night" })).toBeTruthy();
     });
 
-    it("marks Show checkboxes and remembers them per view", () => {
-      at("/calendar");
+    it("marks Show checkboxes and remembers them per view", async () => {
+      await at("/calendar");
       const stubs = screen.getByRole("checkbox", { name: /Stubs you collected/ }) as HTMLInputElement;
       expect(stubs.checked).toBe(true);
       fireEvent.click(stubs);
@@ -414,13 +422,13 @@ describe("Calendar, the four views", () => {
       expect((screen.getByRole("checkbox", { name: /Stubs you collected/ }) as HTMLInputElement).checked).toBe(true);
     });
 
-    it("only lists the kinds that exist today", () => {
-      at("/calendar");
+    it("only lists the kinds that exist today", async () => {
+      await at("/calendar");
       expect(screen.getAllByRole("checkbox").map((c) => c.closest("label")?.textContent)).toEqual(["Plans", "Pursuit sessions", "Stubby’s picksIdeas for your free time", "Free time", "Stubs you collected", "Your blocks"]);
     });
 
-    it("hides free time when it is turned off", () => {
-      at("/calendar?view=week");
+    it("hides free time when it is turned off", async () => {
+      await at("/calendar?view=week");
       expect(screen.getAllByRole("button", { name: /^Free / }).length).toBeGreaterThan(0);
       fireEvent.click(screen.getByRole("checkbox", { name: /Free time/ }));
       expect(screen.queryAllByRole("button", { name: /^Free / })).toHaveLength(0);
@@ -428,9 +436,9 @@ describe("Calendar, the four views", () => {
   });
 
   describe("on a phone", () => {
-    it("fills a Stub day, dots a plan day and lists a tapped day under the grid", () => {
+    it("fills a Stub day, dots a plan day and lists a tapped day under the grid", async () => {
       hook.value = data({ plans: [plan()] });
-      at("/calendar");
+      await at("/calendar");
       const stubDay = screen.getByRole("button", { name: /^Saturday Oct 3, 1 Stub/ });
       expect(stubDay.className).toContain("bg-[var(--cat)]");
       fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 31, 1 plan/ }));
@@ -439,46 +447,46 @@ describe("Calendar, the four views", () => {
       expect(within(list).getByRole("button", { name: "Make a plan for tomorrow" })).toBeTruthy();
     });
 
-    it("lists a day's Stubs when it is tapped", () => {
-      at("/calendar");
+    it("lists a day's Stubs when it is tapped", async () => {
+      await at("/calendar");
       fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 3,/ }));
       const list = document.querySelector("[aria-live='polite']:not([data-stubby-line])") as HTMLElement;
       expect(within(list).getByText("Pottery #2")).toBeTruthy();
     });
 
-    it("opens a Show sheet instead of a side panel, and has Make a plan in the header", () => {
-      at("/calendar");
+    it("opens a Show sheet instead of a side panel, and has Make a plan in the header", async () => {
+      await at("/calendar");
       expect(screen.getByRole("button", { name: "Make a plan" })).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: "Show" }));
       expect(screen.getByRole("checkbox", { name: /Plans/ })).toBeTruthy();
     });
 
-    it("lists the next 30 days, leaving out days with nothing", () => {
+    it("lists the next 30 days, leaving out days with nothing", async () => {
       hook.value = data({ plans: [plan()], windows: [] });
-      at("/calendar?view=list");
+      await at("/calendar?view=list");
       // Day headings only. Ask Stubby is on the stage above, with no heading of its own.
       const headings = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
       expect(headings).toEqual(["TomorrowOct 31"]);
     });
 
-    it("says what is empty and offers one action when there is nothing in the list", () => {
+    it("says what is empty and offers one action when there is nothing in the list", async () => {
       hook.value = data({ plans: [], windows: [] });
       extra.value = { plans: [], stubs: [], failed: false };
-      at("/calendar?view=list");
+      await at("/calendar?view=list");
       expect(screen.getByText("Nothing planned in the next 30 days.")).toBeTruthy();
       expect(screen.getByRole("link", { name: "Find something" }).getAttribute("href")).toBe("/discover");
     });
 
-    it("plans from another range come in alongside the Week view's own", () => {
+    it("plans from another range come in alongside the Week view's own", async () => {
       hook.value = data({ plans: [plan()] });
       extra.value = { plans: [plan({ id: "event-77", title: "Next month thing", startsAt: ny(11, 20, 19), endsAt: ny(11, 20, 21) })], stubs: [], failed: false };
-      at("/calendar?view=list&date=2026-11-18");
+      await at("/calendar?view=list&date=2026-11-18");
       expect(screen.getByText("Next month thing")).toBeTruthy();
     });
 
-    it("offers a retry when the range's plans cannot be read", () => {
+    it("offers a retry when the range's plans cannot be read", async () => {
       extra.value = { plans: [], stubs: [], failed: true };
-      at("/calendar");
+      await at("/calendar");
       expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
     });
   });
@@ -493,11 +501,72 @@ describe("Calendar, a tablet", () => {
   });
   afterEach(() => setWide(false));
 
-  it("has Make a plan in the header and Show as a sheet, not a panel", () => {
-    at("/calendar");
+  it("has Make a plan in the header and Show as a sheet, not a panel", async () => {
+    await at("/calendar");
     expect(screen.getByRole("button", { name: "Make a plan" })).toBeTruthy();
     expect(screen.queryByRole("checkbox")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Show" }));
     expect(screen.getByRole("checkbox", { name: /Plans/ })).toBeTruthy();
+  });
+});
+
+describe("Calendar synchronization and safe availability", () => {
+  it("uses an authoritative empty range instead of resurrecting a cancelled cached plan", async () => {
+    hook.value = data({ plans: [plan()] });
+    extra.value = { plans: [], stubs: [], failed: false, loaded: true };
+    await show();
+    expect(screen.queryByText("Bouldering night")).toBeNull();
+  });
+  it("pauses free slots on a failed block read and actually retries the entries", async () => {
+    vi.mocked(fetchEntries).mockRejectedValueOnce(new Error("Failed"));
+    await show();
+    expect(screen.getByRole("alert")).toBeTruthy();
+    expect(screen.queryByText(/^Free (evening|daytime|all day)$/)).toBeNull();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    });
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByText("Free all day")).toBeTruthy();
+  });
+});
+
+describe("Calendar, the year", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    extra.value = { plans: [], stubs: [stub()], failed: false };
+  });
+  it("shows the twelve months on a phone, each one a button that opens it", async () => {
+    setWide(false);
+    await at("/calendar?view=year");
+    expect(screen.getByRole("heading", { level: 1, name: "2026" })).toBeTruthy();
+    const october = screen.getByRole("button", { name: "October, 1 Stub" });
+    expect(screen.getByRole("button", { name: "Year" }).getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(october);
+    expect(where()).toBe("/calendar?view=month&date=2026-10-01");
+  });
+  it("switches years from the Year switch, keeping the same month", async () => {
+    await at("/calendar?view=month&date=2026-03-14");
+    const years = screen.getByRole("group", { name: "Year" });
+    expect(within(years).getAllByRole("button").map((b) => b.textContent)).toEqual(["2026", "2027"]);
+    fireEvent.click(within(years).getByRole("button", { name: "2027" }));
+    expect(screen.getByRole("heading", { level: 1, name: "March 2027" })).toBeTruthy();
+    expect(within(screen.getByRole("group", { name: "Year" })).getByRole("button", { name: "2027" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("shows the Year switch in Month and Year only", async () => {
+    await at("/calendar?view=week");
+    expect(screen.queryByRole("group", { name: "Year" })).toBeNull();
+  });
+
+  it("opens every month of a year the person can page into, none faded", async () => {
+    setWide(false);
+    await at("/calendar?view=year");
+    for (const name of ["January", "March", "December"]) expect((screen.getByRole("button", { name }) as HTMLButtonElement).disabled).toBe(false);
+  });
+  it("opens a day from the year on a wide screen", async () => {
+    setWide(true);
+    await at("/calendar?view=year");
+    fireEvent.click(screen.getByRole("button", { name: /^Saturday Oct 3, 1 Stub$/ }));
+    expect(where()).toBe("/calendar?view=day&date=2026-10-03");
   });
 });

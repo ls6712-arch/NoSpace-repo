@@ -1,4 +1,6 @@
-import type { ComponentType } from "react";
+import { humanOnboardingEnabled } from "../../../lib/personalization";
+import { HumanQuestion, PreferenceReview } from "./HumanPreferences";
+import { createElement, type ComponentType } from "react";
 import type { OnboardingStep } from "../steps";
 import { BirthdayScreen } from "./BirthdayScreen";
 import { CodeScreen } from "./CodeScreen";
@@ -21,9 +23,10 @@ const SCREENS: Partial<Record<OnboardingStep, ComponentType>> = {
   name: NameStep,
   birthday: BirthdayScreen,
   where: WhereScreen,
-  picks: PicksScreen,
-  free: FreeScreen,
-  yours: YoursScreen,
+  picks: humanOnboardingEnabled ? () => createElement(HumanQuestion,{question:"interests"}) : PicksScreen,
+  free: humanOnboardingEnabled ? () => createElement(HumanQuestion,{question:"rhythm"}) : FreeScreen,
+  yours: humanOnboardingEnabled ? () => createElement(HumanQuestion,{question:"motivations"}) : YoursScreen,
+  review: PreferenceReview,
   card: CardScreen,
   plan: PlanScreen,
   invite: InviteScreen,

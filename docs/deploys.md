@@ -26,6 +26,17 @@ Urgent fix on live: PR straight into `main`, then merge `main` back into
   (sign-ups, Moments, deletes) is real data, and a database migration hits
   live the moment it's applied, whichever branch it came from. Apply
   migrations only when the code that needs them is about to reach `main`.
+  **So do preview links:** on Nov 5 and 6, 2026 production's API logs showed
+  requests from `www.onsoosh.com` and from eight `no-space-repo-*.vercel.app`
+  previews, and none from `trynospace.com`. A separate `nospace-staging`
+  Supabase project exists (`iajtjxdlxzvigesecrqc`) but nothing uses it, and it
+  is out of date (see `docs/staging-sync-plan.md`). This note changes once the
+  founder approves that plan.
+- **Migrations are never applied automatically.** Merging to `main` does not
+  run a migration. The founder says go, then it is applied from `main` and its
+  verification script run (CLAUDE.md). Check `supabase_migrations.schema_migrations`
+  against `supabase/migrations/` now and then: `20261117000000` was applied
+  by hand without a record.
 - **Sign-in on a new domain** needs that domain in Supabase → Authentication →
   URL Configuration → Redirect URLs, or people are sent back to the Site URL
   after Google sign-in or a password reset. Both domains are needed:

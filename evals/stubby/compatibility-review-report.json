@@ -1,0 +1,55 @@
+{
+  "version": "stubby-v3.3",
+  "reviewedCodeCommit": "275dcea4c9e551e16711eddd629753c85ffc7196",
+  "baseMain": "7e552af78169a41276282ce15312293e6faaf1db",
+  "previousReviewHead": "1d3966294c2d568ea7e5b2d7c55ab33793cbf1c7",
+  "fullSuite": {
+    "files": 218,
+    "passed": 2050,
+    "failed": 0,
+    "skipped": 0,
+    "success": true
+  },
+  "v3": {
+    "files": 9,
+    "passed": 186,
+    "goldenPassed": 46,
+    "goldenTotal": 46
+  },
+  "regressions": {
+    "addedCases": 8,
+    "failedBeforeFix": 6,
+    "fixed": [
+      "V3 preserves adultsLeftOut for existing account birthday UI on JSON and SSE responses",
+      "Saved Corner slugs and supported synonyms match ordinary candidate tags without substring false positives"
+    ]
+  },
+  "checks": {
+    "frontendTypes": "passed",
+    "backendTypes": "passed",
+    "denoEntrypoint": "passed with Deno 2.9.6 and offline Supabase npm type alias",
+    "migrationComparedWithFreshMain": "passed: 220 files",
+    "defaultBuild": "passed: 835.68 KB gzip; existing bundle warning",
+    "v3BrowserBuild": "passed: 838.33 KB gzip",
+    "browser": "guest signup continuity and authenticated memory edit/reload/delete passed with mocked Supabase/OAuth",
+    "sql": "migration repeatability, RLS, consent, deletion and rollback passed in local PostgreSQL WASM with synthetic Auth fixtures",
+    "lintAndWhitespace": "passed",
+    "trackedBuildOutput": "passed",
+    "keyPatternScan": "zero actual-key/private-key pattern matches in reviewed diff",
+    "localMainMerge": "main is an ancestor; local merge simulation has no conflict",
+    "environmentManifestsAndCI": "unchanged from main"
+  },
+  "runtime": {
+    "localNode": "24.22.1",
+    "ciNode": "22",
+    "hostedCIObserved": false
+  },
+  "scope": {
+    "legacyEngineDefault": true,
+    "onboardingRedesignImplemented": false,
+    "liveClaudeVerified": false,
+    "hostedSupabaseVerified": false,
+    "productionChanged": false
+  },
+  "mergeRecommendation": "draft pending live integration, product-scope review, hosted CI and owner approval"
+}

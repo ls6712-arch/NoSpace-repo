@@ -1,4 +1,4 @@
-import { withShareNow } from "../lib/momentHold";
+import { withHold } from "../lib/momentHold";
 import {
   createContext,
   useContext,
@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { Post, Visibility } from "../data/posts";
-import { currentSpaceSlug } from "../data/hobbies";
+import { currentSpaceSlug, defaultSpaceSlug } from "../data/hobbies";
 import { Product, products as seedProducts } from "../data/products";
 import { useRewards } from "./RewardsContext";
 import { useAuth } from "./AuthContext";
@@ -74,8 +74,9 @@ export interface ForSaleInput {
 }
 
 export interface NewPostInput {
-  /** Release this Moment to others now instead of after the 2 hour hold. */
-  shareNow?: boolean;
+  /** "Post in 2 hours": keep this Moment to its owner for 2 hours. Off means others see it right away. */
+  postLater?: boolean;
+  /** The Space, or "" when nothing was picked (saved with no Space). */
   hobbySlug: string;
   /** Optional specific hobby within the space, e.g. "pottery" in "workbench". */
   subHobby?: string;
@@ -104,6 +105,9 @@ export interface NewPostInput {
   audience?: "group" | "friends" | "everyone";
   /** The city shown on the Moment ("New York"). Null or missing saves no city. */
   city?: string | null;
+  /** True when the person took the city off this Moment. posts.city_hidden (migration 20261118000000) tells the
+   * database not to count the Moment toward a city either; sent only when true, and dropped if the column is missing. */
+  cityHidden?: boolean;
   forSale?: ForSaleInput;
   /** Set when this moment is a thing happening at a time. */
   startsAt?: number;
@@ -117,6 +121,8 @@ export interface NewPostInput {
   pursuitId?: string;
   /** The Moment this one was made after seeing (the Start page's "Make this too" or "Do this"). The database keeps it only when the poster could see that Moment. */
   inspiredBy?: number;
+  /** The Corner activity this Moment was logged from ("Try this" on its card). posts.activity_id, sent only when set and dropped if the column is missing. */
+  activityId?: string;
 }
 
 function loadFromStorage<T>(key: string): T[] {
@@ -181,7 +187,8 @@ export function rowToPost(row: any, creatorName: string): Post {
     id: row.id,
     // An older post stored one of the eight original Space slugs. Nothing was
     // migrated in the database; it is translated on the way in instead.
-    hobbySlug: currentSpaceSlug(row.hobby_slug),
+    // A Moment logged with nothing picked has no Space (20261110000000_log_punch_cards.sql): "".
+    hobbySlug: currentSpaceSlug(row.hobby_slug ?? ""),
     subHobby: row.sub_hobby ?? undefined,
     // Falls back to sub_hobby only for a row the add_post_corner migration's
     // backfill hasn't reached — every row it did reach already has corner
@@ -265,6 +272,8 @@ interface ContentContextType {
       // Step 3's "Add details" sheet — see the matching patch type on
       // updatePost's own implementation for why these moved here too.
       corner?: string;
+      /** Counts this Moment toward a Pursuit after posting (Posted's Counts toward). */
+      pursuitId?: string;
       locationName?: string;
       locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
     },
@@ -667,7 +676,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     let productId: number | undefined;
     // What this session counts toward for the craft badges: the specific
     // hobby when tagged, otherwise just the space it went into.
-    const hobbyKey = input.subHobby ?? `space:${input.hobbySlug}`;
+    // Nothing at all when the Moment has no Space: it counts, but toward no craft.
+    const hobbyKey = input.subHobby ?? (input.hobbySlug ? `space:${input.hobbySlug}` : undefined);
 
     if (input.forSale) {
       const newListing: Product = {
@@ -732,7 +742,8 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
       const row = {
           user_id: user.id,
-          hobby_slug: input.hobbySlug,
+          // "" means nothing was picked: saved with no Space, never a default one.
+          hobby_slug: input.hobbySlug || null,
           sub_hobby: input.subHobby ?? null,
           corner: input.corner ?? null,
           interest: input.interest?.trim() ? input.interest.trim() : null,
@@ -756,20 +767,37 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       };
       // posts.audience only exists once its migration has run; without it the
       // Moment is saved with its visibility alone, as before.
-      // "Share now" asks for a visible_at at the moment of posting (see lib/momentHold.ts).
-      const held = withShareNow(row, input.shareNow);
+      // Visible to others right away, or 2 hours later with "Post in 2 hours" (see lib/momentHold.ts).
+      const held = withHold(row, input.postLater);
       // posts.city is the same: sent only when set, and dropped when its column is missing.
       const withAudience = input.audience ? { ...held, audience: input.audience } : held;
-      const withCity = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
+      const withCityShown = input.city?.trim() ? { ...withAudience, city: input.city.trim() } : withAudience;
+      // posts.city_hidden: the person removed the city from this Moment, so no city key is kept for it.
+      const withCity = input.cityHidden ? { ...withCityShown, city_hidden: true } : withCityShown;
       // posts.inspired_by (migration 20261101134703) is sent only when set, and dropped when its column is missing.
       const withInspired = input.inspiredBy ? { ...withCity, inspired_by: input.inspiredBy } : withCity;
+      // posts.activity_id (migration 20261122000000_post_activity_id.sql) is the same: sent only when set, and dropped when its column is missing.
+      const withActivity = input.activityId ? { ...withInspired, activity_id: input.activityId } : withInspired;
       let { data, error } = await supabase
         .from("posts")
-        .insert(withInspired as typeof row)
+        .insert(withActivity as typeof row)
         .select(POST_COLUMNS)
         .single();
+      if (input.activityId && error && /activity_id/.test(error.message ?? "")) {
+        ({ data, error } = await supabase.from("posts").insert(withInspired as typeof row).select(POST_COLUMNS).single());
+      }
+      // Before 20261110000000_log_punch_cards.sql runs, posts.hobby_slug is still
+      // required (23502): a Moment with nothing picked falls back to the old default
+      // Space, as it always did, rather than failing to save.
+      if (!input.hobbySlug && error && error.code === "23502" && /hobby_slug/.test(error.message ?? "")) {
+        const fallback = { ...(withInspired as typeof row), hobby_slug: defaultSpaceSlug() };
+        ({ data, error } = await supabase.from("posts").insert(fallback).select(POST_COLUMNS).single());
+      }
       if (input.inspiredBy && error && /inspired_by/.test(error.message ?? "")) {
         ({ data, error } = await supabase.from("posts").insert(withCity as typeof row).select(POST_COLUMNS).single());
+      }
+      if (input.cityHidden && error && /city_hidden/.test(error.message ?? "")) {
+        ({ data, error } = await supabase.from("posts").insert(withCityShown as typeof row).select(POST_COLUMNS).single());
       }
       if (input.city?.trim() && error && isMissingCountColumn(error)) {
         ({ data, error } = await supabase.from("posts").insert(withAudience as typeof row).select(POST_COLUMNS).single());
@@ -865,6 +893,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       // Step 3's "Add details" sheet — Corner and location move to after
       // Save now, so both need to be editable here, not just at creation.
       corner?: string;
+      pursuitId?: string;
       locationName?: string;
       locationPrivacy?: "exact" | "neighborhood" | "city" | "approximate" | "hidden";
     },
@@ -887,6 +916,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
               hobbySlug: patch.hobbySlug ?? p.hobbySlug,
               subHobby: patch.subHobby === undefined ? p.subHobby : patch.subHobby || undefined,
               corner: patch.corner === undefined ? p.corner : patch.corner || undefined,
+              pursuitId: patch.pursuitId === undefined ? p.pursuitId : patch.pursuitId || undefined,
               locationName: patch.locationName === undefined ? p.locationName : patch.locationName || undefined,
               locationPrivacy: patch.locationPrivacy ?? p.locationPrivacy,
               media: newMediaUrl ?? p.media,
@@ -903,6 +933,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       if (patch.hobbySlug !== undefined) postsPatch.hobby_slug = patch.hobbySlug;
       if (patch.subHobby !== undefined) postsPatch.sub_hobby = patch.subHobby || null;
       if (patch.corner !== undefined) postsPatch.corner = patch.corner || null;
+      if (patch.pursuitId !== undefined) postsPatch.pursuit_id = patch.pursuitId || null;
       if (patch.locationName !== undefined) postsPatch.location_name = patch.locationName || null;
       if (patch.locationPrivacy !== undefined) postsPatch.location_privacy = patch.locationPrivacy;
       if (patch.mediaPath !== undefined) {

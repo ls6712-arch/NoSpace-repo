@@ -48,8 +48,8 @@ before assuming.
 - **React 18** + **TypeScript** + **Vite 6**
 - **Tailwind CSS v4**
 - **React Router v7**, using `createHashRouter` (not `BrowserRouter`) — the
-  app ships as a static bundle that sometimes gets opened straight from
-  `file://` or a plain static host, and hash routing works identically there
+  app ships as a static bundle, and hash routing needs no server
+  rewrite rules on a plain static host
   (see the comment at the top of `src/app/routes.ts`)
 - **Supabase** (Postgres + Auth + Storage) for everything that has to work
   across devices or between two different people's browsers

@@ -15,6 +15,10 @@ import { postCorner } from "../data/posts";
 import { bestMatch } from "../lib/tagMatching";
 import { guessSpace } from "../lib/pursuitProgress";
 import { isBlocklistedName } from "../lib/blocklist";
+import { matchCorners } from "../lib/cornerMatching";
+import { CATALOG_CORNERS, type Reach, type Season } from "../data/catalogCorners";
+import { aliasesForExisting, catalogCornerByName, metaForExisting } from "../lib/catalogLookup";
+import { cornerGuide } from "../data/cornerGuides";
 
 /**
  * Corners, created by tagging rather than suggest-and-approve (sql/corners.sql):
@@ -66,6 +70,17 @@ export interface Corner {
    * signed-out/local one (no real clock to read), so newestCorners() below
    * only ever surfaces Corners this field is honestly set for. */
   createdAt?: number;
+  /** From the generated hobby catalog (data/corners_catalog.csv), not tagged
+   * into existence. Catalog Corners stay off Discover until they have a public
+   * Moment (isDiscoverable), unless they have a cornerGuides entry, which makes
+   * them curated. They always show in search and tagging autocomplete. */
+  isCatalog: boolean;
+  /** Other names people use for it (search and typed-name resolution only). */
+  aliases: string[];
+  /** Catalog only: how reachable it is: anywhere, needs a place, seasonal or a trip away. */
+  reach?: Reach;
+  /** Catalog only: the time of year it suits. */
+  season?: Season;
 }
 
 /**
@@ -108,23 +123,7 @@ export function isBrowsableOnDiscover(c: Corner, threshold: number) {
   return !c.hidden && (c.momentCount30d >= threshold || c.hasActiveSpace);
 }
 
-/** Autocomplete matching shared by matchesFor (one Category) and
- * CornerTagField's global mode (every Category) — exact, substring
- * either direction, or a shared word prefix ("Pasta" -> "Pasta Making"). */
-export function matchCorners(corners: Corner[], query: string): Corner[] {
-  const q = query.trim().toLowerCase();
-  if (!q) return corners.slice(0, 6);
-  const qWords = q.split(/\s+/);
-  return corners
-    .filter((c) => {
-      const name = c.name.toLowerCase();
-      if (name === q) return true;
-      if (name.includes(q) || q.includes(name)) return true;
-      const nameWords = name.split(/\s+/);
-      return qWords.some((qw) => nameWords.some((nw) => nw.startsWith(qw) || qw.startsWith(nw)));
-    })
-    .slice(0, 6);
-}
+export { matchCorners };
 
 interface CornersContextType {
   /** Every Corner known for a Space: the curated baseline plus anything
@@ -220,8 +219,28 @@ const BASELINE: Corner[] = hobbies.flatMap((h) =>
     hasActiveSpace: false,
     hidden: false,
     isCurated: true,
+    isCatalog: false,
+    aliases: aliasesForExisting(h.slug, s.slug),
+    reach: metaForExisting(h.slug, s.slug)?.reach,
+    season: metaForExisting(h.slug, s.slug)?.season,
   })),
 );
+
+/** Catalog Corners that matched nothing existing. A guide in cornerGuides.ts makes one curated. */
+const CATALOG: Corner[] = CATALOG_CORNERS.map((c) => ({
+  spaceSlug: c.spaceSlug,
+  slug: c.slug,
+  name: c.name,
+  momentCount: 0,
+  momentCount30d: 0,
+  hasActiveSpace: false,
+  hidden: false,
+  isCurated: cornerGuide(c.spaceSlug, c.slug) != null,
+  isCatalog: true,
+  aliases: [...c.aliases],
+  reach: c.reach,
+  season: c.season,
+}));
 
 interface LocalCorner {
   spaceSlug: string;
@@ -315,6 +334,11 @@ export function CornersProvider({ children }: { children: ReactNode }) {
           hasActiveSpace: r.id != null && activeSpaceCornerIds.has(r.id),
           hidden: r.hidden ?? false,
           isCurated: false,
+          isCatalog: false,
+          // A Corner that already existed keeps its name and slug; the catalog only adds names and fit.
+          aliases: aliasesForExisting(r.space_slug, r.slug),
+          reach: metaForExisting(r.space_slug, r.slug)?.reach,
+          season: metaForExisting(r.space_slug, r.slug)?.season,
           description: r.description ?? undefined,
           createdAt: r.created_at ? new Date(r.created_at).getTime() : undefined,
         })),
@@ -379,6 +403,8 @@ export function CornersProvider({ children }: { children: ReactNode }) {
         hasActiveSpace: false,
         hidden: false,
         isCurated: false,
+        isCatalog: false,
+        aliases: [],
       });
     }
   }
@@ -386,7 +412,9 @@ export function CornersProvider({ children }: { children: ReactNode }) {
   const cornersFor = useCallback(
     (spaceSlug: string) => {
       const merged = new Map<string, Corner>();
+      // Order: curated baseline, then catalog, then table rows, then local.
       for (const c of BASELINE) if (c.spaceSlug === spaceSlug) merged.set(c.slug, c);
+      for (const c of CATALOG) if (c.spaceSlug === spaceSlug && !merged.has(c.slug)) merged.set(c.slug, c);
       // Locally-created corners go in before derived/remote activity so a
       // brand-new, zero-Moment Corner still shows up immediately, and any
       // momentCount that shows up later for the same slug still wins.
@@ -405,6 +433,8 @@ export function CornersProvider({ children }: { children: ReactNode }) {
                 hasActiveSpace: false,
                 hidden: false,
                 isCurated: false,
+                isCatalog: false,
+                aliases: [],
                 description: c.description,
               },
         );
@@ -427,7 +457,11 @@ export function CornersProvider({ children }: { children: ReactNode }) {
                 momentCount30d: c.momentCount30d,
                 hasActiveSpace: c.hasActiveSpace,
                 hidden: c.hidden,
+                aliases: [...new Set([...existing.aliases, ...c.aliases])],
+                reach: existing.reach ?? c.reach,
+                season: existing.season ?? c.season,
                 description: c.description ?? existing.description,
+                createdAt: c.createdAt ?? existing.createdAt,
               }
             : c,
         );
@@ -462,8 +496,12 @@ export function CornersProvider({ children }: { children: ReactNode }) {
   );
 
   const getOrCreateCorner: CornersContextType["getOrCreateCorner"] = async (spaceSlug, rawName, description) => {
-    const name = capitalizeCornerName(rawName.trim().slice(0, 60));
-    const slug = slugifyCorner(name);
+    // A typed name that is a catalog Corner's name or alias ("wheel throwing")
+    // is that Corner, so tagging never mints a near-duplicate of it. Only a
+    // Corner in this same Space counts; the catalog slug and name are used.
+    const catalogHit = catalogCornerByName(rawName, spaceSlug);
+    const name = catalogHit ? catalogHit.name : capitalizeCornerName(rawName.trim().slice(0, 60));
+    const slug = catalogHit ? catalogHit.slug : slugifyCorner(name);
     const trimmedDescription = description?.trim().slice(0, 140) || undefined;
 
     // Local-first, same as mirrorPursuit/profileLinks: the Corner is real
@@ -506,6 +544,10 @@ export function CornersProvider({ children }: { children: ReactNode }) {
 
     const exact = all.find((c) => c.name.toLowerCase() === qNorm);
     if (exact) return { spaceSlug: exact.spaceSlug, slug: exact.slug, name: exact.name };
+
+    // A catalog alias ("clay", "ceramics") is that Corner, never a new one.
+    const byAlias = all.find((c) => c.aliases.some((a) => a.toLowerCase() === qNorm));
+    if (byAlias) return { spaceSlug: byAlias.spaceSlug, slug: byAlias.slug, name: byAlias.name };
 
     const match = bestMatch(
       q,

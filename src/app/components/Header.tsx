@@ -13,6 +13,7 @@ import { formatBadgeCount } from "../lib/messageSync";
 import { APP_NAME } from "../config";
 import { isDismissKey } from "../lib/menuDismiss";
 import { PAGE_X } from "../lib/pageGrid";
+import { useCurrentTab, type TabKey } from "../lib/routeHandle";
 
 function initials(name: string) {
   return name
@@ -36,7 +37,7 @@ function MessagesLink() {
         <MessagesSquare className="size-5" />
         {badgeCount > 0 && (
           <span
-            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums"
+            className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand dark:text-[var(--accent-foreground)] tabular-nums"
             aria-hidden="true"
           >
             {formatBadgeCount(badgeCount)}
@@ -158,11 +159,11 @@ function AccountMenu() {
  */
 const PRIMARY_NAV = [
   { to: "/my-space", label: "Home", hint: "New Moments from the people and hobbies you’re part of",
-    match: (p: string) => p.startsWith("/my-space") },
+    tab: "my-space" as TabKey },
   { to: "/discover", label: "Discover", hint: "Spaces, people and Pursuits",
-    match: (p: string) => p.startsWith("/discover") || p.startsWith("/corners") || p.startsWith("/browse") || p.startsWith("/space") || p.startsWith("/people") },
+    tab: "discover" as TabKey },
   { to: "/create", label: "Log a Moment", hint: "Share a Moment or start a Pursuit.", accent: true,
-    match: (p: string) => p.startsWith("/create") || p.startsWith("/log") },
+    tab: "create" as TabKey },
 ];
 
 /**
@@ -174,6 +175,7 @@ const PRIMARY_NAV = [
 export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
   const { openCart, cartCount } = useCart();
   const { pathname } = useLocation();
+  const currentTab = useCurrentTab();
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   return (
@@ -203,7 +205,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
               are reached through Discover rather than crowding the bar. */}
           <nav className="hidden desk:flex items-center gap-8" aria-label="Primary">
             {PRIMARY_NAV.map((item) => {
-              const active = item.match(pathname);
+              const active = item.tab === currentTab;
               // Step 3: "Log a Moment" opens the same two-tap sheet the
               // phone bar's Create tab does, rather than the full /create
               // form — see BottomTabBar.tsx's own comment on why. The full
@@ -233,7 +235,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
                     item.accent
                       ? "flex items-center gap-1.5 rounded-control bg-accent px-3.5 py-1.5 text-small text-accent-foreground transition-[filter] hover:brightness-110"
                       : `relative py-1 text-small transition-colors ${
-                          active ? "text-accent" : "text-foreground/75 hover:text-foreground"
+                          active ? "text-accent-text" : "text-foreground/75 hover:text-foreground"
                         }`
                   }
                 >
@@ -271,7 +273,7 @@ export function Header({ hideWithRail = false }: { hideWithRail?: boolean }) {
           {cartCount > 0 && (
             <Button variant="ghost" size="icon" onClick={openCart} className="relative" aria-label={`Cart (${cartCount})`}>
               <ShoppingBag className="size-5" />
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand tabular-nums">
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full [background-color:var(--accent-text)] text-caption text-on-brand dark:text-[var(--accent-foreground)] tabular-nums">
                 {cartCount}
               </span>
             </Button>

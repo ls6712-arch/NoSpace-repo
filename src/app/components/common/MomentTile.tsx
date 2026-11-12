@@ -1,7 +1,8 @@
 import { motion } from "motion/react";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { GeneratedArt } from "../GeneratedArt";
-import { MomentMedia, hasRealMedia } from "../MomentCard";
+import { hasRealMedia } from "../moment/MomentMedia";
+import { withFirstFrame } from "../../lib/mediaUrl";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { hobbies, subHobbyLabel } from "../../data/hobbies";
 import { postCorner, type Post } from "../../data/posts";
@@ -109,9 +110,7 @@ export function MomentTile({
           fallback={<GeneratedArt hobbySlug={post.hobbySlug} seed={post.id} className="size-full" />}
         />
       ) : (
-        <div className="pointer-events-none absolute inset-0 [&>*]:!aspect-auto [&>*]:!h-full [&>*]:!rounded-none">
-          <MomentMedia post={post} />
-        </div>
+        <video src={withFirstFrame(src)} muted playsInline preload="metadata" tabIndex={-1} className="pointer-events-none absolute inset-0 size-full object-cover" />
       )}
       <div className="absolute inset-0 bg-[image:var(--scrim-card)]" aria-hidden="true" />
       <div className="absolute inset-x-3.5 bottom-3.5 flex flex-col gap-2">

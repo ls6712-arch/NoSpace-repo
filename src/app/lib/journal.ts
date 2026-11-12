@@ -79,6 +79,8 @@ export interface Goal {
 export type MeasureKind = "count" | "quantity" | "time" | "milestones" | "custom";
 
 export interface Measure {
+  /** Versioned workflow; absent on legacy Pursuits. */
+  workflow?: import("./pursuitWorkflow").Workflow;
   kind: MeasureKind;
   /** The target amount, e.g. 20000. For "milestones" it's the number of milestones. */
   target: number;
@@ -128,6 +130,9 @@ export interface ProgressEntry {
 }
 
 export interface Project {
+  targetMoments?: number | null;
+  archivedAt?: number;
+  workflowPersonal?: import("./pursuitWorkflow").PersonalGoal;
   id: string;
   title: string;
   /**
@@ -220,7 +225,9 @@ export const CHECK_IN_OPTIONS: { days: number; label: string }[] = [
  * disagree with finishedAt/pausedAt. */
 export type PursuitStatus = "active" | "resting" | "complete" | "let_go";
 
-export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt" | "letGoAt">): PursuitStatus {
+export function pursuitStatus(p: Pick<Project, "finishedAt" | "pausedAt" | "letGoAt" | "workflowPersonal">): PursuitStatus {
+  if (p.workflowPersonal?.status === "finished") return "complete";
+  if (p.workflowPersonal?.status === "paused") return "resting";
   if (p.finishedAt) return "complete";
   if (p.letGoAt) return "let_go";
   if (p.pausedAt) return "resting";
@@ -327,6 +334,27 @@ export function startProject(input: {
 }): Project {
   const project = newProject(input);
   commit({ ...state, projects: [project, ...state.projects] });
+  return project;
+}
+
+/**
+ * A Pursuit that is finished from its first write, made around one Moment: what Log a Moment does when someone
+ * answers "finished" on a Moment that counts toward no Pursuit (a Corner with a room). Its start, its link to
+ * the Moment and its finish land in one commit, so it is never active, not even for a render: nothing that
+ * lists open Pursuits (Home, the Pursuit picker, check-ins, suggestions) ever sees it. It has no goal, no
+ * measure and no check-in.
+ */
+export function startFinishedProject(
+  input: { title: string; hobbySlug?: string; subHobby?: string; shared?: boolean },
+  postId: number | string,
+  now = Date.now(),
+): Project {
+  const project: Project = { ...newProject(input), startedAt: now, finishedAt: now, checkInDays: 0 };
+  commit({
+    ...state,
+    projects: [project, ...state.projects],
+    entryProject: { ...state.entryProject, [String(postId)]: project.id },
+  });
   return project;
 }
 
@@ -847,4 +875,20 @@ export function setProjectMode(projectId: string, mode: PursuitMode): Project | 
 
 export function setProjectMeasure(projectId: string, measure: Measure): Project | undefined {
   return patchProject(projectId, () => ({ measure }));
+}
+
+/** Derived compatibility cache for existing Shelf cards. The workflow tables remain authoritative. */
+export function projectWorkflowProgress(projectId: string, entries: ProgressEntry[], personal?: import('./pursuitWorkflow').PersonalGoal) {
+  const project = state.projects.find(p => p.id === projectId);
+  if (!project?.measure?.workflow) return;
+  const progress = [...state.progress.filter(e => e.projectId !== projectId), ...entries];
+  const target = project.measure.workflow.tracking === 'checklist' ? project.measure.workflow.items.filter(i => !i.archived).length : personal ? personal.target ?? 0 : project.measure.workflow.target ?? 0;
+  const updated = { ...project, measure: { ...project.measure, target }, workflowPersonal: personal };
+  if (JSON.stringify(progress) === JSON.stringify(state.progress) && JSON.stringify(updated) === JSON.stringify(project)) return;
+  commit({ ...state, progress, projects: state.projects.map(p => p.id === projectId ? updated : p) });
+}
+
+/** Correct a legacy entry without replacing its identity or links. */
+export function updateLegacyProgress(entryId: string, amount: number, note: string) {
+  commit({...state,progress:state.progress.map(e=>e.id===entryId?{...e,amount,note}:e)});
 }

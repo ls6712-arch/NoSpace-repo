@@ -2,6 +2,7 @@ import { PressLink } from "../common/PressLink";
 import { ImageWithFallback } from "../ImageWithFallback";
 import { cornerPath } from "../../lib/cornerPath";
 import { cornerPhoto, cornerPhotoAlt } from "../../lib/cornerPhoto";
+import { cornerPicture, cornerPictureAlt } from "../../lib/cornerPicture";
 import { cornerStyle } from "../../lib/categoryStyle";
 import { cornerAbout } from "../../data/curatedCorners";
 
@@ -18,11 +19,14 @@ export function CornerCard({
   corner,
   subline,
   fluid = false,
+  still = false,
 }: {
   corner: { spaceSlug: string; slug: string; name: string };
   subline: string;
   /** Fill the width it is given (a grid cell) instead of the fixed width a row uses. */
   fluid?: boolean;
+  /** Show the still of the Corner's 3D world when it has one (cornerPicture). The full Corner list does; nothing else changes. */
+  still?: boolean;
 }) {
   const about = cornerAbout(corner.spaceSlug, corner.slug);
   return (
@@ -32,8 +36,8 @@ export function CornerCard({
         className="group relative block aspect-video overflow-hidden rounded-card bg-[var(--cat)] text-on-media shadow-card transition-shadow duration-base hover:z-10 hover:shadow-glow focus-visible:shadow-glow"
       >
         <ImageWithFallback
-          src={cornerPhoto(corner.spaceSlug, corner.slug, 600)}
-          alt={cornerPhotoAlt(corner.slug)}
+          src={still ? cornerPicture(corner.spaceSlug, corner.slug, 600, "wide") : cornerPhoto(corner.spaceSlug, corner.slug, 600)}
+          alt={still ? cornerPictureAlt(corner.spaceSlug, corner.slug, corner.name) : cornerPhotoAlt(corner.slug)}
           width={288}
           tint
           className="absolute inset-0 size-full"
@@ -42,12 +46,12 @@ export function CornerCard({
         {about && <span className="pointer-events-none absolute inset-0 bg-scrim-solid/25 opacity-0 transition-opacity duration-base group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:hidden" aria-hidden="true" />}
         <span className="absolute inset-x-0 bottom-0 flex flex-col gap-0.5 p-3">
           {about && (
-            <span className="line-clamp-2 max-h-0 overflow-hidden text-small text-on-media/90 opacity-0 transition-[max-height,opacity,margin] duration-base group-hover:mb-1 group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mb-1 group-focus-visible:max-h-12 group-focus-visible:opacity-100 [@media(hover:none)]:hidden">
+            <span className="line-clamp-2 max-h-0 overflow-hidden text-small text-on-media opacity-0 transition-[max-height,opacity,margin] duration-base group-hover:mb-1 group-hover:max-h-12 group-hover:opacity-100 group-focus-visible:mb-1 group-focus-visible:max-h-12 group-focus-visible:opacity-100 [@media(hover:none)]:hidden">
               {about}
             </span>
           )}
-          <span className="truncate text-lead font-semibold">{corner.name}</span>
-          {subline && <span className="truncate text-small text-on-media/90">{subline}</span>}
+          <span className="truncate text-lead font-semibold" title={corner.name}>{corner.name}</span>
+          {subline && <span className="truncate text-small text-on-media/90" title={subline}>{subline}</span>}
         </span>
       </PressLink>
     </li>

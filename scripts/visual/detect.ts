@@ -8,7 +8,9 @@
 // plus page-level horizontal scroll. Compare two builds with diffDetections.
 
 export interface Flag { kind: "clipped" | "offscreen"; sel: string; text: string; axis: "x" | "y" | ""; titled: boolean }
-export interface Detection { hscroll: number; flags: Flag[]; wraps: Record<string, { lines: number; fs: number }> }
+/** An element whose right edge is past the viewport (only collected when the page scrolls sideways). */
+export interface Wide { sel: string; text: string; right: number }
+export interface Detection { hscroll: number; flags: Flag[]; wraps: Record<string, { lines: number; fs: number }>; wide?: Wide[] }
 
 /** Runs inside the page (serialised by Playwright) — keep it self-contained. */
 export function detectInPage(): Detection {
@@ -23,6 +25,20 @@ export function detectInPage(): Detection {
   const inClip = (el: Element) => { for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) if (getComputedStyle(a).overflowX !== "visible") return true; return false; };
   const out: Detection = { hscroll: document.documentElement.scrollWidth - vw, flags: [], wraps: {} };
   const clipped = (v: string) => v === "hidden" || v === "clip";
+  // Name what pushes the page sideways: visible elements past the right edge that no scroller or clip contains.
+  // Only the outermost offenders are kept (an element whose parent already overflows is its parent's problem).
+  if (out.hscroll > 0) {
+    const wide: Wide[] = [];
+    for (const el of document.querySelectorAll("body *")) {
+      const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden" || cs.position === "fixed") continue;
+      const r = el.getBoundingClientRect(); if (r.width <= 1 || r.height <= 1 || r.right <= vw + 1 || inClip(el)) continue;
+      const p = el.parentElement;
+      if (p && p !== document.body && p.getBoundingClientRect().right > vw + 1 && !inClip(p)) continue;
+      wide.push({ sel: sel(el), text: txt(el), right: Math.round(r.right) });
+      if (wide.length >= 6) break;
+    }
+    out.wide = wide;
+  }
   for (const el of document.querySelectorAll("body *")) {
     const cs = getComputedStyle(el); if (cs.display === "none" || cs.visibility === "hidden") continue;
     const r = el.getBoundingClientRect(); if (r.width <= 1 || r.height <= 1) continue; // sr-only text is clipped on purpose

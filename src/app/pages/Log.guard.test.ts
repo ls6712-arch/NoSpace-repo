@@ -19,10 +19,11 @@ describe("Log does not write exact place or time for Moments", () => {
     expect(code(log)).not.toMatch(/\blocation_name\b|\bstarts_at\b|set_post_private|setPostPrivate|\bplace_name\b|\boccurred_at\b/);
   });
 
-  it("passes a start time only for an Activity, and one place field", () => {
+  it("passes a start time and a place only for an Activity", () => {
     expect(log.match(/startsAt: isActivity && startsAt \?/g)).toHaveLength(1);
     expect(log.match(/startsAt:/g)).toHaveLength(1);
-    expect(log.match(/locationName: locationName\.trim\(\) \? locationName\.trim\(\) : undefined/g)).toHaveLength(1);
+    expect(log.match(/locationName: isActivity && locationName\.trim\(\) \? locationName\.trim\(\) : undefined/g)).toHaveLength(1);
+    expect(log.match(/locationName:/g)).toHaveLength(1);
   });
 
   it("keeps the pointer to the ticket next to that line", () => {
@@ -35,13 +36,13 @@ describe("Log does not write exact place or time for Moments", () => {
   });
 });
 
-describe("Share now in Log", () => {
-  it("is a switch that starts off, with its helper text, and is passed to the save", () => {
-    expect(log).toMatch(/useState\(false\);\s*\n/);
-    expect(log).toMatch(/const \[shareNow, setShareNow\] = useState\(false\)/);
-    expect(log).toContain(">Share now</Label>");
-    expect(log).toContain("Shows this Moment to others right away.");
-    expect(log).toContain('shareNow: circle !== "private" && shareNow,');
+describe("Post in 2 hours in Log", () => {
+  it("is a switch that starts off (others see a Moment right away), with its helper text, and is passed to the save", () => {
+    expect(log).toMatch(/const \[postLater, setPostLater\] = useState\(false\)/);
+    expect(log).toContain(">Post in 2 hours</Label>");
+    expect(log).toContain("Still there? Turn this on so others see it after you’ve left.");
+    expect(log).toContain('postLater: circle !== "private" && postLater,');
+    expect(log).not.toMatch(/shareNow/);
   });
 });
 

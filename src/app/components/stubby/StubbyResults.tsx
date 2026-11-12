@@ -1,20 +1,30 @@
+import { humanOnboardingEnabled } from "../../lib/personalization";
+import type { FeedbackDetails } from "../../lib/stubbyAsk";
+import { RejectionDetails } from "./RejectionDetails";
 import { useId, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useReducedMotion } from "motion/react";
-import { Check, ChevronDown, ExternalLink, LoaderCircle, X } from "lucide-react";
+import { Check, ChevronDown, ExternalLink, LoaderCircle, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { Link } from "react-router";
 import { Button } from "../ui/button";
+import { ImageWithFallback } from "../ImageWithFallback";
 import { Chip } from "../ui/Chip";
 import { cn } from "../ui/utils";
 import { pickPill } from "../../lib/cityPicks";
 import { plural } from "../../lib/plural";
-import { ASK_COPY, SHEET, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
+import { ASK_COPY, CARE_COPY, EMPTY_COPY, SHEET, STAY_IN_COPY, UNDERSTOOD_COPY } from "../../lib/calendarCopy";
 import { cardCount, frontCard, selectionFull } from "../../lib/stubbyDeck";
 import { TRY_AGAIN } from "../../lib/stateCopy";
 import type { MyPick } from "../../lib/stubbyAsk";
+import type { StayInCard } from "../../lib/stubbyStayIn";
+import type { CareCard } from "../../lib/stubbyAsk";
+import { GUEST_COPY } from "../../lib/guestCopy";
 import type { AskState, StepRow } from "./AskStubby";
 
 /** A Soosh page (an idea's Corner start page or Pursuit) opens in the app; anything else opens the outside page. */
-const isSooshLink = (url: string) => url.startsWith("/");
+/** A Soosh page Stubby may link to (the database allows only these two kinds of path). */
+const isSooshLink = (url: string) => /^\/(start|pursuit)\/[A-Za-z0-9_/-]+$/.test(url);
+/** Anything else must be an https page; a pick with any other link shows no link at all. */
+const isWebLink = (url: string) => /^https:\/\/[^\s"'<>]+$/i.test(url);
 
 const stepText = (s: StepRow) =>
   s.kind === "search" ? ASK_COPY.lookingFor(s.query ?? "") : s.kind === "pages" ? `Checking ${plural(s.count ?? 0, "page")}` : ASK_COPY.picking;
@@ -30,6 +40,16 @@ export interface DeckActions {
   onMakePlans?: (picks: MyPick[]) => Promise<number[]>;
   /** The bring-a-friend nudge: makes the pick a plan and opens the half ticket. */
   onBring?: (pick: MyPick) => void;
+  /** When nothing fits, Try different words: back to the field, the ask selected. */
+  onTryDifferent?: () => void;
+}
+
+/** "2 were listing pages, 1 was after midnight": the reasons, as one short line. */
+export function reasonLine(reasons: readonly { key: string; count: number }[]): string {
+  return reasons
+    .filter((r) => EMPTY_COPY.reasons[r.key])
+    .map((r) => plural(r.count, EMPTY_COPY.reasons[r.key][0], EMPTY_COPY.reasons[r.key][1]))
+    .join(", ");
 }
 
 /**
@@ -40,13 +60,16 @@ export interface DeckActions {
  * the last Not now. Swipe right or left, or use the arrow keys (Backspace brings one back).
  * Follow-ups add cards to the back. Today's earlier picks fold away under "Earlier today".
  */
-export function StubbyResults({ state, onMakePlans, onBring }: { state: AskState } & DeckActions) {
+export function StubbyResults({ state, onMakePlans, onBring, onTryDifferent }: { state: AskState } & DeckActions) {
   const { busy, error, outcome, earlier, understood, steps, stop, retry, remove, deck } = state;
-  // When nothing fit, Stubby's own line says so; the status isn't repeated here.
+  // When nothing fit, the empty state below says so (with why); the status isn't repeated.
   const status = outcome === "nothing" || outcome === "after" ? null : state.status;
+  const empty = !busy && outcome === "nothing";
   const chips = understood ? [UNDERSTOOD_COPY.when[understood.when ?? ""], UNDERSTOOD_COPY.who[understood.who ?? ""]].filter(Boolean) : [];
   const hasDeck = deck.all.length > 0 || deck.selection.length > 0;
-  if (!busy && !error && !status && !hasDeck && earlier.length === 0) return null;
+  const stayIn = !busy ? state.stayIn : null;
+  const care = !busy ? state.care : null;
+  if (!busy && !error && !status && !empty && !stayIn && !care && !hasDeck && earlier.length === 0) return null;
   return (
     <div data-stubby-results="" className="mb-6 flex flex-col gap-3">
       {busy && chips.length > 0 && (
@@ -90,10 +113,126 @@ export function StubbyResults({ state, onMakePlans, onBring }: { state: AskState
           {TRY_AGAIN}
         </Button>
       )}
+      {state.intelligence && <div role="status" className="text-small text-muted-foreground" data-stubby-evidence="">
+        <p>{state.intelligence.outcome === "verified" ? "Source details checked." : state.intelligence.outcome === "partial" ? "Some details need confirmation. Check the source before you go." : state.intelligence.fallback}</p>
+        {state.intelligence.warnings.map((w, i) => <p key={i}>{w}</p>)}
+      </div>}
+      {care && <Care card={care} />}
+      {stayIn && <StayIn cards={stayIn} onHeadOut={state.headOut} />}
+      {empty && <Empty state={state} onTryDifferent={onTryDifferent} />}
       {deck.all.length > 0 && <Deck state={state} onBring={onBring} />}
       {deck.selection.length > 0 && <Selection state={state} onMakePlans={onMakePlans} />}
       {earlier.length > 0 && <Earlier picks={earlier} onRemove={(p) => void remove(p)} />}
     </div>
+  );
+}
+
+/**
+ * Nothing fits: never a blank area. The honest line (Stubby says it too, and shrugs), why in one
+ * short line, and three ways on: the same ask this weekend, a surprise, or different words.
+ */
+function Empty({ state, onTryDifferent }: { state: AskState; onTryDifferent?: () => void }) {
+  const { reasons, tryWeekend, surprise, left } = state;
+  const why = reasonLine(reasons);
+  const out = left === 0;
+  return (
+    <section data-stubby-empty="" aria-live="polite" className="flex flex-col gap-3 rounded-card border border-dashed border-border p-4">
+      <p className="text-body font-semibold">{ASK_COPY.nothing}</p>
+      {why && <p className="text-small text-muted-foreground">{why}</p>}
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="outline" onClick={tryWeekend} disabled={out}>
+          {EMPTY_COPY.weekend}
+        </Button>
+        <Button type="button" variant="outline" onClick={surprise} disabled={out}>
+          {EMPTY_COPY.surprise}
+        </Button>
+        <Button type="button" variant="outline" onClick={onTryDifferent} disabled={out}>
+          {EMPTY_COPY.differentWords}
+        </Button>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * The care card (stubby-agent C1): a calm card in place of picks. The brief's line, someone to talk
+ * to in their country, the emergency line, and a way to message a friend. No activity picks.
+ */
+function Care({ card }: { card: CareCard }) {
+  const headingId = useId();
+  return (
+    <section data-stubby-care="" aria-labelledby={headingId} className="flex flex-col gap-3 rounded-card border border-border bg-card p-4">
+      <p id={headingId} className="text-body font-semibold">{card.line}</p>
+      {card.resources.length > 0 && (
+        <ul aria-label={CARE_COPY.resourcesLabel} className="flex flex-col gap-2">
+          {card.resources.map((r) => (
+            <li key={r.label} className="flex flex-col gap-0.5">
+              <Button asChild variant="coral" className="self-start">
+                <a href={r.href}>{r.label}</a>
+              </Button>
+              <span className="text-small text-muted-foreground">{r.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="flex flex-wrap gap-2">
+        {card.friend && (
+          <Button asChild variant="outline">
+            <Link to={card.friend.href}>{card.friend.label}</Link>
+          </Button>
+        )}
+        {card.emergency?.href && (
+          <Button asChild variant="outline">
+            <a href={card.emergency.href}>{card.emergency.label}</a>
+          </Button>
+        )}
+      </div>
+      {card.emergency && !card.emergency.href && <p className="text-body font-semibold">{card.emergency.label}</p>}
+      {card.emergency && <p className="text-small text-muted-foreground">{card.emergency.detail}</p>}
+    </section>
+  );
+}
+
+/**
+ * Stay in (hotfix, Nov 3, 2026): their own Pursuits with the next step, and their Corners that
+ * work at home, each with its Corner's photo. Nothing at all: the honest line and three ways on,
+ * never a 0 with no explanation.
+ */
+function StayIn({ cards, onHeadOut }: { cards: StayInCard[]; onHeadOut: () => void }) {
+  if (cards.length === 0) {
+    return (
+      <section data-stubby-stay-in="empty" aria-live="polite" className="flex flex-col gap-3 rounded-card border border-dashed border-border p-4">
+        <p className="text-body font-semibold">{STAY_IN_COPY.nothing}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" onClick={onHeadOut}>
+            {STAY_IN_COPY.headOut}
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/pursuits/new">{STAY_IN_COPY.startPursuit}</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link to="/discover">{STAY_IN_COPY.discover}</Link>
+          </Button>
+        </div>
+      </section>
+    );
+  }
+  return (
+    <ul data-stubby-stay-in="" aria-live="polite" className="flex flex-col gap-3">
+      {cards.map((c) => (
+        <li key={c.id}>
+          <Link to={c.to} className="flex min-h-11 gap-3 overflow-hidden rounded-card border border-border bg-card p-3">
+            {c.photo && <ImageWithFallback src={c.photo} alt="" width={80} className="size-20 shrink-0 rounded-card object-cover" />}
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="self-start rounded-full border border-border px-2 py-0.5 text-caption font-semibold">{STAY_IN_COPY.badge}</span>
+              <span className="text-body font-semibold">{c.title}</span>
+              {c.step && <span className="text-small">{c.step}</span>}
+              {c.needs.length > 0 && <span className="text-caption text-muted-foreground">{`${STAY_IN_COPY.needs}: ${c.needs.join(", ")}`}</span>}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -170,7 +309,7 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
             className={cn("relative touch-pan-y select-none rounded-card border-[1.5px] border-dashed border-accent-text bg-card p-4", !reduce && dx === 0 && "transition-transform")}
             style={dx && !reduce ? { transform: `translateX(${dx}px) rotate(${dx / 24}deg)` } : undefined}
           >
-            <Card pick={front} count={count} onRemove={() => void remove(front)} />
+            <Card pick={front} count={count} onRemove={() => void remove(front)} rated={state.rated[front.id] ?? null} onRate={(s,d) => state.rate(front.id, s,d)} />
             {nudgeId === front.id && onBring && (
               <Button type="button" variant="outline" className="mt-3" onClick={() => onBring(front)}>
                 {SHEET.bringSomeone}
@@ -221,7 +360,20 @@ function Deck({ state, onBring }: { state: AskState; onBring?: (pick: MyPick) =>
 }
 
 /** One card: what, when, where, price, why, and Open. An idea is never shown as a dated ticket. */
-function Card({ pick: p, count, onRemove }: { pick: MyPick; count: { n: number; total: number } | null; onRemove: () => void }) {
+function Card({
+  pick: p,
+  count,
+  onRemove,
+  rated = null,
+  onRate,
+}: {
+  pick: MyPick;
+  count: { n: number; total: number } | null;
+  onRemove: () => void;
+  rated?: "up" | "down" | null;
+  onRate?: (s: "up" | "down",details?:FeedbackDetails) => Promise<boolean>|void;
+}) {
+  const [whyOpen,setWhyOpen]=useState(false);
   const idea = p.kind === "idea";
   const meta = idea ? [p.place, p.price?.trim() || null] : [pickPill(p), p.place];
   const linkClass = "mt-1 inline-flex min-h-8 items-center gap-1 text-small font-semibold underline underline-offset-2";
@@ -240,11 +392,34 @@ function Card({ pick: p, count, onRemove }: { pick: MyPick; count: { n: number; 
           <Link to={p.url} className={linkClass}>
             {ASK_COPY.open}
           </Link>
-        ) : (
+        ) : isWebLink(p.url) ? (
           <a href={p.url} target="_blank" rel="noopener noreferrer" className={linkClass}>
             {ASK_COPY.open}
             <ExternalLink className="size-3.5" aria-hidden="true" />
           </a>
+        ) : null}
+        {onRate && whyOpen && <RejectionDetails onDone={()=>setWhyOpen(false)} onSubmit={d=>onRate("down",d)}/>}
+        {onRate && (
+          <div className="mt-2 flex gap-1">
+            <button
+              type="button"
+              aria-label={GUEST_COPY.goodPick}
+              aria-pressed={rated === "up"}
+              onClick={() => onRate("up")}
+              className={cn("inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground", rated === "up" && "text-accent-text")}
+            >
+              <ThumbsUp className="size-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              aria-label={GUEST_COPY.notForMe}
+              aria-pressed={rated === "down"}
+              onClick={() => humanOnboardingEnabled ? setWhyOpen(true) : void onRate("down")}
+              className={cn("inline-flex size-11 items-center justify-center rounded-full text-muted-foreground hover:text-foreground", rated === "down" && "text-accent-text")}
+            >
+              <ThumbsDown className="size-5" aria-hidden="true" />
+            </button>
+          </div>
         )}
       </div>
       <button type="button" onClick={onRemove} aria-label={`${ASK_COPY.remove}: ${p.title}`} className="-mr-2 -mt-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full text-muted-foreground">
@@ -340,3 +515,6 @@ function Earlier({ picks, onRemove }: { picks: MyPick[]; onRemove: (p: MyPick) =
     </div>
   );
 }
+
+/** The same pick card, for Discover's Stubby's picks row. */
+export { Card as PickCard };

@@ -8,9 +8,23 @@ import { ADD_FREE_TIME_COPY } from "../../lib/homeCopy";
  * days as chips. With no free time saved it asks for it and opens the screen
  * that saves it. Either way the whole card is one link.
  */
-export function YourWeekCard({ windows, left, plans, now }: { windows: readonly string[]; left: readonly WeekWindow[]; plans: readonly WeekPlan[]; now: number }) {
+export function YourWeekCard({ windows, left, plans, now, compact = false }: { windows: readonly string[]; left: readonly WeekWindow[]; plans: readonly WeekPlan[]; now: number; compact?: boolean }) {
   const chips = weekChips(windows, plans, now);
   const none = windows.length === 0;
+  // Home v3: one row, the way into the Calendar on phones. Same words, no day chips.
+  if (compact)
+    return (
+      <Link to={none ? "/week/free" : "/calendar?view=week"} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-0.5 rounded-card border border-border bg-card px-4 py-3 text-foreground">
+        <span className="text-body font-bold" style={{ fontFamily: "var(--font-display)" }}>
+          Your week
+        </span>
+        <span className="order-3 basis-full text-small text-muted-foreground tab:order-none tab:basis-auto tab:flex-1">{none ? ADD_FREE_TIME_COPY : weekLine(left.length, plans.length)}</span>
+        <span className="ml-auto inline-flex shrink-0 items-center gap-0.5 text-small font-semibold text-accent-text">
+          Open
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </span>
+      </Link>
+    );
   return (
     <Link to={none ? "/week/free" : "/calendar?view=week"} className="flex min-h-11 flex-col gap-3 rounded-card border border-border bg-card p-4 text-foreground">
       <span className="flex items-baseline justify-between">

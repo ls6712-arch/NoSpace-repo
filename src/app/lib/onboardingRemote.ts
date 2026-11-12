@@ -41,12 +41,14 @@ export const UNDER_AGE_MESSAGE = "under_minimum_age";
 export async function savePrivate(userId: string, fields: PrivateFields): Promise<{ error: string | null; underAge?: boolean }> {
   if (!supabase) return { error: null };
   try {
+    const auth=await supabase.auth.getUser();
+    if(auth.error || !auth.data.user || auth.data.user.id!==userId || auth.data.user.is_anonymous) return {error:"Your account changed. Reload before saving."};
     const { error } = await supabase
       .from("profile_private")
       .upsert({ user_id: userId, ...fields, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
     if (!error) return { error: null };
     if (error.message === UNDER_AGE_MESSAGE) return { error: null, underAge: true };
-    if (notDeployed(error.code)) return { error: null };
+    if (notDeployed(error.code)) return { error: "Your changes weren’t saved. Try again later." };
     return { error: friendlyError(error) };
   } catch (e) {
     return { error: friendlyError(e) };
@@ -114,5 +116,27 @@ export async function removeUnderageAccount(): Promise<void> {
     await supabase.rpc("remove_underage_account");
   } catch {
     // Signing out still happens.
+  }
+}
+
+/**
+ * The last step of onboarding. The database sets onboarding_completed, and only with an 18+
+ * birthdate on file (finish_onboarding(), migration 20261111000010_member_rpc_gate.sql): the
+ * client can no longer write it. Before that migration is live the function isn't there
+ * (PGRST202), so the old direct update runs instead. "ok" means finished; "refused" means the
+ * database said no (no birthdate); "error" is anything else.
+ */
+export async function finishOnboarding(
+  fallback: () => Promise<{ error: string | null }>,
+  client: { rpc: (fn: string) => PromiseLike<{ data: unknown; error: { code?: string } | null }> } | null = supabase,
+): Promise<"ok" | "refused" | "error"> {
+  if (!client) return (await fallback()).error ? "error" : "ok";
+  try {
+    const { data, error } = await client.rpc("finish_onboarding");
+    if (error?.code === "PGRST202") return (await fallback()).error ? "error" : "ok";
+    if (error) return "error";
+    return data === true ? "ok" : "refused";
+  } catch {
+    return "error";
   }
 }

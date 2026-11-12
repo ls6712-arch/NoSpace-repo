@@ -76,6 +76,7 @@ export function normalizeAmount(measure: Measure, raw: number): number {
 
 /** The step size for the − / + stepper. */
 export function stepFor(measure: Measure): number {
+  if (measure.workflow) return 1;
   if (measure.kind === "quantity") return Math.max(1, Math.round(measure.defaultAmount / 5) || 100);
   if (measure.allowDecimals) return 0.5;
   return 1;

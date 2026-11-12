@@ -1,3 +1,4 @@
+import { weeklyHours } from "../../../supabase/functions/_shared/weeklyHours";
 import { plural } from "./plural";
 
 /**
@@ -136,7 +137,7 @@ export const windowCountLine = (n: number) => `${plural(n, "window")} a week`;
 /** Only known windows, each once, in week order. */
 export function cleanWindows(raw: unknown): string[] {
   const picked = new Set(Array.isArray(raw) ? raw.filter((w): w is string => typeof w === "string") : []);
-  return ALL_WINDOWS.filter((w) => picked.has(w));
+  return weeklyHours([...picked]).map((r) => r.key);
 }
 
 // ---------- budget ----------

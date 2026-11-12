@@ -1,3 +1,5 @@
+import { humanOnboardingEnabled } from "../../../lib/personalization";
+import { ContextualPreferences } from "../../../components/settings/PersonalizationEditor";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { downloadIcs } from "../../../lib/calendarFile";
 import { PlanTicket } from "../../../components/onboarding/PlanTicket";
@@ -150,7 +152,7 @@ export function PlanScreen() {
       intro={outside ? "Soosh plans in your city are coming. For now, here’s one you can do anywhere." : undefined}
       footer={
         went ? (
-          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => finish("/")}>
+          <PillButton data-variant="primary" className="ob-button w-full min-h-14" onClick={() => humanOnboardingEnabled ? next() : finish("/")}>
             See my week
           </PillButton>
         ) : (
@@ -184,6 +186,7 @@ export function PlanScreen() {
           </button>
         )}
       </PlanTicket>
+      {humanOnboardingEnabled && <ContextualPreferences plan={plan} onSaved={()=>{if(user)void loadPlanInput({userId:user.id,names:namesRef.current,redirectTo},now).then(i=>{setPlans(buildPlans(i));setIndex(0);});}}/>}
     </ScreenFrame>
   );
 }

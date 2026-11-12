@@ -1,0 +1,11 @@
+{
+  "note": "Read-only query of public.corners on production (eyzokuhhbyidvmuqfmwm) and staging (iajtjxdlxzvigesecrqc), 2026-11-06. Staging had no rows. Re-take this before regenerating.",
+  "corners": [
+    { "spaceSlug": "books-writing", "slug": "reading", "name": "reading" },
+    { "spaceSlug": "food-cooking", "slug": "cooking", "name": "cooking" },
+    { "spaceSlug": "food-cooking", "slug": "storytelling", "name": "Storytelling" },
+    { "spaceSlug": "photography-film", "slug": "photography", "name": "photography" },
+    { "spaceSlug": "tech-building", "slug": "web-design", "name": "web-design" },
+    { "spaceSlug": "travel-adventure", "slug": "travel", "name": "travel" }
+  ]
+}

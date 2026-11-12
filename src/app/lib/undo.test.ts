@@ -2,7 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const toasts = vi.hoisted(() => ({ calls: [] as { message: string; opts: { duration?: number; action?: { label: string; onClick: () => void } } }[] }));
-vi.mock("sonner", () => ({ toast: (message: string, opts: never) => void toasts.calls.push({ message, opts }) }));
+vi.mock("./toasts", () => ({ showToast: (message: string, opts: never) => void toasts.calls.push({ message, opts }) }));
 
 import { announceChange, flushPendingChanges, UNDO_MS } from "./undo";
 

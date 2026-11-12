@@ -50,4 +50,24 @@ describe("the 18+ Terms and Privacy Policy", () => {
     // The record is only written while this says so.
     if (suggestionLoggingEnabled) expect(privacy).toContain("We keep a short record of the suggestions we show you on Home");
   });
+
+  it("tells guests what Stubby keeps without an account, and for how long (guest Stubby, Nov 3, 2026)", () => {
+    const privacy = text(<PrivacyPolicy />);
+    expect(privacy).toContain("Trying Stubby without an account");
+    // What the code does: a guest account on the first ask, no email, a salted hash kept 2 days,
+    // never the address, deletion after 30 quiet days, carried over on sign-up, not merged on log in.
+    expect(privacy).toContain("The first time you ask, we make a guest account for you in this browser. It has no email, name or password.");
+    expect(privacy).toContain("(a salted hash) with each guest ask, for 2 days. We never keep the address itself.");
+    expect(privacy).toContain("A guest account with no activity for 30 days is deleted, with everything in it.");
+    expect(privacy).toContain("If you sign up, everything you did as a guest moves into your new account.");
+    expect(privacy).toContain("the guest’s picks aren’t added to it.");
+    // The old fixed allowance is gone: limits come from the server now.
+    expect(privacy).not.toContain("limit them to 3 a day");
+  });
+
+  it("says a date of birth is locked once on file, and what under 18 means", () => {
+    const privacy = text(<PrivacyPolicy />);
+    expect(privacy).toContain("Once it’s on file it can’t be changed in the app; to correct it, contact us.");
+    expect(privacy).toContain("If a date shows you’re under 18, we don’t keep the date, and your account can only use Stubby.");
+  });
 });

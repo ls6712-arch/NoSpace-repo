@@ -36,17 +36,19 @@ function ctxFor(ask: string, raw: RawPick[], over: Partial<IntentContext> = {}, 
 }
 
 describe("golden case 1: \"something fun\", no profile", () => {
-  it("one question, who, and no search until it's answered", async () => {
-    expect(readIntent("something fun", { now: NOW }).missing).toBe("who");
+  // The first question for a vague ask is now "Stay in or head out?" (stubby-agent C4, founder, Nov 3, 2026).
+  it("one question, stay in or head out, and no search until it's answered", async () => {
+    expect(readIntent("something fun", { now: NOW }).missing).toBe("setting");
     const search = vi.fn();
     const claimAsk = vi.fn();
     const res = await handleScout(post({ mode: "ask", ask: "something fun", questions: true }), deps({ search, claimAsk }));
-    expect(await res.json()).toEqual({ question: "who", asksLeft: 2 });
+    expect(await res.json()).toEqual({ question: "setting", asksLeft: 2 });
     expect(search).not.toHaveBeenCalled();
     expect(claimAsk).not.toHaveBeenCalled();
   });
 
   it("once answered, no more questions", () => {
+    expect(readIntent("something fun", { now: NOW, answers: { setting: "out" } }).missing).toBeNull();
     expect(readIntent("something fun", { now: NOW, answers: { who: "solo" } }).missing).toBeNull();
   });
 });
@@ -105,7 +107,7 @@ describe("golden case 2: \"something fun to do with my girlfriend tonight\", no 
     expect(prompt).toContain("only things that start between 2026-11-01T17:00 and 2026-11-02T00:00 and end by midnight");
     expect(prompt).toContain("going with their partner");
     expect(prompt).toContain("Leave out bars, breweries, tastings and 21+.");
-    expect(prompt).toContain("up to 3 of the soonest good options after tonight");
+    expect(prompt).toContain("If nothing fits tonight, also report up to 3 of the soonest good options after it.");
   });
 });
 
@@ -119,8 +121,8 @@ describe("golden case 3: \"something to do tonight\", answered Just me; Corners 
     { kind: "idea", title: "Karaoke at home", starts: "2026-11-01T20:00", url: "/start/music/karaoke", corner: null },
   ];
 
-  it("asks who first, then nothing more once answered", () => {
-    expect(readIntent(ask, { now: NOW, cornerNames: ["Pottery", "Running"] }).missing).toBe("who");
+  it("asks stay in or head out first, then nothing more once answered", () => {
+    expect(readIntent(ask, { now: NOW, cornerNames: ["Pottery", "Running"] }).missing).toBe("setting");
     expect(readIntent(ask, { now: NOW, cornerNames: ["Pottery", "Running"], answers: { who: "solo" } })).toMatchObject({ who: "solo", missing: null });
   });
 
@@ -148,23 +150,32 @@ describe("golden case 3: \"something to do tonight\", answered Just me; Corners 
   });
 });
 
-describe("golden case 4: \"pottery tonight\", budget $50 a month", () => {
+describe("golden case 4: \"pottery tonight\", budget $50 a month (a preference, stubby-agent C3)", () => {
   const RAW: RawPick[] = [
     ev({ title: "Wheel throwing intro", price: "$35", corner: "Pottery", url: page("/classes/wheel-intro") }),
     ev({ title: "Open studio hour", price: "Free", corner: "Pottery", url: page("/studio/open-hour") }),
     ev({ title: "Hand-building session", price: "$10 suggested", corner: "Pottery", url: page("/classes/hand-building") }),
   ];
 
-  it("asks nothing and searches straight away, with a ceiling of about $12", () => {
+  it("asks nothing and searches straight away, without dividing monthly money into outings", () => {
     const intent = readIntent("pottery tonight", { now: NOW, monthlyBudget: 50 });
     expect(intent.missing).toBeNull();
-    expect(intent.budget).toEqual({ max: 12, free: false, from: "profile" });
+    expect(intent.budget).toBeNull();
   });
 
-  it("keeps the free and the $10, and drops the $35 with a reason", () => {
+  // The monthly budget is a preference, not a limit (stubby-agent C3, which replaces plan §6.4 here):
+  // nothing is dropped for it, and what misses it comes after what fits, with its price shown.
+  it("does not reorder by an invented activity budget", () => {
     const { result } = ctxFor("pottery tonight", RAW, { monthlyBudget: 50 });
+    expect(result.kept.map((p) => p.title)).toEqual(["Wheel throwing intro", "Open studio hour", "Hand-building session"]);
+    expect(result.kept.map((p) => p.price)).toEqual(["$35", "Free", "$10 suggested"]);
+    expect(result.dropped).toEqual([]);
+  });
+
+  it("a limit typed in the ask is still hard: the $35 is dropped with a reason", () => {
+    const { result } = ctxFor("pottery tonight under $12", RAW, { monthlyBudget: 50 });
     expect(result.kept.map((p) => p.title)).toEqual(["Open studio hour", "Hand-building session"]);
-    expect(result.dropped).toEqual([{ title: "Wheel throwing intro", reason: "Over the budget (about $12 an outing)." }]);
+    expect(result.dropped).toEqual([{ title: "Wheel throwing intro", reason: "Over the budget (about $12 an outing).", key: "budget" }]);
   });
 });
 
@@ -195,7 +206,7 @@ describe("golden case 5: \"free stuff this weekend with the kids\", no profile",
       ["Kids planetarium show", "Not free."],
       ["Glow in the dark skate", "Too late for a family outing."],
       ["Beer garden family afternoon", "A bar, brewery, tasting or 21+, and the ask didn't ask for one."],
-      ["Craft corner for kids", "Price not listed, and only free things were asked for."],
+      ["Craft corner for kids", "Price not listed, so the budget could not be checked."],
     ]);
   });
 });
@@ -210,9 +221,9 @@ describe("the rules behind them", () => {
     }
   });
 
-  it("reads the lowest price a page states", () => {
+  it("uses the highest stated price and never makes missing costs free", () => {
     expect(lowestPrice("Free")).toBe(0);
-    expect(lowestPrice("$15 to $30")).toBe(15);
+    expect(lowestPrice("$15 to $30")).toBe(30);
     expect(lowestPrice("Pay what you wish")).toBeNull();
     expect(lowestPrice(null)).toBeNull();
   });
@@ -266,7 +277,8 @@ describe("the request, end to end", () => {
     const search = vi.fn(async () => ({ text: "<picks>[]</picks>", sourceLinks: new Set<string>(), searches: 1 }));
     const res = await handleScout(post({ mode: "ask", ask: "pottery tonight" }), deps({ search, profileFails: true }));
     expect((await res.json()).outcome).toBe("nothing");
-    expect(search).toHaveBeenCalledTimes(1);
+    // Nothing survived the first round, so one more round ran, aimed at the gaps.
+    expect(search).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -288,6 +300,8 @@ function deps(o: {
     settings: { enabled: true, hasKey: true, runsPerDay: 3, maxSearches: 5, restockSearches: 3, asksPerPerson: 3, asksPerDay: 200 },
     now: () => NOW,
     userId: async () => "user-1",
+    whoIs: async () => ({ guest: false, member: true }),
+    ipHash: async () => null,
     db: {
       runsSince: async () => 0,
       startRun: async () => 1,

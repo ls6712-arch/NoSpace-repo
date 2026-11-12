@@ -3,7 +3,7 @@
 // other or the content (header + pursuits bar judged at scroll top, tab bar at scroll bottom). Run with simulated
 // safe-area insets (notch 47px, home indicator 34px) as well as none.
 // problems fail --strict; warnings (content hidden under a bar) are reported until the layout decision is made.
-export interface FixedBarsResult { bars: { name: string; top: number; bottom: number }[]; problems: string[]; warnings: string[] }
+export interface FixedBarsResult { bars: { name: string; top: number; bottom: number }[]; problems: string[]; warnings: string[]; /** At the bottom of the page: px between the lowest visible content and the tab bar (negative: covered). Absent when there is no tab bar. */ clearance?: number }
 
 export function fixedBarsInPage(arg: { top: number; bottom: number; phase: "top" | "bottom" }): FixedBarsResult {
   const insets = arg;
@@ -16,7 +16,11 @@ export function fixedBarsInPage(arg: { top: number; bottom: number; phase: "top"
   const out: FixedBarsResult = { bars: [], problems: [], warnings: [] };
   const vis = (e: Element) => { const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none" && parseFloat(s.opacity) > 0.05 && !e.closest("[aria-hidden=true]"); };
   const header = document.querySelector("header") as HTMLElement | null;
-  const tab = document.querySelector('nav[aria-label="Main"]') as HTMLElement | null;
+  // Several navs are labelled "Main" (the side rail, the bottom tab bar, the landing page's): the one to judge is the visible bar fixed to the bottom of the screen.
+  const tab = ([...document.querySelectorAll<HTMLElement>('nav[aria-label="Main"]')].find((n) => {
+    const r = n.getBoundingClientRect(); const cs = getComputedStyle(n);
+    return cs.position === "fixed" && cs.display !== "none" && r.width > 0 && r.height > 0 && r.top > innerHeight / 2;
+  }) ?? null) as HTMLElement | null;
   const pbar = [...document.querySelectorAll<HTMLElement>("section")].find((s) => getComputedStyle(s).position === "fixed" && /Pursuits in progress/.test(s.textContent ?? ""));
   const named: [string, HTMLElement | null | undefined][] = [["header", header], ["pursuits-bar", pbar], ["tab-bar", tab]];
   const live = named.filter(([, e]) => e && getComputedStyle(e).display !== "none" && (e === header || e.getBoundingClientRect().height > 0)) as [string, HTMLElement][];
@@ -40,6 +44,14 @@ export function fixedBarsInPage(arg: { top: number; bottom: number; phase: "top"
     // Only judge it if the topmost thing at its centre is a fixed bar (that's what the user sees).
     const top = document.elementFromPoint(Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1), Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1));
     if (top && fixedEls.some((f) => f.contains(top)) && bars.some((b) => hit(b, r))) covered.push(`${e.tagName.toLowerCase()} "${(e.textContent ?? "").trim().slice(0, 28)}" y=${Math.round(r.top)}-${Math.round(r.bottom)} under ${fixedEls.find((f) => f.contains(top))?.tagName.toLowerCase()}`);
+  }
+  if (arg.phase === "bottom" && t) {
+    let lowest = -Infinity;
+    for (const e of document.querySelectorAll<HTMLElement>("main a, main button, main h1, main h2, main h3, main p, main input, main li")) {
+      if (!vis(e) || fixedEls.some((f) => f.contains(e))) continue;
+      lowest = Math.max(lowest, e.getBoundingClientRect().bottom);
+    }
+    if (lowest > -Infinity) out.clearance = Math.round(t.top - lowest);
   }
   if (covered.length) out.warnings.push(`content under a fixed bar: ${[...new Set(covered)].slice(0, 4).join(", ")}${covered.length > 4 ? ` +${covered.length - 4}` : ""}`);
   restore();
