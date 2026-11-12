@@ -18,6 +18,7 @@ import {
 } from "./ui/select";
 import { notify } from "./ui/toaster";
 import { TOAST } from "../lib/stateCopy";
+import { friendlyError as sharedFriendlyError } from "../lib/friendlyError";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { prepareForUpload, storageExtension } from "../lib/uploadMedia";
 
@@ -116,12 +117,17 @@ export function SpaceForm({
     if (!supabase) return null;
     const ids: number[] = [];
     for (const c of picked) {
-      const { data } = await supabase
+      const { data, error: lookupError } = await supabase
         .from("corners")
         .select("id")
         .eq("space_slug", c.spaceSlug)
         .eq("slug", c.slug)
         .maybeSingle();
+      // A failed lookup is not "this Corner is gone": say it could not be reached.
+      if (lookupError) {
+        setError(sharedFriendlyError(lookupError));
+        return null;
+      }
       if (!data) {
         setError(`Couldn’t find the Corner “${c.name}”. Try picking it again.`);
         return null;

@@ -21,6 +21,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { formatDate } from "../../lib/dates";
 import { InlineError } from "../StateViews";
+import { friendlyError } from "../../lib/friendlyError";
 import { ImageWithFallback } from "../ImageWithFallback";
 
 type JoinRequestRow = {
@@ -214,7 +215,12 @@ export function SpaceManageTab({
     if (!supabase || !inviteUsername.trim()) return;
     setBusy("invite");
     setError(null);
-    const { data: target } = await supabase.from("profiles").select("id").eq("username", inviteUsername.trim()).maybeSingle();
+    const { data: target, error: lookupError } = await supabase.from("profiles").select("id").eq("username", inviteUsername.trim()).maybeSingle();
+    // A failed lookup is not "no such person".
+    if (lookupError) {
+      setBusy(null);
+      return setError(friendlyError(lookupError));
+    }
     if (!target) {
       setBusy(null);
       return setError("No one has that username.");

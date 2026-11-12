@@ -82,12 +82,14 @@ export function SpacePage({ space }: { space: SpaceRow }) {
 
   const refetchMembership = async () => {
     if (!supabase || !user) return setMembership(null);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("space_members")
       .select("*")
       .eq("space_id", space.id)
       .eq("user_id", user.id)
       .maybeSingle();
+    // A failed read is not "not a member": keep what was known, so a member is not offered Join.
+    if (error) return setMembership((m) => (m === "loading" ? null : m));
     setMembership((data as SpaceMemberRow) ?? null);
   };
 
