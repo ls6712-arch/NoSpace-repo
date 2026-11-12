@@ -7,7 +7,7 @@
 // download. Every other page is fetched the first time it is opened.
 import { createHashRouter, redirect, type Params } from "react-router";
 import { page } from "./lib/lazyPage";
-import { extraConceptsEnabled, marketplaceEnabled } from "./config";
+import { extraConceptsEnabled, marketplaceEnabled, worldDemoEnabled } from "./config";
 import { Root } from "./pages/Root";
 import { Home } from "./pages/Home";
 import { cornerPath } from "./lib/cornerPath";
@@ -178,6 +178,9 @@ export const router = createHashRouter([
       // /profile used to redirect here to /you — it's now the Settings
       // Profile section route instead (redesign/settings), so that redirect
       // is gone; nothing else pointed at it.
+
+      // The world demo. Staging, previews and local only: on the live site this path goes Home.
+      { path: "world", loader: () => (worldDemoEnabled() ? null : redirect("/my-space")), lazy: page(() => import("./pages/WorldDemo"), "WorldDemo"), handle: { kind: "page", parent: () => "/my-space" } },
 
       ...landingPreviewRoutes,
       ...devRoutes,
