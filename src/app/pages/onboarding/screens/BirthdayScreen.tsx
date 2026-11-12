@@ -4,6 +4,7 @@ import { PillButton } from "../../../components/ui/PillButton";
 import { OnboardingField } from "../../../components/onboarding/OnboardingField";
 import { useAuth } from "../../../context/AuthContext";
 import { MIN_AGE, checkBirthdate } from "../../../lib/age";
+import { hasBirthdayOnFile } from "../../../lib/birthday";
 import { removeUnderageAccount, savePrivate } from "../../../lib/onboardingRemote";
 import { ERROR_LINE } from "../../../lib/stateCopy";
 import { useOnboarding } from "../OnboardingContext";
@@ -60,6 +61,12 @@ export function BirthdayScreen() {
       return;
     }
     if (saved.error) {
+      // A birthday, once set, is locked (20261111000150_birthdate_rules.sql), so a different
+      // date is refused. Someone who already has one on file has nothing to add here: move on.
+      if (await hasBirthdayOnFile(user.id)) {
+        next();
+        return;
+      }
       setError(ERROR_LINE);
       return;
     }
