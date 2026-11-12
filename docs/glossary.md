@@ -1636,3 +1636,23 @@ A Moment is drawn by one set of parts (`src/app/components/moment/`) on every su
 | Everyone / Followers / Only you | At the end of the meta line on your own Moment, with its icon. Opens Change who sees this | Reused |
 | What you wrote / Replace photo | Fields in Add details when it is opened from a Moment’s menu (they were in the Moment’s old Edit form) | Reused |
 | Open {name}’s Moment | Accessible name of a grid tile. Never shown | Brief v2 |
+
+## World demo (staging only; founder, Nov 12, 2026)
+
+The demo at `/world` on www.trynospace.com. It is off on the live site (`worldDemoEnabled` in `src/app/config.ts`) and keeps everything in the browser, so none of these words appear to anyone on www.onsoosh.com. They are written in lower case: the six product nouns are unchanged. If the demo becomes the product, each word needs the founder's approval again before it reaches `main`.
+
+| Term | Meaning |
+|---|---|
+| trail | The five stops toward one thing a person wants to do. Only the stop they are on is shown; the next is hidden |
+| stop | One real thing to do on a trail |
+| Pack a bag / Pack it | Choose one stop, when, and who is coming. One thing at a time |
+| Unpack | Come back and show what you did: a picture and one thing about it |
+| Bring it home | The button that turns what you unpacked into a keepsake |
+| keepsake | The small object brought home from one thing done. It changes at the 3rd, 10th and 25th of the same thing |
+| their half | The other half of a keepsake made with someone |
+| Come along? | The invitation to do a stop together |
+| I did this | Adds something done without a bag; it counts the same |
+| Not tonight | Empties the bag, with no message about it |
+| The lamp | Lit in the town on a day something came home |
+| Uncovered so far | The different things a person has done at least once |
+| This is them | Confirms the pet a person picked |

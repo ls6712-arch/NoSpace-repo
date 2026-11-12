@@ -25,6 +25,15 @@ export const PRODUCTION_HOSTNAMES: readonly string[] = [SITE_DOMAIN, `www.${SITE
 export const STAGING_DOMAIN = "trynospace.com";
 export const STAGING_HOSTNAMES: readonly string[] = [STAGING_DOMAIN, `www.${STAGING_DOMAIN}`];
 
+/**
+ * The world demo (/world): trails, a bag, keepsakes and a pet, kept in the
+ * browser only. On for staging, previews and local runs; never on the live
+ * site, whatever branch the code is on.
+ */
+export function worldDemoEnabled(hostname: string = window.location.hostname): boolean {
+  return !PRODUCTION_HOSTNAMES.includes(hostname);
+}
+
 // Buying/selling isn't live (no payments, fees, tax, refunds, or seller
 // identity behind any listing yet) — every marketplace surface (the
 // Marketplace tab, /shop, /product/:id, a Space's studio booking) stays
