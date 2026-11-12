@@ -52,11 +52,14 @@ const KINDS: Kind[] = ["rpc_anon", "rpc_guest", "rpc_account", "table_nonmember"
 function allowlistFromMigrations(): Record<Kind, Set<string>> {
   const out = Object.fromEntries(KINDS.map((k) => [k, new Set<string>()])) as Record<Kind, Set<string>>;
   for (const { sql } of migrations) {
-    if (!/insert\s+into\s+private\.access_allowlist/i.test(sql)) continue;
     // Rows are ('kind', 'name', 'reason'); a reason may hold a semicolon, so rows are read directly.
-    for (const row of sql.matchAll(/\(\s*'(\w+)'\s*,\s*'(\w+)'\s*,\s*'(?:[^']|'')*'\s*\)/g)) {
-      if ((KINDS as string[]).includes(row[1])) out[row[1] as Kind].add(row[2]);
+    // Only in a migration that inserts into the list: the same shape elsewhere is not a list row.
+    if (/insert\s+into\s+private\.access_allowlist/i.test(sql)) {
+      for (const row of sql.matchAll(/\(\s*'(\w+)'\s*,\s*'(\w+)'\s*,\s*'(?:[^']|'')*'\s*\)/g)) {
+        if ((KINDS as string[]).includes(row[1])) out[row[1] as Kind].add(row[2]);
+      }
     }
+    // A migration may also only take entries off the list (20261202000000_person_name_server_only.sql).
     for (const del of sql.matchAll(/delete\s+from\s+private\.access_allowlist\s+where\s+kind\s*=\s*'(\w+)'\s+and\s+name\s+in\s*\(([^)]*)\)/gi)) {
       for (const n of del[2].matchAll(/'(\w+)'/g)) out[del[1] as Kind]?.delete(n[1]);
     }
