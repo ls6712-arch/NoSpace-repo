@@ -206,6 +206,31 @@ Replaces the Stub types in the row above (silver, ticket, with someone, session,
 | Your front row is full. Take one down first. | Error on a 4th pin |
 | That one has closed. / That one is full. | Errors when joining a drop after it closes / at its cap |
 
+### Drops in the app (proposed Nov 16, 2026, waiting for the founder's approval)
+
+The open drop leads Home, has its own page at `/drop/{link name}`, and that page is what a friend's link opens. Lower-case "drop" in running text; "Drop" only as the Stub's label.
+
+| Term | Meaning |
+|---|---|
+| Soosh drop | Also the small line over a drop's title on Home and on its page (the same words its Stub prints) |
+| I’m in | Join the drop. The same words as the reaction |
+| Log a Moment | The one next step once you are in: opens Log with your drop Pursuit filled in |
+| Bring someone | Share the drop's link. It carries one of your invites when you have one to give |
+| Share | On the reveal and on a finished drop: your Stub as a story image |
+| Closes {day, date, time} / Closed {day, date} | When the window ends, in New York time |
+| One Moment before it closes / {n} Moments before it closes | The drop's goal, with `plural()` |
+| {n} people in | How many joined, with `plural()`. A drop is the one place a count of people is shown. Left out at zero and when it cannot be read |
+| {n} Stubs kept | How many have finished so far, with `plural()`. Left out at zero. Never rounded or estimated |
+| You’re in. Do it, then log a Moment with a photo. | On the drop's page after joining |
+| Your Stub is on your Shelf. The last number is not known until it closes. | On the drop's page after finishing, while it is open |
+| {First name} wants to do this with you. | On the drop's page for someone who opened a friend's link, signed out |
+| Free, and it opens in your browser. | Under Sign up and Log in on the drop's page, signed out |
+| {Title}. Closes {day, date, time}. Do it with me. | The text sent with the link by Bring someone |
+| Kept by {first name} | Under the Stub on the story image |
+| Link copied / Couldn’t share the link. Try again. | Bring someone, where there is no share sheet / when it fails |
+| Saved to your downloads / Couldn’t make the image. Try again. | Share, where there is no share sheet / when it fails |
+| Soosh drops | The admin page, and its row in Settings. Admin-only words on it (Add a drop, Edit this drop, Link name, What to do, Goal, Opens, Closes, Not open yet, Open now, Closed, Open its page, No drops yet) are not shown to members |
+
 ## Pursuits
 
 ### Simplified workflow (approved by the owner, November 4, 2026)
