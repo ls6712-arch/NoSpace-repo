@@ -10,6 +10,9 @@ import { motion } from "motion/react";
 import { Flame, Plus, Minus } from "lucide-react";
 import { StubArt } from "../../components/stub/StubArt";
 import { StubReveal } from "../../components/stub/StubReveal";
+import { DropCard } from "../../components/drop/DropCard";
+import type { Drop, MyDrop } from "../../lib/drops";
+import { shareStub } from "../../lib/stubShareImage";
 import { KIND_LABEL, type StubFace } from "../../lib/stubFace";
 import { Ticket } from "../../components/stub/Ticket";
 import { AvatarStack } from "../../components/ui/AvatarStack";
@@ -116,6 +119,23 @@ const STUB_FACES: StubFace[] = [
   { kind: "event", title: "Clay Corner", eventTitle: "Wheel night", neighborhood: "Gowanus", hostName: "Maya", cornerName: "Pottery", color: "var(--cat-blue)", day: "Oct 30", serial: 147 },
   { kind: "drop", title: "Sunrise week", cornerName: "Running", color: "var(--cat-pink)", day: "Nov 7", goal: 5, edition: 42, editionsTotal: 318 },
 ];
+
+/** An example drop for the kit: opened an hour ago, closes in twelve days. Nothing here is read from the database. */
+const KIT_DROP: Drop = {
+  id: 0,
+  slug: "make-one-give-one",
+  title: "Make one, give one",
+  blurb: "Make one small gift by hand, with one other person.",
+  cornerKey: "crafts-making/paper-crafts",
+  targetMoments: 1,
+  opensAt: Date.parse("2026-11-25T00:00:00Z"),
+  closesAt: Date.parse("2026-12-07T04:59:00Z"),
+  maxEditions: null,
+  palette: ["#ff7ab6", "#ffd36e", "#7ff2c8", "#73aaff", "#c47bff"], // design-token-ignore: the drop default palette, as the database stores it
+  peopleIn: 12,
+  finished: 4,
+};
+const KIT_DROP_STATES: (MyDrop | null)[] = [null, { pursuitId: "kit", edition: null, stubId: null }, { pursuitId: "kit", edition: 5, stubId: 1 }];
 
 export function DevKit() {
   const [moods, setMoods] = useState<string[]>(["Move"]);
@@ -237,7 +257,13 @@ export function DevKit() {
             </PillButton>
           ))}
         </div>
-        {stubReveal && <StubReveal face={stubReveal} onDone={() => setStubReveal(null)} onPin={async () => null} />}
+        {stubReveal && <StubReveal face={stubReveal} onDone={() => setStubReveal(null)} onPin={async () => null} onShare={async () => void (await shareStub(stubReveal, "Maya"))} />}
+      </Section>
+
+      <Section title="The open drop on Home">
+        {KIT_DROP_STATES.map((mine, i) => (
+          <DropCard key={i} drop={KIT_DROP} mine={mine} joining={false} onJoin={async () => ({ pursuitId: null, error: null })} now={KIT_DROP.opensAt + 3_600_000} />
+        ))}
       </Section>
 
       <Section title="Week timeline">

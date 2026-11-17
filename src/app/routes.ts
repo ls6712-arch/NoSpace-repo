@@ -88,6 +88,7 @@ export const router = createHashRouter([
       { path: "admin/reports", lazy: page(() => import("./pages/AdminReports"), "AdminReports"), handle: { kind: "page", parent: () => "/settings" } },
       { path: "admin/invites", lazy: page(() => import("./pages/AdminInvites"), "AdminInvites"), handle: { kind: "page", parent: () => "/settings" } },
       { path: "admin/city-picks", lazy: page(() => import("./pages/AdminCityPicks"), "AdminCityPicks"), handle: { kind: "page", legacyBack: true, parent: () => "/settings" } },
+      { path: "admin/drops", lazy: page(() => import("./pages/AdminDrops"), "AdminDrops"), handle: { kind: "page", legacyBack: true, parent: () => "/settings" } },
       { path: "admin/weekly-schedule", lazy: page(() => import("./pages/AdminStandingSlots"), "AdminStandingSlots"), handle: { kind: "page", legacyBack: true, parent: () => "/settings" } },
       // "Log" was the old name for creating; keep old links working.
       { path: "log", loader: () => redirect("/create") },
@@ -142,6 +143,8 @@ export const router = createHashRouter([
       // A Corner that has a room opens as the room at /corners/:slug (CornerDetail). The room's first address still works.
       { path: "corners/:slug/world", loader: ({ params }) => redirect(cornerPath(undefined, params.slug ?? "")) },
       { path: "browse/:slug", lazy: page(() => import("./pages/Category"), "CategoryPage"), handle: { kind: "page", legacyBack: true, tab: "discover", parent: () => "/corners" } },
+      // One Soosh drop, and the page a friend's link opens. Works signed out.
+      { path: "drop/:slug", lazy: page(() => import("./pages/DropPage"), "DropPage"), handle: { kind: "page", parent: () => "/my-space" } },
       { path: "pursuits/new", lazy: page(() => import("./pages/CreatePursuit"), "CreatePursuit"), handle: { kind: "flow", parent: () => "/my-space" } },
       { path: "join/:token", lazy: page(() => import("./pages/JoinPursuit"), "JoinPursuit"), handle: { kind: "flow", parent: () => "/my-space" } },
       // The old per-Pursuit form is gone: one Log a Moment form, with the Pursuit pre-filled.

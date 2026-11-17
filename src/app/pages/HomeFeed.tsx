@@ -32,6 +32,8 @@ import { useSocial } from "../context/SocialContext";
 import { useCorners } from "../context/CornersContext";
 import { fetchHomeEvents, fetchStillMaking, yourCorners, type HomeEvent, type HomeWallCard } from "../lib/homeYourCorners";
 import { cornerPath } from "../lib/cornerPath";
+import { DropCard } from "../components/drop/DropCard";
+import { useDrop } from "../lib/useDrop";
 
 const PULL_THRESHOLD = 64;
 
@@ -53,6 +55,8 @@ export function HomeFeed() {
   const [cardStates, setCardStates] = useState<Record<string, CardState>>({});
   const [now] = useState(() => Date.now());
   const home = useHomeData(user?.id);
+  // The drop that is open right now, if one is. It leads Home for as long as it is open.
+  const openDrop = useDrop(null, user?.id);
   const touchStart = useRef<number | null>(null);
   const social = useSocial();
   const { allCorners } = useCorners();
@@ -172,6 +176,11 @@ export function HomeFeed() {
         </>
       }
     >
+      {openDrop.drop && (
+        <section className="mb-6">
+          <DropCard drop={openDrop.drop} mine={openDrop.mine} joining={openDrop.joining} onJoin={openDrop.join} now={now} />
+        </section>
+      )}
       {home.status === "loading" ? (
         <div className={PAGE_GRID} aria-hidden="true">
           <Skeleton className={`h-[148px] w-full rounded-card ${SPAN_GRID}`} />

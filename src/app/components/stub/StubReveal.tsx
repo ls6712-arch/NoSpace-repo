@@ -18,7 +18,7 @@ import { EDGE } from "../../lib/stubMaterials";
  *           (drag, or Enter). It waits for them.
  *   print   the Stub they tore lands (heavy haptic), Stubby stamps it
  *   shine   one sweep of foil; a drop's number rolls up from 000
- *   rest    the title, Put in front row and Done
+ *   rest    the title, Share, Put in front row and Done
  * A tap outside the ticket skips to rest. Under reduced motion it opens at rest.
  */
 export const TEAR_LABEL = "Tear off your Stub";
@@ -47,16 +47,29 @@ export function StubReveal({
   face,
   onDone,
   onPin,
+  onShare,
 }: {
   face: StubFace;
   onDone: () => void;
   /** Pin to the front row. Resolves to an error message, or null when it worked. */
   onPin?: () => Promise<string | null>;
+  /** Share the Stub as a story image. When given, Share is the main button and the front row is the second. */
+  onShare?: () => Promise<void>;
 }) {
   const reduce = useReducedMotion() ?? false;
   const [phase, setPhase] = useState<Phase>(reduce ? "rest" : "dim");
   const [shown, setShown] = useState(reduce ? face.edition ?? 0 : 0);
   const [pin, setPin] = useState<"idle" | "busy" | "done" | string>("idle");
+  const [sharing, setSharing] = useState(false);
+  const shareIt = async () => {
+    if (!onShare || sharing) return;
+    setSharing(true);
+    try {
+      await onShare();
+    } finally {
+      setSharing(false);
+    }
+  };
   const timers = useRef<number[]>([]);
   const titleId = useId();
   const done = useRef<HTMLButtonElement>(null);
@@ -245,8 +258,13 @@ export function StubReveal({
                 {pin}
               </p>
             )}
+            {onShare && (
+              <PillButton variant="primary" className="w-full" disabled={sharing} onClick={() => void shareIt()}>
+                Share
+              </PillButton>
+            )}
             {onPin && (
-              <PillButton variant="primary" className="w-full" disabled={pin === "busy" || pin === "done"} onClick={() => void pinIt()}>
+              <PillButton variant={onShare ? "light" : "primary"} className="w-full" disabled={pin === "busy" || pin === "done"} onClick={() => void pinIt()}>
                 {pin === "done" ? "In your front row" : "Put in front row"}
               </PillButton>
             )}

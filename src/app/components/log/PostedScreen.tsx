@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { StubArt } from "../stub/StubArt";
 import { StubReveal } from "../stub/StubReveal";
+import { useShareStub } from "../stub/useShareStub";
 import { Stubby } from "../stubby/Stubby";
 import { PillButton } from "../ui/PillButton";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
@@ -105,6 +106,7 @@ export function PostedScreen({
   const [choiceState, setChoiceState] = useState<"offer" | "skipped" | "busy" | "added" | "failed">("offer");
   const [stub, setStub] = useState<StubFace | null>(null);
   const [revealing, setRevealing] = useState(false);
+  const shareStubImage = useShareStub();
   const [lover, setLover] = useState<{ name: string; avatarUrl?: string } | null>(null);
   const [nextSession, setNextSession] = useState<number | null>(null);
   const [group, setGroup] = useState<string | null>(null);
@@ -208,7 +210,7 @@ export function PostedScreen({
 
   return (
     <div className="flex min-h-viewport flex-col bg-background">
-      {stub && revealing && <StubReveal face={stub} onDone={() => setRevealing(false)} onPin={stub.id ? () => pinStub(stub.id!, true) : undefined} />}
+      {stub && revealing && <StubReveal face={stub} onDone={() => setRevealing(false)} onPin={stub.id ? () => pinStub(stub.id!, true) : undefined} onShare={() => shareStubImage(stub)} />}
       <div className="mx-auto w-full max-w-[calc(680px+2rem)] tab:max-w-[calc(680px+3rem)] desk:max-w-[calc(680px+4rem)] px-4 tab:px-6 desk:px-8 flex flex-1 flex-col items-center gap-5 pt-10 pb-48">
         <Stubby state="done" size={96} label="" />
 

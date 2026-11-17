@@ -85,6 +85,9 @@ const HANDLES_SIGNED_OUT_ITSELF = (pathname: string) =>
   // Step 2's own arrival link — same reasoning as /join/ above: this is
   // exactly how someone not on Sushii yet is meant to get here.
   pathname.startsWith("/i/") ||
+  // A drop's own page is what a friend's link opens: it shows the drop first
+  // and asks for an account only when they tap Sign up.
+  pathname.startsWith("/drop/") ||
   // The Soosh onboarding starts before there is an account (welcome, sign up,
   // code); it keeps a signed-in visitor past the pre-account screens itself.
   (sooshOnboardingEnabled && pathname === "/onboarding") ||

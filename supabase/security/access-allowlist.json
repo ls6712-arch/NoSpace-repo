@@ -23,7 +23,8 @@
     "save_notification_body",
     "space_host_count",
     "space_moment_count_30d",
-    "you_inspired_this_month"
+    "you_inspired_this_month",
+    "drop_summary"
   ],
   "rpc_guest": [
     "corner_activity_30d",
@@ -41,7 +42,8 @@
     "record_stubby_feedback",
     "resolve_profile_handle",
     "space_host_count",
-    "space_moment_count_30d"
+    "space_moment_count_30d",
+    "drop_summary"
   ],
   "rpc_account": [
     "get_calendar_pursuit_sessions",
